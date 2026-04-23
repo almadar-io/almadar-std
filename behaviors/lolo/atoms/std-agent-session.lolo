@@ -15,6 +15,10 @@ orbital AgentSessionOrbital {
 
   type AgentSessionLoaded     = Event AgentSession                  "Fired when AgentSession finishes loading"
   type AgentSessionLoadFailed = Event { message : string } "Fired when AgentSession fails to load"
+  type AgentSessionUpdated = Event { id : string }
+  type AgentSessionUpdateFailed = Event { error : string, code : string }
+  type AgentSessionSaved = Event { id : string }
+  type AgentSessionSaveFailed = Event { error : string, code : string }
   trait AgentSessionBrowse -> AgentSession [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -27,8 +31,11 @@ orbital AgentSessionOrbital {
       AgentSessionAgent ENDED -> INIT
       VIEW { id : string!, row : object }
           AgentSessionLoadFailed { message : string }
+    
+      AgentSessionUpdateFailed { error : string, code : string }
+      AgentSessionSaveFailed { error : string, code : string }
     }
-    emits: [AgentSessionLoaded, AgentSessionLoadFailed]
+    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionUpdated, AgentSessionUpdateFailed, AgentSessionSaved, AgentSessionSaveFailed]
   }
   trait AgentSessionLabel -> AgentSession [interaction, collection] {
     initial: closed
@@ -45,7 +52,7 @@ orbital AgentSessionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update AgentSession @payload.data)
+        (persist update AgentSession @payload.data { emit: { success: "AgentSessionUpdated", failure: "AgentSessionUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit LABELED)
@@ -71,7 +78,7 @@ orbital AgentSessionOrbital {
         (set @entity.parentId @entity.sessionId)
         (agent/fork)
         (agent/session-id)
-        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
+        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
         (emit FORKED)
       DO_LABEL -> active
         (agent/label @payload.data.label)
@@ -88,7 +95,7 @@ orbital AgentSessionOrbital {
         (set @entity.parentId @entity.sessionId)
         (agent/fork)
         (agent/session-id)
-        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
+        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
         (emit FORKED)
       DO_LABEL -> forked
         (agent/label @payload.data.label)

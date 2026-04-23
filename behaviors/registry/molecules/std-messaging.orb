@@ -152,22 +152,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "content": "Loading messages…",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Loading messages…"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -182,72 +182,72 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "message-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "message-circle"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "Messages"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "label": "Compose",
                               "variant": "primary",
-                              "type": "button",
                               "icon": "edit",
+                              "type": "button",
                               "action": "COMPOSE"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "label": "View",
-                              "variant": "ghost"
-                            }
-                          ],
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "name",
                               "label": "Name",
                               "variant": "h4",
-                              "icon": "message-circle"
+                              "icon": "message-circle",
+                              "name": "name"
                             },
                             {
                               "name": "description",
-                              "label": "Description",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Description"
                             },
                             {
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "name": "status",
+                              "variant": "badge"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "variant": "ghost",
+                              "event": "VIEW"
+                            }
+                          ],
+                          "type": "data-grid"
                         }
                       ]
                     }
@@ -263,36 +263,36 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
                           "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
-                          "content": "Failed to load messages",
                           "variant": "h3",
-                          "type": "typography"
-                        },
-                        {
                           "type": "typography",
-                          "content": "@payload.error",
-                          "color": "muted",
-                          "variant": "body"
+                          "content": "Failed to load messages"
                         },
                         {
-                          "variant": "primary",
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
+                          "variant": "body",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "@payload.error"
+                        },
+                        {
                           "type": "button",
-                          "label": "Retry"
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "label": "Retry",
+                          "action": "INIT"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -331,8 +331,8 @@
                     "ChatMessage",
                     {
                       "emit": {
-                        "success": "ChatMessageLoaded",
-                        "failure": "ChatMessageLoadFailed"
+                        "failure": "ChatMessageLoadFailed",
+                        "success": "ChatMessageLoaded"
                       }
                     }
                   ],
@@ -354,18 +354,18 @@
           "name": "ChatMessageCompose",
           "linkedEntity": "ChatMessage",
           "config": {
-            "title": "New Message",
             "fields": [
               "name",
               "description",
               "status"
             ],
             "icon": "edit",
+            "title": "New Message",
             "mode": "create"
           },
           "events": {
-            "OPEN": "COMPOSE",
-            "SAVE": "CHAT_MESSAGE_SENT"
+            "SAVE": "CHAT_MESSAGE_SENT",
+            "OPEN": "COMPOSE"
           }
         },
         {
@@ -426,39 +426,59 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "eye"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.name",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Name"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
                           "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Name",
+                              "variant": "caption",
                               "type": "typography",
-                              "variant": "caption"
+                              "content": "Description"
                             },
                             {
                               "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@entity.description"
                             }
                           ],
                           "type": "stack",
@@ -467,58 +487,38 @@
                         {
                           "children": [
                             {
-                              "content": "Description",
+                              "content": "Status",
                               "variant": "caption",
                               "type": "typography"
                             },
                             {
-                              "type": "typography",
-                              "content": "@entity.description",
-                              "variant": "body"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
-                            },
-                            {
+                              "variant": "body",
                               "content": "@entity.status",
-                              "type": "typography",
-                              "variant": "body"
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "CLOSE",
+                              "type": "button",
                               "variant": "ghost",
                               "label": "Close",
-                              "type": "button"
+                              "action": "CLOSE"
                             }
                           ],
                           "justify": "end",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]

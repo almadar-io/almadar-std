@@ -11,11 +11,13 @@ orbital ValidateOnSave {
     timestamp : number = 0
     status : string = "idle"
   }
+  type ValidateOnSaveLoaded = Event { data : [ValidateOnSave] }
+  type ValidateOnSaveLoadFailed = Event { error : string, code : string }
   trait OrbFileWatcher -> ValidateOnSave [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ValidateOnSave)
+        (fetch ValidateOnSave { emit: { success: "ValidateOnSaveLoaded", failure: "ValidateOnSaveLoadFailed" } })
         (os/watch-files "**/*.orb")
         (os/debounce 500 OS_FILE_MODIFIED)
         (set @entity.status idle)
@@ -79,6 +81,8 @@ orbital ValidateOnSave {
       VALIDATION_PASSED { warnings : array }
       VALIDATION_FAILED { errors : array, warnings : array }
       OS_FILE_MODIFIED { path : string }
+    
+      ValidateOnSaveLoadFailed { error : string, code : string }
     }
   }
   page "/validator" as ValidatorPage -> OrbFileWatcher

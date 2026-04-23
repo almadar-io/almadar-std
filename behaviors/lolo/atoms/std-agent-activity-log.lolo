@@ -17,17 +17,21 @@ orbital AgentActivityLogOrbital {
 
   type AgentActivityLogLoaded     = Event AgentActivityLog                  "Fired when AgentActivityLog finishes loading"
   type AgentActivityLogLoadFailed = Event { message : string } "Fired when AgentActivityLog fails to load"
+  type AgentActivityLogSaved = Event { id : string }
+  type AgentActivityLogSaveFailed = Event { error : string, code : string }
+  type AgentActivityLogDeleted = Event { id : string }
+  type AgentActivityLogDeleteFailed = Event { error : string, code : string }
   trait AgentActivityLogLog -> AgentActivityLog [interaction, instance] {
     state logging {
       INIT -> logging
         (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity"}, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", fields: [], entity: "AgentActivityLog" }] })
       LOG_ENTRY -> logging
-        (persist create AgentActivityLog { action: "@payload.action", detail: "@payload.detail", status: "@payload.status", timestamp: "@now" })
+        (persist create AgentActivityLog { action: "@payload.action", detail: "@payload.detail", status: "@payload.status", timestamp: "@now" } { emit: { success: "AgentActivityLogSaved", failure: "AgentActivityLogSaveFailed" } })
         (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity"}, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", fields: [], entity: "AgentActivityLog" }] })
       CLEAR -> logging
-        (persist delete AgentActivityLog)
+        (persist delete AgentActivityLog  { emit: { success: "AgentActivityLogDeleted", failure: "AgentActivityLogDeleteFailed" } })
         (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity"}, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", fields: [], entity: "AgentActivityLog" }] })
     }
@@ -38,8 +42,11 @@ orbital AgentActivityLogOrbital {
       AgentActivityLogLog LOG_ENTRY -> LOG_ENTRY
           AgentActivityLogLoadFailed { message : string }
           LOG_ENTRY { action : string, detail : string, status : string }
+    
+      AgentActivityLogSaveFailed { error : string, code : string }
+      AgentActivityLogDeleteFailed { error : string, code : string }
     }
-    emits: [AgentActivityLogLoaded, AgentActivityLogLoadFailed]
+    emits: [AgentActivityLogLoaded, AgentActivityLogLoadFailed, AgentActivityLogSaved, AgentActivityLogSaveFailed, AgentActivityLogDeleted, AgentActivityLogDeleteFailed]
   }
   page "/agentactivitylogs" as AgentActivityLogPage -> AgentActivityLogLog
 }

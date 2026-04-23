@@ -127,6 +127,54 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentChatThreadDeleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentChatThreadDeleteFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentChatThreadSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentChatThreadSaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -218,6 +266,54 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "AgentChatThreadDeleted",
+                "name": "AgentChatThread deleted",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentChatThreadDeleteFailed",
+                "name": "AgentChatThread delete failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentChatThreadSaved",
+                "name": "AgentChatThread saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentChatThreadSaveFailed",
+                "name": "AgentChatThread save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -226,242 +322,6 @@
                 "to": "idle",
                 "event": "INIT",
                 "effects": [
-                  [
-                    "fetch",
-                    "AgentChatThread",
-                    {
-                      "emit": {
-                        "success": "AgentChatThreadLoaded",
-                        "failure": "AgentChatThreadLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "message-circle"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentChatThread Thread",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
-                            },
-                            {
-                              "variant": "primary",
-                              "icon": "plus",
-                              "type": "button",
-                              "action": "COMPOSE",
-                              "label": "New Message"
-                            }
-                          ],
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-list",
-                          "fields": [],
-                          "entity": "AgentChatThread",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "gap": "xs",
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "label": "@item.role",
-                                      "type": "badge"
-                                    },
-                                    {
-                                      "variant": "outline",
-                                      "type": "badge",
-                                      "label": "@item.status"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "variant": "caption",
-                                      "type": "typography",
-                                      "content": "@item.timestamp"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.content"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "composing",
-                "event": "COMPOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "message-circle"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "AgentChatThread Thread"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "New Message",
-                              "variant": "primary",
-                              "icon": "plus",
-                              "action": "COMPOSE"
-                            }
-                          ],
-                          "type": "stack",
-                          "justify": "between",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "fields": [],
-                          "entity": "AgentChatThread",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "label": "@item.role",
-                                      "type": "badge"
-                                    },
-                                    {
-                                      "label": "@item.status",
-                                      "variant": "outline",
-                                      "type": "badge"
-                                    },
-                                    {
-                                      "content": "@item.timestamp",
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.content"
-                                }
-                              ],
-                              "gap": "xs",
-                              "direction": "vertical",
-                              "type": "stack"
-                            }
-                          ],
-                          "type": "data-list"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "textarea",
-                              "placeholder": "Type your message..."
-                            },
-                            {
-                              "children": [
-                                {
-                                  "icon": "send",
-                                  "type": "button",
-                                  "variant": "primary",
-                                  "label": "Send",
-                                  "action": "SEND"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            }
-                          ],
-                          "fields": [],
-                          "type": "form-section",
-                          "title": "Compose Message"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "AgentChatThread"
-                  ],
                   [
                     "fetch",
                     "AgentChatThread",
@@ -481,53 +341,52 @@
                       "gap": "lg",
                       "children": [
                         {
+                          "justify": "between",
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "align": "center",
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "AgentChatThread Thread",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "AgentChatThread Thread"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "variant": "primary",
-                              "icon": "plus",
                               "label": "New Message",
+                              "type": "button",
                               "action": "COMPOSE",
-                              "type": "button"
+                              "icon": "plus"
                             }
                           ],
-                          "justify": "between",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "AgentChatThread",
-                          "fields": [],
                           "type": "data-list",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
+                              "gap": "xs",
                               "direction": "vertical",
                               "children": [
                                 {
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "type": "badge",
@@ -539,16 +398,114 @@
                                       "variant": "outline"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
                                       "color": "muted",
+                                      "content": "@item.timestamp",
+                                      "variant": "caption",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center"
+                                },
+                                {
+                                  "content": "@item.content",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ],
+                          "entity": "AgentChatThread",
+                          "fields": []
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "composing",
+                "event": "COMPOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "message-circle",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "AgentChatThread Thread",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center"
+                            },
+                            {
+                              "icon": "plus",
+                              "action": "COMPOSE",
+                              "label": "New Message",
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ],
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [],
+                          "entity": "AgentChatThread",
+                          "type": "data-list",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "label": "@item.role",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "label": "@item.status",
+                                      "variant": "outline",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "variant": "caption",
                                       "content": "@item.timestamp"
                                     }
                                   ],
                                   "type": "stack",
                                   "gap": "sm",
-                                  "align": "center",
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 },
                                 {
                                   "variant": "body",
@@ -556,11 +513,156 @@
                                   "type": "typography"
                                 }
                               ],
-                              "gap": "xs"
+                              "direction": "vertical",
+                              "type": "stack"
+                            }
+                          ]
+                        },
+                        {
+                          "fields": [],
+                          "title": "Compose Message",
+                          "type": "form-section",
+                          "children": [
+                            {
+                              "type": "textarea",
+                              "placeholder": "Type your message..."
+                            },
+                            {
+                              "children": [
+                                {
+                                  "label": "Send",
+                                  "icon": "send",
+                                  "type": "button",
+                                  "action": "SEND",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ]
                         }
                       ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "failure": "AgentChatThreadDeleteFailed",
+                        "success": "AgentChatThreadDeleted"
+                      }
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadLoaded",
+                        "failure": "AgentChatThreadLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle"
+                                },
+                                {
+                                  "content": "AgentChatThread Thread",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "sm",
+                              "align": "center"
+                            },
+                            {
+                              "type": "button",
+                              "action": "COMPOSE",
+                              "label": "New Message",
+                              "variant": "primary",
+                              "icon": "plus"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "AgentChatThread",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "gap": "xs",
+                              "type": "stack",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.role"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.status",
+                                      "variant": "outline"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.timestamp"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@item.content",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "data-list",
+                          "fields": []
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -595,10 +697,16 @@
                     "create",
                     "AgentChatThread",
                     {
-                      "role": "user",
-                      "timestamp": "@now",
                       "status": "sent",
-                      "content": "@payload.content"
+                      "content": "@payload.content",
+                      "role": "user",
+                      "timestamp": "@now"
+                    },
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadSaved",
+                        "failure": "AgentChatThreadSaveFailed"
+                      }
                     }
                   ],
                   [
@@ -610,8 +718,8 @@
                     "AgentChatThread",
                     {
                       "emit": {
-                        "success": "AgentChatThreadLoaded",
-                        "failure": "AgentChatThreadLoadFailed"
+                        "failure": "AgentChatThreadLoadFailed",
+                        "success": "AgentChatThreadLoaded"
                       }
                     }
                   ],
@@ -619,58 +727,57 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "name": "message-circle",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "AgentChatThread Thread"
-                                }
-                              ]
-                            },
-                            {
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "New Message",
-                              "icon": "plus",
-                              "action": "COMPOSE"
-                            }
-                          ],
                           "type": "stack",
+                          "justify": "between",
                           "align": "center",
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "justify": "between"
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "AgentChatThread Thread",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "button",
+                              "icon": "plus",
+                              "action": "COMPOSE",
+                              "variant": "primary",
+                              "label": "New Message"
+                            }
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
                               "gap": "xs",
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "label": "@item.role",
@@ -682,28 +789,29 @@
                                       "type": "badge"
                                     },
                                     {
-                                      "color": "muted",
-                                      "content": "@item.timestamp",
                                       "type": "typography",
+                                      "content": "@item.timestamp",
+                                      "color": "muted",
                                       "variant": "caption"
                                     }
                                   ],
+                                  "gap": "sm",
                                   "direction": "horizontal",
-                                  "align": "center"
+                                  "type": "stack"
                                 },
                                 {
                                   "content": "@item.content",
                                   "type": "typography",
                                   "variant": "body"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
                           ],
-                          "fields": [],
-                          "entity": "AgentChatThread"
+                          "entity": "AgentChatThread",
+                          "type": "data-list"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -716,15 +824,21 @@
                   [
                     "persist",
                     "delete",
-                    "AgentChatThread"
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadDeleted",
+                        "failure": "AgentChatThreadDeleteFailed"
+                      }
+                    }
                   ],
                   [
                     "fetch",
                     "AgentChatThread",
                     {
                       "emit": {
-                        "success": "AgentChatThreadLoaded",
-                        "failure": "AgentChatThreadLoadFailed"
+                        "failure": "AgentChatThreadLoadFailed",
+                        "success": "AgentChatThreadLoaded"
                       }
                     }
                   ],
@@ -733,89 +847,89 @@
                     "main",
                     {
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "message-circle"
                                 },
                                 {
-                                  "content": "AgentChatThread Thread",
+                                  "type": "typography",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "content": "AgentChatThread Thread"
                                 }
                               ],
                               "type": "stack",
                               "direction": "horizontal",
-                              "align": "center"
+                              "gap": "sm"
                             },
                             {
-                              "icon": "plus",
-                              "label": "New Message",
+                              "variant": "primary",
                               "type": "button",
                               "action": "COMPOSE",
-                              "variant": "primary"
+                              "label": "New Message",
+                              "icon": "plus"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-list",
                           "entity": "AgentChatThread",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
+                              "gap": "xs",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "label": "@item.role",
+                                      "type": "badge",
+                                      "label": "@item.role"
+                                    },
+                                    {
+                                      "label": "@item.status",
+                                      "variant": "outline",
                                       "type": "badge"
                                     },
                                     {
-                                      "variant": "outline",
-                                      "type": "badge",
-                                      "label": "@item.status"
-                                    },
-                                    {
-                                      "content": "@item.timestamp",
-                                      "color": "muted",
                                       "variant": "caption",
-                                      "type": "typography"
+                                      "color": "muted",
+                                      "type": "typography",
+                                      "content": "@item.timestamp"
                                     }
                                   ],
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  "gap": "sm",
+                                  "type": "stack"
                                 },
                                 {
+                                  "content": "@item.content",
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@item.content"
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "xs"
+                              ]
                             }
                           ],
-                          "fields": [],
-                          "type": "data-list"
+                          "fields": []
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]

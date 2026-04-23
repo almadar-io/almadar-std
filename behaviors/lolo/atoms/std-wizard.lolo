@@ -12,6 +12,8 @@ orbital WizardEntryOrbital {
 
   type WizardEntryLoaded     = Event WizardEntry                  "Fired when WizardEntry finishes loading"
   type WizardEntryLoadFailed = Event { message : string } "Fired when WizardEntry fails to load"
+  type WizardEntrySaved = Event { id : string }
+  type WizardEntrySaveFailed = Event { error : string, code : string }
   trait WizardEntryWizard -> WizardEntry [interaction, instance] {
     initial: step1
     state step1 {
@@ -43,7 +45,7 @@ orbital WizardEntryOrbital {
         (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
         (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Review", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["createdAt"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
       COMPLETE -> complete
-        (persist create WizardEntry @payload.data)
+        (persist create WizardEntry @payload.data { emit: { success: "WizardEntrySaved", failure: "WizardEntrySaveFailed" } })
         (notify success "WizardEntry created successfully")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Complete!", variant: "h2" }, { type: "typography", content: "Your wizardentry has been created successfully.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] })
     }
@@ -59,8 +61,10 @@ orbital WizardEntryOrbital {
       NEXT { data : object! }
       COMPLETE { data : object! }
           WizardEntryLoadFailed { message : string }
+    
+      WizardEntrySaveFailed { error : string, code : string }
     }
-    emits: [WizardEntryLoaded, WizardEntryLoadFailed]
+    emits: [WizardEntryLoaded, WizardEntryLoadFailed, WizardEntrySaved, WizardEntrySaveFailed]
   }
   page "/wizard" as WizardEntryPage -> WizardEntryWizard
 }

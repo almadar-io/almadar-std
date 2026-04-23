@@ -236,96 +236,79 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "CI/CD Pipeline",
-                      "navItems": [
-                        {
-                          "icon": "hammer",
-                          "label": "Builds",
-                          "href": "/builds"
-                        },
-                        {
-                          "href": "/stages",
-                          "label": "Stages",
-                          "icon": "layers"
-                        },
-                        {
-                          "icon": "rocket",
-                          "label": "Deploy",
-                          "href": "/deploy"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "align": "center",
-                              "gap": "md",
-                              "justify": "between",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack",
                                   "gap": "sm",
                                   "children": [
                                     {
-                                      "name": "package",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "package"
                                     },
                                     {
-                                      "content": "Builds",
                                       "variant": "h2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "Builds"
                                     }
-                                  ],
-                                  "align": "center"
+                                  ]
                                 },
                                 {
+                                  "type": "stack",
+                                  "gap": "sm",
                                   "direction": "horizontal",
                                   "children": [
                                     {
                                       "label": "Create Build",
-                                      "type": "button",
                                       "variant": "primary",
-                                      "icon": "plus",
-                                      "action": "CREATE"
+                                      "type": "button",
+                                      "action": "CREATE",
+                                      "icon": "plus"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "columns": [
-                                {
-                                  "name": "branch",
-                                  "variant": "h3",
-                                  "icon": "git-branch"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "commit",
-                                  "variant": "body"
-                                },
-                                {
-                                  "label": "Triggered By",
-                                  "variant": "caption",
-                                  "name": "triggeredBy"
-                                }
-                              ],
-                              "type": "data-list",
                               "fields": [],
+                              "type": "data-list",
                               "entity": "Build",
                               "variant": "card",
+                              "gap": "sm",
+                              "columns": [
+                                {
+                                  "icon": "git-branch",
+                                  "name": "branch",
+                                  "variant": "h3"
+                                },
+                                {
+                                  "variant": "badge",
+                                  "name": "status"
+                                },
+                                {
+                                  "variant": "body",
+                                  "name": "commit"
+                                },
+                                {
+                                  "name": "triggeredBy",
+                                  "label": "Triggered By",
+                                  "variant": "caption"
+                                }
+                              ],
                               "itemActions": [
                                 {
                                   "variant": "ghost",
@@ -338,18 +321,35 @@
                                   "variant": "ghost"
                                 },
                                 {
-                                  "variant": "danger",
                                   "event": "DELETE",
+                                  "variant": "danger",
                                   "label": "Delete"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
                           "gap": "lg",
-                          "type": "stack",
                           "className": "max-w-5xl mx-auto w-full",
                           "direction": "vertical"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "CI/CD Pipeline",
+                      "navItems": [
+                        {
+                          "icon": "hammer",
+                          "label": "Builds",
+                          "href": "/builds"
+                        },
+                        {
+                          "label": "Stages",
+                          "href": "/stages",
+                          "icon": "layers"
+                        },
+                        {
+                          "href": "/deploy",
+                          "icon": "rocket",
+                          "label": "Deploy"
                         }
                       ]
                     }
@@ -532,30 +532,29 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
                               "content": "Create Build",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cancelEvent": "CLOSE",
+                          "mode": "create",
                           "fields": [
                             "branch",
                             "status",
@@ -564,11 +563,12 @@
                           ],
                           "type": "form-section",
                           "entity": "Build",
-                          "submitEvent": "SAVE",
-                          "mode": "create",
-                          "cancelEvent": "CLOSE"
+                          "submitEvent": "SAVE"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -801,8 +801,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "BuildLoaded",
-                        "failure": "BuildLoadFailed"
+                        "failure": "BuildLoadFailed",
+                        "success": "BuildLoaded"
                       }
                     }
                   ],
@@ -815,18 +815,18 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "edit"
                             },
                             {
-                              "type": "typography",
                               "content": "Edit Build",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal"
                         },
@@ -834,18 +834,18 @@
                           "type": "divider"
                         },
                         {
+                          "type": "form-section",
+                          "mode": "edit",
+                          "entity": "Build",
+                          "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "branch",
                             "status",
                             "commit",
                             "triggeredBy"
                           ],
-                          "entityId": "@entity.id",
-                          "cancelEvent": "CLOSE",
-                          "entity": "Build",
-                          "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "SAVE"
+                          "entityId": "@entity.id"
                         }
                       ]
                     }
@@ -1075,54 +1075,51 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "eye",
                               "type": "icon"
                             },
                             {
+                              "content": "@entity.branch",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.branch"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Branch"
+                              "content": "Branch",
+                              "type": "typography"
                             },
                             {
+                              "content": "@entity.branch",
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.branch"
+                              "type": "typography"
                             }
                           ],
                           "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Status"
                             },
                             {
@@ -1130,68 +1127,71 @@
                               "type": "typography",
                               "variant": "body"
                             }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Commit"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.commit"
-                            }
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "variant": "caption",
                               "type": "typography",
-                              "content": "Triggered By"
+                              "content": "Commit",
+                              "variant": "caption"
                             },
                             {
-                              "content": "@entity.triggeredBy",
-                              "variant": "body",
-                              "type": "typography"
+                              "content": "@entity.commit",
+                              "type": "typography",
+                              "variant": "body"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Triggered By",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.triggeredBy"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "justify": "end",
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "edit",
-                              "label": "Edit",
-                              "variant": "primary",
                               "type": "button",
-                              "action": "EDIT"
+                              "label": "Edit",
+                              "icon": "edit",
+                              "action": "EDIT",
+                              "variant": "primary"
                             },
                             {
-                              "label": "Close",
                               "action": "CLOSE",
                               "type": "button",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "label": "Close"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1426,22 +1426,23 @@
                     "modal",
                     {
                       "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
+                              "content": "Delete Build",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Delete Build"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1449,33 +1450,32 @@
                           "type": "divider"
                         },
                         {
+                          "variant": "error",
                           "type": "alert",
-                          "message": "This action cannot be undone.",
-                          "variant": "error"
+                          "message": "This action cannot be undone."
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "end",
                           "type": "stack",
                           "children": [
                             {
-                              "label": "Cancel",
                               "type": "button",
+                              "action": "CANCEL",
                               "variant": "ghost",
-                              "action": "CANCEL"
+                              "label": "Cancel"
                             },
                             {
-                              "variant": "danger",
                               "action": "CONFIRM_DELETE",
-                              "label": "Delete",
+                              "icon": "check",
                               "type": "button",
-                              "icon": "check"
+                              "variant": "danger",
+                              "label": "Delete"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1760,33 +1760,48 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "label": "Builds",
+                          "href": "/builds",
+                          "icon": "hammer"
+                        },
+                        {
+                          "href": "/stages",
+                          "label": "Stages",
+                          "icon": "layers"
+                        },
+                        {
+                          "label": "Deploy",
+                          "icon": "rocket",
+                          "href": "/deploy"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "CI/CD Pipeline",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "href": "/",
-                                      "label": "Home"
+                                      "label": "Home",
+                                      "href": "/"
                                     },
                                     {
                                       "label": "Stages"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
-                                  "gap": "md",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "gap": "md",
                                       "type": "stack",
                                       "direction": "horizontal",
+                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -1800,15 +1815,17 @@
                                       ]
                                     },
                                     {
-                                      "icon": "refresh-cw",
                                       "label": "Refresh",
                                       "type": "button",
+                                      "action": "REFRESH",
                                       "variant": "secondary",
-                                      "action": "REFRESH"
+                                      "icon": "refresh-cw"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "justify": "between"
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
@@ -1818,7 +1835,6 @@
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "cols": 3.0,
                                       "children": [
                                         {
                                           "type": "card",
@@ -1826,13 +1842,16 @@
                                             {
                                               "type": "stack",
                                               "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "content": "Name",
                                                   "type": "typography",
+                                                  "content": "Name",
                                                   "variant": "caption"
                                                 },
                                                 {
+                                                  "variant": "h3",
+                                                  "type": "typography",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1840,21 +1859,16 @@
                                                       "@entity"
                                                     ],
                                                     "name"
-                                                  ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  ]
                                                 }
-                                              ],
-                                              "gap": "sm"
+                                              ]
                                             }
                                           ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "direction": "vertical",
                                               "children": [
                                                 {
                                                   "variant": "caption",
@@ -1862,6 +1876,8 @@
                                                   "type": "typography"
                                                 },
                                                 {
+                                                  "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1869,29 +1885,30 @@
                                                       "@entity"
                                                     ],
                                                     "status"
-                                                  ],
-                                                  "variant": "h3",
-                                                  "type": "typography"
+                                                  ]
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical",
+                                              "type": "stack",
+                                              "gap": "sm"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
                                               "type": "stack",
+                                              "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
+                                                  "variant": "caption",
                                                   "type": "typography",
-                                                  "content": "Duration",
-                                                  "variant": "caption"
+                                                  "content": "Duration"
                                                 },
                                                 {
                                                   "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1899,26 +1916,26 @@
                                                       "@entity"
                                                     ],
                                                     "duration"
-                                                  ],
-                                                  "variant": "h3"
+                                                  ]
                                                 }
-                                              ],
-                                              "direction": "vertical"
+                                              ]
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
+                                              "gap": "sm",
                                               "children": [
                                                 {
+                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Output",
-                                                  "type": "typography"
+                                                  "content": "Output"
                                                 },
                                                 {
+                                                  "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1926,18 +1943,18 @@
                                                       "@entity"
                                                     ],
                                                     "output"
-                                                  ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  ]
                                                 }
                                               ],
-                                              "gap": "sm",
+                                              "type": "stack",
                                               "direction": "vertical"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
                                       ],
-                                      "type": "simple-grid"
+                                      "type": "simple-grid",
+                                      "cols": 3.0
                                     }
                                   ]
                                 },
@@ -1945,19 +1962,17 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
                                   "gap": "md",
-                                  "cols": 2.0,
                                   "children": [
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
-                                          "variant": "caption",
                                           "content": "Chart View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     },
                                     {
                                       "type": "card",
@@ -1969,38 +1984,41 @@
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19.0
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
                                       "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
                                       "value": 22.0
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "color": "primary",
@@ -2010,70 +2028,52 @@
                                       "color": "muted",
                                       "label": "Previous"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
                                   "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "y": 100.0,
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "y": 50.0,
+                                      "label": "Process",
+                                      "id": "b",
+                                      "x": 200.0
+                                    },
+                                    {
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "id": "c",
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "type": "graph-view",
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "height": 200.0,
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "y": 100.0,
-                                      "x": 50.0,
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "y": 50.0,
-                                      "id": "b",
-                                      "x": 200.0,
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "y": 100.0,
-                                      "label": "End",
-                                      "x": 350.0
-                                    }
                                   ]
                                 }
                               ],
-                              "gap": "lg",
-                              "type": "stack"
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ],
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/builds",
-                          "icon": "hammer",
-                          "label": "Builds"
-                        },
-                        {
-                          "label": "Stages",
-                          "icon": "layers",
-                          "href": "/stages"
-                        },
-                        {
-                          "label": "Deploy",
-                          "icon": "rocket",
-                          "href": "/deploy"
-                        }
-                      ],
-                      "appName": "CI/CD Pipeline"
+                      ]
                     }
                   ]
                 ]
@@ -2097,15 +2097,349 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "CI/CD Pipeline",
                       "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "icon": "hammer",
+                          "href": "/builds",
+                          "label": "Builds"
+                        },
+                        {
+                          "icon": "layers",
+                          "label": "Stages",
+                          "href": "/stages"
+                        },
+                        {
+                          "icon": "rocket",
+                          "href": "/deploy",
+                          "label": "Deploy"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "scaled-diagram",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "lg",
+                              "children": [
+                                {
+                                  "type": "breadcrumb",
+                                  "items": [
+                                    {
+                                      "href": "/",
+                                      "label": "Home"
+                                    },
+                                    {
+                                      "label": "Stages"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "gap": "md",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "layers"
+                                        },
+                                        {
+                                          "content": "Stages",
+                                          "variant": "h2",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh",
+                                      "type": "button",
+                                      "variant": "secondary",
+                                      "action": "REFRESH"
+                                    }
+                                  ],
+                                  "gap": "md"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "padding": "md",
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "cols": 3.0,
+                                      "children": [
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "gap": "sm",
+                                              "direction": "vertical",
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "caption",
+                                                  "content": "Name"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "content": [
+                                                    "object/get",
+                                                    [
+                                                      "array/first",
+                                                      "@entity"
+                                                    ],
+                                                    "name"
+                                                  ],
+                                                  "variant": "h3"
+                                                }
+                                              ],
+                                              "type": "stack"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "children": [
+                                                {
+                                                  "content": "Status",
+                                                  "variant": "caption",
+                                                  "type": "typography"
+                                                },
+                                                {
+                                                  "variant": "h3",
+                                                  "type": "typography",
+                                                  "content": [
+                                                    "object/get",
+                                                    [
+                                                      "array/first",
+                                                      "@entity"
+                                                    ],
+                                                    "status"
+                                                  ]
+                                                }
+                                              ],
+                                              "direction": "vertical",
+                                              "type": "stack",
+                                              "gap": "sm"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "gap": "sm",
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "caption",
+                                                  "content": "Duration"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "h3",
+                                                  "content": [
+                                                    "object/get",
+                                                    [
+                                                      "array/first",
+                                                      "@entity"
+                                                    ],
+                                                    "duration"
+                                                  ]
+                                                }
+                                              ],
+                                              "direction": "vertical"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "gap": "sm",
+                                              "type": "stack",
+                                              "direction": "vertical",
+                                              "children": [
+                                                {
+                                                  "variant": "caption",
+                                                  "content": "Output",
+                                                  "type": "typography"
+                                                },
+                                                {
+                                                  "variant": "h3",
+                                                  "content": [
+                                                    "object/get",
+                                                    [
+                                                      "array/first",
+                                                      "@entity"
+                                                    ],
+                                                    "output"
+                                                  ],
+                                                  "type": "typography"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "type": "simple-grid"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "grid",
+                                  "children": [
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "content": "Chart View",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "variant": "caption",
+                                          "type": "typography",
+                                          "content": "Graph View"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "gap": "md",
+                                  "cols": 2.0
+                                },
+                                {
+                                  "type": "line-chart",
+                                  "data": [
+                                    {
+                                      "date": "Jan",
+                                      "value": 12.0
+                                    },
+                                    {
+                                      "value": 19.0,
+                                      "date": "Feb"
+                                    },
+                                    {
+                                      "date": "Mar",
+                                      "value": 15.0
+                                    },
+                                    {
+                                      "value": 25.0,
+                                      "date": "Apr"
+                                    },
+                                    {
+                                      "date": "May",
+                                      "value": 22.0
+                                    },
+                                    {
+                                      "date": "Jun",
+                                      "value": 30.0
+                                    }
+                                  ]
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "label": "Current",
+                                      "color": "primary"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "label": "Previous"
+                                    }
+                                  ],
+                                  "type": "chart-legend"
+                                },
+                                {
+                                  "edges": [
+                                    {
+                                      "to": "b",
+                                      "from": "a"
+                                    },
+                                    {
+                                      "to": "c",
+                                      "from": "b"
+                                    }
+                                  ],
+                                  "type": "graph-view",
+                                  "height": 200.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "label": "Start",
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "label": "Process",
+                                      "x": 200.0,
+                                      "id": "b",
+                                      "y": 50.0
+                                    },
+                                    {
+                                      "id": "c",
+                                      "y": 100.0,
+                                      "x": 350.0,
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "width": 400.0
+                                }
+                              ],
+                              "direction": "vertical"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Stage",
+                    {
+                      "emit": {
+                        "success": "StageLoaded",
+                        "failure": "StageLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -2114,18 +2448,14 @@
                                     {
                                       "label": "Stages"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
-                                  "justify": "between",
                                   "direction": "horizontal",
-                                  "gap": "md",
+                                  "justify": "between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "name": "layers",
@@ -2136,35 +2466,40 @@
                                           "type": "typography",
                                           "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
                                       "label": "Refresh",
-                                      "action": "REFRESH",
                                       "icon": "refresh-cw",
                                       "variant": "secondary",
-                                      "type": "button"
+                                      "type": "button",
+                                      "action": "REFRESH"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "cols": 3.0,
-                                      "type": "simple-grid",
                                       "children": [
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
                                               "children": [
                                                 {
                                                   "content": "Name",
-                                                  "variant": "caption",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "content": [
@@ -2175,26 +2510,26 @@
                                                     ],
                                                     "name"
                                                   ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  "variant": "h3",
+                                                  "type": "typography"
                                                 }
                                               ],
-                                              "type": "stack",
+                                              "direction": "vertical",
                                               "gap": "sm",
-                                              "direction": "vertical"
+                                              "type": "stack"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
+                                                  "type": "typography",
                                                   "content": "Status",
-                                                  "type": "typography"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
@@ -2210,22 +2545,19 @@
                                                 }
                                               ],
                                               "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              "gap": "sm"
                                             }
                                           ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "gap": "sm",
                                               "children": [
                                                 {
+                                                  "content": "Duration",
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Duration"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "variant": "h3",
@@ -2239,23 +2571,23 @@
                                                   ],
                                                   "type": "typography"
                                                 }
-                                              ]
+                                              ],
+                                              "type": "stack",
+                                              "gap": "sm",
+                                              "direction": "vertical"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "Output",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
                                                   "content": [
                                                     "object/get",
@@ -2264,49 +2596,52 @@
                                                       "@entity"
                                                     ],
                                                     "output"
-                                                  ]
+                                                  ],
+                                                  "type": "typography"
                                                 }
                                               ],
+                                              "direction": "vertical",
                                               "type": "stack",
                                               "gap": "sm"
                                             }
                                           ],
                                           "type": "card"
                                         }
-                                      ]
+                                      ],
+                                      "cols": 3.0,
+                                      "type": "simple-grid"
                                     }
-                                  ],
-                                  "type": "box"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
+                                  "cols": 2.0,
                                   "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
+                                          "content": "Chart View"
                                         }
                                       ]
                                     },
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     }
-                                  ],
-                                  "cols": 2.0
+                                  ]
                                 },
                                 {
                                   "type": "line-chart",
@@ -2338,7 +2673,6 @@
                                   ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "color": "primary",
@@ -2348,52 +2682,53 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "type": "graph-view",
+                                  "width": 400.0,
+                                  "height": 200.0,
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
                                   ],
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "x": 50.0,
-                                      "y": 100.0,
+                                      "label": "Start",
                                       "id": "a",
-                                      "label": "Start"
+                                      "y": 100.0,
+                                      "x": 50.0
                                     },
                                     {
-                                      "y": 50.0,
-                                      "label": "Process",
                                       "x": 200.0,
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process",
+                                      "y": 50.0
                                     },
                                     {
-                                      "x": 350.0,
+                                      "id": "c",
                                       "label": "End",
                                       "y": 100.0,
-                                      "id": "c"
+                                      "x": 350.0
                                     }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0
+                                  ]
                                 }
                               ],
-                              "gap": "lg",
-                              "direction": "vertical"
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
                           ],
                           "type": "scaled-diagram"
                         }
                       ],
-                      "appName": "CI/CD Pipeline",
                       "navItems": [
                         {
                           "href": "/builds",
@@ -2401,353 +2736,18 @@
                           "label": "Builds"
                         },
                         {
-                          "label": "Stages",
-                          "icon": "layers",
-                          "href": "/stages"
-                        },
-                        {
-                          "icon": "rocket",
-                          "label": "Deploy",
-                          "href": "/deploy"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "displaying",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Stage",
-                    {
-                      "emit": {
-                        "failure": "StageLoadFailed",
-                        "success": "StageLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Stages"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "layers"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "content": "Stages",
-                                          "variant": "h2"
-                                        }
-                                      ],
-                                      "gap": "md",
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "action": "REFRESH",
-                                      "variant": "secondary",
-                                      "type": "button",
-                                      "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "padding": "md",
-                                  "type": "box",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "type": "typography",
-                                                  "content": "Name"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "name"
-                                                  ]
-                                                }
-                                              ],
-                                              "gap": "sm"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "content": "Status",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "status"
-                                                  ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
-                                                }
-                                              ],
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "gap": "sm"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Duration"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "duration"
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "gap": "sm",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Output"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "output"
-                                                  ]
-                                                }
-                                              ],
-                                              "type": "stack"
-                                            }
-                                          ]
-                                        }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "gap": "md",
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "nodes": [
-                                    {
-                                      "y": 100.0,
-                                      "label": "Start",
-                                      "id": "a",
-                                      "x": 50.0
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "y": 50.0,
-                                      "x": 200.0
-                                    },
-                                    {
-                                      "x": 350.0,
-                                      "id": "c",
-                                      "label": "End",
-                                      "y": 100.0
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "edges": [
-                                    {
-                                      "from": "a",
-                                      "to": "b"
-                                    },
-                                    {
-                                      "from": "b",
-                                      "to": "c"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "height": 200.0
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical"
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ],
-                      "appName": "CI/CD Pipeline",
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Builds",
-                          "href": "/builds",
-                          "icon": "hammer"
-                        },
-                        {
-                          "label": "Stages",
                           "href": "/stages",
+                          "label": "Stages",
                           "icon": "layers"
                         },
                         {
-                          "icon": "rocket",
+                          "label": "Deploy",
                           "href": "/deploy",
-                          "label": "Deploy"
+                          "icon": "rocket"
                         }
-                      ]
+                      ],
+                      "appName": "CI/CD Pipeline",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2771,34 +2771,33 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "CI/CD Pipeline",
                       "navItems": [
                         {
-                          "icon": "hammer",
+                          "href": "/builds",
                           "label": "Builds",
-                          "href": "/builds"
+                          "icon": "hammer"
                         },
                         {
-                          "label": "Stages",
                           "href": "/stages",
-                          "icon": "layers"
+                          "icon": "layers",
+                          "label": "Stages"
                         },
                         {
-                          "icon": "rocket",
+                          "label": "Deploy",
                           "href": "/deploy",
-                          "label": "Deploy"
+                          "icon": "rocket"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "href": "/",
@@ -2807,64 +2806,63 @@
                                     {
                                       "label": "Stages"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "name": "layers",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "layers"
                                         },
                                         {
-                                          "content": "Stages",
                                           "type": "typography",
+                                          "content": "Stages",
                                           "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "md"
                                     },
                                     {
-                                      "action": "REFRESH",
                                       "variant": "secondary",
-                                      "type": "button",
+                                      "action": "REFRESH",
                                       "icon": "refresh-cw",
+                                      "type": "button",
                                       "label": "Refresh"
                                     }
                                   ],
-                                  "type": "stack",
                                   "gap": "md",
-                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
                                       "children": [
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
                                               "gap": "sm",
-                                              "direction": "vertical",
                                               "type": "stack",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "Name",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
+                                                  "type": "typography",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -2873,29 +2871,25 @@
                                                     ],
                                                     "name"
                                                   ],
-                                                  "type": "typography",
                                                   "variant": "h3"
                                                 }
                                               ]
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
                                               "gap": "sm",
                                               "children": [
                                                 {
+                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Status",
-                                                  "type": "typography"
+                                                  "content": "Status"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
+                                                  "type": "typography",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -2906,15 +2900,17 @@
                                                   ]
                                                 }
                                               ],
-                                              "direction": "vertical"
+                                              "direction": "vertical",
+                                              "type": "stack"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
                                                   "variant": "caption",
@@ -2922,8 +2918,8 @@
                                                   "content": "Duration"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
+                                                  "type": "typography",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -2935,11 +2931,12 @@
                                                 }
                                               ],
                                               "type": "stack",
-                                              "direction": "vertical"
+                                              "gap": "sm"
                                             }
                                           ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
                                               "gap": "sm",
@@ -2947,9 +2944,9 @@
                                               "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Output"
+                                                  "content": "Output",
+                                                  "type": "typography"
                                                 },
                                                 {
                                                   "content": [
@@ -2960,15 +2957,16 @@
                                                     ],
                                                     "output"
                                                   ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  "variant": "h3",
+                                                  "type": "typography"
                                                 }
                                               ]
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         }
-                                      ]
+                                      ],
+                                      "cols": 3.0,
+                                      "type": "simple-grid"
                                     }
                                   ]
                                 },
@@ -2976,42 +2974,42 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "cols": 2.0,
-                                  "gap": "md",
                                   "children": [
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
-                                          "content": "Chart View",
                                           "type": "typography",
+                                          "content": "Chart View",
                                           "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     },
                                     {
                                       "children": [
                                         {
-                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "content": "Graph View"
                                         }
                                       ],
                                       "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "cols": 2.0,
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "value": 15.0,
@@ -3032,57 +3030,59 @@
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
                                       "color": "muted",
                                       "label": "Previous"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
-                                  "nodes": [
-                                    {
-                                      "y": 100.0,
-                                      "x": 50.0,
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b",
-                                      "x": 200.0,
-                                      "y": 50.0
-                                    },
-                                    {
-                                      "label": "End",
-                                      "x": 350.0,
-                                      "y": 100.0,
-                                      "id": "c"
-                                    }
-                                  ],
                                   "width": 400.0,
-                                  "height": 200.0,
                                   "type": "graph-view",
                                   "edges": [
                                     {
-                                      "to": "b",
-                                      "from": "a"
+                                      "from": "a",
+                                      "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "nodes": [
+                                    {
+                                      "label": "Start",
+                                      "x": 50.0,
+                                      "id": "a",
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "id": "b",
+                                      "x": 200.0,
+                                      "label": "Process",
+                                      "y": 50.0
+                                    },
+                                    {
+                                      "y": 100.0,
+                                      "x": 350.0,
+                                      "label": "End",
+                                      "id": "c"
                                     }
                                   ]
                                 }
                               ],
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -3099,8 +3099,8 @@
                     "Stage",
                     {
                       "emit": {
-                        "success": "StageLoaded",
-                        "failure": "StageLoadFailed"
+                        "failure": "StageLoadFailed",
+                        "success": "StageLoaded"
                       }
                     }
                   ],
@@ -3108,29 +3108,13 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "label": "Builds",
-                          "href": "/builds",
-                          "icon": "hammer"
-                        },
-                        {
-                          "href": "/stages",
-                          "icon": "layers",
-                          "label": "Stages"
-                        },
-                        {
-                          "label": "Deploy",
-                          "icon": "rocket",
-                          "href": "/deploy"
-                        }
-                      ],
+                      "appName": "CI/CD Pipeline",
+                      "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "items": [
@@ -3145,10 +3129,12 @@
                                   "type": "breadcrumb"
                                 },
                                 {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "justify": "between",
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "type": "stack",
                                       "children": [
                                         {
@@ -3160,44 +3146,40 @@
                                           "type": "typography",
                                           "content": "Stages"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "md"
                                     },
                                     {
+                                      "variant": "secondary",
                                       "type": "button",
-                                      "label": "Refresh",
                                       "icon": "refresh-cw",
                                       "action": "REFRESH",
-                                      "variant": "secondary"
+                                      "label": "Refresh"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "between"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
                                       "children": [
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
-                                              "direction": "vertical",
                                               "gap": "sm",
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Name"
+                                                  "content": "Name",
+                                                  "type": "typography"
                                                 },
                                                 {
-                                                  "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -3206,27 +3188,25 @@
                                                     ],
                                                     "name"
                                                   ],
-                                                  "variant": "h3"
+                                                  "type": "typography"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "children": [
                                             {
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
+                                                  "content": "Status",
                                                   "type": "typography",
-                                                  "content": "Status"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -3234,27 +3214,29 @@
                                                       "@entity"
                                                     ],
                                                     "status"
-                                                  ],
-                                                  "variant": "h3"
+                                                  ]
                                                 }
-                                              ]
+                                              ],
+                                              "type": "stack",
+                                              "gap": "sm",
+                                              "direction": "vertical"
                                             }
                                           ],
                                           "type": "card"
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "direction": "vertical",
                                               "children": [
                                                 {
+                                                  "content": "Duration",
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Duration"
+                                                  "variant": "caption"
                                                 },
                                                 {
+                                                  "type": "typography",
+                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -3262,28 +3244,28 @@
                                                       "@entity"
                                                     ],
                                                     "duration"
-                                                  ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  ]
                                                 }
-                                              ]
+                                              ],
+                                              "gap": "sm",
+                                              "type": "stack",
+                                              "direction": "vertical"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "children": [
                                             {
-                                              "gap": "sm",
                                               "type": "stack",
+                                              "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "Output",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
-                                                  "variant": "h3",
                                                   "type": "typography",
                                                   "content": [
                                                     "object/get",
@@ -3292,45 +3274,47 @@
                                                       "@entity"
                                                     ],
                                                     "output"
-                                                  ]
+                                                  ],
+                                                  "variant": "h3"
                                                 }
-                                              ],
-                                              "direction": "vertical"
+                                              ]
                                             }
                                           ],
                                           "type": "card"
                                         }
                                       ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
+                                      "cols": 3.0,
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
-                                  "type": "grid",
                                   "cols": 2.0,
+                                  "type": "grid",
+                                  "gap": "md",
                                   "children": [
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "content": "Graph View",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
@@ -3344,84 +3328,100 @@
                                       "value": 12.0
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
                                       "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
                                       "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "color": "primary",
                                       "label": "Current"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "width": 400.0,
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "x": 50.0,
-                                      "label": "Start",
-                                      "y": 100.0
-                                    },
-                                    {
-                                      "id": "b",
-                                      "x": 200.0,
-                                      "label": "Process",
-                                      "y": 50.0
-                                    },
-                                    {
-                                      "y": 100.0,
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350.0
-                                    }
-                                  ],
                                   "edges": [
                                     {
-                                      "to": "b",
-                                      "from": "a"
+                                      "from": "a",
+                                      "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
+                                    }
+                                  ],
+                                  "width": 400.0,
+                                  "height": 200.0,
+                                  "type": "graph-view",
+                                  "nodes": [
+                                    {
+                                      "x": 50.0,
+                                      "id": "a",
+                                      "y": 100.0,
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "label": "Process",
+                                      "y": 50.0,
+                                      "id": "b",
+                                      "x": 200.0
+                                    },
+                                    {
+                                      "label": "End",
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "id": "c"
                                     }
                                   ]
                                 }
                               ],
                               "type": "stack",
+                              "direction": "vertical",
                               "gap": "lg"
                             }
                           ]
                         }
                       ],
-                      "appName": "CI/CD Pipeline",
-                      "type": "dashboard-layout"
+                      "navItems": [
+                        {
+                          "icon": "hammer",
+                          "href": "/builds",
+                          "label": "Builds"
+                        },
+                        {
+                          "label": "Stages",
+                          "icon": "layers",
+                          "href": "/stages"
+                        },
+                        {
+                          "label": "Deploy",
+                          "icon": "rocket",
+                          "href": "/deploy"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3635,65 +3635,65 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/builds",
-                          "label": "Builds",
-                          "icon": "hammer"
-                        },
-                        {
-                          "label": "Stages",
-                          "icon": "layers",
-                          "href": "/stages"
-                        },
-                        {
-                          "label": "Deploy",
-                          "href": "/deploy",
-                          "icon": "rocket"
-                        }
-                      ],
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
                           "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "upload-cloud"
+                                  "name": "upload-cloud",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h2",
                                   "type": "typography",
                                   "content": "Deployment"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "color": "muted",
+                              "type": "typography",
                               "content": "Ready to start deployment operation.",
-                              "variant": "body",
-                              "type": "typography"
+                              "variant": "body"
                             },
                             {
-                              "icon": "play",
-                              "action": "START",
-                              "type": "button",
                               "variant": "primary",
-                              "label": "Start"
+                              "action": "START",
+                              "label": "Start",
+                              "type": "button",
+                              "icon": "play"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "lg"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "label": "Builds",
+                          "href": "/builds",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Stages",
+                          "href": "/stages",
+                          "icon": "layers"
+                        },
+                        {
+                          "label": "Deploy",
+                          "href": "/deploy",
+                          "icon": "rocket"
                         }
                       ],
                       "appName": "CI/CD Pipeline"
@@ -3712,26 +3712,25 @@
                     {
                       "navItems": [
                         {
-                          "label": "Builds",
                           "href": "/builds",
-                          "icon": "hammer"
+                          "icon": "hammer",
+                          "label": "Builds"
                         },
                         {
-                          "href": "/stages",
                           "label": "Stages",
+                          "href": "/stages",
                           "icon": "layers"
                         },
                         {
+                          "label": "Deploy",
                           "href": "/deploy",
-                          "icon": "rocket",
-                          "label": "Deploy"
+                          "icon": "rocket"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "appName": "CI/CD Pipeline",
                       "children": [
                         {
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "message": "Processing deployment...",
@@ -3743,11 +3742,12 @@
                               "type": "skeleton"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical"
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "align": "center",
+                          "type": "stack"
                         }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -3767,59 +3767,59 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "CI/CD Pipeline",
                       "navItems": [
                         {
+                          "label": "Builds",
                           "href": "/builds",
-                          "icon": "hammer",
-                          "label": "Builds"
+                          "icon": "hammer"
                         },
                         {
+                          "icon": "layers",
                           "label": "Stages",
-                          "href": "/stages",
-                          "icon": "layers"
+                          "href": "/stages"
                         },
                         {
-                          "icon": "rocket",
                           "label": "Deploy",
-                          "href": "/deploy"
+                          "href": "/deploy",
+                          "icon": "rocket"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "check-circle"
                             },
                             {
+                              "variant": "success",
                               "type": "alert",
-                              "message": "Deployment successful.",
-                              "variant": "success"
+                              "message": "Deployment successful."
                             },
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "type": "button",
                                   "label": "Reset",
-                                  "variant": "ghost",
                                   "action": "RESET",
-                                  "icon": "rotate-ccw",
-                                  "type": "button"
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
                                 }
                               ],
                               "type": "stack",
+                              "gap": "sm",
                               "justify": "center",
-                              "gap": "sm"
+                              "direction": "horizontal"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical"
+                          "direction": "vertical",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "appName": "CI/CD Pipeline",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3833,63 +3833,63 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "icon": "hammer",
-                          "href": "/builds",
-                          "label": "Builds"
-                        },
-                        {
-                          "href": "/stages",
-                          "icon": "layers",
-                          "label": "Stages"
-                        },
-                        {
-                          "label": "Deploy",
-                          "href": "/deploy",
-                          "icon": "rocket"
-                        }
-                      ],
                       "appName": "CI/CD Pipeline",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "error-state",
                               "title": "Operation Failed",
                               "message": "Deployment failed.",
+                              "type": "error-state",
                               "onRetry": "RETRY"
                             },
                             {
-                              "direction": "horizontal",
+                              "justify": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "button",
-                                  "variant": "primary",
-                                  "icon": "refresh-cw",
                                   "label": "Retry",
-                                  "action": "RETRY"
+                                  "action": "RETRY",
+                                  "variant": "primary",
+                                  "icon": "refresh-cw"
                                 },
                                 {
-                                  "label": "Reset",
-                                  "action": "RESET",
-                                  "variant": "ghost",
+                                  "type": "button",
                                   "icon": "rotate-ccw",
-                                  "type": "button"
+                                  "variant": "ghost",
+                                  "label": "Reset",
+                                  "action": "RESET"
                                 }
                               ],
-                              "justify": "center",
                               "gap": "sm",
-                              "type": "stack"
+                              "direction": "horizontal"
                             }
                           ],
-                          "gap": "lg",
-                          "type": "stack",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "lg",
                           "direction": "vertical"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/builds",
+                          "icon": "hammer",
+                          "label": "Builds"
+                        },
+                        {
+                          "label": "Stages",
+                          "href": "/stages",
+                          "icon": "layers"
+                        },
+                        {
+                          "icon": "rocket",
+                          "href": "/deploy",
+                          "label": "Deploy"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3903,68 +3903,68 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Builds",
-                          "icon": "hammer",
-                          "href": "/builds"
-                        },
-                        {
-                          "icon": "layers",
-                          "label": "Stages",
-                          "href": "/stages"
-                        },
-                        {
-                          "label": "Deploy",
-                          "icon": "rocket",
-                          "href": "/deploy"
-                        }
-                      ],
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "direction": "vertical",
+                          "align": "center",
                           "children": [
                             {
+                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "upload-cloud"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Deployment",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "gap": "md"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "body",
-                              "color": "muted",
+                              "content": "Ready to start deployment operation.",
                               "type": "typography",
-                              "content": "Ready to start deployment operation."
+                              "variant": "body",
+                              "color": "muted"
                             },
                             {
                               "type": "button",
-                              "label": "Start",
+                              "action": "START",
                               "variant": "primary",
                               "icon": "play",
-                              "action": "START"
+                              "label": "Start"
                             }
                           ],
-                          "gap": "lg"
+                          "gap": "lg",
+                          "type": "stack"
                         }
                       ],
-                      "appName": "CI/CD Pipeline"
+                      "navItems": [
+                        {
+                          "label": "Builds",
+                          "href": "/builds",
+                          "icon": "hammer"
+                        },
+                        {
+                          "href": "/stages",
+                          "label": "Stages",
+                          "icon": "layers"
+                        },
+                        {
+                          "label": "Deploy",
+                          "href": "/deploy",
+                          "icon": "rocket"
+                        }
+                      ],
+                      "appName": "CI/CD Pipeline",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3978,59 +3978,17 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "align": "center",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "upload-cloud",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Deployment",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "color": "muted",
-                              "variant": "body",
-                              "content": "Ready to start deployment operation."
-                            },
-                            {
-                              "action": "START",
-                              "label": "Start",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "play"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "lg"
-                        }
-                      ],
+                      "appName": "CI/CD Pipeline",
                       "navItems": [
                         {
-                          "href": "/builds",
                           "icon": "hammer",
+                          "href": "/builds",
                           "label": "Builds"
                         },
                         {
-                          "label": "Stages",
                           "href": "/stages",
-                          "icon": "layers"
+                          "icon": "layers",
+                          "label": "Stages"
                         },
                         {
                           "label": "Deploy",
@@ -4039,7 +3997,49 @@
                         }
                       ],
                       "type": "dashboard-layout",
-                      "appName": "CI/CD Pipeline"
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "upload-cloud",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Deployment"
+                                }
+                              ],
+                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "color": "muted",
+                              "content": "Ready to start deployment operation."
+                            },
+                            {
+                              "icon": "play",
+                              "action": "START",
+                              "label": "Start",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "gap": "lg"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -4053,44 +4053,44 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "CI/CD Pipeline",
                       "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "loading-state",
-                              "message": "Processing deployment...",
-                              "title": "Deploying..."
-                            },
-                            {
-                              "type": "skeleton",
-                              "variant": "text"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center"
-                        }
-                      ],
                       "navItems": [
                         {
-                          "href": "/builds",
                           "label": "Builds",
-                          "icon": "hammer"
+                          "icon": "hammer",
+                          "href": "/builds"
                         },
                         {
+                          "label": "Stages",
                           "href": "/stages",
-                          "icon": "layers",
-                          "label": "Stages"
+                          "icon": "layers"
                         },
                         {
-                          "href": "/deploy",
                           "label": "Deploy",
+                          "href": "/deploy",
                           "icon": "rocket"
                         }
                       ],
-                      "appName": "CI/CD Pipeline"
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "message": "Processing deployment...",
+                              "type": "loading-state",
+                              "title": "Deploying..."
+                            },
+                            {
+                              "variant": "text",
+                              "type": "skeleton"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 ]

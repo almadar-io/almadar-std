@@ -23,6 +23,8 @@ orbital AgentMemoryOrbital {
   type Forgot                = Event { id : string }      "Fired after a memory is forgotten"
   type Reinforced            = Event { id : string }      "Fired after a memory is reinforced"
   type Decayed               = Event { id : string }      "Fired after the decay sweep completes"
+  type AgentMemorySaved = Event { id : string }
+  type AgentMemorySaveFailed = Event { error : string, code : string }
 
   trait AgentMemoryBrowse -> AgentMemory [interaction, collection] {
     initial: loading
@@ -55,8 +57,10 @@ orbital AgentMemoryOrbital {
       REINFORCE { id : string!, row : object }
       FORGET { id : string!, row : object }
       AgentMemoryLoadFailed { message : string }
+    
+      AgentMemorySaveFailed { error : string, code : string }
     }
-    emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
+    emits: [AgentMemoryLoaded, AgentMemoryLoadFailed, AgentMemorySaved, AgentMemorySaveFailed]
   }
   trait AgentMemoryCreate -> AgentMemory [interaction, instance] {
     initial: closed
@@ -72,7 +76,7 @@ orbital AgentMemoryOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create AgentMemory @payload.data)
+        (persist create AgentMemory @payload.data { emit: { success: "AgentMemorySaved", failure: "AgentMemorySaveFailed" } })
         (emit MEMORIZED { id: "@payload.data.id" })
         (render-ui modal null)
         (render-ui main { type: "box" })
@@ -94,7 +98,7 @@ orbital AgentMemoryOrbital {
         (render-ui main { type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
-        (persist create AgentMemory @payload.data)
+        (persist create AgentMemory @payload.data { emit: { success: "AgentMemorySaved", failure: "AgentMemorySaveFailed" } })
         (emit MEMORIZED { id: "@payload.data.id" })
       DECAY -> idle
         (agent/decay)

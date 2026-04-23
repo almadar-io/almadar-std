@@ -13,6 +13,8 @@ orbital InventorySlotOrbital {
 
   type InventorySlotLoaded     = Event InventorySlot                  "Fired when InventorySlot finishes loading"
   type InventorySlotLoadFailed = Event { message : string } "Fired when InventorySlot fails to load"
+  type InventorySlotDeleted = Event { id : string }
+  type InventorySlotDeleteFailed = Event { error : string, code : string }
   trait InventorySlotInventoryPanel -> InventorySlot [interaction, instance] {
     state idle {
       INIT -> idle
@@ -24,7 +26,7 @@ orbital InventorySlotOrbital {
         (fetch InventorySlot { emit: { success: "InventorySlotLoaded", failure: "InventorySlotLoadFailed" } })
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
       DROP_ITEM -> idle
-        (persist delete InventorySlot @payload.id)
+        (persist delete InventorySlot @payload.id { emit: { success: "InventorySlotDeleted", failure: "InventorySlotDeleteFailed" } })
         (fetch InventorySlot { emit: { success: "InventorySlotLoaded", failure: "InventorySlotLoadFailed" } })
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
     }
@@ -33,8 +35,10 @@ orbital InventorySlotOrbital {
       USE_ITEM { id : string! }
       DROP_ITEM { id : string! }
           InventorySlotLoadFailed { message : string }
+    
+      InventorySlotDeleteFailed { error : string, code : string }
     }
-    emits: [InventorySlotLoaded, InventorySlotLoadFailed]
+    emits: [InventorySlotLoaded, InventorySlotLoadFailed, InventorySlotDeleted, InventorySlotDeleteFailed]
   }
   page "/inventoryslots" as InventorySlotInventoryPage -> InventorySlotInventoryPanel
 }

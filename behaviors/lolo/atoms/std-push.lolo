@@ -18,12 +18,14 @@ orbital PushSubscriberOrbital {
 
   type PushReceived     = Event { message : string } "Fired on every incoming push frame"
   type PushDisconnected = Event { reason : string }  "Fired when the push connection drops"
+  type PushSubscriberLoaded = Event { data : [PushSubscriber] }
+  type PushSubscriberLoadFailed = Event { error : string, code : string }
 
   trait PushSubscriberIndicator -> PushSubscriber [interaction, instance] {
     initial: idle
     state idle {
       INIT -> connecting
-        (fetch PushSubscriber)
+        (fetch PushSubscriber { emit: { success: "PushSubscriberLoaded", failure: "PushSubscriberLoadFailed" } })
         (os/watch-http "wss://push.example.com" {
           emit: {
             on_message: "PUSH_RECEIVED",
@@ -60,10 +62,12 @@ orbital PushSubscriberOrbital {
       PUSH_RECEIVED external { message : string }
       PUSH_DISCONNECTED external { reason : string }
     }
-    emits: [PushReceived, PushDisconnected]
+    emits: [PushReceived, PushDisconnected, PushSubscriberLoaded, PushSubscriberLoadFailed]
     listens {
       PUSH_RECEIVED { message : string }
       PUSH_DISCONNECTED { reason : string }
+    
+      PushSubscriberLoadFailed { error : string, code : string }
     }
   }
 

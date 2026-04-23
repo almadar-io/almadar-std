@@ -20,6 +20,8 @@ orbital AgentToolCallOrbital {
 
   type AgentToolCallLoaded     = Event AgentToolCall                  "Fired when AgentToolCall finishes loading"
   type AgentToolCallLoadFailed = Event { message : string } "Fired when AgentToolCall fails to load"
+  type AgentToolCallSaved = Event { id : string }
+  type AgentToolCallSaveFailed = Event { error : string, code : string }
   trait AgentToolCallModal -> AgentToolCall [interaction, instance] {
     initial: closed
     state closed {
@@ -36,7 +38,7 @@ orbital AgentToolCallOrbital {
         (ref AgentToolCall)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
       SAVE -> closed
-        (persist create AgentToolCall @payload.data)
+        (persist create AgentToolCall @payload.data { emit: { success: "AgentToolCallSaved", failure: "AgentToolCallSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
         (ref AgentToolCall)
@@ -48,8 +50,10 @@ orbital AgentToolCallOrbital {
     listens {
       SAVE { data : object! }
           AgentToolCallLoadFailed { message : string }
+    
+      AgentToolCallSaveFailed { error : string, code : string }
     }
-    emits: [AgentToolCallLoaded, AgentToolCallLoadFailed]
+    emits: [AgentToolCallLoaded, AgentToolCallLoadFailed, AgentToolCallSaved, AgentToolCallSaveFailed]
   }
   trait AgentToolCallAgent -> AgentToolCall [interaction, instance] {
     initial: idle

@@ -20,6 +20,10 @@ orbital AgentConversationOrbital {
 
   type AgentConversationLoaded     = Event AgentConversation                  "Fired when AgentConversation finishes loading"
   type AgentConversationLoadFailed = Event { message : string } "Fired when AgentConversation fails to load"
+  type AgentConversationDeleted = Event { id : string }
+  type AgentConversationDeleteFailed = Event { error : string, code : string }
+  type AgentConversationSaved = Event { id : string }
+  type AgentConversationSaveFailed = Event { error : string, code : string }
   trait AgentConversationThread -> AgentConversation [interaction, collection] {
     initial: idle
     state idle {
@@ -29,7 +33,7 @@ orbital AgentConversationOrbital {
       COMPOSE -> composing
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus"}] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", fields: [], title: "Compose Message", children: [{ type: "textarea", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] }] }] })
       CLEAR -> idle
-        (persist delete AgentConversation)
+        (persist delete AgentConversation  { emit: { success: "AgentConversationDeleted", failure: "AgentConversationDeleteFailed" } })
         (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
     }
@@ -39,12 +43,12 @@ orbital AgentConversationOrbital {
         (set @entity.role user)
         (set @entity.timestamp @now)
         (set @entity.status sent)
-        (persist create AgentConversation { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
+        (persist create AgentConversation { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "AgentConversationSaved", failure: "AgentConversationSaveFailed" } })
         (emit SEND_MESSAGE)
         (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
       CLEAR -> idle
-        (persist delete AgentConversation)
+        (persist delete AgentConversation  { emit: { success: "AgentConversationDeleted", failure: "AgentConversationDeleteFailed" } })
         (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
     }
@@ -54,8 +58,11 @@ orbital AgentConversationOrbital {
     listens {
       SEND { content : string! }
           AgentConversationLoadFailed { message : string }
+    
+      AgentConversationDeleteFailed { error : string, code : string }
+      AgentConversationSaveFailed { error : string, code : string }
     }
-    emits: [AgentConversationLoaded, AgentConversationLoadFailed]
+    emits: [AgentConversationLoaded, AgentConversationLoadFailed, AgentConversationDeleted, AgentConversationDeleteFailed, AgentConversationSaved, AgentConversationSaveFailed]
   }
   trait AgentConversationAgent -> AgentConversation [interaction, collection] {
     initial: idle

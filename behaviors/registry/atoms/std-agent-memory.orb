@@ -135,6 +135,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentMemorySaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentMemorySaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "listens": [
@@ -257,6 +281,30 @@
                 ]
               },
               {
+                "key": "AgentMemorySaved",
+                "name": "AgentMemory saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentMemorySaveFailed",
+                "name": "AgentMemory save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "PIN",
                 "name": "Pin",
                 "payload": [
@@ -313,8 +361,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ],
@@ -322,22 +370,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
                           "content": "Loading memories…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -351,93 +399,91 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
                       "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "brain"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "AgentMemory Manager"
                                 }
                               ],
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "type": "stack"
                             },
                             {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "Memorize",
+                                  "type": "button",
                                   "action": "MEMORIZE",
                                   "variant": "primary",
-                                  "icon": "plus",
-                                  "type": "button"
+                                  "label": "Memorize",
+                                  "icon": "plus"
                                 },
                                 {
-                                  "label": "Recall",
-                                  "action": "RECALL",
                                   "variant": "secondary",
+                                  "action": "RECALL",
                                   "type": "button",
+                                  "label": "Recall",
                                   "icon": "search"
                                 },
                                 {
-                                  "action": "DECAY",
                                   "icon": "clock",
-                                  "variant": "ghost",
                                   "type": "button",
-                                  "label": "Decay All"
+                                  "label": "Decay All",
+                                  "variant": "ghost",
+                                  "action": "DECAY"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "AgentMemory",
                           "type": "data-grid",
                           "fields": [
                             {
-                              "icon": "brain",
                               "name": "content",
+                              "icon": "brain",
                               "variant": "h4",
                               "label": "Content"
                             },
                             {
+                              "variant": "badge",
                               "name": "category",
-                              "label": "Category",
-                              "variant": "badge"
+                              "label": "Category"
                             },
                             {
+                              "variant": "caption",
                               "name": "strength",
-                              "label": "Strength",
-                              "variant": "caption"
+                              "label": "Strength"
                             }
                           ],
                           "itemActions": [
                             {
-                              "event": "PIN",
+                              "variant": "ghost",
                               "label": "Pin",
-                              "variant": "ghost"
+                              "event": "PIN"
                             },
                             {
                               "label": "Reinforce",
@@ -446,13 +492,15 @@
                             },
                             {
                               "label": "Forget",
-                              "variant": "danger",
-                              "event": "FORGET"
+                              "event": "FORGET",
+                              "variant": "danger"
                             }
-                          ]
+                          ],
+                          "entity": "AgentMemory"
                         }
                       ],
-                      "className": "max-w-5xl mx-auto w-full"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -466,15 +514,16 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
-                          "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon",
-                          "color": "destructive"
+                          "name": "alert-triangle"
                         },
                         {
                           "type": "typography",
@@ -482,20 +531,19 @@
                           "content": "Failed to load memories"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "body",
-                          "content": "@payload.message"
+                          "color": "muted",
+                          "content": "@payload.message",
+                          "type": "typography"
                         },
                         {
-                          "variant": "primary",
+                          "type": "button",
                           "icon": "rotate-ccw",
-                          "label": "Retry",
                           "action": "INIT",
-                          "type": "button"
+                          "variant": "primary",
+                          "label": "Retry"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -740,8 +788,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ]
@@ -756,19 +804,22 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Memorize"
                             }
                           ]
@@ -777,21 +828,18 @@
                           "type": "divider"
                         },
                         {
+                          "mode": "create",
+                          "entity": "AgentMemory",
+                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
-                          "type": "form-section",
                           "fields": [
                             "content",
                             "category",
                             "scope"
                           ],
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "entity": "AgentMemory"
+                          "type": "form-section"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -829,7 +877,13 @@
                     "persist",
                     "create",
                     "AgentMemory",
-                    "@payload.data"
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "AgentMemorySaved",
+                        "failure": "AgentMemorySaveFailed"
+                      }
+                    }
                   ],
                   [
                     "emit",
@@ -1156,9 +1210,9 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Memory",
                       "icon": "brain",
                       "type": "empty-state",
-                      "title": "Memory",
                       "description": "Memory is ready"
                     }
                   ]
@@ -1178,7 +1232,13 @@
                     "persist",
                     "create",
                     "AgentMemory",
-                    "@payload.data"
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "AgentMemorySaved",
+                        "failure": "AgentMemorySaveFailed"
+                      }
+                    }
                   ],
                   [
                     "emit",
@@ -1216,8 +1276,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "failure": "AgentMemoryLoadFailed",
-                        "success": "AgentMemoryLoaded"
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
                       }
                     }
                   ]

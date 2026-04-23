@@ -228,55 +228,55 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "brain"
+                              "name": "brain",
+                              "type": "icon"
                             },
                             {
-                              "content": "RAG Pipeline",
                               "variant": "h2",
+                              "content": "RAG Pipeline",
                               "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "gap": "md",
                               "children": [
                                 {
+                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "Enter a query to retrieve context and generate a response",
-                                  "variant": "body"
+                                  "content": "Enter a query to retrieve context and generate a response"
                                 },
                                 {
+                                  "entity": "AgentRag",
                                   "type": "form-section",
-                                  "mode": "edit",
                                   "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
                                   ],
-                                  "entity": "AgentRag"
+                                  "mode": "edit"
                                 }
                               ],
-                              "gap": "md",
+                              "direction": "vertical",
                               "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ]
                     }
@@ -307,39 +307,39 @@
                     "main",
                     {
                       "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "name": "search",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "search"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Retrieving context..."
+                          "content": "Retrieving context...",
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "justify": "center",
                           "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "badge",
                               "label": "Recalling memories"
                             },
                             {
-                              "label": "Searching code",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Searching code"
                             }
-                          ]
+                          ],
+                          "justify": "center"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -384,29 +384,27 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
+                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "cpu"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Generating response..."
+                          "content": "Generating response...",
+                          "variant": "h3"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "justify": "center",
                           "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "badge",
                               "label": [
                                 "str/concat",
                                 [
@@ -414,10 +412,10 @@
                                   "@entity.memoryHits"
                                 ],
                                 " memories"
-                              ]
+                              ],
+                              "type": "badge"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "str/concat",
                                 [
@@ -425,19 +423,222 @@
                                   "@entity.searchHits"
                                 ],
                                 " code hits"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "center"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
                 "from": "retrieving",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "variant": "h2",
+                          "content": "RAG Pipeline Error",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "type": "button",
+                          "action": "RESET",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "label": "Try Again"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "completed",
+                "event": "GENERATION_DONE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.response"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "agent/memorize",
+                    [
+                      "str/concat",
+                      "RAG query: ",
+                      "@entity.query"
+                    ],
+                    "pattern-affinity"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "check-circle",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "RAG Complete",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "action": "RESET",
+                              "variant": "ghost",
+                              "label": "New Query",
+                              "type": "button",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "label": "Memory Hits",
+                              "type": "stat-display",
+                              "value": "@entity.memoryHits",
+                              "icon": "brain"
+                            },
+                            {
+                              "label": "Code Hits",
+                              "type": "stat-display",
+                              "value": "@entity.searchHits",
+                              "icon": "code"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Query",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.query",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "content": "Response",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.response",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Retrieved Context",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.context",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
                 "to": "idle",
                 "event": "FAILED",
                 "effects": [
@@ -472,217 +673,16 @@
                         },
                         {
                           "action": "RESET",
-                          "icon": "rotate-ccw",
-                          "label": "Try Again",
                           "type": "button",
+                          "label": "Try Again",
+                          "icon": "rotate-ccw",
                           "variant": "primary"
                         }
                       ],
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
-                      "align": "center",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "generating",
-                "to": "completed",
-                "event": "GENERATION_DONE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.response",
-                    "@payload.response"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "completed"
-                  ],
-                  [
-                    "agent/memorize",
-                    [
-                      "str/concat",
-                      "RAG query: ",
-                      "@entity.query"
-                    ],
-                    "pattern-affinity"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "justify": "between",
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "align": "center",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "check-circle"
-                                },
-                                {
-                                  "content": "RAG Complete",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm"
-                            },
-                            {
-                              "icon": "rotate-ccw",
-                              "variant": "ghost",
-                              "label": "New Query",
-                              "type": "button",
-                              "action": "RESET"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "cols": 2.0,
-                          "type": "simple-grid",
-                          "children": [
-                            {
-                              "value": "@entity.memoryHits",
-                              "type": "stat-display",
-                              "label": "Memory Hits",
-                              "icon": "brain"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Code Hits",
-                              "icon": "code",
-                              "value": "@entity.searchHits"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Query"
-                                },
-                                {
-                                  "content": "@entity.query",
-                                  "variant": "body",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Response"
-                                },
-                                {
-                                  "content": "@entity.response",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md"
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "type": "card",
-                          "children": [
-                            {
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "content": "Retrieved Context",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.context",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "vertical"
-                            }
-                          ]
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "generating",
-                "to": "idle",
-                "event": "FAILED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.error",
-                    "@payload.error"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "error"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle"
-                        },
-                        {
-                          "variant": "h2",
-                          "content": "RAG Pipeline Error",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "error",
-                          "type": "alert",
-                          "message": "@entity.error"
-                        },
-                        {
-                          "label": "Try Again",
-                          "type": "button",
-                          "action": "RESET",
-                          "icon": "rotate-ccw",
-                          "variant": "primary"
-                        }
-                      ],
-                      "gap": "lg"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -726,57 +726,57 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "brain"
                             },
                             {
+                              "type": "typography",
                               "content": "RAG Pipeline",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Enter a query to retrieve context and generate a response",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "Enter a query to retrieve context and generate a response"
                                 },
                                 {
+                                  "type": "form-section",
+                                  "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
                                   ],
-                                  "type": "form-section",
-                                  "mode": "edit",
                                   "entity": "AgentRag",
-                                  "submitEvent": "GENERATE"
+                                  "mode": "edit"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "md",
-                              "type": "stack"
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]

@@ -166,6 +166,54 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentConversationDeleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentConversationDeleteFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentConversationSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentConversationSaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -273,6 +321,54 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "AgentConversationDeleted",
+                "name": "AgentConversation deleted",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentConversationDeleteFailed",
+                "name": "AgentConversation delete failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentConversationSaved",
+                "name": "AgentConversation saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AgentConversationSaveFailed",
+                "name": "AgentConversation save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -286,8 +382,8 @@
                     "AgentConversation",
                     {
                       "emit": {
-                        "success": "AgentConversationLoaded",
-                        "failure": "AgentConversationLoadFailed"
+                        "failure": "AgentConversationLoadFailed",
+                        "success": "AgentConversationLoaded"
                       }
                     }
                   ],
@@ -296,90 +392,90 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "align": "center",
-                              "children": [
-                                {
-                                  "name": "message-circle",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "AgentConversation Thread"
-                                }
-                              ],
                               "type": "stack",
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle"
+                                },
+                                {
+                                  "content": "AgentConversation Thread",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ]
                             },
                             {
+                              "type": "button",
                               "label": "New Message",
                               "variant": "primary",
-                              "icon": "plus",
                               "action": "COMPOSE",
-                              "type": "button"
+                              "icon": "plus"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [],
-                          "entity": "AgentConversation",
-                          "type": "data-list",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "type": "stack",
+                              "gap": "xs",
                               "direction": "vertical",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "label": "@item.role",
+                                      "type": "badge",
+                                      "label": "@item.role"
+                                    },
+                                    {
+                                      "label": "@item.status",
+                                      "variant": "outline",
                                       "type": "badge"
                                     },
                                     {
-                                      "variant": "outline",
-                                      "type": "badge",
-                                      "label": "@item.status"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "color": "muted",
+                                      "variant": "caption",
                                       "content": "@item.timestamp",
-                                      "variant": "caption"
+                                      "type": "typography",
+                                      "color": "muted"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "align": "center"
+                                  "align": "center",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@item.content"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "xs"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "data-list",
+                          "entity": "AgentConversation",
+                          "fields": []
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -395,109 +491,109 @@
                     {
                       "children": [
                         {
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "message-circle"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "AgentConversation Thread"
+                                  "content": "AgentConversation Thread",
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "variant": "primary",
-                              "action": "COMPOSE",
                               "icon": "plus",
+                              "action": "COMPOSE",
+                              "type": "button",
                               "label": "New Message",
-                              "type": "button"
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
                           "type": "stack",
-                          "justify": "between",
-                          "gap": "sm"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "AgentConversation",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "align": "center",
                                   "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "badge",
-                                      "label": "@item.role"
+                                      "label": "@item.role",
+                                      "type": "badge"
                                     },
                                     {
                                       "type": "badge",
-                                      "variant": "outline",
-                                      "label": "@item.status"
+                                      "label": "@item.status",
+                                      "variant": "outline"
                                     },
                                     {
+                                      "content": "@item.timestamp",
                                       "color": "muted",
                                       "variant": "caption",
-                                      "type": "typography",
-                                      "content": "@item.timestamp"
+                                      "type": "typography"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@item.content",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@item.content"
                                 }
                               ],
-                              "gap": "xs"
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
-                          "fields": [],
                           "type": "data-list"
                         },
                         {
-                          "fields": [],
-                          "type": "form-section",
                           "title": "Compose Message",
                           "children": [
                             {
-                              "placeholder": "Type your message...",
-                              "type": "textarea"
+                              "type": "textarea",
+                              "placeholder": "Type your message..."
                             },
                             {
+                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "sm",
                               "children": [
                                 {
+                                  "action": "SEND",
                                   "label": "Send",
-                                  "type": "button",
-                                  "variant": "primary",
                                   "icon": "send",
-                                  "action": "SEND"
+                                  "variant": "primary",
+                                  "type": "button"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "form-section",
+                          "fields": []
                         }
                       ],
                       "direction": "vertical",
@@ -515,7 +611,13 @@
                   [
                     "persist",
                     "delete",
-                    "AgentConversation"
+                    "AgentConversation",
+                    {
+                      "emit": {
+                        "failure": "AgentConversationDeleteFailed",
+                        "success": "AgentConversationDeleted"
+                      }
+                    }
                   ],
                   [
                     "fetch",
@@ -531,44 +633,47 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "message-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "message-circle"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "AgentConversation Thread"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "label": "New Message",
-                              "icon": "plus",
                               "type": "button",
+                              "variant": "primary",
+                              "label": "New Message",
                               "action": "COMPOSE",
-                              "variant": "primary"
+                              "icon": "plus"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center"
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "AgentConversation",
                           "type": "data-list",
                           "renderItem": [
                             "fn",
@@ -576,27 +681,27 @@
                             {
                               "children": [
                                 {
-                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "type": "badge",
                                       "label": "@item.role"
                                     },
                                     {
-                                      "type": "badge",
+                                      "label": "@item.status",
                                       "variant": "outline",
-                                      "label": "@item.status"
+                                      "type": "badge"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
                                       "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "variant": "caption",
+                                      "content": "@item.timestamp",
+                                      "type": "typography"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center"
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "type": "stack"
                                 },
                                 {
                                   "content": "@item.content",
@@ -609,13 +714,10 @@
                               "gap": "xs"
                             }
                           ],
-                          "entity": "AgentConversation",
                           "fields": []
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -650,10 +752,16 @@
                     "create",
                     "AgentConversation",
                     {
-                      "status": "sent",
-                      "timestamp": "@now",
                       "role": "user",
+                      "timestamp": "@now",
+                      "status": "sent",
                       "content": "@payload.content"
+                    },
+                    {
+                      "emit": {
+                        "success": "AgentConversationSaved",
+                        "failure": "AgentConversationSaveFailed"
+                      }
                     }
                   ],
                   [
@@ -674,61 +782,59 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "sm",
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "stack",
                               "gap": "sm",
-                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "message-circle"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "AgentConversation Thread",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "align": "center"
                             },
                             {
-                              "icon": "plus",
-                              "label": "New Message",
                               "type": "button",
                               "action": "COMPOSE",
+                              "label": "New Message",
+                              "icon": "plus",
                               "variant": "primary"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": [],
+                          "type": "data-list",
+                          "entity": "AgentConversation",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
-                              "gap": "xs",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "align": "center",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "badge",
-                                      "label": "@item.role"
+                                      "label": "@item.role",
+                                      "type": "badge"
                                     },
                                     {
                                       "label": "@item.status",
@@ -736,14 +842,16 @@
                                       "type": "badge"
                                     },
                                     {
-                                      "variant": "caption",
                                       "type": "typography",
+                                      "color": "muted",
                                       "content": "@item.timestamp",
-                                      "color": "muted"
+                                      "variant": "caption"
                                     }
                                   ],
+                                  "align": "center",
+                                  "gap": "sm",
                                   "direction": "horizontal",
-                                  "gap": "sm"
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "typography",
@@ -751,14 +859,14 @@
                                   "variant": "body"
                                 }
                               ],
-                              "direction": "vertical"
+                              "gap": "xs"
                             }
-                          ],
-                          "fields": [],
-                          "entity": "AgentConversation",
-                          "type": "data-list"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -771,7 +879,13 @@
                   [
                     "persist",
                     "delete",
-                    "AgentConversation"
+                    "AgentConversation",
+                    {
+                      "emit": {
+                        "success": "AgentConversationDeleted",
+                        "failure": "AgentConversationDeleteFailed"
+                      }
+                    }
                   ],
                   [
                     "fetch",
@@ -787,91 +901,91 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "justify": "between",
                           "gap": "sm",
+                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
-                              "align": "center",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "message-circle"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "AgentConversation Thread",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             },
                             {
+                              "icon": "plus",
                               "variant": "primary",
                               "type": "button",
                               "label": "New Message",
-                              "icon": "plus",
                               "action": "COMPOSE"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "badge",
                                       "label": "@item.role"
                                     },
                                     {
-                                      "label": "@item.status",
                                       "type": "badge",
+                                      "label": "@item.status",
                                       "variant": "outline"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
+                                      "type": "typography",
                                       "content": "@item.timestamp",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@item.content"
+                                  "content": "@item.content",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "xs"
                             }
                           ],
-                          "entity": "AgentConversation",
                           "type": "data-list",
-                          "fields": []
+                          "entity": "AgentConversation"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1100,10 +1214,10 @@
                     "render-ui",
                     "main",
                     {
+                      "description": "Conversation is ready",
                       "icon": "message-circle",
-                      "type": "empty-state",
                       "title": "Conversation",
-                      "description": "Conversation is ready"
+                      "type": "empty-state"
                     }
                   ]
                 ]

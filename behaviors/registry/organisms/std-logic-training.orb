@@ -179,8 +179,8 @@
                     "DebugChallenge",
                     {
                       "emit": {
-                        "success": "DebugChallengeLoaded",
-                        "failure": "DebugChallengeLoadFailed"
+                        "failure": "DebugChallengeLoadFailed",
+                        "success": "DebugChallengeLoaded"
                       }
                     }
                   ],
@@ -188,22 +188,22 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
                       "children": [
                         {
+                          "type": "game-menu",
+                          "title": "Debug Challenge",
                           "menuItems": [
                             {
                               "variant": "primary",
                               "label": "Start",
                               "event": "START"
                             }
-                          ],
-                          "type": "game-menu",
-                          "title": "Debug Challenge"
+                          ]
                         }
                       ],
-                      "type": "game-shell",
-                      "appName": "Logic Training"
+                      "showTopBar": true,
+                      "appName": "Logic Training",
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -218,12 +218,8 @@
                     "main",
                     {
                       "showTopBar": true,
-                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "stats": [
@@ -243,10 +239,14 @@
                               "completeEvent": "COMPLETE",
                               "type": "debugger-board"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "md"
                         }
                       ],
-                      "appName": "Logic Training"
+                      "appName": "Logic Training",
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -265,10 +265,11 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Logic Training",
                       "children": [
                         {
-                          "type": "game-over-screen",
                           "title": "Well Done!",
+                          "type": "game-over-screen",
                           "menuItems": [
                             {
                               "event": "RESTART",
@@ -278,9 +279,8 @@
                           ]
                         }
                       ],
-                      "type": "game-shell",
-                      "appName": "Logic Training",
-                      "showTopBar": true
+                      "showTopBar": true,
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -298,18 +298,18 @@
                       "children": [
                         {
                           "title": "Debug Challenge",
+                          "type": "game-menu",
                           "menuItems": [
                             {
+                              "label": "Start",
                               "variant": "primary",
-                              "event": "START",
-                              "label": "Start"
+                              "event": "START"
                             }
-                          ],
-                          "type": "game-menu"
+                          ]
                         }
                       ],
-                      "type": "game-shell",
-                      "showTopBar": true
+                      "showTopBar": true,
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -506,11 +506,117 @@
                     "NegotiateChallenge",
                     {
                       "emit": {
-                        "success": "NegotiateChallengeLoaded",
-                        "failure": "NegotiateChallengeLoadFailed"
+                        "failure": "NegotiateChallengeLoadFailed",
+                        "success": "NegotiateChallengeLoaded"
                       }
                     }
                   ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "Logic Training",
+                      "type": "game-shell",
+                      "children": [
+                        {
+                          "menuItems": [
+                            {
+                              "variant": "primary",
+                              "label": "Start",
+                              "event": "START"
+                            }
+                          ],
+                          "title": "Negotiate Challenge",
+                          "type": "game-menu"
+                        }
+                      ],
+                      "showTopBar": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-shell",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "game-hud",
+                              "stats": [
+                                {
+                                  "label": "Score",
+                                  "value": "@entity.score"
+                                },
+                                {
+                                  "label": "Level",
+                                  "value": "@entity.level"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "negotiator-board",
+                              "completeEvent": "COMPLETE",
+                              "entity": "NegotiateChallenge"
+                            }
+                          ]
+                        }
+                      ],
+                      "showTopBar": true,
+                      "appName": "Logic Training"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "Logic Training",
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "children": [
+                        {
+                          "title": "Well Done!",
+                          "menuItems": [
+                            {
+                              "label": "Play Again",
+                              "variant": "primary",
+                              "event": "RESTART"
+                            }
+                          ],
+                          "type": "game-over-screen"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
                   [
                     "render-ui",
                     "main",
@@ -531,112 +637,6 @@
                         }
                       ],
                       "type": "game-shell"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "menu",
-                "to": "playing",
-                "event": "START",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "game-hud",
-                              "stats": [
-                                {
-                                  "value": "@entity.score",
-                                  "label": "Score"
-                                },
-                                {
-                                  "value": "@entity.level",
-                                  "label": "Level"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "negotiator-board",
-                              "entity": "NegotiateChallenge",
-                              "completeEvent": "COMPLETE"
-                            }
-                          ],
-                          "gap": "md"
-                        }
-                      ],
-                      "appName": "Logic Training"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE"
-              },
-              {
-                "from": "playing",
-                "to": "complete",
-                "event": "COMPLETE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "showTopBar": true,
-                      "type": "game-shell",
-                      "children": [
-                        {
-                          "title": "Well Done!",
-                          "menuItems": [
-                            {
-                              "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "game-over-screen"
-                        }
-                      ],
-                      "appName": "Logic Training"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "complete",
-                "to": "menu",
-                "event": "RESTART",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "title": "Negotiate Challenge",
-                          "type": "game-menu",
-                          "menuItems": [
-                            {
-                              "variant": "primary",
-                              "event": "START",
-                              "label": "Start"
-                            }
-                          ]
-                        }
-                      ],
-                      "showTopBar": true,
-                      "type": "game-shell",
-                      "appName": "Logic Training"
                     }
                   ]
                 ]
@@ -874,8 +874,8 @@
                     "TrainingScore",
                     {
                       "emit": {
-                        "failure": "TrainingScoreLoadFailed",
-                        "success": "TrainingScoreLoaded"
+                        "success": "TrainingScoreLoaded",
+                        "failure": "TrainingScoreLoadFailed"
                       }
                     }
                   ],
@@ -883,17 +883,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Logic Training",
+                      "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
-                          "level": "@entity.level",
-                          "multiplier": "@entity.multiplier",
                           "type": "score-board",
-                          "score": "@entity.score",
                           "highScore": "@entity.highScore",
-                          "combo": "@entity.combo"
+                          "multiplier": "@entity.multiplier",
+                          "level": "@entity.level",
+                          "combo": "@entity.combo",
+                          "score": "@entity.score"
                         }
                       ]
                     }
@@ -927,19 +927,19 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
                       "type": "game-shell",
-                      "appName": "Logic Training",
                       "children": [
                         {
-                          "type": "score-board",
-                          "level": "@entity.level",
                           "multiplier": "@entity.multiplier",
+                          "type": "score-board",
                           "score": "@entity.score",
-                          "combo": "@entity.combo",
-                          "highScore": "@entity.highScore"
+                          "level": "@entity.level",
+                          "highScore": "@entity.highScore",
+                          "combo": "@entity.combo"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "appName": "Logic Training"
                     }
                   ]
                 ]
@@ -959,18 +959,18 @@
                     "main",
                     {
                       "showTopBar": true,
+                      "appName": "Logic Training",
                       "children": [
                         {
-                          "score": "@entity.score",
-                          "level": "@entity.level",
-                          "highScore": "@entity.highScore",
+                          "multiplier": "@entity.multiplier",
                           "type": "score-board",
                           "combo": "@entity.combo",
-                          "multiplier": "@entity.multiplier"
+                          "score": "@entity.score",
+                          "level": "@entity.level",
+                          "highScore": "@entity.highScore"
                         }
                       ],
-                      "type": "game-shell",
-                      "appName": "Logic Training"
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -999,17 +999,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Logic Training",
+                      "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
-                          "score": "@entity.score",
-                          "combo": "@entity.combo",
                           "multiplier": "@entity.multiplier",
+                          "score": "@entity.score",
+                          "highScore": "@entity.highScore",
+                          "combo": "@entity.combo",
                           "level": "@entity.level",
-                          "type": "score-board",
-                          "highScore": "@entity.highScore"
+                          "type": "score-board"
                         }
                       ]
                     }
