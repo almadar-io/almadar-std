@@ -18,6 +18,10 @@ orbital ServiceNotificationHubOrbital {
 
   type ServiceNotificationHubLoaded     = Event ServiceNotificationHub                  "Fired when ServiceNotificationHub finishes loading"
   type ServiceNotificationHubLoadFailed = Event { message : string } "Fired when ServiceNotificationHub fails to load"
+  type ServiceNotificationHubEmailCompleted = Event { result : object }
+  type ServiceNotificationHubEmailFailed = Event { error : string, code : string }
+  type ServiceNotificationHubTwilioCompleted = Event { result : object }
+  type ServiceNotificationHubTwilioFailed = Event { error : string, code : string }
   trait ServiceNotificationHubNotificationHub -> ServiceNotificationHub [interaction, instance] {
     initial: idle
     state idle {
@@ -27,15 +31,15 @@ orbital ServiceNotificationHubOrbital {
       SEND_EMAIL -> sending
         (set @entity.channel email)
         (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
-        (call-service email send { to: "@entity.recipient", subject: "@entity.subject", body: "@entity.messageBody" })
+        (call-service email send { to: "@entity.recipient", subject: "@entity.subject", body: "@entity.messageBody" } { emit: { success: "ServiceNotificationHubEmailCompleted", failure: "ServiceNotificationHubEmailFailed" } })
       SEND_SMS -> sending
         (set @entity.channel sms)
         (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
-        (call-service twilio "sendSMS" { to: "@entity.recipient", body: "@entity.messageBody" })
+        (call-service twilio "sendSMS" { to: "@entity.recipient", body: "@entity.messageBody" } { emit: { success: "ServiceNotificationHubTwilioCompleted", failure: "ServiceNotificationHubTwilioFailed" } })
       SEND_WHATSAPP -> sending
         (set @entity.channel whatsapp)
         (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
-        (call-service twilio "sendWhatsApp" { to: "@entity.recipient", body: "@entity.messageBody" })
+        (call-service twilio "sendWhatsApp" { to: "@entity.recipient", body: "@entity.messageBody" } { emit: { success: "ServiceNotificationHubTwilioCompleted", failure: "ServiceNotificationHubTwilioFailed" } })
     }
     state sending {
       SENT -> sent
@@ -61,8 +65,11 @@ orbital ServiceNotificationHubOrbital {
     listens {
       FAILED { error : string! }
           ServiceNotificationHubLoadFailed { message : string }
+    
+      ServiceNotificationHubEmailFailed { error : string, code : string }
+      ServiceNotificationHubTwilioFailed { error : string, code : string }
     }
-    emits: [ServiceNotificationHubLoaded, ServiceNotificationHubLoadFailed]
+    emits: [ServiceNotificationHubLoaded, ServiceNotificationHubLoadFailed, ServiceNotificationHubEmailCompleted, ServiceNotificationHubEmailFailed, ServiceNotificationHubTwilioCompleted, ServiceNotificationHubTwilioFailed]
   }
   page "/servicenotificationhubs" as ServiceNotificationHubPage -> ServiceNotificationHubNotificationHub
 }

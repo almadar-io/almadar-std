@@ -15,6 +15,12 @@ orbital ServiceNodeOrbital {
 
   type ServiceNodeLoaded     = Event ServiceNode                  "Fired when ServiceNode finishes loading"
   type ServiceNodeLoadFailed = Event { message : string } "Fired when ServiceNode fails to load"
+  type LogEntrySaved = Event { id : string }
+  type LogEntrySaveFailed = Event { error : string, code : string }
+  type LogEntryUpdated = Event { id : string }
+  type LogEntryUpdateFailed = Event { error : string, code : string }
+  type LogEntryDeleted = Event { id : string }
+  type LogEntryDeleteFailed = Event { error : string, code : string }
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
     initial: closed
     state closed {
@@ -40,9 +46,13 @@ orbital ServiceNodeOrbital {
       RESET -> closed
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
     }
-    emits: [ServiceNodeLoaded, ServiceNodeLoadFailed]
+    emits: [ServiceNodeLoaded, ServiceNodeLoadFailed, LogEntrySaved, LogEntrySaveFailed, LogEntryUpdated, LogEntryUpdateFailed, LogEntryDeleted, LogEntryDeleteFailed]
     listens {
       ServiceNodeLoadFailed { message : string }
+    
+      LogEntrySaveFailed { error : string, code : string }
+      LogEntryUpdateFailed { error : string, code : string }
+      LogEntryDeleteFailed { error : string, code : string }
     }
   }
   page "/services" as ServicesPage -> ServiceNodeCircuitBreaker
@@ -129,7 +139,7 @@ orbital LogEntryOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create LogEntry @payload.data)
+        (persist create LogEntry @payload.data { emit: { success: "LogEntrySaved", failure: "LogEntrySaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit LOG_ENTRY_CREATED)
@@ -149,7 +159,7 @@ orbital LogEntryOrbital {
       INIT -> closed
         (ref LogEntry)
       EDIT -> open
-        (fetch LogEntry { id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
+        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "LogEntry", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"], entityId: "@entity.id" }] })
     }
     state open {
@@ -158,7 +168,7 @@ orbital LogEntryOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update LogEntry @payload.data)
+        (persist update LogEntry @payload.data { emit: { success: "LogEntryUpdated", failure: "LogEntryUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit LOG_ENTRY_UPDATED)
@@ -179,7 +189,7 @@ orbital LogEntryOrbital {
       INIT -> closed
         (ref LogEntry)
       VIEW -> open
-        (fetch LogEntry { id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
+        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "body", content: "@entity.message" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Service" }, { type: "typography", variant: "body", content: "@entity.service" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -205,12 +215,12 @@ orbital LogEntryOrbital {
         (ref LogEntry)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch LogEntry { id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
+        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete LogEntry @entity.pendingId)
+        (persist delete LogEntry @entity.pendingId { emit: { success: "LogEntryDeleted", failure: "LogEntryDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref LogEntry)

@@ -13,6 +13,12 @@ orbital RouteOrbital {
 
   type RouteLoaded     = Event Route                  "Fired when Route finishes loading"
   type RouteLoadFailed = Event { message : string } "Fired when Route fails to load"
+  type RouteSaved = Event { id : string }
+  type RouteSaveFailed = Event { error : string, code : string }
+  type RouteUpdated = Event { id : string }
+  type RouteUpdateFailed = Event { error : string, code : string }
+  type RouteDeleted = Event { id : string }
+  type RouteDeleteFailed = Event { error : string, code : string }
   trait RouteBrowse -> Route [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -27,8 +33,12 @@ orbital RouteOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           RouteLoadFailed { message : string }
+    
+      RouteSaveFailed { error : string, code : string }
+      RouteUpdateFailed { error : string, code : string }
+      RouteDeleteFailed { error : string, code : string }
     }
-    emits: [RouteLoaded, RouteLoadFailed]
+    emits: [RouteLoaded, RouteLoadFailed, RouteSaved, RouteSaveFailed, RouteUpdated, RouteUpdateFailed, RouteDeleted, RouteDeleteFailed]
   }
   trait RouteCreate -> Route [interaction, collection] {
     initial: closed
@@ -45,7 +55,7 @@ orbital RouteOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Route @payload.data)
+        (persist create Route @payload.data { emit: { success: "RouteSaved", failure: "RouteSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ROUTE_CREATED)
@@ -65,7 +75,7 @@ orbital RouteOrbital {
       INIT -> closed
         (ref Route)
       EDIT -> open
-        (fetch Route { id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Route", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"], entityId: "@entity.id" }] })
     }
     state open {
@@ -74,7 +84,7 @@ orbital RouteOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Route @payload.data)
+        (persist update Route @payload.data { emit: { success: "RouteUpdated", failure: "RouteUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ROUTE_UPDATED)
@@ -95,7 +105,7 @@ orbital RouteOrbital {
       INIT -> closed
         (ref Route)
       VIEW -> open
-        (fetch Route { id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.path" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Path" }, { type: "typography", variant: "body", content: "@entity.path" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Method" }, { type: "typography", variant: "body", content: "@entity.method" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Backend" }, { type: "typography", variant: "body", content: "@entity.backend" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Rate Limit" }, { type: "typography", variant: "body", content: "@entity.rateLimit" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -122,12 +132,12 @@ orbital RouteOrbital {
         (ref Route)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Route { id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Route", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Route @entity.pendingId)
+        (persist delete Route @entity.pendingId { emit: { success: "RouteDeleted", failure: "RouteDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Route)

@@ -54,7 +54,7 @@ orbital LocationOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (fetch Location)
+        (fetch Location { emit: { success: "LocationLoaded", failure: "LocationLoadFailed" } })
       SELECT -> open
         (set @entity.id @payload.id)
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Selection", action: "CONFIRM_SELECT", actionPayload: { id: "@entity.id" }, variant: "primary", icon: "check" }] }] })

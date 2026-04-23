@@ -15,6 +15,8 @@ orbital DashboardTabbedOrbital {
     value : string
     tab : string
   }
+  type DashboardItemLoaded = Event { data : [DashboardItem] }
+  type DashboardItemLoadFailed = Event { error : string, code : string }
 
   trait DashboardTabs     = Tabs.traits.TabContentTabs       -> DashboardItem {}
   trait DashboardSummary  = Display.traits.DisplayItemDisplay -> DashboardItem {}
@@ -24,7 +26,7 @@ orbital DashboardTabbedOrbital {
   trait DashboardLayout -> DashboardItem [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch DashboardItem)
+        (fetch DashboardItem { emit: { success: "DashboardItemLoaded", failure: "DashboardItemLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "vertical",

@@ -16,6 +16,8 @@ orbital DrawerMasterOrbital {
     description : string
     status : string
   }
+  type DrawerMasterItemLoaded = Event { data : [DrawerMasterItem] }
+  type DrawerMasterItemLoadFailed = Event { error : string, code : string }
 
   trait DrawerMasterBrowse = Browse.traits.BrowseItemBrowse -> DrawerMasterItem {
     ;; Browse already emits BrowseItemLoaded; we additionally declare SELECT as an external
@@ -28,7 +30,7 @@ orbital DrawerMasterOrbital {
   trait DrawerMasterLayout -> DrawerMasterItem [interaction, collection] {
     state composing {
       INIT -> composing
-        (fetch DrawerMasterItem)
+        (fetch DrawerMasterItem { emit: { success: "DrawerMasterItemLoaded", failure: "DrawerMasterItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "box", children: ["@trait.DrawerMasterBrowse"] }, { type: "box", children: ["@trait.DrawerMasterDrawer"] }] })
     }
   }

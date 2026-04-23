@@ -15,19 +15,23 @@ orbital PushActivityLogOrbital {
     receivedAt : string
     payload : string
   }
+  type PushActivityItemLoaded = Event { data : [PushActivityItem] }
+  type PushActivityItemLoadFailed = Event { error : string, code : string }
 
   trait PushActivityPush = Push.traits.PushSubscriberIndicator    -> PushActivityItem {}
   trait PushActivityLog  = ActivityLog.traits.AgentActivityLogLog -> PushActivityItem {
     listens {
       PushActivityPush PUSH_RECEIVED     -> LOG_ENTRY
       PushActivityPush PUSH_DISCONNECTED -> LOG_ENTRY
+    
+      PushActivityItemLoadFailed { error : string, code : string }
     }
   }
 
   trait PushActivityLayout -> PushActivityItem [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch PushActivityItem)
+        (fetch PushActivityItem { emit: { success: "PushActivityItemLoaded", failure: "PushActivityItemLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "vertical",

@@ -14,6 +14,14 @@ orbital CourseOrbital {
 
   type CourseLoaded     = Event Course                  "Fired when Course finishes loading"
   type CourseLoadFailed = Event { message : string } "Fired when Course fails to load"
+  type CourseSaved = Event { id : string }
+  type CourseSaveFailed = Event { error : string, code : string }
+  type CourseUpdated = Event { id : string }
+  type CourseUpdateFailed = Event { error : string, code : string }
+  type CourseDeleted = Event { id : string }
+  type CourseDeleteFailed = Event { error : string, code : string }
+  type EnrollmentSaved = Event { id : string }
+  type EnrollmentSaveFailed = Event { error : string, code : string }
   trait CourseBrowse -> Course [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -31,8 +39,13 @@ orbital CourseOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           CourseLoadFailed { message : string }
+    
+      CourseSaveFailed { error : string, code : string }
+      CourseUpdateFailed { error : string, code : string }
+      CourseDeleteFailed { error : string, code : string }
+      EnrollmentSaveFailed { error : string, code : string }
     }
-    emits: [CourseLoaded, CourseLoadFailed]
+    emits: [CourseLoaded, CourseLoadFailed, CourseSaved, CourseSaveFailed, CourseUpdated, CourseUpdateFailed, CourseDeleted, CourseDeleteFailed, EnrollmentSaved, EnrollmentSaveFailed]
   }
   trait CourseCreate -> Course [interaction, collection] {
     initial: closed
@@ -49,7 +62,7 @@ orbital CourseOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Course @payload.data)
+        (persist create Course @payload.data { emit: { success: "CourseSaved", failure: "CourseSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit COURSE_CREATED)
@@ -69,7 +82,7 @@ orbital CourseOrbital {
       INIT -> closed
         (ref Course)
       EDIT -> open
-        (fetch Course { id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
+        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Course", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"], entityId: "@entity.id" }] })
     }
     state open {
@@ -78,7 +91,7 @@ orbital CourseOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Course @payload.data)
+        (persist update Course @payload.data { emit: { success: "CourseUpdated", failure: "CourseUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit COURSE_UPDATED)
@@ -99,7 +112,7 @@ orbital CourseOrbital {
       INIT -> closed
         (ref Course)
       VIEW -> open
-        (fetch Course { id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
+        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Instructor" }, { type: "typography", variant: "body", content: "@entity.instructor" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "body", content: "@entity.duration" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -125,12 +138,12 @@ orbital CourseOrbital {
         (ref Course)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Course { id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
+        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Course", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Course @entity.pendingId)
+        (persist delete Course @entity.pendingId { emit: { success: "CourseDeleted", failure: "CourseDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Course)
@@ -190,7 +203,7 @@ orbital EnrollmentOrbital {
         (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 1 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Course Selection", variant: "h3" }, { type: "form-section", entity: "Enrollment", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["courseId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       COMPLETE -> complete
-        (persist create Enrollment @payload.data)
+        (persist create Enrollment @payload.data { emit: { success: "EnrollmentSaved", failure: "EnrollmentSaveFailed" } })
         (notify success "Enrollment created successfully")
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Enrolled!", variant: "h2" }, { type: "typography", content: "You have been successfully enrolled in the course.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
     }

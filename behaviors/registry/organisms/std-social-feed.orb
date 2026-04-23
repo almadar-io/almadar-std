@@ -99,6 +99,54 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "PostSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PostSaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CommentSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CommentSaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -159,6 +207,54 @@
                 ]
               },
               {
+                "key": "PostSaved",
+                "name": "Post saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PostSaveFailed",
+                "name": "Post save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CommentSaved",
+                "name": "Comment saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CommentSaveFailed",
+                "name": "Comment save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "VIEW",
                 "name": "View",
                 "payload": [
@@ -188,69 +284,91 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "SocialFeed",
+                      "navItems": [
+                        {
+                          "label": "Feed",
+                          "href": "/feed",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Messages",
+                          "href": "/messages",
+                          "icon": "message-circle"
+                        }
+                      ],
                       "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "align": "center",
+                              "justify": "between",
                               "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md",
-                              "justify": "between",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "name": "rss",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "rss"
                                     },
                                     {
-                                      "type": "typography",
+                                      "content": "Feed",
                                       "variant": "h2",
-                                      "content": "Feed"
+                                      "type": "typography"
                                     }
                                   ],
                                   "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack",
                                   "align": "center"
                                 },
                                 {
-                                  "gap": "sm",
                                   "direction": "horizontal",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "label": "New Post",
-                                      "variant": "primary",
                                       "type": "button",
                                       "action": "CREATE",
-                                      "icon": "plus"
+                                      "variant": "primary",
+                                      "icon": "plus",
+                                      "label": "New Post"
                                     }
                                   ],
                                   "type": "stack"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "variant": "card",
                               "gap": "sm",
                               "entity": "Post",
-                              "variant": "card",
+                              "type": "data-list",
                               "fields": [],
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW",
+                                  "variant": "ghost"
+                                }
+                              ],
                               "columns": [
                                 {
-                                  "icon": "rss",
                                   "name": "title",
+                                  "icon": "rss",
                                   "variant": "h3"
                                 },
                                 {
-                                  "name": "likes",
                                   "variant": "badge",
+                                  "name": "likes",
                                   "format": "number"
                                 },
                                 {
@@ -262,39 +380,17 @@
                                   "name": "content"
                                 },
                                 {
+                                  "name": "createdAt",
                                   "label": "Posted",
                                   "format": "date",
-                                  "variant": "caption",
-                                  "name": "createdAt"
-                                }
-                              ],
-                              "type": "data-list",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "variant": "ghost",
-                                  "event": "VIEW"
+                                  "variant": "caption"
                                 }
                               ]
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full"
+                          ]
                         }
                       ],
-                      "navItems": [
-                        {
-                          "href": "/feed",
-                          "label": "Feed",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "icon": "message-circle",
-                          "href": "/messages",
-                          "label": "Messages"
-                        }
-                      ]
+                      "appName": "SocialFeed"
                     }
                   ]
                 ]
@@ -459,43 +555,43 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
                               "content": "Create Post",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CLOSE",
-                          "entity": "Post",
-                          "submitEvent": "SAVE",
+                          "type": "form-section",
                           "fields": [
                             "title",
                             "content",
                             "author",
                             "likes"
                           ],
-                          "type": "form-section",
-                          "mode": "create"
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "entity": "Post",
+                          "cancelEvent": "CLOSE"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -533,7 +629,13 @@
                     "persist",
                     "create",
                     "Post",
-                    "@payload.data"
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PostSaved",
+                        "failure": "PostSaveFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -706,59 +808,57 @@
                     "fetch",
                     "Post",
                     {
+                      "id": "@payload.id",
                       "emit": {
                         "success": "PostLoaded",
                         "failure": "PostLoadFailed"
-                      },
-                      "id": "@payload.id"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.title",
+                              "variant": "h3",
                               "type": "typography"
                             }
                           ],
-                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
-                          "type": "stack"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "Title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Title"
                             },
                             {
-                              "variant": "body",
+                              "type": "typography",
                               "content": "@entity.title",
-                              "type": "typography"
+                              "variant": "body"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
@@ -766,7 +866,44 @@
                               "variant": "caption"
                             },
                             {
-                              "content": "@entity.content",
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Author"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.author"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Created At",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.createdAt",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -776,74 +913,39 @@
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "Author",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.author"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Created At"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.createdAt"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "variant": "caption",
                               "type": "typography",
                               "content": "Likes"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.likes",
-                              "type": "typography"
+                              "content": "@entity.likes"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "justify": "end",
                           "children": [
                             {
                               "type": "button",
-                              "action": "CLOSE",
                               "label": "Close",
+                              "action": "CLOSE",
                               "variant": "ghost"
                             }
                           ],
-                          "justify": "end",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1072,11 +1174,94 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "appName": "SocialFeed",
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle"
+                                    },
+                                    {
+                                      "content": "Messages",
+                                      "variant": "h2",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "align": "center"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "label": "Compose",
+                                      "action": "COMPOSE",
+                                      "icon": "edit",
+                                      "type": "button",
+                                      "variant": "primary"
+                                    }
+                                  ],
+                                  "gap": "sm"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "entity": "Comment",
+                              "type": "data-list",
+                              "variant": "card",
+                              "fields": [],
+                              "gap": "sm",
+                              "columns": [
+                                {
+                                  "name": "author",
+                                  "variant": "h4",
+                                  "icon": "message-circle"
+                                },
+                                {
+                                  "name": "body",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "createdAt",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "itemActions": [
+                                {
+                                  "variant": "ghost",
+                                  "event": "VIEW",
+                                  "label": "View"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ],
                       "navItems": [
                         {
-                          "icon": "layout-list",
                           "label": "Feed",
+                          "icon": "layout-list",
                           "href": "/feed"
                         },
                         {
@@ -1085,90 +1270,7 @@
                           "icon": "message-circle"
                         }
                       ],
-                      "appName": "SocialFeed",
-                      "children": [
-                        {
-                          "className": "max-w-5xl mx-auto w-full",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "justify": "between",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "message-circle"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h2",
-                                      "content": "Messages"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "icon": "edit",
-                                      "action": "COMPOSE",
-                                      "variant": "primary",
-                                      "type": "button",
-                                      "label": "Compose"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "gap": "sm",
-                              "entity": "Comment",
-                              "fields": [],
-                              "columns": [
-                                {
-                                  "icon": "message-circle",
-                                  "variant": "h4",
-                                  "name": "author"
-                                },
-                                {
-                                  "name": "body",
-                                  "variant": "body"
-                                },
-                                {
-                                  "format": "date",
-                                  "name": "createdAt",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card"
-                            }
-                          ]
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -1317,23 +1419,23 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "edit"
                             },
                             {
+                              "type": "typography",
                               "content": "New Comment",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1344,15 +1446,15 @@
                             "author",
                             "postId"
                           ],
-                          "mode": "create",
-                          "type": "form-section",
                           "entity": "Comment",
                           "submitEvent": "SEND",
-                          "cancelEvent": "CLOSE"
+                          "cancelEvent": "CLOSE",
+                          "mode": "create",
+                          "type": "form-section"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1390,7 +1492,13 @@
                     "persist",
                     "create",
                     "Comment",
-                    "@payload.data"
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "CommentSaved",
+                        "failure": "CommentSaveFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -1547,11 +1655,11 @@
                     "fetch",
                     "Comment",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "failure": "CommentLoadFailed",
-                        "success": "CommentLoaded"
-                      },
-                      "id": "@payload.id"
+                        "success": "CommentLoaded",
+                        "failure": "CommentLoadFailed"
+                      }
                     }
                   ],
                   [
@@ -1559,36 +1667,35 @@
                     "modal",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "eye",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.body"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "variant": "caption",
                               "content": "Body",
+                              "variant": "caption",
                               "type": "typography"
                             },
                             {
@@ -1597,50 +1704,49 @@
                               "content": "@entity.body"
                             }
                           ],
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Author"
+                            },
+                            {
+                              "content": "@entity.author",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Post ID",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.postId",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
                           "gap": "md",
                           "children": [
                             {
-                              "content": "Author",
+                              "content": "Created At",
                               "type": "typography",
                               "variant": "caption"
-                            },
-                            {
-                              "content": "@entity.author",
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Post ID"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.postId"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Created At"
                             },
                             {
                               "type": "typography",
@@ -1648,26 +1754,28 @@
                               "content": "@entity.createdAt"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "justify": "end",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "type": "button",
                               "label": "Close",
-                              "action": "CLOSE"
+                              "type": "button",
+                              "action": "CLOSE",
+                              "variant": "ghost"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]

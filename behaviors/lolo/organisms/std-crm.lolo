@@ -14,6 +14,20 @@ orbital ContactOrbital {
 
   type ContactLoaded     = Event Contact                  "Fired when Contact finishes loading"
   type ContactLoadFailed = Event { message : string } "Fired when Contact fails to load"
+  type ContactSaved = Event { id : string }
+  type ContactSaveFailed = Event { error : string, code : string }
+  type ContactUpdated = Event { id : string }
+  type ContactUpdateFailed = Event { error : string, code : string }
+  type ContactDeleted = Event { id : string }
+  type ContactDeleteFailed = Event { error : string, code : string }
+  type DealSaved = Event { id : string }
+  type DealSaveFailed = Event { error : string, code : string }
+  type DealUpdated = Event { id : string }
+  type DealUpdateFailed = Event { error : string, code : string }
+  type DealDeleted = Event { id : string }
+  type DealDeleteFailed = Event { error : string, code : string }
+  type NoteSaved = Event { id : string }
+  type NoteSaveFailed = Event { error : string, code : string }
   trait ContactBrowse -> Contact [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -31,8 +45,16 @@ orbital ContactOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           ContactLoadFailed { message : string }
+    
+      ContactSaveFailed { error : string, code : string }
+      ContactUpdateFailed { error : string, code : string }
+      ContactDeleteFailed { error : string, code : string }
+      DealSaveFailed { error : string, code : string }
+      DealUpdateFailed { error : string, code : string }
+      DealDeleteFailed { error : string, code : string }
+      NoteSaveFailed { error : string, code : string }
     }
-    emits: [ContactLoaded, ContactLoadFailed]
+    emits: [ContactLoaded, ContactLoadFailed, ContactSaved, ContactSaveFailed, ContactUpdated, ContactUpdateFailed, ContactDeleted, ContactDeleteFailed, DealSaved, DealSaveFailed, DealUpdated, DealUpdateFailed, DealDeleted, DealDeleteFailed, NoteSaved, NoteSaveFailed]
   }
   trait ContactCreate -> Contact [interaction, collection] {
     initial: closed
@@ -49,7 +71,7 @@ orbital ContactOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Contact @payload.data)
+        (persist create Contact @payload.data { emit: { success: "ContactSaved", failure: "ContactSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit CONTACT_CREATED)
@@ -69,7 +91,7 @@ orbital ContactOrbital {
       INIT -> closed
         (ref Contact)
       EDIT -> open
-        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
+        (fetch Contact {id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" }, emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"], entityId: "@entity.id" }] })
     }
     state open {
@@ -78,7 +100,7 @@ orbital ContactOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Contact @payload.data)
+        (persist update Contact @payload.data { emit: { success: "ContactUpdated", failure: "ContactUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit CONTACT_UPDATED)
@@ -99,7 +121,7 @@ orbital ContactOrbital {
       INIT -> closed
         (ref Contact)
       VIEW -> open
-        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
+        (fetch Contact {id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" }, emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Company" }, { type: "typography", variant: "body", content: "@entity.company" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -125,12 +147,12 @@ orbital ContactOrbital {
         (ref Contact)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
+        (fetch Contact {id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" }, emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Contact", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Contact @entity.pendingId)
+        (persist delete Contact @entity.pendingId { emit: { success: "ContactDeleted", failure: "ContactDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Contact)
@@ -201,7 +223,7 @@ orbital DealOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Deal @payload.data)
+        (persist create Deal @payload.data { emit: { success: "DealSaved", failure: "DealSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit DEAL_CREATED)
@@ -221,7 +243,7 @@ orbital DealOrbital {
       INIT -> closed
         (ref Deal)
       EDIT -> open
-        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
+        (fetch Deal {id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" }, emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"], entityId: "@entity.id" }] })
     }
     state open {
@@ -230,7 +252,7 @@ orbital DealOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Deal @payload.data)
+        (persist update Deal @payload.data { emit: { success: "DealUpdated", failure: "DealUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit DEAL_UPDATED)
@@ -251,7 +273,7 @@ orbital DealOrbital {
       INIT -> closed
         (ref Deal)
       VIEW -> open
-        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
+        (fetch Deal {id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" }, emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Contact ID" }, { type: "typography", variant: "body", content: "@entity.contactId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Value" }, { type: "typography", variant: "body", content: "@entity.value" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Stage" }, { type: "typography", variant: "body", content: "@entity.stage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Closed At" }, { type: "typography", variant: "body", content: "@entity.closedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -276,12 +298,12 @@ orbital DealOrbital {
         (ref Deal)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
+        (fetch Deal {id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" }, emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Deal", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Deal @entity.pendingId)
+        (persist delete Deal @entity.pendingId { emit: { success: "DealDeleted", failure: "DealDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Deal)
@@ -386,7 +408,7 @@ orbital NoteOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SEND -> closed
-        (persist create Note @payload.data)
+        (persist create Note @payload.data { emit: { success: "NoteSaved", failure: "NoteSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
@@ -405,7 +427,7 @@ orbital NoteOrbital {
       INIT -> closed
         (ref Note)
       VIEW -> open
-        (fetch Note { id: "@payload.id" , emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
+        (fetch Note {id: "@payload.id" , emit: { success: "NoteLoaded", failure: "NoteLoadFailed" }, emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {

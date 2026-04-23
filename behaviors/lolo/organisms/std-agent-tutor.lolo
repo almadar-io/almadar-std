@@ -18,6 +18,12 @@ orbital TutorSessionOrbital {
 
   type TutorSessionLoaded     = Event TutorSession                  "Fired when TutorSession finishes loading"
   type TutorSessionLoadFailed = Event { message : string } "Fired when TutorSession fails to load"
+  type TutorChatDeleted = Event { id : string }
+  type TutorChatDeleteFailed = Event { error : string, code : string }
+  type ConceptSaved = Event { id : string }
+  type ConceptSaveFailed = Event { error : string, code : string }
+  type StudentAssessmentSaved = Event { id : string }
+  type StudentAssessmentSaveFailed = Event { error : string, code : string }
   trait TeachingSession -> TutorSession [interaction, collection] {
     initial: idle
     state idle {
@@ -60,8 +66,12 @@ orbital TutorSessionOrbital {
     listens {
       START_SESSION { topic : string! }
           TutorSessionLoadFailed { message : string }
+    
+      TutorChatDeleteFailed { error : string, code : string }
+      ConceptSaveFailed { error : string, code : string }
+      StudentAssessmentSaveFailed { error : string, code : string }
     }
-    emits: [TutorSessionLoaded, TutorSessionLoadFailed]
+    emits: [TutorSessionLoaded, TutorSessionLoadFailed, TutorChatDeleted, TutorChatDeleteFailed, ConceptSaved, ConceptSaveFailed, StudentAssessmentSaved, StudentAssessmentSaveFailed]
   }
   page "/teach" as TeachPage -> TeachingSession
 }
@@ -150,7 +160,7 @@ orbital TutorChatOrbital {
       COMPOSE -> composing
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus"}] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", fields: [], title: "Compose Message", children: [{ type: "textarea", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] }] }] }] })
       CLEAR -> idle
-        (persist delete TutorChat)
+        (persist delete TutorChat  { emit: { success: "TutorChatDeleted", failure: "TutorChatDeleteFailed" } })
         (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
@@ -165,7 +175,7 @@ orbital TutorChatOrbital {
         (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       CLEAR -> idle
-        (persist delete TutorChat)
+        (persist delete TutorChat  { emit: { success: "TutorChatDeleted", failure: "TutorChatDeleteFailed" } })
         (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
@@ -266,7 +276,7 @@ orbital ConceptOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Concept @payload.data)
+        (persist create Concept @payload.data { emit: { success: "ConceptSaved", failure: "ConceptSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit MEMORIZED)
@@ -288,7 +298,7 @@ orbital ConceptOrbital {
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
-        (persist create Concept @payload.data)
+        (persist create Concept @payload.data { emit: { success: "ConceptSaved", failure: "ConceptSaveFailed" } })
       DECAY -> idle
         (agent/decay)
         (emit DECAYED)
@@ -360,7 +370,7 @@ orbital StudentAssessmentOrbital {
         (ref StudentAssessment)
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create StudentAssessment @payload.data)
+        (persist create StudentAssessment @payload.data { emit: { success: "StudentAssessmentSaved", failure: "StudentAssessmentSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
         (ref StudentAssessment)

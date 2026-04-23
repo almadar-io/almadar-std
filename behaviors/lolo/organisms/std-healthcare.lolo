@@ -15,6 +15,22 @@ orbital PatientOrbital {
 
   type PatientLoaded     = Event Patient                  "Fired when Patient finishes loading"
   type PatientLoadFailed = Event { message : string } "Fired when Patient fails to load"
+  type PatientSaved = Event { id : string }
+  type PatientSaveFailed = Event { error : string, code : string }
+  type PatientUpdated = Event { id : string }
+  type PatientUpdateFailed = Event { error : string, code : string }
+  type PatientDeleted = Event { id : string }
+  type PatientDeleteFailed = Event { error : string, code : string }
+  type AppointmentSaved = Event { id : string }
+  type AppointmentSaveFailed = Event { error : string, code : string }
+  type AppointmentUpdated = Event { id : string }
+  type AppointmentUpdateFailed = Event { error : string, code : string }
+  type AppointmentDeleted = Event { id : string }
+  type AppointmentDeleteFailed = Event { error : string, code : string }
+  type IntakeFormSaved = Event { id : string }
+  type IntakeFormSaveFailed = Event { error : string, code : string }
+  type PrescriptionSaved = Event { id : string }
+  type PrescriptionSaveFailed = Event { error : string, code : string }
   trait PatientBrowse -> Patient [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -30,8 +46,17 @@ orbital PatientOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           PatientLoadFailed { message : string }
+    
+      PatientSaveFailed { error : string, code : string }
+      PatientUpdateFailed { error : string, code : string }
+      PatientDeleteFailed { error : string, code : string }
+      AppointmentSaveFailed { error : string, code : string }
+      AppointmentUpdateFailed { error : string, code : string }
+      AppointmentDeleteFailed { error : string, code : string }
+      IntakeFormSaveFailed { error : string, code : string }
+      PrescriptionSaveFailed { error : string, code : string }
     }
-    emits: [PatientLoaded, PatientLoadFailed]
+    emits: [PatientLoaded, PatientLoadFailed, PatientSaved, PatientSaveFailed, PatientUpdated, PatientUpdateFailed, PatientDeleted, PatientDeleteFailed, AppointmentSaved, AppointmentSaveFailed, AppointmentUpdated, AppointmentUpdateFailed, AppointmentDeleted, AppointmentDeleteFailed, IntakeFormSaved, IntakeFormSaveFailed, PrescriptionSaved, PrescriptionSaveFailed]
   }
   trait PatientCreate -> Patient [interaction, collection] {
     initial: closed
@@ -48,7 +73,7 @@ orbital PatientOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Patient @payload.data)
+        (persist create Patient @payload.data { emit: { success: "PatientSaved", failure: "PatientSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PATIENT_CREATED)
@@ -68,7 +93,7 @@ orbital PatientOrbital {
       INIT -> closed
         (ref Patient)
       EDIT -> open
-        (fetch Patient { id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
+        (fetch Patient {id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" }, emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Patient", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Patient", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["firstName", "lastName", "dateOfBirth", "phone", "insuranceId", "status"], entityId: "@entity.id" }] })
     }
     state open {
@@ -77,7 +102,7 @@ orbital PatientOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Patient @payload.data)
+        (persist update Patient @payload.data { emit: { success: "PatientUpdated", failure: "PatientUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PATIENT_UPDATED)
@@ -98,7 +123,7 @@ orbital PatientOrbital {
       INIT -> closed
         (ref Patient)
       VIEW -> open
-        (fetch Patient { id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
+        (fetch Patient {id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" }, emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.firstName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "First Name" }, { type: "typography", variant: "body", content: "@entity.firstName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Last Name" }, { type: "typography", variant: "body", content: "@entity.lastName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date Of Birth" }, { type: "typography", variant: "body", content: "@entity.dateOfBirth" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Insurance ID" }, { type: "typography", variant: "body", content: "@entity.insuranceId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -124,12 +149,12 @@ orbital PatientOrbital {
         (ref Patient)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Patient { id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
+        (fetch Patient {id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" }, emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Patient", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Patient @entity.pendingId)
+        (persist delete Patient @entity.pendingId { emit: { success: "PatientDeleted", failure: "PatientDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Patient)
@@ -200,7 +225,7 @@ orbital AppointmentOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Appointment @payload.data)
+        (persist create Appointment @payload.data { emit: { success: "AppointmentSaved", failure: "AppointmentSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit APPOINTMENT_CREATED)
@@ -220,7 +245,7 @@ orbital AppointmentOrbital {
       INIT -> closed
         (ref Appointment)
       EDIT -> open
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Appointment", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["patientName", "doctorName", "date", "time", "reason", "status"], entityId: "@entity.id" }] })
     }
     state open {
@@ -229,7 +254,7 @@ orbital AppointmentOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Appointment @payload.data)
+        (persist update Appointment @payload.data { emit: { success: "AppointmentUpdated", failure: "AppointmentUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit APPOINTMENT_UPDATED)
@@ -250,7 +275,7 @@ orbital AppointmentOrbital {
       INIT -> closed
         (ref Appointment)
       VIEW -> open
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.patientName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Patient Name" }, { type: "typography", variant: "body", content: "@entity.patientName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Doctor Name" }, { type: "typography", variant: "body", content: "@entity.doctorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Time" }, { type: "typography", variant: "body", content: "@entity.time" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.reason" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -275,12 +300,12 @@ orbital AppointmentOrbital {
         (ref Appointment)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Appointment", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Appointment @entity.pendingId)
+        (persist delete Appointment @entity.pendingId { emit: { success: "AppointmentDeleted", failure: "AppointmentDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Appointment)
@@ -351,7 +376,7 @@ orbital IntakeFormOrbital {
         (fetch IntakeForm { emit: { success: "IntakeFormLoaded", failure: "IntakeFormLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Insurance", variant: "h3" }, { type: "form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["emergencyContact", "insuranceProvider", "insuranceId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       COMPLETE -> complete
-        (persist create IntakeForm @payload.data)
+        (persist create IntakeForm @payload.data { emit: { success: "IntakeFormSaved", failure: "IntakeFormSaveFailed" } })
         (notify success "IntakeForm created successfully")
         (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Intake Complete", variant: "h2" }, { type: "typography", content: "Patient intake form has been submitted successfully.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
     }
@@ -415,7 +440,7 @@ orbital PrescriptionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Prescription @payload.data)
+        (persist create Prescription @payload.data { emit: { success: "PrescriptionSaved", failure: "PrescriptionSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
@@ -431,7 +456,7 @@ orbital PrescriptionOrbital {
       INIT -> closed
         (ref Prescription)
       VIEW -> open
-        (fetch Prescription { id: "@payload.id" , emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+        (fetch Prescription {id: "@payload.id" , emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" }, emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.medication" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Medication" }, { type: "typography", variant: "body", content: "@entity.medication" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Dosage" }, { type: "typography", variant: "body", content: "@entity.dosage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Frequency" }, { type: "typography", variant: "body", content: "@entity.frequency" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Patient Name" }, { type: "typography", variant: "body", content: "@entity.patientName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Prescribed By" }, { type: "typography", variant: "body", content: "@entity.prescribedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {

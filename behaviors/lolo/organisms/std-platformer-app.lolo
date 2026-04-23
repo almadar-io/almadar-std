@@ -14,6 +14,12 @@ orbital PlatLevelOrbital {
 
   type PlatLevelLoaded     = Event PlatLevel                  "Fired when PlatLevel finishes loading"
   type PlatLevelLoadFailed = Event { message : string } "Fired when PlatLevel fails to load"
+  type CollectibleSaved = Event { id : string }
+  type CollectibleSaveFailed = Event { error : string, code : string }
+  type CollectibleUpdated = Event { id : string }
+  type CollectibleUpdateFailed = Event { error : string, code : string }
+  type CollectibleDeleted = Event { id : string }
+  type CollectibleDeleteFailed = Event { error : string, code : string }
   trait PlatLevelPlatformerFlow -> PlatLevel [interaction, collection] {
     initial: menu
     state menu {
@@ -50,9 +56,13 @@ orbital PlatLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
-    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    emits: [PlatLevelLoaded, PlatLevelLoadFailed, CollectibleSaved, CollectibleSaveFailed, CollectibleUpdated, CollectibleUpdateFailed, CollectibleDeleted, CollectibleDeleteFailed]
     listens {
       PlatLevelLoadFailed { message : string }
+    
+      CollectibleSaveFailed { error : string, code : string }
+      CollectibleUpdateFailed { error : string, code : string }
+      CollectibleDeleteFailed { error : string, code : string }
     }
   }
   trait PlatLevelPlatformerCanvas -> PlatLevel [interaction, collection] {
@@ -159,7 +169,7 @@ orbital CollectibleOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Collectible @payload.data)
+        (persist create Collectible @payload.data { emit: { success: "CollectibleSaved", failure: "CollectibleSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ITEM_ADDED)
@@ -179,7 +189,7 @@ orbital CollectibleOrbital {
       INIT -> closed
         (ref Collectible)
       USE_ITEM -> open
-        (fetch Collectible { id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
+        (fetch Collectible {id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" }, emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap" }, { type: "typography", content: "Use Collectible", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", action: "SAVE", variant: "primary", icon: "check" }] }] })
     }
     state open {
@@ -188,7 +198,7 @@ orbital CollectibleOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Collectible @payload.data)
+        (persist update Collectible @payload.data { emit: { success: "CollectibleUpdated", failure: "CollectibleUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ITEM_USED)
@@ -210,12 +220,12 @@ orbital CollectibleOrbital {
         (ref Collectible)
       DROP -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Collectible { id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
+        (fetch Collectible {id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" }, emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Drop Collectible", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Are you sure you want to drop this collectible?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", action: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DROP -> idle
-        (persist delete Collectible @entity.pendingId)
+        (persist delete Collectible @entity.pendingId { emit: { success: "CollectibleDeleted", failure: "CollectibleDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Collectible)

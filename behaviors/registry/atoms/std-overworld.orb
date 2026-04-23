@@ -176,27 +176,27 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "map"
+                                  "name": "map",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "World Map",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "pulse": false,
@@ -205,57 +205,48 @@
                               "label": "Exploring"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between"
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "zoom": 10.0,
                           "height": "200px",
                           "markers": [],
-                          "zoom": 10.0,
                           "type": "map-view"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "label": "Travel",
-                              "event": "TRAVEL"
-                            }
-                          ],
-                          "fields": [],
                           "type": "data-grid",
-                          "entity": "WorldRegion",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
+                              "gap": "sm",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "justify": "between",
-                                  "align": "center",
-                                  "direction": "horizontal",
                                   "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
                                       "align": "center",
+                                      "type": "stack",
+                                      "gap": "sm",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "map-pin"
                                         },
                                         {
-                                          "content": "@item.name",
+                                          "variant": "h4",
                                           "type": "typography",
-                                          "variant": "h4"
+                                          "content": "@item.name"
                                         }
                                       ]
                                     },
@@ -263,15 +254,24 @@
                                       "label": "@item.description",
                                       "type": "badge"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 },
                                 {
-                                  "content": "@item.status",
                                   "variant": "caption",
+                                  "content": "@item.status",
                                   "type": "typography"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
+                            }
+                          ],
+                          "entity": "WorldRegion",
+                          "fields": [],
+                          "itemActions": [
+                            {
+                              "label": "Travel",
+                              "event": "TRAVEL"
                             }
                           ]
                         }
@@ -289,35 +289,35 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "gap": "md",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "loader"
                             },
                             {
-                              "type": "typography",
+                              "content": "Traveling...",
                               "variant": "h2",
-                              "content": "Traveling..."
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "typography",
                           "content": "Traveling to the destination worldregions map.",
-                          "variant": "body",
-                          "type": "typography"
+                          "variant": "body"
                         }
                       ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
@@ -327,6 +327,134 @@
                 "from": "transitioning",
                 "to": "entered",
                 "event": "ARRIVE",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorldRegion",
+                    {
+                      "emit": {
+                        "success": "WorldRegionLoaded",
+                        "failure": "WorldRegionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "name": "map",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "WorldRegions Map",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "label": "Entered",
+                              "status": "online",
+                              "type": "status-dot"
+                            }
+                          ],
+                          "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "direction": "horizontal",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "name": "map-pin",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "variant": "h4",
+                                          "type": "typography",
+                                          "content": "@item.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "@item.description",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "justify": "between",
+                                  "align": "center"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@item.status"
+                                }
+                              ]
+                            }
+                          ],
+                          "fields": [],
+                          "entity": "WorldRegion"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back to Map",
+                              "action": "BACK",
+                              "icon": "arrow-left",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "end"
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "entered",
+                "to": "exploring",
+                "event": "BACK",
                 "effects": [
                   [
                     "fetch",
@@ -345,142 +473,14 @@
                       "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "gap": "md",
-                              "children": [
-                                {
-                                  "name": "map",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "WorldRegions Map"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "status-dot",
-                              "label": "Entered",
-                              "status": "online"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "fields": [],
-                          "entity": "WorldRegion",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "direction": "horizontal",
-                                      "align": "center",
-                                      "gap": "sm",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "map-pin"
-                                        },
-                                        {
-                                          "variant": "h4",
-                                          "content": "@item.name",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "label": "@item.description",
-                                      "type": "badge"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "@item.status"
-                                }
-                              ],
                               "type": "stack",
-                              "gap": "sm",
-                              "direction": "vertical"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "action": "BACK",
-                              "icon": "arrow-left",
-                              "label": "Back to Map",
-                              "variant": "ghost",
-                              "type": "button"
-                            }
-                          ],
-                          "gap": "sm"
-                        }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "entered",
-                "to": "exploring",
-                "event": "BACK",
-                "effects": [
-                  [
-                    "fetch",
-                    "WorldRegion",
-                    {
-                      "emit": {
-                        "success": "WorldRegionLoaded",
-                        "failure": "WorldRegionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -492,16 +492,15 @@
                                   "content": "World Map"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "label": "Exploring",
                               "pulse": false,
                               "status": "online",
-                              "type": "status-dot"
+                              "type": "status-dot",
+                              "label": "Exploring"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -509,13 +508,19 @@
                         {
                           "zoom": 10.0,
                           "type": "map-view",
-                          "height": "200px",
-                          "markers": []
+                          "markers": [],
+                          "height": "200px"
                         },
                         {
-                          "entity": "WorldRegion",
                           "type": "data-grid",
+                          "entity": "WorldRegion",
                           "fields": [],
+                          "itemActions": [
+                            {
+                              "label": "Travel",
+                              "event": "TRAVEL"
+                            }
+                          ],
                           "renderItem": [
                             "fn",
                             "item",
@@ -523,33 +528,33 @@
                               "type": "stack",
                               "children": [
                                 {
-                                  "align": "center",
-                                  "type": "stack",
-                                  "justify": "between",
                                   "children": [
                                     {
-                                      "gap": "sm",
                                       "type": "stack",
                                       "direction": "horizontal",
                                       "align": "center",
                                       "children": [
                                         {
-                                          "name": "map-pin",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "map-pin"
                                         },
                                         {
+                                          "type": "typography",
                                           "variant": "h4",
-                                          "content": "@item.name",
-                                          "type": "typography"
+                                          "content": "@item.name"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "sm"
                                     },
                                     {
                                       "label": "@item.description",
                                       "type": "badge"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "justify": "between",
+                                  "type": "stack"
                                 },
                                 {
                                   "variant": "caption",
@@ -557,18 +562,13 @@
                                   "content": "@item.status"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "vertical"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "label": "Travel",
-                              "event": "TRAVEL"
+                              "direction": "vertical",
+                              "gap": "sm"
                             }
                           ]
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]

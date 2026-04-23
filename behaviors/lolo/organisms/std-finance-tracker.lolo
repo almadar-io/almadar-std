@@ -13,6 +13,14 @@ orbital TransactionOrbital {
 
   type TransactionLoaded     = Event Transaction                  "Fired when Transaction finishes loading"
   type TransactionLoadFailed = Event { message : string } "Fired when Transaction fails to load"
+  type TransactionSaved = Event { id : string }
+  type TransactionSaveFailed = Event { error : string, code : string }
+  type TransactionUpdated = Event { id : string }
+  type TransactionUpdateFailed = Event { error : string, code : string }
+  type TransactionDeleted = Event { id : string }
+  type TransactionDeleteFailed = Event { error : string, code : string }
+  type FinanceReportSaved = Event { id : string }
+  type FinanceReportSaveFailed = Event { error : string, code : string }
   trait TransactionBrowse -> Transaction [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -27,8 +35,13 @@ orbital TransactionOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           TransactionLoadFailed { message : string }
+    
+      TransactionSaveFailed { error : string, code : string }
+      TransactionUpdateFailed { error : string, code : string }
+      TransactionDeleteFailed { error : string, code : string }
+      FinanceReportSaveFailed { error : string, code : string }
     }
-    emits: [TransactionLoaded, TransactionLoadFailed]
+    emits: [TransactionLoaded, TransactionLoadFailed, TransactionSaved, TransactionSaveFailed, TransactionUpdated, TransactionUpdateFailed, TransactionDeleted, TransactionDeleteFailed, FinanceReportSaved, FinanceReportSaveFailed]
   }
   trait TransactionCreate -> Transaction [interaction, collection] {
     initial: closed
@@ -45,7 +58,7 @@ orbital TransactionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Transaction @payload.data)
+        (persist create Transaction @payload.data { emit: { success: "TransactionSaved", failure: "TransactionSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit TRANSACTION_CREATED)
@@ -65,7 +78,7 @@ orbital TransactionOrbital {
       INIT -> closed
         (ref Transaction)
       EDIT -> open
-        (fetch Transaction { id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
+        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Transaction", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Transaction", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["description", "amount", "category", "date"], entityId: "@entity.id" }] })
     }
     state open {
@@ -74,7 +87,7 @@ orbital TransactionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Transaction @payload.data)
+        (persist update Transaction @payload.data { emit: { success: "TransactionUpdated", failure: "TransactionUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit TRANSACTION_UPDATED)
@@ -95,7 +108,7 @@ orbital TransactionOrbital {
       INIT -> closed
         (ref Transaction)
       VIEW -> open
-        (fetch Transaction { id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
+        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.description" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Amount" }, { type: "typography", variant: "body", content: "@entity.amount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -122,12 +135,12 @@ orbital TransactionOrbital {
         (ref Transaction)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Transaction { id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
+        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Transaction", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Transaction @entity.pendingId)
+        (persist delete Transaction @entity.pendingId { emit: { success: "TransactionDeleted", failure: "TransactionDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Transaction)
@@ -230,7 +243,7 @@ orbital FinanceReportOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create FinanceReport @payload.data)
+        (persist create FinanceReport @payload.data { emit: { success: "FinanceReportSaved", failure: "FinanceReportSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
@@ -247,7 +260,7 @@ orbital FinanceReportOrbital {
       INIT -> closed
         (ref FinanceReport)
       VIEW -> open
-        (fetch FinanceReport { id: "@payload.id" , emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
+        (fetch FinanceReport {id: "@payload.id" , emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" }, emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Period" }, { type: "typography", variant: "body", content: "@entity.period" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Total" }, { type: "typography", variant: "body", content: "@entity.total" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Generated At" }, { type: "typography", variant: "body", content: "@entity.generatedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {

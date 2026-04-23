@@ -22,6 +22,10 @@ orbital ServicePaymentFlowOrbital {
 
   type ServicePaymentFlowLoaded     = Event ServicePaymentFlow                  "Fired when ServicePaymentFlow finishes loading"
   type ServicePaymentFlowLoadFailed = Event { message : string } "Fired when ServicePaymentFlow fails to load"
+  type ServicePaymentFlowStripeCompleted = Event { result : object }
+  type ServicePaymentFlowStripeFailed = Event { error : string, code : string }
+  type ServicePaymentFlowEmailCompleted = Event { result : object }
+  type ServicePaymentFlowEmailFailed = Event { error : string, code : string }
   trait ServicePaymentFlowPayment -> ServicePaymentFlow [interaction, instance] {
     initial: idle
     state idle {
@@ -30,14 +34,14 @@ orbital ServicePaymentFlowOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
-        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" } { emit: { success: "ServicePaymentFlowStripeCompleted", failure: "ServicePaymentFlowStripeFailed" } })
     }
     state creating {
       PAYMENT_CREATED -> confirming
         (set @entity.paymentIntentId @payload.id)
         (set @entity.clientSecret @payload.clientSecret)
         (render-ui main { type: "loading-state", title: "Confirming payment...", message: "Processing your payment." })
-        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" })
+        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" } { emit: { success: "ServicePaymentFlowStripeCompleted", failure: "ServicePaymentFlowStripeFailed" } })
       FAILED -> error
         (set @entity.error @payload.error)
         (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
@@ -68,8 +72,11 @@ orbital ServicePaymentFlowOrbital {
       PAYMENT_CREATED { id : string!, clientSecret : string! }
       FAILED { error : string! }
           ServicePaymentFlowLoadFailed { message : string }
+    
+      ServicePaymentFlowStripeFailed { error : string, code : string }
+      ServicePaymentFlowEmailFailed { error : string, code : string }
     }
-    emits: [ServicePaymentFlowLoaded, ServicePaymentFlowLoadFailed]
+    emits: [ServicePaymentFlowLoaded, ServicePaymentFlowLoadFailed, ServicePaymentFlowStripeCompleted, ServicePaymentFlowStripeFailed, ServicePaymentFlowEmailCompleted, ServicePaymentFlowEmailFailed]
   }
   trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction, instance] {
     initial: waiting
@@ -78,7 +85,7 @@ orbital ServicePaymentFlowOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "Receipt will be sent after payment.", variant: "body", color: "muted" }] })
       SEND_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServicePaymentFlowEmailCompleted", failure: "ServicePaymentFlowEmailFailed" } })
     }
     state sending {
       SENT -> sent
@@ -91,12 +98,12 @@ orbital ServicePaymentFlowOrbital {
     state sent {
       SEND_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Resending receipt..." })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServicePaymentFlowEmailCompleted", failure: "ServicePaymentFlowEmailFailed" } })
     }
     state receiptError {
       RETRY_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServicePaymentFlowEmailCompleted", failure: "ServicePaymentFlowEmailFailed" } })
     }
     listens {
       ServicePaymentFlowPayment SEND_RECEIPT -> SEND_RECEIPT

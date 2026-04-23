@@ -25,6 +25,12 @@ orbital ServiceDevopsToolkitOrbital {
 
   type ServiceDevopsToolkitLoaded     = Event ServiceDevopsToolkit                  "Fired when ServiceDevopsToolkit finishes loading"
   type ServiceDevopsToolkitLoadFailed = Event { message : string } "Fired when ServiceDevopsToolkit fails to load"
+  type ServiceDevopsToolkitGithubCompleted = Event { result : object }
+  type ServiceDevopsToolkitGithubFailed = Event { error : string, code : string }
+  type ServiceDevopsToolkitRedisCompleted = Event { result : object }
+  type ServiceDevopsToolkitRedisFailed = Event { error : string, code : string }
+  type ServiceDevopsToolkitStorageCompleted = Event { result : object }
+  type ServiceDevopsToolkitStorageFailed = Event { error : string, code : string }
   trait ServiceDevopsToolkitGithub -> ServiceDevopsToolkit [interaction, instance] {
     initial: ghIdle
     state ghIdle {
@@ -33,7 +39,7 @@ orbital ServiceDevopsToolkitOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", placeholder: "PR title" }, { type: "textarea", placeholder: "Describe your changes..." }, { type: "input", placeholder: "feature-branch" }, { type: "input", placeholder: "main" }, { type: "button", label: "Create PR", action: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
       CREATE_PR -> creatingPR
         (render-ui main { type: "loading-state", title: "Creating pull request...", message: "Submitting your PR to GitHub." })
-        (call-service github "createPR" { title: "@entity.title", body: "@entity.body", head: "@entity.head", base: "@entity.base" })
+        (call-service github "createPR" { title: "@entity.title", body: "@entity.body", head: "@entity.head", base: "@entity.base" } { emit: { success: "ServiceDevopsToolkitGithubCompleted", failure: "ServiceDevopsToolkitGithubFailed" } })
     }
     state creatingPR {
       PR_CREATED -> prCreated
@@ -59,8 +65,12 @@ orbital ServiceDevopsToolkitOrbital {
       PR_CREATED { url : string! }
       GH_FAILED { error : string! }
           ServiceDevopsToolkitLoadFailed { message : string }
+    
+      ServiceDevopsToolkitGithubFailed { error : string, code : string }
+      ServiceDevopsToolkitRedisFailed { error : string, code : string }
+      ServiceDevopsToolkitStorageFailed { error : string, code : string }
     }
-    emits: [ServiceDevopsToolkitLoaded, ServiceDevopsToolkitLoadFailed]
+    emits: [ServiceDevopsToolkitLoaded, ServiceDevopsToolkitLoadFailed, ServiceDevopsToolkitGithubCompleted, ServiceDevopsToolkitGithubFailed, ServiceDevopsToolkitRedisCompleted, ServiceDevopsToolkitRedisFailed, ServiceDevopsToolkitStorageCompleted, ServiceDevopsToolkitStorageFailed]
   }
   trait ServiceDevopsToolkitRedis -> ServiceDevopsToolkit [interaction, instance] {
     initial: redisIdle
@@ -70,13 +80,13 @@ orbital ServiceDevopsToolkitOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", placeholder: "cache-key" }, { type: "input", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", action: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", action: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", action: "DELETE_KEY", variant: "danger", icon: "trash-2" }] }] })
       GET_KEY -> redisExecuting
         (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
-        (call-service redis get { key: "@entity.cacheKey" })
+        (call-service redis get { key: "@entity.cacheKey" } { emit: { success: "ServiceDevopsToolkitRedisCompleted", failure: "ServiceDevopsToolkitRedisFailed" } })
       SET_KEY -> redisExecuting
         (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
-        (call-service redis set { key: "@entity.cacheKey", value: "@entity.cacheValue" })
+        (call-service redis set { key: "@entity.cacheKey", value: "@entity.cacheValue" } { emit: { success: "ServiceDevopsToolkitRedisCompleted", failure: "ServiceDevopsToolkitRedisFailed" } })
       DELETE_KEY -> redisExecuting
         (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
-        (call-service redis delete { key: "@entity.cacheKey" })
+        (call-service redis delete { key: "@entity.cacheKey" } { emit: { success: "ServiceDevopsToolkitRedisCompleted", failure: "ServiceDevopsToolkitRedisFailed" } })
     }
     state redisExecuting {
       REDIS_DONE -> redisComplete
@@ -113,16 +123,16 @@ orbital ServiceDevopsToolkitOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", placeholder: "bucket-name" }, { type: "input", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", action: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", action: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", action: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", action: "DELETE_FILE", variant: "danger", icon: "trash-2" }] }] })
       UPLOAD -> storageExecuting
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
-        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey" })
+        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceDevopsToolkitStorageCompleted", failure: "ServiceDevopsToolkitStorageFailed" } })
       DOWNLOAD -> storageExecuting
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
-        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" })
+        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceDevopsToolkitStorageCompleted", failure: "ServiceDevopsToolkitStorageFailed" } })
       LIST -> storageExecuting
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
-        (call-service storage list { bucket: "@entity.bucket" })
+        (call-service storage list { bucket: "@entity.bucket" } { emit: { success: "ServiceDevopsToolkitStorageCompleted", failure: "ServiceDevopsToolkitStorageFailed" } })
       DELETE_FILE -> storageExecuting
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
-        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" })
+        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceDevopsToolkitStorageCompleted", failure: "ServiceDevopsToolkitStorageFailed" } })
     }
     state storageExecuting {
       STORAGE_DONE -> storageComplete

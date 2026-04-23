@@ -13,6 +13,14 @@ orbital BuildOrbital {
 
   type BuildLoaded     = Event Build                  "Fired when Build finishes loading"
   type BuildLoadFailed = Event { message : string } "Fired when Build fails to load"
+  type BuildSaved = Event { id : string }
+  type BuildSaveFailed = Event { error : string, code : string }
+  type BuildUpdated = Event { id : string }
+  type BuildUpdateFailed = Event { error : string, code : string }
+  type BuildDeleted = Event { id : string }
+  type BuildDeleteFailed = Event { error : string, code : string }
+  type DeploymentSaved = Event { id : string }
+  type DeploymentSaveFailed = Event { error : string, code : string }
   trait BuildBrowse -> Build [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -27,8 +35,13 @@ orbital BuildOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           BuildLoadFailed { message : string }
+    
+      BuildSaveFailed { error : string, code : string }
+      BuildUpdateFailed { error : string, code : string }
+      BuildDeleteFailed { error : string, code : string }
+      DeploymentSaveFailed { error : string, code : string }
     }
-    emits: [BuildLoaded, BuildLoadFailed]
+    emits: [BuildLoaded, BuildLoadFailed, BuildSaved, BuildSaveFailed, BuildUpdated, BuildUpdateFailed, BuildDeleted, BuildDeleteFailed, DeploymentSaved, DeploymentSaveFailed]
   }
   trait BuildCreate -> Build [interaction, collection] {
     initial: closed
@@ -45,7 +58,7 @@ orbital BuildOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Build @payload.data)
+        (persist create Build @payload.data { emit: { success: "BuildSaved", failure: "BuildSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit BUILD_CREATED)
@@ -65,7 +78,7 @@ orbital BuildOrbital {
       INIT -> closed
         (ref Build)
       EDIT -> open
-        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Build", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"], entityId: "@entity.id" }] })
     }
     state open {
@@ -74,7 +87,7 @@ orbital BuildOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Build @payload.data)
+        (persist update Build @payload.data { emit: { success: "BuildUpdated", failure: "BuildUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit BUILD_UPDATED)
@@ -95,7 +108,7 @@ orbital BuildOrbital {
       INIT -> closed
         (ref Build)
       VIEW -> open
-        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.branch" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Branch" }, { type: "typography", variant: "body", content: "@entity.branch" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Commit" }, { type: "typography", variant: "body", content: "@entity.commit" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Triggered By" }, { type: "typography", variant: "body", content: "@entity.triggeredBy" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -122,12 +135,12 @@ orbital BuildOrbital {
         (ref Build)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Build", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Build @entity.pendingId)
+        (persist delete Build @entity.pendingId { emit: { success: "BuildDeleted", failure: "BuildDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Build)
@@ -215,7 +228,7 @@ orbital DeploymentOrbital {
     }
     state loading {
       LOADED -> success
-        (persist create Deployment @payload.data)
+        (persist create Deployment @payload.data { emit: { success: "DeploymentSaved", failure: "DeploymentSaveFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Deployment successful." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       FAILED -> error
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "Deployment failed.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })

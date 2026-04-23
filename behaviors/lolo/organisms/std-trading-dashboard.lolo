@@ -12,6 +12,14 @@ orbital PortfolioOrbital {
 
   type PortfolioLoaded     = Event Portfolio                  "Fired when Portfolio finishes loading"
   type PortfolioLoadFailed = Event { message : string } "Fired when Portfolio fails to load"
+  type TradeOrderSaved = Event { id : string }
+  type TradeOrderSaveFailed = Event { error : string, code : string }
+  type TradeOrderUpdated = Event { id : string }
+  type TradeOrderUpdateFailed = Event { error : string, code : string }
+  type TradeOrderDeleted = Event { id : string }
+  type TradeOrderDeleteFailed = Event { error : string, code : string }
+  type MarketFeedSaved = Event { id : string }
+  type MarketFeedSaveFailed = Event { error : string, code : string }
   trait PortfolioDisplay -> Portfolio [interaction, collection] {
     initial: loading
     state loading {
@@ -35,9 +43,14 @@ orbital PortfolioOrbital {
         (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [PortfolioLoaded, PortfolioLoadFailed]
+    emits: [PortfolioLoaded, PortfolioLoadFailed, TradeOrderSaved, TradeOrderSaveFailed, TradeOrderUpdated, TradeOrderUpdateFailed, TradeOrderDeleted, TradeOrderDeleteFailed, MarketFeedSaved, MarketFeedSaveFailed]
     listens {
       PortfolioLoadFailed { message : string }
+    
+      TradeOrderSaveFailed { error : string, code : string }
+      TradeOrderUpdateFailed { error : string, code : string }
+      TradeOrderDeleteFailed { error : string, code : string }
+      MarketFeedSaveFailed { error : string, code : string }
     }
   }
   page "/portfolio" as PortfolioPage -> PortfolioDisplay
@@ -83,7 +96,7 @@ orbital TradeOrderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create TradeOrder @payload.data)
+        (persist create TradeOrder @payload.data { emit: { success: "TradeOrderSaved", failure: "TradeOrderSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit TRADE_ORDER_CREATED)
@@ -103,7 +116,7 @@ orbital TradeOrderOrbital {
       INIT -> closed
         (ref TradeOrder)
       EDIT -> open
-        (fetch TradeOrder { id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
+        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TradeOrder", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"], entityId: "@entity.id" }] })
     }
     state open {
@@ -112,7 +125,7 @@ orbital TradeOrderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update TradeOrder @payload.data)
+        (persist update TradeOrder @payload.data { emit: { success: "TradeOrderUpdated", failure: "TradeOrderUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit TRADE_ORDER_UPDATED)
@@ -133,7 +146,7 @@ orbital TradeOrderOrbital {
       INIT -> closed
         (ref TradeOrder)
       VIEW -> open
-        (fetch TradeOrder { id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
+        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.symbol" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Symbol" }, { type: "typography", variant: "body", content: "@entity.symbol" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Side" }, { type: "typography", variant: "body", content: "@entity.side" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Quantity" }, { type: "typography", variant: "body", content: "@entity.quantity" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -159,12 +172,12 @@ orbital TradeOrderOrbital {
         (ref TradeOrder)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch TradeOrder { id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
+        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete TradeOrder @entity.pendingId)
+        (persist delete TradeOrder @entity.pendingId { emit: { success: "TradeOrderDeleted", failure: "TradeOrderDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref TradeOrder)
@@ -211,7 +224,7 @@ orbital MarketFeedOrbital {
     }
     state loading {
       LOADED -> success
-        (persist create MarketFeed @payload.data)
+        (persist create MarketFeed @payload.data { emit: { success: "MarketFeedSaved", failure: "MarketFeedSaveFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Market feed connected." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       FAILED -> error
         (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "Market feed disconnected.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })

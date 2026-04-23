@@ -41,6 +41,14 @@ orbital BuildPlanOrbital {
   type BuildProgressLoaded = Event { message : string } "Emitted event BuildProgressLoaded"
 
   type BuildProgressLoadFailed = Event { message : string } "Emitted event BuildProgressLoadFailed"
+  type BuildPlanSaved = Event { id : string }
+  type BuildPlanSaveFailed = Event { error : string, code : string }
+  type BuildLoopSaved = Event { id : string }
+  type BuildLoopSaveFailed = Event { error : string, code : string }
+  type BuildFixSaved = Event { id : string }
+  type BuildFixSaveFailed = Event { error : string, code : string }
+  type BuildSessionUpdated = Event { id : string }
+  type BuildSessionUpdateFailed = Event { error : string, code : string }
   trait BuildPlanner -> BuildPlan [interaction, collection] {
     initial: idle
     state idle {
@@ -109,8 +117,13 @@ orbital BuildPlanOrbital {
       MEMORIES_LOADED { memories : string!, count : number! }
       PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
       FAILED { error : string! }
+    
+      BuildPlanSaveFailed { error : string, code : string }
+      BuildLoopSaveFailed { error : string, code : string }
+      BuildFixSaveFailed { error : string, code : string }
+      BuildSessionUpdateFailed { error : string, code : string }
     }
-    emits: [BuildTaskLoaded, BuildTaskLoadFailed]
+    emits: [BuildTaskLoaded, BuildTaskLoadFailed, BuildPlanSaved, BuildPlanSaveFailed, BuildLoopSaved, BuildLoopSaveFailed, BuildFixSaved, BuildFixSaveFailed, BuildSessionUpdated, BuildSessionUpdateFailed]
   }
   trait PlannerTaskInput -> BuildPlan [interaction, collection] {
     initial: closed
@@ -151,7 +164,7 @@ orbital BuildPlanOrbital {
         (ref BuildPlan)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildPlan @payload.data)
+        (persist create BuildPlan @payload.data { emit: { success: "BuildPlanSaved", failure: "BuildPlanSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
         (ref BuildPlan)
@@ -183,7 +196,7 @@ orbital BuildPlanOrbital {
         (ref BuildPlan)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildPlan @payload.data)
+        (persist create BuildPlan @payload.data { emit: { success: "BuildPlanSaved", failure: "BuildPlanSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref BuildPlan)
@@ -401,7 +414,7 @@ orbital BuildLoopOrbital {
         (ref BuildLoop)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildLoop @payload.data)
+        (persist create BuildLoop @payload.data { emit: { success: "BuildLoopSaved", failure: "BuildLoopSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref BuildLoop)
@@ -433,7 +446,7 @@ orbital BuildLoopOrbital {
         (ref BuildLoop)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildLoop @payload.data)
+        (persist create BuildLoop @payload.data { emit: { success: "BuildLoopSaved", failure: "BuildLoopSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
         (ref BuildLoop)
@@ -709,7 +722,7 @@ orbital BuildFixOrbital {
         (ref BuildFix)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildFix @payload.data)
+        (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
         (ref BuildFix)
@@ -741,7 +754,7 @@ orbital BuildFixOrbital {
         (ref BuildFix)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildFix @payload.data)
+        (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
         (ref BuildFix)
@@ -773,7 +786,7 @@ orbital BuildFixOrbital {
         (ref BuildFix)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create BuildFix @payload.data)
+        (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref BuildFix)
@@ -832,7 +845,7 @@ orbital BuildSessionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update BuildSession @payload.data)
+        (persist update BuildSession @payload.data { emit: { success: "BuildSessionUpdated", failure: "BuildSessionUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit LABELED)

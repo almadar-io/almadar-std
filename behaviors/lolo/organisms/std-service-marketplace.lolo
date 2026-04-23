@@ -14,6 +14,24 @@ orbital ProductOrbital {
 
   type ProductLoaded     = Event Product                  "Fired when Product finishes loading"
   type ProductLoadFailed = Event { message : string } "Fired when Product fails to load"
+  type ProductSaved = Event { id : string }
+  type ProductSaveFailed = Event { error : string, code : string }
+  type ProductUpdated = Event { id : string }
+  type ProductUpdateFailed = Event { error : string, code : string }
+  type ProductDeleted = Event { id : string }
+  type ProductDeleteFailed = Event { error : string, code : string }
+  type ProductOauthCompleted = Event { result : object }
+  type ProductOauthFailed = Event { error : string, code : string }
+  type ProductStripeCompleted = Event { result : object }
+  type ProductStripeFailed = Event { error : string, code : string }
+  type ProductEmailCompleted = Event { result : object }
+  type ProductEmailFailed = Event { error : string, code : string }
+  type OrderSaved = Event { id : string }
+  type OrderSaveFailed = Event { error : string, code : string }
+  type OrderUpdated = Event { id : string }
+  type OrderUpdateFailed = Event { error : string, code : string }
+  type OrderDeleted = Event { id : string }
+  type OrderDeleteFailed = Event { error : string, code : string }
   trait ProductBrowse -> Product [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -31,8 +49,18 @@ orbital ProductOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           ProductLoadFailed { message : string }
+    
+      ProductSaveFailed { error : string, code : string }
+      ProductUpdateFailed { error : string, code : string }
+      ProductDeleteFailed { error : string, code : string }
+      ProductOauthFailed { error : string, code : string }
+      ProductStripeFailed { error : string, code : string }
+      ProductEmailFailed { error : string, code : string }
+      OrderSaveFailed { error : string, code : string }
+      OrderUpdateFailed { error : string, code : string }
+      OrderDeleteFailed { error : string, code : string }
     }
-    emits: [ProductLoaded, ProductLoadFailed]
+    emits: [ProductLoaded, ProductLoadFailed, ProductSaved, ProductSaveFailed, ProductUpdated, ProductUpdateFailed, ProductDeleted, ProductDeleteFailed, ProductOauthCompleted, ProductOauthFailed, ProductStripeCompleted, ProductStripeFailed, ProductEmailCompleted, ProductEmailFailed, OrderSaved, OrderSaveFailed, OrderUpdated, OrderUpdateFailed, OrderDeleted, OrderDeleteFailed]
   }
   trait ProductCreate -> Product [interaction, collection] {
     initial: closed
@@ -49,7 +77,7 @@ orbital ProductOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Product @payload.data)
+        (persist create Product @payload.data { emit: { success: "ProductSaved", failure: "ProductSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PRODUCT_CREATED)
@@ -69,7 +97,7 @@ orbital ProductOrbital {
       INIT -> closed
         (ref Product)
       EDIT -> open
-        (fetch Product { id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
+        (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Product", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Product", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "price", "category", "inStock"], entityId: "@entity.id" }] })
     }
     state open {
@@ -78,7 +106,7 @@ orbital ProductOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Product @payload.data)
+        (persist update Product @payload.data { emit: { success: "ProductUpdated", failure: "ProductUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PRODUCT_UPDATED)
@@ -99,7 +127,7 @@ orbital ProductOrbital {
       INIT -> closed
         (ref Product)
       VIEW -> open
-        (fetch Product { id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
+        (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "In Stock" }, { type: "typography", variant: "body", content: "@entity.inStock" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -125,12 +153,12 @@ orbital ProductOrbital {
         (ref Product)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Product { id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
+        (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Product", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Product @entity.pendingId)
+        (persist delete Product @entity.pendingId { emit: { success: "ProductDeleted", failure: "ProductDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Product)
@@ -176,14 +204,14 @@ orbital AuthSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", action: "LOGIN", variant: "primary", icon: "log-in" }] }] })
       LOGIN -> authorizing
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Authorizing...", message: "Redirecting to provider for authorization." }] })
-        (call-service oauth authorize { provider: "@entity.provider", scopes: ["openid", "email"] })
+        (call-service oauth authorize { provider: "@entity.provider", scopes: ["openid", "email"] } { emit: { success: "ProductOauthCompleted", failure: "ProductOauthFailed" } })
     }
     state authorizing {
       AUTH_URL_RECEIVED -> authorizing
         (set @entity.authUrl @payload.authUrl)
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "external-link" }, { type: "typography", content: "Authorization Required", variant: "h2" }, { type: "typography", content: "@entity.authUrl", variant: "body", color: "muted" }, { type: "input", placeholder: "Paste authorization code here" }, { type: "button", label: "Submit", action: "CALLBACK", variant: "primary", icon: "check" }] }] })
       CALLBACK -> authenticated
-        (call-service oauth token { code: "@payload.code" })
+        (call-service oauth token { code: "@payload.code" } { emit: { success: "ProductOauthCompleted", failure: "ProductOauthFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", action: "REFRESH", variant: "ghost", icon: "refresh-cw" }, { type: "button", label: "Logout", action: "LOGOUT", variant: "ghost", icon: "log-out" }] }] }] })
       FAILED -> error
         (set @entity.error @payload.error)
@@ -197,7 +225,7 @@ orbital AuthSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", action: "REFRESH", variant: "ghost", icon: "refresh-cw" }, { type: "button", label: "Logout", action: "LOGOUT", variant: "ghost", icon: "log-out" }] }] }] })
       REFRESH -> refreshing
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Refreshing token...", message: "Obtaining a new access token." }] })
-        (call-service oauth refresh { refreshToken: "@entity.refreshToken" })
+        (call-service oauth refresh { refreshToken: "@entity.refreshToken" } { emit: { success: "ProductOauthCompleted", failure: "ProductOauthFailed" } })
       LOGOUT -> unauthenticated
         (set @entity.authStatus unauthenticated)
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", action: "LOGIN", variant: "primary", icon: "log-in" }] }] })
@@ -251,14 +279,14 @@ orbital OrderPaymentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] }] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." }] })
-        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" } { emit: { success: "ProductStripeCompleted", failure: "ProductStripeFailed" } })
     }
     state creating {
       PAYMENT_CREATED -> confirming
         (set @entity.paymentIntentId @payload.id)
         (set @entity.clientSecret @payload.clientSecret)
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Confirming payment...", message: "Processing your payment." }] })
-        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" })
+        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" } { emit: { success: "ProductStripeCompleted", failure: "ProductStripeFailed" } })
       FAILED -> error
         (set @entity.error @payload.error)
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" }] })
@@ -300,7 +328,7 @@ orbital OrderPaymentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "Receipt will be sent after payment.", variant: "body", color: "muted" }] }] })
       SEND_RECEIPT -> sending
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." }] })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ProductEmailCompleted", failure: "ProductEmailFailed" } })
     }
     state sending {
       SENT -> sent
@@ -313,12 +341,12 @@ orbital OrderPaymentOrbital {
     state sent {
       SEND_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Resending receipt..." })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ProductEmailCompleted", failure: "ProductEmailFailed" } })
     }
     state receiptError {
       RETRY_RECEIPT -> sending
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." }] })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ProductEmailCompleted", failure: "ProductEmailFailed" } })
     }
     listens {
       OrderPaymentPayment SEND_RECEIPT -> SEND_RECEIPT
@@ -367,7 +395,7 @@ orbital OrderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Order @payload.data)
+        (persist create Order @payload.data { emit: { success: "OrderSaved", failure: "OrderSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ORDER_CREATED)
@@ -387,7 +415,7 @@ orbital OrderOrbital {
       INIT -> closed
         (ref Order)
       EDIT -> open
-        (fetch Order { id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
+        (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Order", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Order", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["productName", "amount", "paymentStatus", "orderDate"], entityId: "@entity.id" }] })
     }
     state open {
@@ -396,7 +424,7 @@ orbital OrderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Order @payload.data)
+        (persist update Order @payload.data { emit: { success: "OrderUpdated", failure: "OrderUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ORDER_UPDATED)
@@ -417,7 +445,7 @@ orbital OrderOrbital {
       INIT -> closed
         (ref Order)
       VIEW -> open
-        (fetch Order { id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
+        (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.productName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Product Name" }, { type: "typography", variant: "body", content: "@entity.productName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Amount" }, { type: "typography", variant: "body", content: "@entity.amount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Payment Status" }, { type: "typography", variant: "body", content: "@entity.paymentStatus" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Order Date" }, { type: "typography", variant: "body", content: "@entity.orderDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -442,12 +470,12 @@ orbital OrderOrbital {
         (ref Order)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Order { id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
+        (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Order", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Order @entity.pendingId)
+        (persist delete Order @entity.pendingId { emit: { success: "OrderDeleted", failure: "OrderDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Order)

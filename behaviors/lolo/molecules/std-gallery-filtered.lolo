@@ -14,6 +14,8 @@ orbital GalleryFilteredOrbital {
     imageUrl : string
     tags : string
   }
+  type GalleryFilteredItemLoaded = Event { data : [GalleryFilteredItem] }
+  type GalleryFilteredItemLoadFailed = Event { error : string, code : string }
 
   trait GalleryFilteredSearch  = Search.traits.SearchResultSearch   -> GalleryFilteredItem {}
   trait GalleryFilteredFilter  = Filter.traits.FilterTargetFilter   -> GalleryFilteredItem {}
@@ -22,7 +24,7 @@ orbital GalleryFilteredOrbital {
   trait GalleryFilteredLayout -> GalleryFilteredItem [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch GalleryFilteredItem)
+        (fetch GalleryFilteredItem { emit: { success: "GalleryFilteredItemLoaded", failure: "GalleryFilteredItemLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "vertical",

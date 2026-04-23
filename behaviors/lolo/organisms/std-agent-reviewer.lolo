@@ -18,6 +18,12 @@ orbital ReviewOrbital {
 
   type ReviewLoaded     = Event Review                  "Fired when Review finishes loading"
   type ReviewLoadFailed = Event { message : string } "Fired when Review fails to load"
+  type ReviewRagSaved = Event { id : string }
+  type ReviewRagSaveFailed = Event { error : string, code : string }
+  type AnalysisSaved = Event { id : string }
+  type AnalysisSaveFailed = Event { error : string, code : string }
+  type ReviewCompletionSaved = Event { id : string }
+  type ReviewCompletionSaveFailed = Event { error : string, code : string }
   trait ReviewGenerator -> Review [interaction, collection] {
     initial: idle
     state idle {
@@ -56,8 +62,12 @@ orbital ReviewOrbital {
       * CLASSIFIED -> SUBMIT_REVIEW
           ReviewLoadFailed { message : string }
           SUBMIT_REVIEW { target : string }
+    
+      ReviewRagSaveFailed { error : string, code : string }
+      AnalysisSaveFailed { error : string, code : string }
+      ReviewCompletionSaveFailed { error : string, code : string }
     }
-    emits: [ReviewLoaded, ReviewLoadFailed]
+    emits: [ReviewLoaded, ReviewLoadFailed, ReviewRagSaved, ReviewRagSaveFailed, AnalysisSaved, AnalysisSaveFailed, ReviewCompletionSaved, ReviewCompletionSaveFailed]
   }
   page "/review" as ReviewPage -> ReviewGenerator
 }
@@ -190,7 +200,7 @@ orbital ReviewRagOrbital {
         (ref ReviewRag)
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create ReviewRag @payload.data)
+        (persist create ReviewRag @payload.data { emit: { success: "ReviewRagSaved", failure: "ReviewRagSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref ReviewRag)
@@ -237,7 +247,7 @@ orbital AnalysisOrbital {
         (ref Analysis)
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create Analysis @payload.data)
+        (persist create Analysis @payload.data { emit: { success: "AnalysisSaved", failure: "AnalysisSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
         (ref Analysis)
@@ -342,7 +352,7 @@ orbital ReviewCompletionOrbital {
         (ref ReviewCompletion)
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create ReviewCompletion @payload.data)
+        (persist create ReviewCompletion @payload.data { emit: { success: "ReviewCompletionSaved", failure: "ReviewCompletionSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref ReviewCompletion)

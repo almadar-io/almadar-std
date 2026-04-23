@@ -15,6 +15,20 @@ orbital ProviderOrbital {
 
   type ProviderLoaded     = Event Provider                  "Fired when Provider finishes loading"
   type ProviderLoadFailed = Event { message : string } "Fired when Provider fails to load"
+  type ProviderSaved = Event { id : string }
+  type ProviderSaveFailed = Event { error : string, code : string }
+  type ProviderUpdated = Event { id : string }
+  type ProviderUpdateFailed = Event { error : string, code : string }
+  type ProviderDeleted = Event { id : string }
+  type ProviderDeleteFailed = Event { error : string, code : string }
+  type BookingSaved = Event { id : string }
+  type BookingSaveFailed = Event { error : string, code : string }
+  type AppointmentSaved = Event { id : string }
+  type AppointmentSaveFailed = Event { error : string, code : string }
+  type AppointmentUpdated = Event { id : string }
+  type AppointmentUpdateFailed = Event { error : string, code : string }
+  type AppointmentDeleted = Event { id : string }
+  type AppointmentDeleteFailed = Event { error : string, code : string }
   trait ProviderBrowse -> Provider [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -32,8 +46,16 @@ orbital ProviderOrbital {
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
           ProviderLoadFailed { message : string }
+    
+      ProviderSaveFailed { error : string, code : string }
+      ProviderUpdateFailed { error : string, code : string }
+      ProviderDeleteFailed { error : string, code : string }
+      BookingSaveFailed { error : string, code : string }
+      AppointmentSaveFailed { error : string, code : string }
+      AppointmentUpdateFailed { error : string, code : string }
+      AppointmentDeleteFailed { error : string, code : string }
     }
-    emits: [ProviderLoaded, ProviderLoadFailed]
+    emits: [ProviderLoaded, ProviderLoadFailed, ProviderSaved, ProviderSaveFailed, ProviderUpdated, ProviderUpdateFailed, ProviderDeleted, ProviderDeleteFailed, BookingSaved, BookingSaveFailed, AppointmentSaved, AppointmentSaveFailed, AppointmentUpdated, AppointmentUpdateFailed, AppointmentDeleted, AppointmentDeleteFailed]
   }
   trait ProviderCreate -> Provider [interaction, collection] {
     initial: closed
@@ -50,7 +72,7 @@ orbital ProviderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Provider @payload.data)
+        (persist create Provider @payload.data { emit: { success: "ProviderSaved", failure: "ProviderSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PROVIDER_CREATED)
@@ -70,7 +92,7 @@ orbital ProviderOrbital {
       INIT -> closed
         (ref Provider)
       EDIT -> open
-        (fetch Provider { id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
+        (fetch Provider {id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" }, emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Provider", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Provider", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "specialty", "location", "phone", "rating", "available"], entityId: "@entity.id" }] })
     }
     state open {
@@ -79,7 +101,7 @@ orbital ProviderOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Provider @payload.data)
+        (persist update Provider @payload.data { emit: { success: "ProviderUpdated", failure: "ProviderUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit PROVIDER_UPDATED)
@@ -100,7 +122,7 @@ orbital ProviderOrbital {
       INIT -> closed
         (ref Provider)
       VIEW -> open
-        (fetch Provider { id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
+        (fetch Provider {id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" }, emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Specialty" }, { type: "typography", variant: "body", content: "@entity.specialty" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Location" }, { type: "typography", variant: "body", content: "@entity.location" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Rating" }, { type: "typography", variant: "body", content: "@entity.rating" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Available" }, { type: "typography", variant: "body", content: "@entity.available" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -126,12 +148,12 @@ orbital ProviderOrbital {
         (ref Provider)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Provider { id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
+        (fetch Provider {id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" }, emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Provider", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Provider @entity.pendingId)
+        (persist delete Provider @entity.pendingId { emit: { success: "ProviderDeleted", failure: "ProviderDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Provider)
@@ -200,7 +222,7 @@ orbital BookingOrbital {
         (fetch Booking { emit: { success: "BookingLoaded", failure: "BookingLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Book Appointment", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Provider Selection", "Your Details", "Date and Time"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Date and Time", variant: "h3" }, { type: "form-section", entity: "Booking", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["date", "time", "notes"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       COMPLETE -> complete
-        (persist create Booking @payload.data)
+        (persist create Booking @payload.data { emit: { success: "BookingSaved", failure: "BookingSaveFailed" } })
         (notify success "Booking created successfully")
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Booking Confirmed", variant: "h2" }, { type: "typography", content: "Your appointment has been booked successfully.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
     }
@@ -264,7 +286,7 @@ orbital AppointmentOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Appointment @payload.data)
+        (persist create Appointment @payload.data { emit: { success: "AppointmentSaved", failure: "AppointmentSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit APPOINTMENT_CREATED)
@@ -284,7 +306,7 @@ orbital AppointmentOrbital {
       INIT -> closed
         (ref Appointment)
       EDIT -> open
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Appointment", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["providerName", "customerName", "date", "time", "status", "notes"], entityId: "@entity.id" }] })
     }
     state open {
@@ -293,7 +315,7 @@ orbital AppointmentOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update Appointment @payload.data)
+        (persist update Appointment @payload.data { emit: { success: "AppointmentUpdated", failure: "AppointmentUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit APPOINTMENT_UPDATED)
@@ -314,7 +336,7 @@ orbital AppointmentOrbital {
       INIT -> closed
         (ref Appointment)
       VIEW -> open
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.providerName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Provider Name" }, { type: "typography", variant: "body", content: "@entity.providerName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Customer Name" }, { type: "typography", variant: "body", content: "@entity.customerName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Time" }, { type: "typography", variant: "body", content: "@entity.time" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -339,12 +361,12 @@ orbital AppointmentOrbital {
         (ref Appointment)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Appointment { id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Appointment", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DELETE -> idle
-        (persist delete Appointment @entity.pendingId)
+        (persist delete Appointment @entity.pendingId { emit: { success: "AppointmentDeleted", failure: "AppointmentDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref Appointment)

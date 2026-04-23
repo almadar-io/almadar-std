@@ -322,15 +322,18 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
                       "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
@@ -338,51 +341,50 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "AgentSession Manager",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "AgentSession Manager"
                                 }
                               ],
                               "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal"
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "type": "stack",
-                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "secondary",
+                                  "type": "button",
+                                  "label": "Fork",
                                   "action": "FORK",
                                   "icon": "git-branch",
-                                  "type": "button",
-                                  "label": "Fork"
+                                  "variant": "secondary"
                                 },
                                 {
-                                  "label": "Label",
                                   "variant": "secondary",
                                   "icon": "tag",
-                                  "type": "button",
-                                  "action": "LABEL"
+                                  "label": "Label",
+                                  "action": "LABEL",
+                                  "type": "button"
                                 },
                                 {
-                                  "label": "End",
+                                  "type": "button",
+                                  "variant": "ghost",
                                   "icon": "square",
                                   "action": "END",
-                                  "type": "button",
-                                  "variant": "ghost"
+                                  "label": "End"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ],
-                          "justify": "between",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
                           "itemActions": [
                             {
                               "event": "VIEW",
@@ -392,41 +394,39 @@
                           ],
                           "fields": [
                             {
+                              "label": "Session ID",
                               "name": "sessionId",
                               "icon": "terminal",
-                              "variant": "h4",
-                              "label": "Session ID"
+                              "variant": "h4"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
-                              "label": "Status",
+                              "name": "status",
                               "colorMap": {
-                                "archived": "neutral",
-                                "disabled": "neutral",
                                 "inactive": "neutral",
+                                "disabled": "neutral",
+                                "done": "success",
+                                "failed": "destructive",
                                 "pending": "warning",
-                                "completed": "success",
+                                "error": "destructive",
                                 "cancelled": "destructive",
                                 "active": "success",
                                 "draft": "warning",
-                                "failed": "destructive",
-                                "error": "destructive",
+                                "completed": "success",
                                 "scheduled": "warning",
-                                "done": "success"
-                              }
+                                "archived": "neutral"
+                              },
+                              "label": "Status"
                             },
                             {
-                              "variant": "caption",
+                              "label": "Label",
                               "name": "label",
-                              "label": "Label"
+                              "variant": "caption"
                             }
                           ],
-                          "type": "data-grid",
                           "entity": "AgentSession"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -620,15 +620,13 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "tag",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "tag"
                             },
                             {
                               "type": "typography",
@@ -636,7 +634,6 @@
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal"
                         },
@@ -644,32 +641,35 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "children": [
                             {
                               "content": "Session:",
-                              "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
                               "type": "badge",
                               "label": "@entity.sessionId"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
-                          "mode": "edit",
                           "type": "form-section",
-                          "cancelEvent": "CLOSE",
                           "entity": "AgentSession",
+                          "mode": "edit",
                           "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "label"
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -947,8 +947,8 @@
                     "AgentSession",
                     {
                       "emit": {
-                        "success": "AgentSessionLoaded",
-                        "failure": "AgentSessionLoadFailed"
+                        "failure": "AgentSessionLoadFailed",
+                        "success": "AgentSessionLoaded"
                       }
                     }
                   ],
@@ -1085,8 +1085,8 @@
                     "create",
                     "AgentSession",
                     {
-                      "parentId": "@entity.parentId",
                       "createdAt": "@now",
+                      "parentId": "@entity.parentId",
                       "status": "forked",
                       "sessionId": "@entity.sessionId"
                     },
@@ -1188,10 +1188,10 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Session",
-                      "description": "Session is ready",
                       "type": "empty-state",
-                      "icon": "git-branch"
+                      "description": "Session is ready",
+                      "icon": "git-branch",
+                      "title": "Session"
                     }
                   ]
                 ]

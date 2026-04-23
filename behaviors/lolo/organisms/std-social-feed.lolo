@@ -13,6 +13,10 @@ orbital PostOrbital {
 
   type PostLoaded     = Event Post                  "Fired when Post finishes loading"
   type PostLoadFailed = Event { message : string } "Fired when Post fails to load"
+  type PostSaved = Event { id : string }
+  type PostSaveFailed = Event { error : string, code : string }
+  type CommentSaved = Event { id : string }
+  type CommentSaveFailed = Event { error : string, code : string }
   trait PostBrowse -> Post [interaction, collection] {
     state browsing {
       INIT -> browsing
@@ -25,8 +29,11 @@ orbital PostOrbital {
     listens {
       VIEW { id : string!, row : object }
           PostLoadFailed { message : string }
+    
+      PostSaveFailed { error : string, code : string }
+      CommentSaveFailed { error : string, code : string }
     }
-    emits: [PostLoaded, PostLoadFailed]
+    emits: [PostLoaded, PostLoadFailed, PostSaved, PostSaveFailed, CommentSaved, CommentSaveFailed]
   }
   trait PostCreate -> Post [interaction, collection] {
     initial: closed
@@ -43,7 +50,7 @@ orbital PostOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Post @payload.data)
+        (persist create Post @payload.data { emit: { success: "PostSaved", failure: "PostSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
@@ -59,7 +66,7 @@ orbital PostOrbital {
       INIT -> closed
         (ref Post)
       VIEW -> open
-        (fetch Post { id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
+        (fetch Post {id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" }, emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Likes" }, { type: "typography", variant: "body", content: "@entity.likes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -118,7 +125,7 @@ orbital CommentOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SEND -> closed
-        (persist create Comment @payload.data)
+        (persist create Comment @payload.data { emit: { success: "CommentSaved", failure: "CommentSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
@@ -137,7 +144,7 @@ orbital CommentOrbital {
       INIT -> closed
         (ref Comment)
       VIEW -> open
-        (fetch Comment { id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
+        (fetch Comment {id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" }, emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.body" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Post ID" }, { type: "typography", variant: "body", content: "@entity.postId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
     state open {

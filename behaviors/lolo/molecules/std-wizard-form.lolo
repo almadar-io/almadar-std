@@ -26,12 +26,14 @@ orbital WizardFormOrbital {
 
   type WizardFormSaved      = Event { id : string }                   "Fired when wizard flow completes successfully"
   type WizardFormSaveFailed = Event { error : string, code : string } "Fired when the final persist fails"
+  type WizardFormEntryLoaded = Event { data : [WizardFormEntry] }
+  type WizardFormEntryLoadFailed = Event { error : string, code : string }
 
   trait WizardFormFlow -> WizardFormEntry [interaction, instance] {
     initial: personal
     state personal {
       INIT -> personal
-        (fetch WizardFormEntry)
+        (fetch WizardFormEntry { emit: { success: "WizardFormEntryLoaded", failure: "WizardFormEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Sign-up" },
           { type: "wizard-progress", steps: ["Personal", "Preferences", "Review"], currentStep: 0 },
@@ -118,12 +120,14 @@ orbital WizardFormOrbital {
           { type: "wizard-navigation", currentStep: 0, totalSteps: 3, showBack: false, showNext: true, showComplete: false, onNext: "NEXT" }
         ] })
     }
-    emits: [WizardFormSaved, WizardFormSaveFailed]
+    emits: [WizardFormSaved, WizardFormSaveFailed, WizardFormEntryLoaded, WizardFormEntryLoadFailed]
     listens {
       NEXT                   { data : object! }
       PREV                   { }
       COMPLETE               { data : object! }
       WizardFormSaveFailed   { error : string, code : string }
+    
+      WizardFormEntryLoadFailed { error : string, code : string }
     }
   }
 

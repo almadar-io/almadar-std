@@ -24,6 +24,8 @@ orbital FilteredListItemOrbital {
     description : string
     status : string
   }
+  type FilteredListItemLoaded = Event { data : [FilteredListItem] }
+  type FilteredListItemLoadFailed = Event { error : string, code : string }
 
   trait FilteredItemSearch = Search.traits.SearchResultSearch -> FilteredListItem {}
 
@@ -38,7 +40,7 @@ orbital FilteredListItemOrbital {
   trait FilteredListLayout -> FilteredListItem [interaction, collection] {
     state composing {
       INIT -> composing
-        (fetch FilteredListItem)
+        (fetch FilteredListItem { emit: { success: "FilteredListItemLoaded", failure: "FilteredListItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: ["@trait.FilteredItemSearch", "@trait.FilteredItemFilter"] }, "@trait.FilteredItemBrowse", "@trait.FilteredItemPagination"] })
     }
   }

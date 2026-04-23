@@ -16,11 +16,15 @@ orbital BookingOrbital {
     startsAt : string
     status : string
   }
+  type BookingLoaded = Event { data : [Booking] }
+  type BookingLoadFailed = Event { error : string, code : string }
 
   trait BookingCalendar     = Calendar.traits.CalendarEventCalendar        -> Booking {
     listens {
       BookingModal SAVE -> INIT
       BookingConfirmation CONFIRM -> INIT
+    
+      BookingLoadFailed { error : string, code : string }
     }
   }
   trait BookingModal        = Modal.traits.ModalRecordModal                -> Booking {}
@@ -29,7 +33,7 @@ orbital BookingOrbital {
   trait BookingLayout -> Booking [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch Booking)
+        (fetch Booking { emit: { success: "BookingLoaded", failure: "BookingLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "vertical",

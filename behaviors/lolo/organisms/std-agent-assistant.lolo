@@ -24,6 +24,12 @@ orbital AssistantOrbital {
 
   type AssistantLoaded     = Event Assistant                  "Fired when Assistant finishes loading"
   type AssistantLoadFailed = Event { message : string } "Fired when Assistant fails to load"
+  type AssistantDeleted = Event { id : string }
+  type AssistantDeleteFailed = Event { error : string, code : string }
+  type MemorySaved = Event { id : string }
+  type MemorySaveFailed = Event { error : string, code : string }
+  type ProviderConfigUpdated = Event { id : string }
+  type ProviderConfigUpdateFailed = Event { error : string, code : string }
   trait AssistantConversation -> Assistant [interaction, collection] {
     initial: idle
     state idle {
@@ -33,7 +39,7 @@ orbital AssistantOrbital {
       COMPOSE -> composing
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus"}] }, { type: "divider" }, { type: "data-list", entity: "Assistant", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", fields: [], title: "Compose Message", children: [{ type: "textarea", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] }] }] }] })
       CLEAR -> idle
-        (persist delete Assistant)
+        (persist delete Assistant  { emit: { success: "AssistantDeleted", failure: "AssistantDeleteFailed" } })
         (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
@@ -48,7 +54,7 @@ orbital AssistantOrbital {
         (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       CLEAR -> idle
-        (persist delete Assistant)
+        (persist delete Assistant  { emit: { success: "AssistantDeleted", failure: "AssistantDeleteFailed" } })
         (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle"}, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", action: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
@@ -61,8 +67,12 @@ orbital AssistantOrbital {
       * PROVIDER_CHANGED -> INIT
       SEND { content : string! }
           AssistantLoadFailed { message : string }
+    
+      AssistantDeleteFailed { error : string, code : string }
+      MemorySaveFailed { error : string, code : string }
+      ProviderConfigUpdateFailed { error : string, code : string }
     }
-    emits: [AssistantLoaded, AssistantLoadFailed]
+    emits: [AssistantLoaded, AssistantLoadFailed, AssistantDeleted, AssistantDeleteFailed, MemorySaved, MemorySaveFailed, ProviderConfigUpdated, ProviderConfigUpdateFailed]
   }
   trait AssistantAgent -> Assistant [interaction, collection] {
     initial: idle
@@ -152,7 +162,7 @@ orbital MemoryOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create Memory @payload.data)
+        (persist create Memory @payload.data { emit: { success: "MemorySaved", failure: "MemorySaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit MEMORIZED)
@@ -174,7 +184,7 @@ orbital MemoryOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
-        (persist create Memory @payload.data)
+        (persist create Memory @payload.data { emit: { success: "MemorySaved", failure: "MemorySaveFailed" } })
       DECAY -> idle
         (agent/decay)
         (emit DECAYED)
@@ -421,7 +431,7 @@ orbital ProviderConfigOrbital {
         (ref ProviderConfig)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist update ProviderConfig @payload.data)
+        (persist update ProviderConfig @payload.data { emit: { success: "ProviderConfigUpdated", failure: "ProviderConfigUpdateFailed" } })
         (render-ui modal null)
         (emit SWITCHED)
         (ref ProviderConfig)

@@ -15,6 +15,8 @@ orbital MasterDetailOrbital {
     name : string
     items : string
   }
+  type MasterDetailItemLoaded = Event { data : [MasterDetailItem] }
+  type MasterDetailItemLoadFailed = Event { error : string, code : string }
 
   trait MasterDetailList    = Browse.traits.BrowseItemBrowse    -> MasterDetailItem {}
   trait MasterDetailRelated = Related.traits.RelatedItemList    -> MasterDetailItem {}
@@ -22,7 +24,7 @@ orbital MasterDetailOrbital {
   trait MasterDetailLayout -> MasterDetailItem [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch MasterDetailItem)
+        (fetch MasterDetailItem { emit: { success: "MasterDetailItemLoaded", failure: "MasterDetailItemLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "horizontal",

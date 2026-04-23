@@ -157,20 +157,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Loading locations…",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading locations…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
                       "gap": "md"
                     }
@@ -186,68 +186,68 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "name": "map-pin",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "Locations"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ],
-                          "justify": "between"
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "label": "Name",
+                              "variant": "h4",
+                              "icon": "map-pin",
+                              "name": "name"
+                            },
+                            {
+                              "name": "description",
+                              "label": "Description",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ],
+                          "type": "data-grid",
                           "itemActions": [
                             {
                               "label": "Select",
                               "event": "SELECT",
                               "variant": "ghost"
                             }
-                          ],
-                          "fields": [
-                            {
-                              "name": "name",
-                              "icon": "map-pin",
-                              "variant": "h4",
-                              "label": "Name"
-                            },
-                            {
-                              "name": "description",
-                              "variant": "caption",
-                              "label": "Description"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -261,36 +261,36 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
+                          "type": "icon",
+                          "color": "destructive"
                         },
                         {
+                          "content": "Failed to load locations",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load locations"
+                          "variant": "h3"
                         },
                         {
+                          "color": "muted",
                           "content": "@payload.error",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "body"
                         },
                         {
                           "variant": "primary",
-                          "icon": "rotate-ccw",
                           "type": "button",
-                          "label": "Retry",
-                          "action": "INIT"
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "label": "Retry"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -407,7 +407,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "Location"
+                    "Location",
+                    {
+                      "emit": {
+                        "failure": "LocationLoadFailed",
+                        "success": "LocationLoaded"
+                      }
+                    }
                   ]
                 ]
               },
@@ -425,84 +431,85 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "map-pin",
                               "type": "icon"
                             },
                             {
+                              "content": "@entity.name",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@entity.name"
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "content": "Name",
+                              "variant": "caption",
                               "type": "typography",
-                              "variant": "caption"
+                              "content": "Name"
                             },
                             {
                               "content": "@entity.name",
-                              "variant": "body",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             }
-                          ],
+                          ]
+                        },
+                        {
                           "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
                           "type": "stack",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Description",
-                              "type": "typography"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.description",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
+                              "content": "Description",
+                              "variant": "caption"
                             },
                             {
-                              "variant": "body",
-                              "content": "@entity.status",
+                              "type": "typography",
+                              "content": "@entity.description",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Status",
                               "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.status"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "end",
                           "type": "stack",
                           "children": [
@@ -513,21 +520,20 @@
                               "action": "CLOSE"
                             },
                             {
+                              "icon": "check",
+                              "variant": "primary",
+                              "label": "Confirm Selection",
                               "action": "CONFIRM_SELECT",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "icon": "check",
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Confirm Selection"
+                              }
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -566,9 +572,9 @@
           "linkedEntity": "Location",
           "config": {
             "icon": "alert-triangle",
-            "title": "Confirm Location",
             "alertMessage": "Are you sure you want to select this location?",
-            "confirmLabel": "Confirm"
+            "confirmLabel": "Confirm",
+            "title": "Confirm Location"
           },
           "events": {
             "CONFIRM": "CONFIRMED",

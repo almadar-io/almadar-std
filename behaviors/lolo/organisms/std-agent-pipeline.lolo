@@ -41,6 +41,14 @@ orbital PipelinePlanOrbital {
   type SessionTreeLoaded = Event { message : string } "Emitted event SessionTreeLoaded"
 
   type SessionTreeLoadFailed = Event { message : string } "Emitted event SessionTreeLoadFailed"
+  type PipelinePlanSaved = Event { id : string }
+  type PipelinePlanSaveFailed = Event { error : string, code : string }
+  type PipelineExecSaved = Event { id : string }
+  type PipelineExecSaveFailed = Event { error : string, code : string }
+  type PipelineSessionUpdated = Event { id : string }
+  type PipelineSessionUpdateFailed = Event { error : string, code : string }
+  type ExecutionLogSaved = Event { id : string }
+  type ExecutionLogSaveFailed = Event { error : string, code : string }
   trait PipelinePlanner -> PipelinePlan [interaction, collection] {
     initial: idle
     state idle {
@@ -110,8 +118,13 @@ orbital PipelinePlanOrbital {
       MEMORIES_LOADED { memories : string!, count : number! }
       PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
       FAILED { error : string! }
+    
+      PipelinePlanSaveFailed { error : string, code : string }
+      PipelineExecSaveFailed { error : string, code : string }
+      PipelineSessionUpdateFailed { error : string, code : string }
+      ExecutionLogSaveFailed { error : string, code : string }
     }
-    emits: [SessionTreeLoaded, SessionTreeLoadFailed]
+    emits: [SessionTreeLoaded, SessionTreeLoadFailed, PipelinePlanSaved, PipelinePlanSaveFailed, PipelineExecSaved, PipelineExecSaveFailed, PipelineSessionUpdated, PipelineSessionUpdateFailed, ExecutionLogSaved, ExecutionLogSaveFailed]
   }
   trait PlannerTaskInput -> PipelinePlan [interaction, collection] {
     initial: closed
@@ -152,7 +165,7 @@ orbital PipelinePlanOrbital {
         (ref PipelinePlan)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "PipelinePlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create PipelinePlan @payload.data)
+        (persist create PipelinePlan @payload.data { emit: { success: "PipelinePlanSaved", failure: "PipelinePlanSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
         (ref PipelinePlan)
@@ -184,7 +197,7 @@ orbital PipelinePlanOrbital {
         (ref PipelinePlan)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "PipelinePlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create PipelinePlan @payload.data)
+        (persist create PipelinePlan @payload.data { emit: { success: "PipelinePlanSaved", failure: "PipelinePlanSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref PipelinePlan)
@@ -405,7 +418,7 @@ orbital PipelineExecOrbital {
         (ref PipelineExec)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "PipelineExec", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create PipelineExec @payload.data)
+        (persist create PipelineExec @payload.data { emit: { success: "PipelineExecSaved", failure: "PipelineExecSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
         (ref PipelineExec)
@@ -437,7 +450,7 @@ orbital PipelineExecOrbital {
         (ref PipelineExec)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
-        (persist create PipelineExec @payload.data)
+        (persist create PipelineExec @payload.data { emit: { success: "PipelineExecSaved", failure: "PipelineExecSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
         (ref PipelineExec)
@@ -565,7 +578,7 @@ orbital PipelineSessionOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update PipelineSession @payload.data)
+        (persist update PipelineSession @payload.data { emit: { success: "PipelineSessionUpdated", failure: "PipelineSessionUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit LABELED)
@@ -686,7 +699,7 @@ orbital ExecutionLogOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create ExecutionLog @payload.data)
+        (persist create ExecutionLog @payload.data { emit: { success: "ExecutionLogSaved", failure: "ExecutionLogSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit MEMORIZED)
@@ -708,7 +721,7 @@ orbital ExecutionLogOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
-        (persist create ExecutionLog @payload.data)
+        (persist create ExecutionLog @payload.data { emit: { success: "ExecutionLogSaved", failure: "ExecutionLogSaveFailed" } })
       DECAY -> idle
         (agent/decay)
         (emit DECAYED)

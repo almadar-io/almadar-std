@@ -20,6 +20,14 @@ orbital ServiceCustomApiTesterOrbital {
 
   type ServiceCustomApiTesterLoaded     = Event ServiceCustomApiTester                  "Fired when ServiceCustomApiTester finishes loading"
   type ServiceCustomApiTesterLoadFailed = Event { message : string } "Fired when ServiceCustomApiTester fails to load"
+  type ServiceCustomApiTesterCustomHeaderApiCompleted = Event { result : object }
+  type ServiceCustomApiTesterCustomHeaderApiFailed = Event { error : string, code : string }
+  type ServiceCustomApiTesterCustomBearerApiCompleted = Event { result : object }
+  type ServiceCustomApiTesterCustomBearerApiFailed = Event { error : string, code : string }
+  type ServiceCustomApiTesterCustomQueryApiCompleted = Event { result : object }
+  type ServiceCustomApiTesterCustomQueryApiFailed = Event { error : string, code : string }
+  type ServiceCustomApiTesterCustomNoauthApiCompleted = Event { result : object }
+  type ServiceCustomApiTesterCustomNoauthApiFailed = Event { error : string, code : string }
   trait ServiceCustomApiTesterApiTester -> ServiceCustomApiTester [interaction, instance] {
     initial: idle
     state idle {
@@ -29,19 +37,19 @@ orbital ServiceCustomApiTesterOrbital {
       CALL_HEADER_API -> calling
         (set @entity.authType header)
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
-        (call-service custom-header-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-header-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomApiTesterCustomHeaderApiCompleted", failure: "ServiceCustomApiTesterCustomHeaderApiFailed" } })
       CALL_BEARER_API -> calling
         (set @entity.authType bearer)
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
-        (call-service custom-bearer-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-bearer-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomApiTesterCustomBearerApiCompleted", failure: "ServiceCustomApiTesterCustomBearerApiFailed" } })
       CALL_QUERY_API -> calling
         (set @entity.authType query)
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
-        (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomApiTesterCustomQueryApiCompleted", failure: "ServiceCustomApiTesterCustomQueryApiFailed" } })
       CALL_NOAUTH_API -> calling
         (set @entity.authType noauth)
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
-        (call-service custom-noauth-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-noauth-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomApiTesterCustomNoauthApiCompleted", failure: "ServiceCustomApiTesterCustomNoauthApiFailed" } })
     }
     state calling {
       API_RESPONSE -> complete
@@ -66,8 +74,13 @@ orbital ServiceCustomApiTesterOrbital {
       API_RESPONSE { data : string!, statusCode : number! }
       FAILED { error : string! }
           ServiceCustomApiTesterLoadFailed { message : string }
+    
+      ServiceCustomApiTesterCustomHeaderApiFailed { error : string, code : string }
+      ServiceCustomApiTesterCustomBearerApiFailed { error : string, code : string }
+      ServiceCustomApiTesterCustomQueryApiFailed { error : string, code : string }
+      ServiceCustomApiTesterCustomNoauthApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomApiTesterLoaded, ServiceCustomApiTesterLoadFailed]
+    emits: [ServiceCustomApiTesterLoaded, ServiceCustomApiTesterLoadFailed, ServiceCustomApiTesterCustomHeaderApiCompleted, ServiceCustomApiTesterCustomHeaderApiFailed, ServiceCustomApiTesterCustomBearerApiCompleted, ServiceCustomApiTesterCustomBearerApiFailed, ServiceCustomApiTesterCustomQueryApiCompleted, ServiceCustomApiTesterCustomQueryApiFailed, ServiceCustomApiTesterCustomNoauthApiCompleted, ServiceCustomApiTesterCustomNoauthApiFailed]
   }
   page "/servicecustomapitesters" as ServiceCustomApiTesterPage -> ServiceCustomApiTesterApiTester
 }

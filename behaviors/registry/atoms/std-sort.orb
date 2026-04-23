@@ -169,99 +169,96 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "align": "center",
+                          "gap": "sm",
+                          "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "arrow-up-down"
+                                  "name": "arrow-up-down",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "SortableItems"
                                 }
-                              ],
-                              "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "color": "muted",
+                              "content": "Sort by",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Sort by"
+                              "variant": "caption"
                             },
                             {
-                              "icon": "arrow-up-down",
-                              "type": "button",
-                              "actionPayload": {
-                                "direction": "asc",
-                                "field": "name"
-                              },
-                              "action": "SORT",
+                              "variant": "secondary",
                               "label": "Name",
-                              "variant": "secondary"
-                            },
-                            {
-                              "type": "button",
                               "action": "SORT",
-                              "label": "Description",
-                              "variant": "secondary",
-                              "icon": "arrow-up-down",
                               "actionPayload": {
-                                "field": "description",
+                                "field": "name",
                                 "direction": "asc"
-                              }
-                            },
-                            {
-                              "actionPayload": {
-                                "direction": "asc",
-                                "field": "status"
                               },
                               "type": "button",
-                              "action": "SORT",
-                              "label": "Status",
-                              "variant": "secondary",
                               "icon": "arrow-up-down"
                             },
                             {
+                              "variant": "secondary",
+                              "label": "Description",
+                              "type": "button",
+                              "icon": "arrow-up-down",
                               "actionPayload": {
                                 "direction": "asc",
-                                "field": "createdAt"
+                                "field": "description"
                               },
-                              "action": "SORT",
+                              "action": "SORT"
+                            },
+                            {
+                              "actionPayload": {
+                                "field": "status",
+                                "direction": "asc"
+                              },
+                              "variant": "secondary",
                               "icon": "arrow-up-down",
                               "type": "button",
+                              "action": "SORT",
+                              "label": "Status"
+                            },
+                            {
+                              "icon": "arrow-up-down",
+                              "type": "button",
+                              "action": "SORT",
+                              "actionPayload": {
+                                "field": "createdAt",
+                                "direction": "asc"
+                              },
                               "label": "CreatedAt",
                               "variant": "secondary"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
-                          "type": "data-grid",
+                          "entity": "SortableItem",
                           "fields": [
                             {
                               "label": "Name",
@@ -270,18 +267,21 @@
                             },
                             {
                               "name": "description",
-                              "variant": "caption",
-                              "label": "Description"
+                              "label": "Description",
+                              "variant": "caption"
                             },
                             {
-                              "label": "Status",
                               "variant": "badge",
+                              "label": "Status",
                               "name": "status"
                             }
                           ],
-                          "entity": "SortableItem"
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -295,123 +295,118 @@
                     "fetch",
                     "SortableItem",
                     {
+                      "emit": {
+                        "success": "SortableItemLoaded",
+                        "failure": "SortableItemLoadFailed"
+                      },
                       "sort": [
                         "concat",
                         "@payload.field",
                         ":",
                         "@payload.direction"
-                      ],
-                      "emit": {
-                        "success": "SortableItemLoaded",
-                        "failure": "SortableItemLoadFailed"
-                      }
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "arrow-up-down"
                                 },
                                 {
-                                  "content": "SortableItems",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "SortableItems"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             },
                             {
-                              "variant": "ghost",
                               "type": "button",
                               "label": "Clear sort",
-                              "icon": "x",
-                              "action": "INIT"
+                              "action": "INIT",
+                              "variant": "ghost",
+                              "icon": "x"
                             }
                           ],
-                          "align": "center",
                           "direction": "horizontal",
+                          "justify": "between",
                           "type": "stack",
-                          "gap": "sm",
-                          "justify": "between"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "caption",
-                              "color": "muted",
                               "type": "typography",
-                              "content": "Sort by"
+                              "color": "muted",
+                              "content": "Sort by",
+                              "variant": "caption"
                             },
                             {
-                              "type": "button",
-                              "variant": "primary",
                               "label": "Name",
-                              "action": "SORT",
                               "actionPayload": {
                                 "field": "name",
                                 "direction": "desc"
                               },
-                              "icon": "chevron-up"
+                              "variant": "primary",
+                              "action": "SORT",
+                              "icon": "chevron-up",
+                              "type": "button"
                             },
                             {
-                              "label": "Description",
+                              "type": "button",
                               "actionPayload": {
                                 "direction": "asc",
                                 "field": "description"
                               },
-                              "type": "button",
                               "variant": "secondary",
                               "icon": "arrow-up-down",
+                              "label": "Description",
                               "action": "SORT"
                             },
                             {
+                              "type": "button",
                               "actionPayload": {
                                 "direction": "asc",
                                 "field": "status"
                               },
-                              "action": "SORT",
-                              "variant": "secondary",
                               "icon": "arrow-up-down",
-                              "type": "button",
-                              "label": "Status"
+                              "action": "SORT",
+                              "label": "Status",
+                              "variant": "secondary"
                             },
                             {
-                              "action": "SORT",
+                              "label": "CreatedAt",
                               "actionPayload": {
                                 "field": "createdAt",
                                 "direction": "asc"
                               },
                               "variant": "secondary",
-                              "icon": "arrow-up-down",
+                              "action": "SORT",
                               "type": "button",
-                              "label": "CreatedAt"
+                              "icon": "arrow-up-down"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SortableItem",
                           "fields": [
                             {
                               "variant": "h4",
@@ -425,23 +420,26 @@
                             },
                             {
                               "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
+                              "label": "Status",
+                              "variant": "badge"
                             }
-                          ]
+                          ],
+                          "entity": "SortableItem",
+                          "type": "data-grid"
                         },
                         {
                           "type": "sortable-list",
-                          "items": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "grip-vertical",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "grip-vertical"
                                 },
                                 {
                                   "content": "@item.name",
@@ -449,14 +447,16 @@
                                   "type": "typography"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "align": "center"
                             }
                           ],
-                          "reorderEvent": "REORDER"
+                          "reorderEvent": "REORDER",
+                          "items": []
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -486,115 +486,114 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "arrow-up-down",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "arrow-up-down"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "SortableItems"
+                                  "content": "SortableItems",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
-                              "icon": "x",
                               "type": "button",
                               "variant": "ghost",
-                              "label": "Clear sort",
-                              "action": "INIT"
+                              "action": "INIT",
+                              "icon": "x",
+                              "label": "Clear sort"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
-                          "justify": "between"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "content": "Sort by",
-                              "variant": "caption",
                               "color": "muted",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "icon": "chevron-up",
-                              "type": "button",
-                              "label": "Name",
-                              "action": "SORT",
-                              "variant": "primary",
                               "actionPayload": {
                                 "field": "name",
                                 "direction": "desc"
-                              }
+                              },
+                              "label": "Name",
+                              "action": "SORT",
+                              "variant": "primary",
+                              "icon": "chevron-up",
+                              "type": "button"
                             },
                             {
                               "icon": "arrow-up-down",
-                              "variant": "secondary",
-                              "label": "Description",
                               "actionPayload": {
-                                "direction": "asc",
-                                "field": "description"
+                                "field": "description",
+                                "direction": "asc"
                               },
                               "type": "button",
-                              "action": "SORT"
+                              "action": "SORT",
+                              "variant": "secondary",
+                              "label": "Description"
                             },
                             {
-                              "icon": "arrow-up-down",
                               "variant": "secondary",
+                              "icon": "arrow-up-down",
+                              "type": "button",
                               "label": "Status",
                               "action": "SORT",
-                              "type": "button",
                               "actionPayload": {
-                                "field": "status",
-                                "direction": "asc"
+                                "direction": "asc",
+                                "field": "status"
                               }
                             },
                             {
                               "type": "button",
-                              "actionPayload": {
-                                "field": "createdAt",
-                                "direction": "asc"
-                              },
+                              "variant": "secondary",
+                              "icon": "arrow-up-down",
                               "label": "CreatedAt",
                               "action": "SORT",
-                              "variant": "secondary",
-                              "icon": "arrow-up-down"
+                              "actionPayload": {
+                                "direction": "asc",
+                                "field": "createdAt"
+                              }
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal"
                         },
                         {
+                          "type": "data-grid",
                           "fields": [
                             {
+                              "label": "Name",
                               "name": "name",
-                              "variant": "h4",
-                              "label": "Name"
+                              "variant": "h4"
                             },
                             {
+                              "label": "Description",
                               "name": "description",
-                              "variant": "caption",
-                              "label": "Description"
+                              "variant": "caption"
                             },
                             {
                               "label": "Status",
@@ -602,36 +601,37 @@
                               "name": "status"
                             }
                           ],
-                          "entity": "SortableItem",
-                          "type": "data-grid"
+                          "entity": "SortableItem"
                         },
                         {
-                          "reorderEvent": "REORDER",
-                          "items": [],
-                          "type": "sortable-list",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "grip-vertical",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "grip-vertical"
                                 },
                                 {
                                   "content": "@item.name",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
                               "gap": "md",
-                              "align": "center"
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "sortable-list",
+                          "items": [],
+                          "reorderEvent": "REORDER"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -655,17 +655,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -677,9 +680,8 @@
                                   "content": "SortableItems"
                                 }
                               ],
-                              "type": "stack",
                               "align": "center",
-                              "direction": "horizontal"
+                              "gap": "sm"
                             }
                           ]
                         },
@@ -692,54 +694,54 @@
                           "direction": "horizontal",
                           "children": [
                             {
-                              "color": "muted",
                               "variant": "caption",
                               "content": "Sort by",
-                              "type": "typography"
+                              "type": "typography",
+                              "color": "muted"
                             },
                             {
-                              "action": "SORT",
                               "variant": "secondary",
-                              "icon": "arrow-up-down",
-                              "label": "Name",
                               "actionPayload": {
                                 "field": "name",
                                 "direction": "asc"
                               },
-                              "type": "button"
-                            },
-                            {
                               "action": "SORT",
-                              "variant": "secondary",
                               "icon": "arrow-up-down",
                               "type": "button",
-                              "actionPayload": {
-                                "field": "description",
-                                "direction": "asc"
-                              },
-                              "label": "Description"
+                              "label": "Name"
                             },
                             {
+                              "actionPayload": {
+                                "direction": "asc",
+                                "field": "description"
+                              },
+                              "label": "Description",
+                              "variant": "secondary",
                               "action": "SORT",
-                              "label": "Status",
                               "type": "button",
+                              "icon": "arrow-up-down"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "secondary",
+                              "icon": "arrow-up-down",
                               "actionPayload": {
                                 "field": "status",
                                 "direction": "asc"
                               },
-                              "variant": "secondary",
-                              "icon": "arrow-up-down"
+                              "action": "SORT",
+                              "type": "button"
                             },
                             {
                               "type": "button",
-                              "actionPayload": {
-                                "direction": "asc",
-                                "field": "createdAt"
-                              },
                               "variant": "secondary",
+                              "actionPayload": {
+                                "field": "createdAt",
+                                "direction": "asc"
+                              },
                               "icon": "arrow-up-down",
-                              "action": "SORT",
-                              "label": "CreatedAt"
+                              "label": "CreatedAt",
+                              "action": "SORT"
                             }
                           ],
                           "gap": "sm"
@@ -749,9 +751,9 @@
                           "entity": "SortableItem",
                           "fields": [
                             {
-                              "name": "name",
                               "label": "Name",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "name"
                             },
                             {
                               "label": "Description",
@@ -759,15 +761,13 @@
                               "variant": "caption"
                             },
                             {
+                              "name": "status",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "variant": "badge"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]

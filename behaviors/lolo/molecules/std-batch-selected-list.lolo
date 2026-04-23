@@ -17,10 +17,14 @@ orbital BatchListItemOrbital {
     description : string
     status : string
   }
+  type BatchListItemLoaded = Event { data : [BatchListItem] }
+  type BatchListItemLoadFailed = Event { error : string, code : string }
 
   trait BatchItemBrowse       = Browse.traits.BrowseItemBrowse             -> BatchListItem {
     listens {
       BatchItemConfirmation CONFIRM -> INIT
+    
+      BatchListItemLoadFailed { error : string, code : string }
     }
   }
   trait BatchItemSelection    = Selection.traits.SelectableItemSelection   -> BatchListItem {}
@@ -29,7 +33,7 @@ orbital BatchListItemOrbital {
   trait BatchListLayout -> BatchListItem [interaction, instance] {
     state composing {
       INIT -> composing
-        (fetch BatchListItem)
+        (fetch BatchListItem { emit: { success: "BatchListItemLoaded", failure: "BatchListItemLoadFailed" } })
         (render-ui main {
           type: "stack",
           direction: "vertical",

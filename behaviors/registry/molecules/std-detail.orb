@@ -143,8 +143,8 @@
                     "DetailRecord",
                     {
                       "emit": {
-                        "failure": "DetailRecordLoadFailed",
-                        "success": "DetailRecordLoaded"
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
                       }
                     }
                   ],
@@ -152,22 +152,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
-                          "content": "Loading records…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "content": "Loading records…"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -181,39 +181,38 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
                       "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "file-text",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "DetailRecords",
                                   "type": "typography",
-                                  "content": "DetailRecords"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "icon": "plus",
                               "label": "Create",
+                              "action": "CREATE",
                               "variant": "primary",
-                              "type": "button",
-                              "action": "CREATE"
+                              "icon": "plus",
+                              "type": "button"
                             }
                           ],
+                          "type": "stack",
                           "gap": "md",
                           "justify": "between"
                         },
@@ -221,35 +220,36 @@
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "variant": "ghost",
+                              "event": "VIEW",
+                              "label": "View"
+                            }
+                          ],
                           "fields": [
                             {
-                              "label": "Name",
                               "variant": "h4",
                               "name": "name",
-                              "icon": "file-text"
+                              "icon": "file-text",
+                              "label": "Name"
                             },
                             {
+                              "name": "description",
                               "label": "Description",
-                              "variant": "caption",
-                              "name": "description"
+                              "variant": "caption"
                             },
                             {
-                              "label": "Status",
                               "name": "status",
+                              "label": "Status",
                               "variant": "badge"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "label": "View",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "type": "data-grid"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -263,12 +263,16 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "color": "destructive"
                         },
                         {
                           "type": "typography",
@@ -276,23 +280,19 @@
                           "variant": "h3"
                         },
                         {
-                          "variant": "body",
                           "type": "typography",
+                          "color": "muted",
                           "content": "@payload.error",
-                          "color": "muted"
+                          "variant": "body"
                         },
                         {
-                          "type": "button",
-                          "action": "INIT",
-                          "variant": "primary",
                           "label": "Retry",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "type": "button",
+                          "action": "INIT"
                         }
-                      ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -307,8 +307,8 @@
                     "DetailRecord",
                     {
                       "emit": {
-                        "failure": "DetailRecordLoadFailed",
-                        "success": "DetailRecordLoaded"
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
                       }
                     }
                   ],
@@ -331,8 +331,8 @@
                     "DetailRecord",
                     {
                       "emit": {
-                        "failure": "DetailRecordLoadFailed",
-                        "success": "DetailRecordLoaded"
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
                       }
                     }
                   ],
@@ -354,14 +354,14 @@
           "name": "DetailRecordCreate",
           "linkedEntity": "DetailRecord",
           "config": {
-            "mode": "create",
-            "title": "New DetailRecord",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "mode": "create",
+            "title": "New DetailRecord"
           },
           "events": {
             "OPEN": "CREATE",
@@ -408,7 +408,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "DetailRecord"
+                    "DetailRecord",
+                    {
+                      "emit": {
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -426,22 +432,25 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "eye"
+                              "name": "eye",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.name"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
@@ -450,7 +459,6 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -459,66 +467,64 @@
                             },
                             {
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Description"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.description"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Status",
-                              "type": "typography"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.status",
+                              "content": "@entity.name",
                               "type": "typography"
                             }
                           ],
                           "gap": "md"
                         },
                         {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Description",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Status",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.status",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "CLOSE",
+                              "label": "Close",
                               "variant": "ghost",
-                              "label": "Close"
+                              "type": "button",
+                              "action": "CLOSE"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "justify": "end"
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

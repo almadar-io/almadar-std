@@ -12,6 +12,14 @@ orbital BattleStateOrbital {
 
   type BattleStateLoaded     = Event BattleState                  "Fired when BattleState finishes loading"
   type BattleStateLoadFailed = Event { message : string } "Fired when BattleState fails to load"
+  type RpgItemSaved = Event { id : string }
+  type RpgItemSaveFailed = Event { error : string, code : string }
+  type RpgItemUpdated = Event { id : string }
+  type RpgItemUpdateFailed = Event { error : string, code : string }
+  type RpgItemDeleted = Event { id : string }
+  type RpgItemDeleteFailed = Event { error : string, code : string }
+  type MissionUpdated = Event { id : string }
+  type MissionUpdateFailed = Event { error : string, code : string }
   trait BattleStateBattleFlow -> BattleState [interaction, collection] {
     initial: menu
     state menu {
@@ -53,8 +61,13 @@ orbital BattleStateOrbital {
     listens {
       * ENCOUNTER_STARTED -> START
           BattleStateLoadFailed { message : string }
+    
+      RpgItemSaveFailed { error : string, code : string }
+      RpgItemUpdateFailed { error : string, code : string }
+      RpgItemDeleteFailed { error : string, code : string }
+      MissionUpdateFailed { error : string, code : string }
     }
-    emits: [BattleStateLoaded, BattleStateLoadFailed]
+    emits: [BattleStateLoaded, BattleStateLoadFailed, RpgItemSaved, RpgItemSaveFailed, RpgItemUpdated, RpgItemUpdateFailed, RpgItemDeleted, RpgItemDeleteFailed, MissionUpdated, MissionUpdateFailed]
   }
   trait BattleStateCombatLog -> BattleState [interaction, collection] {
     state idle {
@@ -156,7 +169,7 @@ orbital RpgItemOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist create RpgItem @payload.data)
+        (persist create RpgItem @payload.data { emit: { success: "RpgItemSaved", failure: "RpgItemSaveFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ITEM_ADDED)
@@ -176,7 +189,7 @@ orbital RpgItemOrbital {
       INIT -> closed
         (ref RpgItem)
       USE_ITEM -> open
-        (fetch RpgItem { id: "@payload.id" , emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
+        (fetch RpgItem {id: "@payload.id" , emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" }, emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap" }, { type: "typography", content: "Use RpgItem", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", action: "SAVE", variant: "primary", icon: "check" }] }] })
     }
     state open {
@@ -185,7 +198,7 @@ orbital RpgItemOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
-        (persist update RpgItem @payload.data)
+        (persist update RpgItem @payload.data { emit: { success: "RpgItemUpdated", failure: "RpgItemUpdateFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (emit ITEM_USED)
@@ -207,12 +220,12 @@ orbital RpgItemOrbital {
         (ref RpgItem)
       DROP -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch RpgItem { id: "@payload.id" , emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
+        (fetch RpgItem {id: "@payload.id" , emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" }, emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Drop RpgItem", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Are you sure you want to drop this rpgitem?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", action: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM_DROP -> idle
-        (persist delete RpgItem @entity.pendingId)
+        (persist delete RpgItem @entity.pendingId { emit: { success: "RpgItemDeleted", failure: "RpgItemDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref RpgItem)
@@ -270,7 +283,7 @@ orbital MissionOrbital {
     }
     state progressing {
       SAVE -> active
-        (persist update Mission @payload.data)
+        (persist update Mission @payload.data { emit: { success: "MissionUpdated", failure: "MissionUpdateFailed" } })
         (render-ui modal null)
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
