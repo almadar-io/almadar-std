@@ -1,12 +1,12 @@
 {
-  "$generated": "2026-04-18T11:47:20.813Z",
+  "$generated": "2026-04-23T09:40:07.766Z",
   "$source": "tools/behavior-registry-sync",
-  "totalBehaviors": 144,
+  "totalBehaviors": 145,
   "atoms": 80,
-  "molecules": 32,
+  "molecules": 33,
   "organisms": 32,
   "layers": {
-    "UI Patterns": 144
+    "UI Patterns": 145
   },
   "behaviors": {
     "std-agent-activity-log": {
@@ -14,11 +14,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Chronological action log atom for tracking agent operations. Provides a timeline view of agent actions with status indicators, duration tracking, and clear functionality. Listens for LOG_ENTRY events from sibling traits.",
+      "description": "std-agent-activity-log as a Function",
       "statePattern": "logging",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -85,7 +85,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
         "std-search",
@@ -94,24 +93,29 @@
       ],
       "connectableEvents": [
         "LOG_ENTRY",
-        "CLEAR"
+        "CLEAR",
+        "AgentActivityLogLoaded",
+        "AgentActivityLogLoadFailed"
       ],
       "eventPayloads": {
         "LOG_ENTRY": [
           {
             "name": "action",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "detail",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "status",
-            "type": "string",
-            "required": true
+            "type": "string"
+          }
+        ],
+        "AgentActivityLogLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -121,11 +125,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Chat message thread atom for agent conversations. Displays a chronological list of messages (user, assistant, tool) with compose/send flow. Emits configurable send event for orchestrating traits to handle the actual agent call.",
+      "description": "std-agent-chat-thread as a Function",
       "statePattern": "composing, idle",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -188,10 +192,8 @@
         "std-agent-activity-log",
         "std-agent-assistant",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
-        "std-realtime-chat",
         "std-search",
         "std-selection",
         "std-service-email",
@@ -199,8 +201,11 @@
       ],
       "connectableEvents": [
         "COMPOSE",
+        "CLEAR",
         "SEND",
-        "CLEAR"
+        "SEND_MESSAGE",
+        "AgentChatThreadLoaded",
+        "AgentChatThreadLoadFailed"
       ],
       "eventPayloads": {
         "SEND": [
@@ -208,6 +213,12 @@
             "name": "content",
             "type": "string",
             "required": true
+          }
+        ],
+        "AgentChatThreadLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -217,11 +228,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Classification flow atom for agent-powered text classification. Composes UI atoms (stdModal for input form, stdNotification for result badge) with an agent trait that uses agent/generate with a classification prompt.",
+      "description": "std-agent-classifier as a Function",
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 4
       },
       "defaultEntity": {
@@ -290,7 +301,10 @@
         "tag"
       ],
       "composableWith": [
+        "std-agent-builder",
         "std-agent-completion",
+        "std-agent-pipeline",
+        "std-agent-planner",
         "std-agent-provider",
         "std-agent-tool-call",
         "std-arcade-game",
@@ -313,7 +327,10 @@
       "connectableEvents": [
         "CLASSIFY",
         "CLOSE",
-        "SAVE"
+        "SAVE",
+        "CLASSIFIED",
+        "AgentClassifierLoaded",
+        "AgentClassifierLoadFailed"
       ],
       "eventPayloads": {
         "SAVE": [
@@ -321,6 +338,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "AgentClassifierLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -330,11 +353,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Completion flow atom for agent text generation. Composes UI atoms (stdModal for prompt input, stdNotification for feedback) with an agent trait that handles agent/generate and retry logic.",
+      "description": "std-agent-completion as a Function",
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 4
       },
       "defaultEntity": {
@@ -433,7 +456,10 @@
       "connectableEvents": [
         "GENERATE",
         "CLOSE",
-        "SAVE"
+        "SAVE",
+        "GENERATED",
+        "AgentCompletionLoaded",
+        "AgentCompletionLoadFailed"
       ],
       "eventPayloads": {
         "SAVE": [
@@ -441,6 +467,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "AgentCompletionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -450,11 +482,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Context window management atom for agent token tracking. Composes UI atoms (stdAgentTokenGauge for visual display, stdNotification for threshold alerts) with an agent trait that handles agent/compact, agent/token-count, and agent/context-usage.",
+      "description": "std-agent-context-window as a Function",
       "statePattern": "critical, normal, warning",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 16
       },
       "defaultEntity": {
@@ -585,7 +617,9 @@
       "connectableEvents": [
         "UPDATE",
         "COMPACT",
-        "RESET"
+        "RESET",
+        "AgentContextWindowLoaded",
+        "AgentContextWindowLoadFailed"
       ],
       "eventPayloads": {
         "UPDATE": [
@@ -593,6 +627,12 @@
             "name": "current",
             "type": "number",
             "required": true
+          }
+        ],
+        "AgentContextWindowLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -602,11 +642,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Conversation flow atom for multi-turn agent interactions. Composes stdAgentChatThread (message display and compose) with an agent trait that handles agent/generate for AI replies and TOKEN_UPDATE emitting.",
+      "description": "std-agent-conversation as a Function",
       "statePattern": "composing, idle",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -689,10 +729,8 @@
         "std-agent-activity-log",
         "std-agent-assistant",
         "std-agent-chat-thread",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
-        "std-realtime-chat",
         "std-search",
         "std-selection",
         "std-service-email",
@@ -700,8 +738,11 @@
       ],
       "connectableEvents": [
         "COMPOSE",
+        "CLEAR",
         "SEND",
-        "CLEAR"
+        "SEND_MESSAGE",
+        "AgentConversationLoaded",
+        "AgentConversationLoadFailed"
       ],
       "eventPayloads": {
         "SEND": [
@@ -709,6 +750,12 @@
             "name": "content",
             "type": "string",
             "required": true
+          }
+        ],
+        "AgentConversationLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -718,12 +765,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Memory lifecycle atom for agent memory operations. Composes UI atoms (stdBrowse for memory table, stdModal for memorize form) with an agent trait that handles agent/memorize, agent/recall, agent/pin, agent/forget, agent/reinforce, and agent/decay operators.",
-      "statePattern": "browsing",
+      "description": "std-agent-memory as a Function",
+      "statePattern": "browsing, error, loading",
       "complexity": {
-        "states": 1,
-        "events": 7,
-        "transitions": 1
+        "states": 3,
+        "events": 6,
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "AgentMemory",
@@ -783,23 +830,26 @@
         ]
       },
       "defaultLabels": {
-        "title": "AgentMemory Manager",
+        "title": "AgentMemorys",
         "entitySingular": "AgentMemory",
         "entityPlural": "AgentMemorys"
       },
-      "defaultIcons": [
-        "brain"
-      ],
+      "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
-        "MEMORIZE",
-        "RECALL",
-        "DECAY",
+        "AgentMemoryLoaded",
+        "AgentMemoryLoadFailed",
         "PIN",
         "REINFORCE",
         "FORGET"
       ],
       "eventPayloads": {
+        "AgentMemoryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "PIN": [
           {
             "name": "id",
@@ -840,11 +890,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Provider routing atom for agent model/provider switching. Composes UI atoms (stdModal for switch form, stdNotification for confirmation) with an agent trait that handles agent/switch-provider, agent/provider, and agent/model operators.",
+      "description": "std-agent-provider as a Function",
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 4
       },
       "defaultEntity": {
@@ -935,7 +985,10 @@
       "connectableEvents": [
         "SWITCH",
         "CLOSE",
-        "SAVE"
+        "SAVE",
+        "SWITCHED",
+        "AgentProviderLoaded",
+        "AgentProviderLoadFailed"
       ],
       "eventPayloads": {
         "SAVE": [
@@ -943,6 +996,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "AgentProviderLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -952,7 +1011,7 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Code search flow atom for agent-powered codebase searching. Composes stdBrowse (results table) with an agent trait that handles agent/search-code.",
+      "description": "std-agent-search as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
@@ -1015,17 +1074,11 @@
         "search"
       ],
       "composableWith": [
-        "std-agent-activity-log",
-        "std-agent-assistant",
-        "std-agent-chat-thread",
-        "std-agent-conversation",
         "std-agent-session",
         "std-api-gateway",
         "std-booking-system",
         "std-cicd-pipeline",
         "std-cms",
-        "std-collision",
-        "std-combat-log",
         "std-crm",
         "std-ecommerce",
         "std-finance-tracker",
@@ -1036,21 +1089,21 @@
         "std-lms",
         "std-project-manager",
         "std-realtime-chat",
-        "std-search",
-        "std-selection",
-        "std-service-content-pipeline",
         "std-service-marketplace",
-        "std-service-research-assistant",
-        "std-service-youtube",
-        "std-social-feed",
-        "std-undo"
+        "std-social-feed"
       ],
       "connectableEvents": [
-        "SEARCH",
-        "CLEAR",
+        "AgentSearchLoaded",
+        "AgentSearchLoadFailed",
         "VIEW"
       ],
       "eventPayloads": {
+        "AgentSearchLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -1069,11 +1122,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Session lifecycle atom for agent session management. Composes UI atoms (stdBrowse for session list, stdModal for fork label form) with an agent trait that handles agent/fork, agent/label, and agent/session-id.",
+      "description": "std-agent-session as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 4,
         "transitions": 1
       },
       "defaultEntity": {
@@ -1146,12 +1199,17 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "FORK",
-        "LABEL",
-        "END",
+        "AgentSessionLoaded",
+        "AgentSessionLoadFailed",
         "VIEW"
       ],
       "eventPayloads": {
+        "AgentSessionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -1170,11 +1228,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Pipeline/workflow step indicator atom. Tracks progress through a series of named steps with start/advance/complete/fail lifecycle. Listens for ADVANCE, COMPLETE, FAIL so orchestrating traits can drive the progress externally.",
+      "description": "std-agent-step-progress as a Function",
       "statePattern": "completed, failed, idle, in_progress",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 9
       },
       "defaultEntity": {
@@ -1294,23 +1352,32 @@
       ],
       "connectableEvents": [
         "START",
+        "RESET",
         "ADVANCE",
         "COMPLETE",
         "FAIL",
-        "RESET"
+        "AgentStepProgressLoaded",
+        "AgentStepProgressLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "AgentStepProgressLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-agent-token-gauge": {
       "name": "std-agent-token-gauge",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Token usage display atom with threshold-based state transitions. Shows current token count, usage percentage, and progress bar. Transitions from normal -> warning -> critical based on configurable thresholds. Provides compact and reset actions.",
+      "description": "std-agent-token-gauge as a Function",
       "statePattern": "critical, normal, warning",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 16
       },
       "defaultEntity": {
@@ -1416,7 +1483,9 @@
       "connectableEvents": [
         "UPDATE",
         "COMPACT",
-        "RESET"
+        "RESET",
+        "AgentTokenGaugeLoaded",
+        "AgentTokenGaugeLoadFailed"
       ],
       "eventPayloads": {
         "UPDATE": [
@@ -1424,6 +1493,12 @@
             "name": "current",
             "type": "number",
             "required": true
+          }
+        ],
+        "AgentTokenGaugeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -1433,11 +1508,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Tool execution atom for agent tool invocation. Composes UI atoms (stdModal for invoke form, stdAgentActivityLog for call history) with an agent trait that handles agent/invoke and TOOL_STARTED/TOOL_COMPLETED emits.",
+      "description": "std-agent-tool-call as a Function",
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 7,
         "transitions": 4
       },
       "defaultEntity": {
@@ -1538,7 +1613,10 @@
       "connectableEvents": [
         "INVOKE",
         "CLOSE",
-        "SAVE"
+        "SAVE",
+        "INVOKED",
+        "AgentToolCallLoaded",
+        "AgentToolCallLoadFailed"
       ],
       "eventPayloads": {
         "SAVE": [
@@ -1546,6 +1624,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "AgentToolCallLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -1555,11 +1639,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Async operation behavior: idle, loading, success, error. Covers fetch, submit, retry, and polling patterns in one molecule. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-async as a Function",
       "statePattern": "error, idle, loading, success",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -1674,8 +1758,10 @@
         "START",
         "LOADED",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "AsyncTaskLoaded",
+        "AsyncTaskLoadFailed"
       ],
       "eventPayloads": {
         "LOADED": [
@@ -1691,6 +1777,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "AsyncTaskLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -1699,7 +1791,7 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Autoregressive text generation molecule (GPT-style). Forward pass in a self-transition loop: generates one token at a time until EOS token or max length is reached.",
+      "description": "std-autoregressive as a Function",
       "statePattern": "generating, idle",
       "complexity": {
         "states": 2,
@@ -1777,12 +1869,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Data grid browsing atom. Renders a list of entities with configurable item actions. The browsing view that molecules compose with modal/confirmation atoms.",
-      "statePattern": "browsing",
+      "description": "std-browse as a Function",
+      "statePattern": "browsing, error, loading",
       "complexity": {
-        "states": 1,
-        "events": 1,
-        "transitions": 1
+        "states": 3,
+        "events": 3,
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "BrowseItem",
@@ -1816,23 +1908,31 @@
         "entitySingular": "BrowseItem",
         "entityPlural": "BrowseItems"
       },
-      "defaultIcons": [
-        "list"
-      ],
+      "defaultIcons": [],
       "composableWith": [],
-      "connectableEvents": [],
-      "eventPayloads": {}
+      "connectableEvents": [
+        "BrowseItemLoaded",
+        "BrowseItemLoadFailed"
+      ],
+      "eventPayloads": {
+        "BrowseItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-cache-aside": {
       "name": "std-cache-aside",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Cache management behavior: empty, cached, stale with fetch/invalidate cycle. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-cache-aside as a Function",
       "statePattern": "cached, empty, stale",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 7
       },
       "defaultEntity": {
@@ -1892,7 +1992,9 @@
         "FETCH",
         "CACHED",
         "INVALIDATE",
-        "REFRESH"
+        "REFRESH",
+        "CacheEntryLoaded",
+        "CacheEntryLoadFailed"
       ],
       "eventPayloads": {
         "CACHED": [
@@ -1900,6 +2002,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "CacheEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -1909,11 +2017,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Calendar browsing atom with month/day/slot views. Absorbs: calendar-grid, day-cell, time-slot-cell, date-range-selector.",
+      "description": "std-calendar as a Function",
       "statePattern": "day-view, month-view, slot-selected",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 6
       },
       "defaultEntity": {
@@ -1974,7 +2082,9 @@
       "connectableEvents": [
         "SELECT_DAY",
         "SELECT_SLOT",
-        "BACK"
+        "BACK",
+        "CalendarEventLoaded",
+        "CalendarEventLoadFailed"
       ],
       "eventPayloads": {
         "SELECT_DAY": [
@@ -1990,6 +2100,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "CalendarEventLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -1998,11 +2114,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Circuit breaker pattern behavior: closed, open, halfOpen. Protects services from cascading failures with automatic recovery. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-circuit-breaker as a Function",
       "statePattern": "closed, halfOpen, open",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 8
       },
       "defaultEntity": {
@@ -2104,9 +2220,18 @@
         "FAILURE",
         "SUCCESS",
         "TIMEOUT",
-        "RESET"
+        "RESET",
+        "ServiceNodeLoaded",
+        "ServiceNodeLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ServiceNodeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-collision": {
       "name": "std-collision",
@@ -2180,7 +2305,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-combat-log",
         "std-search",
         "std-selection",
@@ -2206,11 +2330,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Scrollable combat event log atom using the `combat-log` pattern. Displays timestamped combat events with icons and colors. Supports appending new events and clearing the log.",
+      "description": "std-combat-log as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -2283,7 +2407,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-search",
         "std-selection",
@@ -2291,7 +2414,9 @@
       ],
       "connectableEvents": [
         "LOG_EVENT",
-        "CLEAR"
+        "CLEAR",
+        "CombatLogEntryLoaded",
+        "CombatLogEntryLoadFailed"
       ],
       "eventPayloads": {
         "LOG_EVENT": [
@@ -2299,6 +2424,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "CombatLogEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -2308,11 +2439,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Attack cycle behavior: ready, attacking, cooldown, defeated. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-combat as a Function",
       "statePattern": "attacking, cooldown, defeated, ready",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -2411,9 +2542,11 @@
       "connectableEvents": [
         "ATTACK",
         "HIT",
-        "COOLDOWN_END",
         "DEFEAT",
-        "RESET"
+        "COOLDOWN_END",
+        "RESET",
+        "CombatantLoaded",
+        "CombatantLoadFailed"
       ],
       "eventPayloads": {
         "ATTACK": [
@@ -2428,6 +2561,12 @@
             "name": "damage",
             "type": "number",
             "required": true
+          }
+        ],
+        "CombatantLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -2481,9 +2620,7 @@
         "entitySingular": "ConfirmAction",
         "entityPlural": "ConfirmActions"
       },
-      "defaultIcons": [
-        "shield-check"
-      ],
+      "defaultIcons": [],
       "composableWith": [
         "std-agent-classifier",
         "std-agent-completion",
@@ -2517,6 +2654,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ]
       }
@@ -2526,11 +2667,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "RPG dialogue atom using the `dialogue-box` pattern. Shows speaker, portrait, typewriter text, and choices.",
+      "description": "std-dialogue-box as a Function",
       "statePattern": "idle, talking",
       "complexity": {
         "states": 2,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -2597,7 +2738,9 @@
         "ADVANCE",
         "CHOICE",
         "COMPLETE",
-        "START_DIALOGUE"
+        "START_DIALOGUE",
+        "DialogueNodeLoaded",
+        "DialogueNodeLoadFailed"
       ],
       "eventPayloads": {
         "CHOICE": [
@@ -2605,6 +2748,12 @@
             "name": "choiceId",
             "type": "string",
             "required": true
+          }
+        ],
+        "DialogueNodeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -2614,11 +2763,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Read-only display molecule with loading/refresh. Single trait (display is self-contained, no modal atoms needed). Used for dashboards, stats panels, KPIs.",
+      "description": "std-display as a Function",
       "statePattern": "displaying, loading, refreshing",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 5
       },
       "defaultEntity": {
@@ -2669,9 +2818,18 @@
       "connectableEvents": [
         "LOADED",
         "REFRESH",
-        "REFRESHED"
+        "REFRESHED",
+        "DisplayItemLoaded",
+        "DisplayItemLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "DisplayItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-drawer": {
       "name": "std-drawer",
@@ -2682,7 +2840,7 @@
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -2742,21 +2900,30 @@
       ],
       "connectableEvents": [
         "OPEN",
-        "CLOSE"
+        "CLOSE",
+        "DrawerContentLoaded",
+        "DrawerContentLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "DrawerContentLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-filter": {
       "name": "std-filter",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Filter atom. Shows filter buttons per field with predefined values. Clicking a filter value transitions to filtered state. Clear resets.",
-      "statePattern": "browsing, filtered",
+      "description": "std-filter as a Function",
+      "statePattern": "browsing, error, filtered, loading",
       "complexity": {
-        "states": 2,
-        "events": 3,
-        "transitions": 4
+        "states": 4,
+        "events": 5,
+        "transitions": 8
       },
       "defaultEntity": {
         "name": "FilterTarget",
@@ -2790,15 +2957,21 @@
         "entitySingular": "FilterTarget",
         "entityPlural": "FilterTargets"
       },
-      "defaultIcons": [
-        "filter"
-      ],
+      "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
+        "FilterTargetLoaded",
+        "FilterTargetLoadFailed",
         "FILTER",
         "CLEAR_FILTERS"
       ],
       "eventPayloads": {
+        "FilterTargetLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "FILTER": [
           {
             "name": "field",
@@ -2818,11 +2991,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Flip card atom for flashcard-style front/back content. Absorbs: flip-container, flip-card.",
+      "description": "std-flip-card as a Function",
       "statePattern": "back, front",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 6,
         "transitions": 4
       },
       "defaultEntity": {
@@ -2877,20 +3050,29 @@
       "connectableEvents": [
         "FLIP",
         "FLIP_BACK",
-        "NEXT"
+        "NEXT",
+        "FlashcardLoaded",
+        "FlashcardLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "FlashcardLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-gallery": {
       "name": "std-gallery",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Image gallery atom with carousel browsing and lightbox viewing. Absorbs: carousel, lightbox.",
+      "description": "std-gallery as a Function",
       "statePattern": "browsing, viewing",
       "complexity": {
         "states": 2,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -2972,7 +3154,9 @@
       ],
       "connectableEvents": [
         "VIEW",
-        "CLOSE"
+        "CLOSE",
+        "GalleryItemLoaded",
+        "GalleryItemLoadFailed"
       ],
       "eventPayloads": {
         "VIEW": [
@@ -2980,6 +3164,12 @@
             "name": "id",
             "type": "string",
             "required": true
+          }
+        ],
+        "GalleryItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -2989,11 +3179,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Game audio provider atom using the `game-audio-provider` pattern. Wraps child content with an audio context, providing sound playback and mute toggling.",
+      "description": "std-game-audio as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 2,
+        "events": 4,
         "transitions": 2
       },
       "defaultEntity": {
@@ -3033,20 +3223,29 @@
       ],
       "composableWith": [],
       "connectableEvents": [
-        "TOGGLE_MUTE"
+        "TOGGLE_MUTE",
+        "AudioTrackLoaded",
+        "AudioTrackLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "AudioTrackLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-game-canvas2d": {
       "name": "std-game-canvas2d",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "2D game canvas atom using the `game-canvas-2d` pattern. Provides a render loop with configurable FPS, width, and height. Handles init, start, stop, and per-frame tick events.",
+      "description": "std-game-canvas2d as a Function",
       "statePattern": "idle, rendering",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 6,
         "transitions": 4
       },
       "defaultEntity": {
@@ -3116,21 +3315,30 @@
       ],
       "connectableEvents": [
         "START",
+        "TICK",
         "STOP",
-        "TICK"
+        "GameCanvas2dLoaded",
+        "GameCanvas2dLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "GameCanvas2dLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-game-canvas3d": {
       "name": "std-game-canvas3d",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "3D game canvas atom using the `game-canvas-3d` pattern. Renders tiles, units, and features in a 3D scene with configurable orientation, camera mode, grid, shadows, and background color.",
+      "description": "std-game-canvas3d as a Function",
       "statePattern": "active, idle",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 6,
         "transitions": 7
       },
       "defaultEntity": {
@@ -3187,7 +3395,9 @@
       "connectableEvents": [
         "TILE_CLICK",
         "UNIT_CLICK",
-        "CAMERA_CHANGE"
+        "CAMERA_CHANGE",
+        "Canvas3dSceneLoaded",
+        "Canvas3dSceneLoadFailed"
       ],
       "eventPayloads": {
         "TILE_CLICK": [
@@ -3203,6 +3413,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "Canvas3dSceneLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -3211,11 +3427,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Heads-up display atom. Renders the `game-hud` pattern showing health, score, lives, and other stats.",
+      "description": "std-game-hud as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 2,
+        "events": 4,
         "transitions": 2
       },
       "defaultEntity": {
@@ -3260,16 +3476,25 @@
         "std-validate-on-save"
       ],
       "connectableEvents": [
-        "REFRESH"
+        "REFRESH",
+        "HudStateLoaded",
+        "HudStateLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "HudStateLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-game-menu": {
       "name": "std-game-menu",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Game main menu atom using the `game-menu` pattern. Shows title, subtitle, and menu options (Start, Options, Credits, etc.).",
+      "description": "std-game-menu as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
@@ -3352,11 +3577,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Game over screen atom using the `game-over-screen` pattern. Shows final score, high score, and retry/quit actions.",
+      "description": "std-game-over-screen as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -3445,20 +3670,29 @@
         "NAVIGATE",
         "RESTART",
         "RETRY",
-        "QUIT"
+        "QUIT",
+        "GameOverStateLoaded",
+        "GameOverStateLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "GameOverStateLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-gameflow": {
       "name": "std-gameflow",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Game state management behavior: menu, playing, paused, gameover. Uses game UI patterns per state: menu     -> game-menu (title, subtitle, Start Game button) playing  -> game-hud (score, level stats) paused   -> game-menu in modal (Resume, Quit buttons) gameover -> game-over-screen (score, Play Again, Main Menu)",
+      "description": "std-gameflow as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 8,
+        "events": 10,
         "transitions": 10
       },
       "defaultEntity": {
@@ -3548,14 +3782,23 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "GameSessionLoaded",
+        "GameSessionLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "GameSessionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-input": {
       "name": "std-input",
@@ -3617,8 +3860,8 @@
       "composableWith": [],
       "connectableEvents": [
         "FOCUS",
-        "BLUR",
         "CHANGE",
+        "BLUR",
         "VALIDATE"
       ],
       "eventPayloads": {
@@ -3636,11 +3879,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Grid-based inventory atom using the `inventory-panel` pattern. Shows items in a grid with select, use, and drop actions.",
+      "description": "std-inventory-panel as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 4,
+        "events": 6,
         "transitions": 4
       },
       "defaultEntity": {
@@ -3686,7 +3929,9 @@
       "connectableEvents": [
         "SELECT_SLOT",
         "USE_ITEM",
-        "DROP_ITEM"
+        "DROP_ITEM",
+        "InventorySlotLoaded",
+        "InventorySlotLoadFailed"
       ],
       "eventPayloads": {
         "SELECT_SLOT": [
@@ -3709,6 +3954,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "InventorySlotLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -3717,11 +3968,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Isometric game renderer atom using the `isometric-canvas` pattern. Renders tiles, units, and features on an isometric grid. Handles tile clicks, unit clicks, and hover events.",
+      "description": "std-isometric-canvas as a Function",
       "statePattern": "active, idle",
       "complexity": {
         "states": 2,
-        "events": 6,
+        "events": 8,
         "transitions": 10
       },
       "defaultEntity": {
@@ -3778,7 +4029,9 @@
         "UNIT_CLICK",
         "TILE_HOVER",
         "TILE_LEAVE",
-        "DESELECT"
+        "DESELECT",
+        "IsometricWorldLoaded",
+        "IsometricWorldLoadFailed"
       ],
       "eventPayloads": {
         "TILE_CLICK": [
@@ -3793,6 +4046,12 @@
             "name": "unitId",
             "type": "string",
             "required": true
+          }
+        ],
+        "IsometricWorldLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -3934,7 +4193,7 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Modal overlay atom. Accepts content injection so molecules can control what renders inside the open state.",
+      "description": "std-modal as a Function",
       "statePattern": "closed, open",
       "complexity": {
         "states": 2,
@@ -3969,13 +4228,11 @@
         ]
       },
       "defaultLabels": {
-        "title": "Details",
+        "title": "ModalRecords",
         "entitySingular": "ModalRecord",
         "entityPlural": "ModalRecords"
       },
-      "defaultIcons": [
-        "layout-panel-top"
-      ],
+      "defaultIcons": [],
       "composableWith": [
         "std-agent-classifier",
         "std-agent-completion",
@@ -4022,11 +4279,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Entity movement behavior: idle, moving, collision detection and resolution. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-movement as a Function",
       "statePattern": "colliding, idle, moving",
       "complexity": {
         "states": 3,
-        "events": 7,
+        "events": 9,
         "transitions": 7
       },
       "defaultEntity": {
@@ -4104,7 +4361,9 @@
         "COLLISION",
         "RESOLVE",
         "CANCEL",
-        "CLOSE"
+        "CLOSE",
+        "MovableEntityLoaded",
+        "MovableEntityLoadFailed"
       ],
       "eventPayloads": {
         "MOVE": [
@@ -4125,6 +4384,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "MovableEntityLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -4137,7 +4402,7 @@
       "statePattern": "hidden, visible",
       "complexity": {
         "states": 2,
-        "events": 3,
+        "events": 5,
         "transitions": 4
       },
       "defaultEntity": {
@@ -4188,7 +4453,9 @@
       "composableWith": [],
       "connectableEvents": [
         "SHOW",
-        "HIDE"
+        "HIDE",
+        "NotificationLoaded",
+        "NotificationLoadFailed"
       ],
       "eventPayloads": {
         "SHOW": [
@@ -4201,6 +4468,12 @@
             "name": "notificationType",
             "type": "string"
           }
+        ],
+        "NotificationLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -4209,11 +4482,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Map/zone navigation behavior: exploring, transitioning, entered. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-overworld as a Function",
       "statePattern": "entered, exploring, transitioning",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 4
       },
       "defaultEntity": {
@@ -4258,7 +4531,9 @@
       "connectableEvents": [
         "TRAVEL",
         "ARRIVE",
-        "BACK"
+        "BACK",
+        "WorldRegionLoaded",
+        "WorldRegionLoadFailed"
       ],
       "eventPayloads": {
         "TRAVEL": [
@@ -4266,6 +4541,12 @@
             "name": "zoneId",
             "type": "string",
             "required": true
+          }
+        ],
+        "WorldRegionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -4279,7 +4560,7 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 2,
+        "events": 4,
         "transitions": 2
       },
       "defaultEntity": {
@@ -4319,7 +4600,9 @@
       ],
       "composableWith": [],
       "connectableEvents": [
-        "PAGE"
+        "PAGE",
+        "PagedItemLoaded",
+        "PagedItemLoadFailed"
       ],
       "eventPayloads": {
         "PAGE": [
@@ -4332,6 +4615,12 @@
             "name": "pageSize",
             "type": "number",
             "required": true
+          }
+        ],
+        "PagedItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -4448,9 +4737,9 @@
       ],
       "connectableEvents": [
         "START",
-        "STOP",
         "TICK",
-        "APPLY_FORCE"
+        "APPLY_FORCE",
+        "STOP"
       ],
       "eventPayloads": {
         "APPLY_FORCE": [
@@ -4472,11 +4761,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Side-scrolling platformer atom using the `platformer-canvas` pattern. Renders player, platforms, and handles movement events.",
+      "description": "std-platformer-canvas as a Function",
       "statePattern": "idle, running",
       "complexity": {
         "states": 2,
-        "events": 6,
+        "events": 8,
         "transitions": 6
       },
       "defaultEntity": {
@@ -4551,25 +4840,34 @@
         "std-turn-based-battle"
       ],
       "connectableEvents": [
+        "START",
         "LEFT",
         "RIGHT",
         "JUMP",
         "STOP",
-        "START"
+        "PlatformerWorldLoaded",
+        "PlatformerWorldLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PlatformerWorldLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-push": {
       "name": "std-push",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "External-event subscription atom. Wraps os/watch-http with a lifecycle state machine (idle → subscribed ↔ reconnecting) using emit: config to turn incoming messages + failures into closed-circuit events.",
-      "statePattern": "idle, reconnecting, subscribed",
+      "description": "std-push as a Function",
+      "statePattern": "connecting, idle, reconnecting, subscribed",
       "complexity": {
-        "states": 3,
-        "events": 3,
-        "transitions": 5
+        "states": 4,
+        "events": 5,
+        "transitions": 7
       },
       "defaultEntity": {
         "name": "PushSubscriber",
@@ -4583,10 +4881,6 @@
           {
             "name": "status",
             "type": "string"
-          },
-          {
-            "name": "lastMessageAt",
-            "type": "string"
           }
         ]
       },
@@ -4595,26 +4889,39 @@
         "entitySingular": "PushSubscriber",
         "entityPlural": "PushSubscribers"
       },
-      "defaultIcons": [
-        "wifi"
-      ],
+      "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
         "PUSH_RECEIVED",
-        "PUSH_DISCONNECTED"
+        "PUSH_DISCONNECTED",
+        "PushReceived",
+        "PushDisconnected"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PUSH_RECEIVED": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
+        "PUSH_DISCONNECTED": [
+          {
+            "name": "reason",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-quest": {
       "name": "std-quest",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Quest/objective tracking behavior: available, active, complete, failed. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-quest as a Function",
       "statePattern": "active, available, complete, failed, progressing",
       "complexity": {
         "states": 5,
-        "events": 9,
+        "events": 11,
         "transitions": 11
       },
       "defaultEntity": {
@@ -4730,12 +5037,14 @@
       "connectableEvents": [
         "ACCEPT",
         "PROGRESS",
-        "SAVE",
         "COMPLETE",
         "FAIL",
-        "RESET",
+        "SAVE",
         "CANCEL",
-        "CLOSE"
+        "CLOSE",
+        "RESET",
+        "QuestLogLoaded",
+        "QuestLogLoadFailed"
       ],
       "eventPayloads": {
         "PROGRESS": [
@@ -4750,6 +5059,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "QuestLogLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -4874,11 +5189,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Rating atom with star-rating input and display. Absorbs: star-rating.",
+      "description": "std-rating as a Function",
       "statePattern": "idle, rated",
       "complexity": {
         "states": 2,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -4973,7 +5288,9 @@
       ],
       "connectableEvents": [
         "RATE",
-        "RESET"
+        "RESET",
+        "ReviewLoaded",
+        "ReviewLoadFailed"
       ],
       "eventPayloads": {
         "RATE": [
@@ -4981,6 +5298,12 @@
             "name": "rating",
             "type": "number",
             "required": true
+          }
+        ],
+        "ReviewLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -4990,12 +5313,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Relation-walking atom. Fetches the linked entity with include: hydrating a declared relation, emits FETCH_OK on success, renders populated children as a data-list.",
-      "statePattern": "loaded",
+      "description": "std-related as a Function",
+      "statePattern": "error, loaded, loading",
       "complexity": {
-        "states": 1,
+        "states": 3,
         "events": 3,
-        "transitions": 3
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "RelatedItem",
@@ -5009,10 +5332,6 @@
           {
             "name": "name",
             "type": "string"
-          },
-          {
-            "name": "items",
-            "type": "string"
           }
         ]
       },
@@ -5024,21 +5343,28 @@
       "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
-        "FETCH_OK",
-        "FETCH_FAILED"
+        "RelatedItemLoaded",
+        "RelatedItemLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "RelatedItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-score-board": {
       "name": "std-score-board",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Score display atom using the `score-board` pattern. Shows score, high score, combo, multiplier, level.",
+      "description": "std-score-board as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 4,
+        "events": 6,
         "transitions": 4
       },
       "defaultEntity": {
@@ -5147,7 +5473,9 @@
       "connectableEvents": [
         "ADD_SCORE",
         "COMBO",
-        "RESET"
+        "RESET",
+        "ScoreBoardEntryLoaded",
+        "ScoreBoardEntryLoadFailed"
       ],
       "eventPayloads": {
         "ADD_SCORE": [
@@ -5163,6 +5491,12 @@
             "type": "number",
             "required": true
           }
+        ],
+        "ScoreBoardEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5175,7 +5509,7 @@
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -5280,8 +5614,10 @@
       "connectableEvents": [
         "ADD",
         "SUBTRACT",
+        "COMBO",
         "RESET",
-        "COMBO"
+        "ScoreEntryLoaded",
+        "ScoreEntryLoadFailed"
       ],
       "eventPayloads": {
         "ADD": [
@@ -5304,6 +5640,12 @@
             "type": "number",
             "required": true
           }
+        ],
+        "ScoreEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5313,11 +5655,11 @@
       "family": "unknown",
       "layer": "UI Patterns",
       "description": "std-search as a Function",
-      "statePattern": "idle, searching",
+      "statePattern": "error, idle, loading, searching",
       "complexity": {
-        "states": 2,
-        "events": 3,
-        "transitions": 4
+        "states": 4,
+        "events": 5,
+        "transitions": 8
       },
       "defaultEntity": {
         "name": "SearchResult",
@@ -5359,7 +5701,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
         "std-selection",
@@ -5370,6 +5711,8 @@
       ],
       "connectableEvents": [
         "SEARCH",
+        "SearchResultLoaded",
+        "SearchResultLoadFailed",
         "CLEAR"
       ],
       "eventPayloads": {
@@ -5378,6 +5721,12 @@
             "name": "query",
             "type": "string",
             "required": true
+          }
+        ],
+        "SearchResultLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -5391,7 +5740,7 @@
       "statePattern": "idle, selected, selecting",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 7
       },
       "defaultEntity": {
@@ -5434,7 +5783,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
         "std-isometric-canvas",
@@ -5446,7 +5794,9 @@
         "SELECT",
         "DESELECT",
         "CLEAR",
-        "CONFIRM_SELECTION"
+        "CONFIRM_SELECTION",
+        "SelectableItemLoaded",
+        "SelectableItemLoadFailed"
       ],
       "eventPayloads": {
         "SELECT": [
@@ -5462,6 +5812,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "SelectableItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5470,11 +5826,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Custom REST API behavior with Bearer token authentication. Tests the schema-level service declaration pattern with bearer auth. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-custom-bearer as a Function",
       "statePattern": "calling, complete, error, idle",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -5594,8 +5950,10 @@
         "CALL_API",
         "API_RESPONSE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceCustomBearerLoaded",
+        "ServiceCustomBearerLoadFailed"
       ],
       "eventPayloads": {
         "API_RESPONSE": [
@@ -5616,6 +5974,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceCustomBearerLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5624,11 +5988,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Custom REST API behavior with header-based API key authentication. Tests the schema-level service declaration pattern (no pre-built integration). Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-custom-header as a Function",
       "statePattern": "calling, complete, error, idle",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -5748,8 +6112,10 @@
         "CALL_API",
         "API_RESPONSE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceCustomHeaderLoaded",
+        "ServiceCustomHeaderLoadFailed"
       ],
       "eventPayloads": {
         "API_RESPONSE": [
@@ -5770,6 +6136,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceCustomHeaderLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5778,11 +6150,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Custom REST API behavior with no authentication. Tests the schema-level service declaration pattern for public APIs. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-custom-noauth as a Function",
       "statePattern": "calling, complete, error, idle",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -5902,8 +6274,10 @@
         "CALL_API",
         "API_RESPONSE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceCustomNoauthLoaded",
+        "ServiceCustomNoauthLoadFailed"
       ],
       "eventPayloads": {
         "API_RESPONSE": [
@@ -5924,6 +6298,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceCustomNoauthLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -5932,11 +6312,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Custom REST API behavior with query-string API key authentication. Tests the schema-level service declaration pattern with query-based auth. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-custom-query as a Function",
       "statePattern": "calling, complete, error, idle",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -6056,8 +6436,10 @@
         "CALL_API",
         "API_RESPONSE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceCustomQueryLoaded",
+        "ServiceCustomQueryLoadFailed"
       ],
       "eventPayloads": {
         "API_RESPONSE": [
@@ -6078,6 +6460,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceCustomQueryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -6086,11 +6474,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Email service integration behavior: compose, send, track delivery status. Wraps the `email` service with call-service for send operations. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-email as a Function",
       "statePattern": "error, idle, sending, sent",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -6211,8 +6599,10 @@
         "SEND",
         "SENT",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceEmailLoaded",
+        "ServiceEmailLoadFailed"
       ],
       "eventPayloads": {
         "SENT": [
@@ -6227,6 +6617,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceEmailLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -6235,11 +6631,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "GitHub service integration behavior: idle, creatingPR, prCreated, error. Wraps the `github` integration (listIssues, createPR) with a PR creation flow. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-github as a Function",
       "statePattern": "creatingPR, error, idle, prCreated",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 7
       },
       "defaultEntity": {
@@ -6371,8 +6767,10 @@
         "CREATE_PR",
         "PR_CREATED",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceGithubLoaded",
+        "ServiceGithubLoadFailed"
       ],
       "eventPayloads": {
         "PR_CREATED": [
@@ -6393,6 +6791,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceGithubLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -6401,11 +6805,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "LLM service integration behavior: generate, classify, summarize text. Wraps the `llm` integration with 4 actions via separate action events. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-llm as a Function",
       "statePattern": "complete, error, idle, processing",
       "complexity": {
         "states": 4,
-        "events": 8,
+        "events": 10,
         "transitions": 9
       },
       "defaultEntity": {
@@ -6537,8 +6941,10 @@
         "SUMMARIZE",
         "COMPLETE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceLlmLoaded",
+        "ServiceLlmLoadFailed"
       ],
       "eventPayloads": {
         "COMPLETE": [
@@ -6554,6 +6960,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceLlmLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -6562,11 +6974,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "OAuth service integration behavior: authorize, token exchange, refresh. Wraps the `oauth` integration with a multi-step authorization flow. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-oauth as a Function",
       "statePattern": "authenticated, authorizing, error, refreshing, unauthenticated",
       "complexity": {
         "states": 5,
-        "events": 10,
+        "events": 12,
         "transitions": 11
       },
       "defaultEntity": {
@@ -6675,12 +7087,14 @@
         "LOGIN",
         "AUTH_URL_RECEIVED",
         "CALLBACK",
+        "FAILED",
         "TOKEN_RECEIVED",
         "REFRESH",
-        "TOKEN_REFRESHED",
         "LOGOUT",
-        "FAILED",
-        "RETRY"
+        "TOKEN_REFRESHED",
+        "RETRY",
+        "ServiceOauthLoaded",
+        "ServiceOauthLoadFailed"
       ],
       "eventPayloads": {
         "AUTH_URL_RECEIVED": [
@@ -6693,6 +7107,13 @@
         "CALLBACK": [
           {
             "name": "code",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
             "type": "string",
             "required": true
           }
@@ -6716,11 +7137,10 @@
             "required": true
           }
         ],
-        "FAILED": [
+        "ServiceOauthLoadFailed": [
           {
-            "name": "error",
-            "type": "string",
-            "required": true
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -6730,11 +7150,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Redis cache integration behavior: get, set, delete with TTL support. Wraps the `redis` service with separate events for each operation. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-redis as a Function",
       "statePattern": "complete, error, executing, idle",
       "complexity": {
         "states": 4,
-        "events": 7,
+        "events": 9,
         "transitions": 8
       },
       "defaultEntity": {
@@ -6850,7 +7270,9 @@
         "DELETE_KEY",
         "EXECUTED",
         "FAILED",
-        "RESET"
+        "RESET",
+        "ServiceRedisLoaded",
+        "ServiceRedisLoadFailed"
       ],
       "eventPayloads": {
         "EXECUTED": [
@@ -6866,6 +7288,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceRedisLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -6874,11 +7302,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Storage service integration behavior: upload, download, list, delete files. Wraps the `storage` service with separate events for each operation. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-storage as a Function",
       "statePattern": "complete, error, executing, idle",
       "complexity": {
         "states": 4,
-        "events": 8,
+        "events": 10,
         "transitions": 9
       },
       "defaultEntity": {
@@ -6999,7 +7427,9 @@
         "DELETE_FILE",
         "EXECUTED",
         "FAILED",
-        "RESET"
+        "RESET",
+        "ServiceStorageLoaded",
+        "ServiceStorageLoadFailed"
       ],
       "eventPayloads": {
         "EXECUTED": [
@@ -7015,6 +7445,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceStorageLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -7023,11 +7459,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Stripe payment integration behavior: idle, creating, confirming, succeeded, error. Wraps the `stripe` service integration with a multi-step payment flow. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-stripe as a Function",
       "statePattern": "confirming, creating, error, idle, succeeded",
       "complexity": {
         "states": 5,
-        "events": 8,
+        "events": 9,
         "transitions": 9
       },
       "defaultEntity": {
@@ -7146,11 +7582,12 @@
       "connectableEvents": [
         "CREATE_PAYMENT",
         "PAYMENT_CREATED",
-        "CONFIRM_PAYMENT",
-        "PAYMENT_CONFIRMED",
         "FAILED",
+        "PAYMENT_CONFIRMED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceStripeLoaded",
+        "ServiceStripeLoadFailed"
       ],
       "eventPayloads": {
         "PAYMENT_CREATED": [
@@ -7171,6 +7608,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceStripeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -7179,11 +7622,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Twilio messaging integration behavior: compose, send SMS or WhatsApp, track delivery. Wraps the `twilio` service integration with sendSMS and sendWhatsApp operations. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-twilio as a Function",
       "statePattern": "error, idle, sending, sent",
       "complexity": {
         "states": 4,
-        "events": 7,
+        "events": 9,
         "transitions": 8
       },
       "defaultEntity": {
@@ -7299,8 +7742,10 @@
         "SEND_WHATSAPP",
         "SENT",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceTwilioLoaded",
+        "ServiceTwilioLoadFailed"
       ],
       "eventPayloads": {
         "SENT": [
@@ -7315,6 +7760,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceTwilioLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -7323,11 +7774,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "YouTube service integration behavior: search videos, view video details. Wraps the `youtube` service integration with search and getVideo operations. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-youtube as a Function",
       "statePattern": "error, idle, results, searching, viewingDetail",
       "complexity": {
         "states": 5,
-        "events": 8,
+        "events": 10,
         "transitions": 10
       },
       "defaultEntity": {
@@ -7405,7 +7856,6 @@
         "std-agent-planner",
         "std-agent-rag",
         "std-agent-reviewer",
-        "std-agent-search",
         "std-agent-step-progress",
         "std-agent-token-gauge",
         "std-agent-tool-loop",
@@ -7449,16 +7899,25 @@
       "connectableEvents": [
         "SEARCH",
         "SEARCH_COMPLETE",
+        "FAILED",
         "SELECT_VIDEO",
+        "RESET",
         "VIDEO_LOADED",
         "BACK",
-        "FAILED",
-        "RESET"
+        "ServiceYoutubeLoaded",
+        "ServiceYoutubeLoadFailed"
       ],
       "eventPayloads": {
         "SEARCH_COMPLETE": [
           {
             "name": "results",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
             "type": "string",
             "required": true
           }
@@ -7482,11 +7941,10 @@
             "required": true
           }
         ],
-        "FAILED": [
+        "ServiceYoutubeLoadFailed": [
           {
-            "name": "error",
-            "type": "string",
-            "required": true
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -7496,11 +7954,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "2D physics simulation renderer atom using the `simulation-canvas` pattern. Runs built-in Euler integration for educational presets (pendulum, spring, etc.). Supports start, stop, and reset controls.",
+      "description": "std-simulation-canvas as a Function",
       "statePattern": "idle, running",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 6,
         "transitions": 5
       },
       "defaultEntity": {
@@ -7607,21 +8065,30 @@
       ],
       "connectableEvents": [
         "START",
+        "RESET",
         "STOP",
-        "RESET"
+        "SimulationWorldLoaded",
+        "SimulationWorldLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "SimulationWorldLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-sort": {
       "name": "std-sort",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Sort atom. Shows sort-by buttons for each sortable field. Clicking a field name sorts by that field. Clicking again toggles direction.",
+      "description": "std-sort as a Function",
       "statePattern": "idle, sorted",
       "complexity": {
         "states": 2,
-        "events": 2,
+        "events": 4,
         "transitions": 4
       },
       "defaultEntity": {
@@ -7662,7 +8129,9 @@
       ],
       "composableWith": [],
       "connectableEvents": [
-        "SORT"
+        "SORT",
+        "SortableItemLoaded",
+        "SortableItemLoadFailed"
       ],
       "eventPayloads": {
         "SORT": [
@@ -7675,6 +8144,12 @@
             "name": "direction",
             "type": "string"
           }
+        ],
+        "SortableItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -7683,11 +8158,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Sprite renderer atom using the `sprite` pattern. Renders a single frame from a spritesheet with position and scale. Handles frame changes and click events.",
+      "description": "std-sprite as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -7748,7 +8223,9 @@
       "composableWith": [],
       "connectableEvents": [
         "SET_FRAME",
-        "CLICK"
+        "CLICK",
+        "SpriteEntityLoaded",
+        "SpriteEntityLoadFailed"
       ],
       "eventPayloads": {
         "SET_FRAME": [
@@ -7756,6 +8233,12 @@
             "name": "frame",
             "type": "number",
             "required": true
+          }
+        ],
+        "SpriteEntityLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -7765,11 +8248,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Tab navigation atom. Uses the `tabs` pattern component with clickable tab headers. Each tab shows different entity data.",
+      "description": "std-tabs as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 2,
+        "events": 4,
         "transitions": 2
       },
       "defaultEntity": {
@@ -7809,7 +8292,9 @@
       ],
       "composableWith": [],
       "connectableEvents": [
-        "SELECT_TAB"
+        "SELECT_TAB",
+        "TabContentLoaded",
+        "TabContentLoadFailed"
       ],
       "eventPayloads": {
         "SELECT_TAB": [
@@ -7817,6 +8302,12 @@
             "name": "tab",
             "type": "string",
             "required": true
+          }
+        ],
+        "TabContentLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -7826,11 +8317,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Text animation and highlighting atom. Absorbs: typewriter-text, text-highlight, law-reference-tooltip.",
+      "description": "std-text-effects as a Function",
       "statePattern": "animating, highlighted, idle",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 6
       },
       "defaultEntity": {
@@ -7931,20 +8422,29 @@
       "connectableEvents": [
         "ANIMATE",
         "HIGHLIGHT",
-        "RESET"
+        "RESET",
+        "TextContentLoaded",
+        "TextContentLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "TextContentLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-theme": {
       "name": "std-theme",
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Theme selection atom with toggle and full selector. Absorbs: theme-toggle, theme-selector.",
+      "description": "std-theme as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -7997,7 +8497,9 @@
       ],
       "connectableEvents": [
         "TOGGLE",
-        "SELECT"
+        "SELECT",
+        "ThemePreferenceLoaded",
+        "ThemePreferenceLoadFailed"
       ],
       "eventPayloads": {
         "SELECT": [
@@ -8005,6 +8507,12 @@
             "name": "theme",
             "type": "string",
             "required": true
+          }
+        ],
+        "ThemePreferenceLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -8136,11 +8644,11 @@
       ],
       "connectableEvents": [
         "START",
-        "PAUSE",
-        "RESUME",
-        "RESET",
         "TICK",
-        "EXPIRE"
+        "PAUSE",
+        "EXPIRE",
+        "RESET",
+        "RESUME"
       ],
       "eventPayloads": {}
     },
@@ -8149,11 +8657,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Undo/Redo atom using array operators as a stack. - PUSH: appends to undoStack, clears redoStack - UNDO: pops from undoStack, pushes to redoStack - REDO: pops from redoStack, pushes to undoStack - CLEAR: empties both stacks",
+      "description": "std-undo as a Function",
       "statePattern": "idle",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -8211,7 +8719,6 @@
         "std-agent-assistant",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
         "std-search",
@@ -8221,7 +8728,9 @@
         "PUSH",
         "UNDO",
         "REDO",
-        "CLEAR"
+        "CLEAR",
+        "UndoActionLoaded",
+        "UndoActionLoadFailed"
       ],
       "eventPayloads": {
         "PUSH": [
@@ -8229,6 +8738,12 @@
             "name": "data",
             "type": "string",
             "required": true
+          }
+        ],
+        "UndoActionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -8238,7 +8753,7 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "File upload atom with drag-and-drop zone and progress tracking. Absorbs: upload-drop-zone.",
+      "description": "std-upload as a Function",
       "statePattern": "complete, error, idle, uploading",
       "complexity": {
         "states": 4,
@@ -8358,8 +8873,8 @@
         "UPLOAD",
         "COMPLETE",
         "FAILED",
-        "RETRY",
-        "RESET"
+        "RESET",
+        "RETRY"
       ],
       "eventPayloads": {
         "UPLOAD": [
@@ -8376,7 +8891,7 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "OS trigger that watches .orb files and validates them on save. Shows a status dashboard with validation results. Emits AGENT_INTERRUPT with validation results to interrupt autonomous agents with ground truth.",
+      "description": "std-validate-on-save as a Function",
       "statePattern": "idle, invalid, valid, validating",
       "complexity": {
         "states": 4,
@@ -8440,31 +8955,15 @@
       ],
       "connectableEvents": [
         "OS_FILE_MODIFIED",
-        "REFRESH",
         "VALIDATION_PASSED",
-        "VALIDATION_FAILED"
+        "VALIDATION_FAILED",
+        "REFRESH"
       ],
       "eventPayloads": {
         "OS_FILE_MODIFIED": [
           {
             "name": "path",
             "type": "string"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "dir",
-            "type": "string"
-          },
-          {
-            "name": "ext",
-            "type": "string"
-          },
-          {
-            "name": "timestamp",
-            "type": "number"
           }
         ],
         "VALIDATION_PASSED": [
@@ -8490,11 +8989,11 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Multi-step wizard behavior parameterized for any domain. Generates a dynamic number of steps based on the `steps` parameter, with a review screen and completion view. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-wizard as a Function",
       "statePattern": "complete, review, step1, step2, step3",
       "complexity": {
         "states": 5,
-        "events": 5,
+        "events": 7,
         "transitions": 10
       },
       "defaultEntity": {
@@ -8565,7 +9064,9 @@
         "NEXT",
         "PREV",
         "COMPLETE",
-        "RESTART"
+        "RESTART",
+        "WizardEntryLoaded",
+        "WizardEntryLoadFailed"
       ],
       "eventPayloads": {
         "NEXT": [
@@ -8581,6 +9082,12 @@
             "type": "object",
             "required": true
           }
+        ],
+        "WizardEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -8589,11 +9096,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-agent-fix-loop -- Validation-fix cycle",
+      "description": "std-agent-fix-loop as a Function",
       "statePattern": "applying, failed, fixing, idle, succeeded, validating",
       "complexity": {
         "states": 6,
-        "events": 9,
+        "events": 11,
         "transitions": 11
       },
       "defaultEntity": {
@@ -8767,11 +9274,13 @@
         "FIX",
         "VALIDATION_PASSED",
         "VALIDATION_ERRORS",
-        "FIX_GENERATED",
-        "FIX_APPLIED",
         "EXCEEDED_ATTEMPTS",
+        "FIX_GENERATED",
         "FAILED",
-        "RESET"
+        "FIX_APPLIED",
+        "RESET",
+        "FIX_SUCCEEDED",
+        "FIX_FAILED"
       ],
       "eventPayloads": {
         "VALIDATION_ERRORS": [
@@ -8786,16 +9295,16 @@
             "required": true
           }
         ],
-        "FIX_GENERATED": [
+        "EXCEEDED_ATTEMPTS": [
           {
-            "name": "fix",
+            "name": "error",
             "type": "string",
             "required": true
           }
         ],
-        "EXCEEDED_ATTEMPTS": [
+        "FIX_GENERATED": [
           {
-            "name": "error",
+            "name": "fix",
             "type": "string",
             "required": true
           }
@@ -8814,7 +9323,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-agent-learner -- Outcome learning",
+      "description": "std-agent-learner as a Function",
       "statePattern": "analyzing, idle, recording",
       "complexity": {
         "states": 3,
@@ -9038,34 +9547,30 @@
       "connectableEvents": [
         "TASK_SUCCEEDED",
         "TASK_FAILED",
+        "RESET",
         "RECORDED",
-        "ANALYSIS_DONE",
         "FAILED",
-        "RESET"
+        "ANALYSIS_DONE"
       ],
       "eventPayloads": {
         "TASK_SUCCEEDED": [
           {
             "name": "outcome",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "category",
-            "type": "string",
-            "required": true
+            "type": "string"
           }
         ],
         "TASK_FAILED": [
           {
             "name": "outcome",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "category",
-            "type": "string",
-            "required": true
+            "type": "string"
           }
         ],
         "RECORDED": [
@@ -9075,16 +9580,16 @@
             "required": true
           }
         ],
-        "ANALYSIS_DONE": [
+        "FAILED": [
           {
-            "name": "impact",
+            "name": "error",
             "type": "string",
             "required": true
           }
         ],
-        "FAILED": [
+        "ANALYSIS_DONE": [
           {
-            "name": "error",
+            "name": "impact",
             "type": "string",
             "required": true
           }
@@ -9096,11 +9601,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-agent-planner -- Task planning",
+      "description": "std-agent-planner as a Function",
       "statePattern": "classifying, idle, planning, ready, recalling",
       "complexity": {
         "states": 5,
-        "events": 7,
+        "events": 8,
         "transitions": 9
       },
       "defaultEntity": {
@@ -9245,6 +9750,7 @@
       ],
       "composableWith": [
         "std-agent-builder",
+        "std-agent-classifier",
         "std-agent-context-window",
         "std-agent-fix-loop",
         "std-agent-learner",
@@ -9292,15 +9798,23 @@
       "connectableEvents": [
         "PLAN",
         "CLASSIFIED",
+        "FAILED",
         "MEMORIES_LOADED",
         "PLAN_GENERATED",
-        "FAILED",
-        "RESET"
+        "RESET",
+        "PLAN_READY"
       ],
       "eventPayloads": {
         "CLASSIFIED": [
           {
             "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
             "type": "string",
             "required": true
           }
@@ -9328,13 +9842,6 @@
             "type": "number",
             "required": true
           }
-        ],
-        "FAILED": [
-          {
-            "name": "error",
-            "type": "string",
-            "required": true
-          }
         ]
       }
     },
@@ -9343,7 +9850,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-agent-rag -- Retrieval-Augmented Generation",
+      "description": "std-agent-rag as a Function",
       "statePattern": "completed, generating, idle, retrieving",
       "complexity": {
         "states": 4,
@@ -9521,8 +10028,8 @@
       "connectableEvents": [
         "GENERATE",
         "RETRIEVAL_DONE",
-        "GENERATION_DONE",
         "FAILED",
+        "GENERATION_DONE",
         "RESET"
       ],
       "eventPayloads": {
@@ -9543,16 +10050,16 @@
             "required": true
           }
         ],
-        "GENERATION_DONE": [
+        "FAILED": [
           {
-            "name": "response",
+            "name": "error",
             "type": "string",
             "required": true
           }
         ],
-        "FAILED": [
+        "GENERATION_DONE": [
           {
-            "name": "error",
+            "name": "response",
             "type": "string",
             "required": true
           }
@@ -9564,7 +10071,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-agent-tool-loop -- Tool execution loop",
+      "description": "std-agent-tool-loop as a Function",
       "statePattern": "checking, completed, executing, failed, idle, planning",
       "complexity": {
         "states": 6,
@@ -9795,11 +10302,11 @@
       "connectableEvents": [
         "EXECUTE",
         "PLAN_GENERATED",
+        "FAILED",
         "TOOL_RESULT",
         "CHECK_PASSED",
         "CHECK_NEEDS_MORE",
         "MAX_ITERATIONS",
-        "FAILED",
         "RESET"
       ],
       "eventPayloads": {
@@ -9817,6 +10324,13 @@
           {
             "name": "toolArgs",
             "type": "object",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
             "required": true
           }
         ],
@@ -9852,13 +10366,6 @@
             "type": "string",
             "required": true
           }
-        ],
-        "FAILED": [
-          {
-            "name": "error",
-            "type": "string",
-            "required": true
-          }
         ]
       }
     },
@@ -9867,7 +10374,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Batch-select list: Browse + Selection + Confirmation with a batch-action toolbar, composed via @trait.X.",
+      "description": "std-batch-selected-list as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -9912,11 +10419,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `builder-board` pattern for the playing state.",
+      "description": "std-builder-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -10000,18 +10507,27 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "BuilderGameLoaded",
+        "BuilderGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "BuilderGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-calendar-booking": {
       "name": "std-calendar-booking",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Calendar booking: Calendar view with Modal + Confirmation modals, Calendar composed via @trait.X.",
+      "description": "std-calendar-booking as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -10056,12 +10572,12 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Shopping cart molecule. Composes atoms: - Cart-specific browse trait (empty/hasItems/checkout states) - stdModal for the add-item form (responds to ADD_ITEM)",
-      "statePattern": "browsing, checkout",
+      "description": "std-cart as a Function",
+      "statePattern": "browsing, error, loading",
       "complexity": {
-        "states": 2,
-        "events": 6,
-        "transitions": 4
+        "states": 3,
+        "events": 3,
+        "transitions": 5
       },
       "defaultEntity": {
         "name": "CartItem",
@@ -10096,31 +10612,27 @@
         ]
       },
       "defaultLabels": {
-        "title": "Shopping Cart",
+        "title": "CartItems",
         "entitySingular": "CartItem",
-        "entityPlural": "CartItems",
-        "createButton": "Add Item"
+        "entityPlural": "CartItems"
       },
-      "defaultIcons": [
-        "shopping-cart",
-        "package",
-        "dollar-sign",
-        "receipt"
-      ],
+      "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
-        "ADD_ITEM",
-        "REQUEST_REMOVE",
-        "PROCEED_CHECKOUT",
-        "BACK_TO_CART",
-        "CONFIRM_ORDER"
+        "CartItemLoaded",
+        "CartItemLoadFailed"
       ],
       "eventPayloads": {
-        "REQUEST_REMOVE": [
+        "CartItemLoaded": [
           {
-            "name": "id",
-            "type": "string",
-            "required": true
+            "name": "data",
+            "type": "object"
+          }
+        ],
+        "CartItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -10130,11 +10642,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `classifier-board` pattern for the playing state.",
+      "description": "std-classifier-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -10218,18 +10730,27 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "ClassifierGameLoaded",
+        "ClassifierGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ClassifierGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-dashboard-tabbed": {
       "name": "std-dashboard-tabbed",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Tabbed dashboard: Tabs over 3 Display panels composed via @trait.X (two-hop).",
+      "description": "std-dashboard-tabbed as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -10274,11 +10795,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `debugger-board` pattern for the playing state.",
+      "description": "std-debugger-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -10362,18 +10883,27 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "DebuggerGameLoaded",
+        "DebuggerGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "DebuggerGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-drawer-master-list": {
       "name": "std-drawer-master-list",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Master-drawer: Browse left + Drawer right, composed via @trait.X.",
+      "description": "std-drawer-master-list as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -10418,11 +10948,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `event-handler-board` pattern for the playing state.",
+      "description": "std-event-handler-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -10506,18 +11036,27 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "EventHandlerGameLoaded",
+        "EventHandlerGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "EventHandlerGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-filtered-list": {
       "name": "std-filtered-list",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Filtered list molecule composing Search + Filter + Browse + Pagination via @trait.X in a vstack. Showcases intra-frame composition.",
+      "description": "std-filtered-list as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -10562,11 +11101,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Advanced form molecule with relation-select for linked entity fields. Absorbs: relation-select.",
+      "description": "std-form-advanced as a Function",
       "statePattern": "editing, submitted",
       "complexity": {
         "states": 2,
-        "events": 3,
+        "events": 5,
         "transitions": 3
       },
       "defaultEntity": {
@@ -10611,7 +11150,7 @@
           },
           {
             "name": "birthDate",
-            "type": "date",
+            "type": "datetime",
             "default": ""
           },
           {
@@ -10621,7 +11160,7 @@
           },
           {
             "name": "categoryId",
-            "type": "relation",
+            "type": "string",
             "default": ""
           }
         ]
@@ -10681,7 +11220,9 @@
       ],
       "connectableEvents": [
         "SUBMIT",
-        "RESET"
+        "RESET",
+        "FormEntryLoaded",
+        "FormEntryLoadFailed"
       ],
       "eventPayloads": {
         "SUBMIT": [
@@ -10689,6 +11230,12 @@
             "name": "data",
             "type": "object",
             "required": true
+          }
+        ],
+        "FormEntryLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -10698,7 +11245,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Filtered gallery: Search + Filter atop a Gallery, composed via @trait.X.",
+      "description": "std-gallery-filtered as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -10738,16 +11285,93 @@
       "connectableEvents": [],
       "eventPayloads": {}
     },
+    "std-list": {
+      "name": "std-list",
+      "level": "molecule",
+      "family": "unknown",
+      "layer": "UI Patterns",
+      "description": "std-list as a Function",
+      "statePattern": "browsing, error, loading",
+      "complexity": {
+        "states": 3,
+        "events": 3,
+        "transitions": 5
+      },
+      "defaultEntity": {
+        "name": "ListItem",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "ListItems",
+        "entitySingular": "ListItem",
+        "entityPlural": "ListItems"
+      },
+      "defaultIcons": [],
+      "composableWith": [],
+      "connectableEvents": [
+        "ListItemLoaded",
+        "ListItemLoadFailed"
+      ],
+      "eventPayloads": {
+        "ListItemLoaded": [
+          {
+            "name": "data",
+            "type": "[ListItem]"
+          }
+        ],
+        "ListItemLoadFailed": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "code",
+            "type": "string"
+          }
+        ]
+      }
+    },
     "std-negotiator-game": {
       "name": "std-negotiator-game",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `negotiator-board` pattern for the playing state.",
+      "description": "std-negotiator-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -10831,22 +11455,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "NegotiatorGameLoaded",
+        "NegotiatorGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "NegotiatorGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-platformer-game": {
       "name": "std-platformer-game",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Side-scrolling platformer game molecule. Composes game atoms into a two-trait orbital:",
+      "description": "std-platformer-game as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 12,
+        "events": 14,
         "transitions": 14
       },
       "defaultEntity": {
@@ -10946,25 +11579,34 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "LEFT",
         "RIGHT",
         "JUMP",
         "STOP",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "PlatLevelLoaded",
+        "PlatLevelLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PlatLevelLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-push-activity-log": {
       "name": "std-push-activity-log",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Push + activity log: PushIndicator status + ActivityLog of received messages, composed via @trait.X.",
+      "description": "std-push-activity-log as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -11009,11 +11651,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Puzzle game molecule. Composes game atoms into a two-trait orbital:",
+      "description": "std-puzzle-game as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 10,
+        "events": 12,
         "transitions": 12
       },
       "defaultEntity": {
@@ -11123,27 +11765,36 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "MOVE",
         "HINT",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "PuzzleBoardLoaded",
+        "PuzzleBoardLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PuzzleBoardLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-quiz": {
       "name": "std-quiz",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Quiz molecule composing flip-card atom with question/answer flow. Absorbs: quiz-block.",
+      "description": "std-quiz as a Function",
       "statePattern": "answer-revealed, complete, question",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 5
       },
       "defaultEntity": {
@@ -11254,7 +11905,9 @@
       "connectableEvents": [
         "ANSWER",
         "NEXT",
-        "RESTART"
+        "RESTART",
+        "QuizItemLoaded",
+        "QuizItemLoadFailed"
       ],
       "eventPayloads": {
         "ANSWER": [
@@ -11262,6 +11915,12 @@
             "name": "answer",
             "type": "string",
             "required": true
+          }
+        ],
+        "QuizItemLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -11271,7 +11930,7 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Relation master-detail: Browse + Related walking a declared relation, composed via @trait.X.",
+      "description": "std-related-master-detail as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -11312,11 +11971,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `sequencer-board` pattern for the playing state.",
+      "description": "std-sequencer-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -11400,18 +12059,27 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "SequencerGameLoaded",
+        "SequencerGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "SequencerGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-service-content-pipeline": {
       "name": "std-service-content-pipeline",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Content research pipeline molecule. Composes youtube search + llm summarization into a sequential pipeline: search -> select -> summarize.",
+      "description": "std-service-content-pipeline as a Function",
       "statePattern": "complete, error, idle, results, searching, summarizing",
       "complexity": {
         "states": 6,
@@ -11492,7 +12160,6 @@
         "std-agent-planner",
         "std-agent-rag",
         "std-agent-reviewer",
-        "std-agent-search",
         "std-agent-step-progress",
         "std-agent-token-gauge",
         "std-agent-tool-loop",
@@ -11534,17 +12201,24 @@
       "connectableEvents": [
         "SEARCH",
         "SEARCH_COMPLETE",
-        "SELECT_AND_SUMMARIZE",
-        "VIDEO_FETCHED",
-        "SUMMARY_COMPLETE",
         "FAILED",
-        "RESET"
+        "SELECT_AND_SUMMARIZE",
+        "RESET",
+        "VIDEO_FETCHED",
+        "SUMMARY_COMPLETE"
       ],
       "eventPayloads": {
         "SEARCH_COMPLETE": [
           {
             "name": "results",
             "type": "array",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
             "required": true
           }
         ],
@@ -11573,13 +12247,6 @@
             "type": "string",
             "required": true
           }
-        ],
-        "FAILED": [
-          {
-            "name": "error",
-            "type": "string",
-            "required": true
-          }
         ]
       }
     },
@@ -11588,11 +12255,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Unified API tester molecule that exercises all 4 custom REST auth patterns (header API key, bearer token, query param API key, no auth) with a tab selector. Single entity, single trait, 4 call events. Pure function: params in, OrbitalDefinition out.",
+      "description": "std-service-custom-api-tester as a Function",
       "statePattern": "calling, complete, error, idle",
       "complexity": {
         "states": 4,
-        "events": 9,
+        "events": 11,
         "transitions": 10
       },
       "defaultEntity": {
@@ -11720,8 +12387,10 @@
         "CALL_NOAUTH_API",
         "API_RESPONSE",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceCustomApiTesterLoaded",
+        "ServiceCustomApiTesterLoadFailed"
       ],
       "eventPayloads": {
         "API_RESPONSE": [
@@ -11742,6 +12411,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceCustomApiTesterLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -11750,11 +12425,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "DevOps toolkit molecule. Three independent traits on a single page sharing one entity via the event bus: - GitHubTrait: PR creation flow (ghIdle -> creatingPR -> prCreated / ghError) - RedisTrait: cache get/set/delete (redisIdle -> redisExecuting -> redisComplete / redisError) - StorageTrait: file upload/download/list/delete (storageIdle -> storageExecuting -> storageComplete / storageError)",
+      "description": "std-service-devops-toolkit as a Function",
       "statePattern": "creatingPR, ghError, ghIdle, prCreated",
       "complexity": {
         "states": 4,
-        "events": 6,
+        "events": 8,
         "transitions": 6
       },
       "defaultEntity": {
@@ -11865,8 +12540,10 @@
         "CREATE_PR",
         "PR_CREATED",
         "GH_FAILED",
+        "GH_RESET",
         "GH_RETRY",
-        "GH_RESET"
+        "ServiceDevopsToolkitLoaded",
+        "ServiceDevopsToolkitLoadFailed"
       ],
       "eventPayloads": {
         "PR_CREATED": [
@@ -11882,6 +12559,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServiceDevopsToolkitLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -11890,11 +12573,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Unified notification sender molecule. Composes email and twilio into a single trait with channel selection (Email, SMS, WhatsApp). A single state machine routes to the appropriate call-service based on the chosen channel.",
+      "description": "std-service-notification-hub as a Function",
       "statePattern": "error, idle, sending, sent",
       "complexity": {
         "states": 4,
-        "events": 8,
+        "events": 10,
         "transitions": 9
       },
       "defaultEntity": {
@@ -12011,8 +12694,10 @@
         "SEND_WHATSAPP",
         "SENT",
         "FAILED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "ServiceNotificationHubLoaded",
+        "ServiceNotificationHubLoadFailed"
       ],
       "eventPayloads": {
         "FAILED": [
@@ -12020,6 +12705,12 @@
             "name": "error",
             "type": "string",
             "required": true
+          }
+        ],
+        "ServiceNotificationHubLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -12029,11 +12720,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Payment flow molecule. Composes stripe payment and email receipt into a single orchestrated flow: pay, then auto-send receipt email.",
+      "description": "std-service-payment-flow as a Function",
       "statePattern": "confirming, creating, error, idle, succeeded",
       "complexity": {
         "states": 5,
-        "events": 7,
+        "events": 10,
         "transitions": 9
       },
       "defaultEntity": {
@@ -12165,10 +12856,13 @@
       "connectableEvents": [
         "CREATE_PAYMENT",
         "PAYMENT_CREATED",
-        "PAYMENT_CONFIRMED",
         "FAILED",
+        "PAYMENT_CONFIRMED",
+        "RESET",
         "RETRY",
-        "RESET"
+        "SEND_RECEIPT",
+        "ServicePaymentFlowLoaded",
+        "ServicePaymentFlowLoadFailed"
       ],
       "eventPayloads": {
         "PAYMENT_CREATED": [
@@ -12189,6 +12883,12 @@
             "type": "string",
             "required": true
           }
+        ],
+        "ServicePaymentFlowLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
         ]
       }
     },
@@ -12197,11 +12897,11 @@
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Educational game molecule: menu -> playing -> complete. Uses the `simulator-board` pattern for the playing state.",
+      "description": "std-simulator-game as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -12285,22 +12985,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "SimulatorGameLoaded",
+        "SimulatorGameLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "SimulatorGameLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-turn-based-battle": {
       "name": "std-turn-based-battle",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Turn-based strategy game molecule (Fire Emblem, XCOM style). Composes game atoms into a two-trait orbital:",
+      "description": "std-turn-based-battle as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 9,
+        "events": 11,
         "transitions": 11
       },
       "defaultEntity": {
@@ -12390,22 +13099,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "END_TURN",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "BattleUnitLoaded",
+        "BattleUnitLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "BattleUnitLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-wizard-form": {
       "name": "std-wizard-form",
       "level": "molecule",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Wizard-driven form: Wizard + Input + ValidateOnSave composed via @trait.X (two-hop).",
+      "description": "std-wizard-form as a Function",
       "statePattern": "composing",
       "complexity": {
         "states": 1,
@@ -12450,11 +13168,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Full chat assistant organism. Composes molecule + atoms into a multi-turn conversational agent with memory persistence, context compaction, provider switching, tabbed views, and a memory sidebar drawer.",
+      "description": "std-agent-assistant as a Function",
       "statePattern": "composing, idle",
       "complexity": {
         "states": 2,
-        "events": 4,
+        "events": 8,
         "transitions": 5
       },
       "defaultEntity": {
@@ -12561,10 +13279,8 @@
         "std-agent-activity-log",
         "std-agent-chat-thread",
         "std-agent-conversation",
-        "std-agent-search",
         "std-collision",
         "std-combat-log",
-        "std-realtime-chat",
         "std-search",
         "std-selection",
         "std-service-email",
@@ -12572,8 +13288,12 @@
       ],
       "connectableEvents": [
         "COMPOSE",
+        "CLEAR",
         "SEND",
-        "CLEAR"
+        "SEND_MESSAGE",
+        "MEMORIZE_RESPONSE",
+        "AssistantLoaded",
+        "AssistantLoadFailed"
       ],
       "eventPayloads": {
         "SEND": [
@@ -12581,6 +13301,12 @@
             "name": "content",
             "type": "string",
             "required": true
+          }
+        ],
+        "AssistantLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -12590,11 +13316,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Schema builder agent organism. Full build cycle that plans, generates, validates, and fixes .orb programs. Composes planner + tool-loop + fix-loop molecules with session management and tabbed views.",
+      "description": "std-agent-builder as a Function",
       "statePattern": "classifying, idle, planning, ready, recalling",
       "complexity": {
         "states": 5,
-        "events": 7,
+        "events": 10,
         "transitions": 9
       },
       "defaultEntity": {
@@ -12727,6 +13453,7 @@
         "map"
       ],
       "composableWith": [
+        "std-agent-classifier",
         "std-agent-context-window",
         "std-agent-fix-loop",
         "std-agent-learner",
@@ -12775,15 +13502,25 @@
       "connectableEvents": [
         "PLAN",
         "CLASSIFIED",
+        "FAILED",
         "MEMORIES_LOADED",
         "PLAN_GENERATED",
-        "FAILED",
-        "RESET"
+        "RESET",
+        "PLAN_READY",
+        "BuildTaskLoaded",
+        "BuildTaskLoadFailed"
       ],
       "eventPayloads": {
         "CLASSIFIED": [
           {
             "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
             "type": "string",
             "required": true
           }
@@ -12810,13 +13547,18 @@
             "name": "confidence",
             "type": "number",
             "required": true
-          }
-        ],
-        "FAILED": [
+          },
           {
-            "name": "error",
-            "type": "string",
-            "required": true
+            "name": "plan",
+            "type": "string"
+          },
+          {
+            "name": "toolName",
+            "type": "string"
+          },
+          {
+            "name": "toolArgs",
+            "type": "string"
           }
         ]
       }
@@ -12826,11 +13568,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Multi-step pipeline organism. Composes planner + tool-loop molecules with session management, step progress tracking, and a session tree drawer.",
+      "description": "std-agent-pipeline as a Function",
       "statePattern": "classifying, idle, planning, ready, recalling",
       "complexity": {
         "states": 5,
-        "events": 7,
+        "events": 11,
         "transitions": 9
       },
       "defaultEntity": {
@@ -12964,6 +13706,7 @@
       ],
       "composableWith": [
         "std-agent-builder",
+        "std-agent-classifier",
         "std-agent-context-window",
         "std-agent-fix-loop",
         "std-agent-learner",
@@ -13011,15 +13754,26 @@
       "connectableEvents": [
         "PLAN",
         "CLASSIFIED",
+        "FAILED",
         "MEMORIES_LOADED",
         "PLAN_GENERATED",
-        "FAILED",
-        "RESET"
+        "RESET",
+        "PLAN_READY",
+        "PIPELINE_PLANNED",
+        "SessionTreeLoaded",
+        "SessionTreeLoadFailed"
       ],
       "eventPayloads": {
         "CLASSIFIED": [
           {
             "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
             "type": "string",
             "required": true
           }
@@ -13046,13 +13800,18 @@
             "name": "confidence",
             "type": "number",
             "required": true
-          }
-        ],
-        "FAILED": [
+          },
           {
-            "name": "error",
-            "type": "string",
-            "required": true
+            "name": "plan",
+            "type": "string"
+          },
+          {
+            "name": "toolName",
+            "type": "string"
+          },
+          {
+            "name": "toolArgs",
+            "type": "string"
           }
         ]
       }
@@ -13062,11 +13821,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Schema/code reviewer organism. Composes RAG molecule + classifier atom to classify input, search for relevant patterns, recall best practices, and generate structured review output with tabbed views and an issues browse.",
+      "description": "std-agent-reviewer as a Function",
       "statePattern": "analyzing, completed, idle, reviewing",
       "complexity": {
         "states": 4,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -13172,14 +13931,21 @@
         "SUBMIT_REVIEW",
         "PATTERNS_FOUND",
         "REVIEW_GENERATED",
-        "RESET"
+        "RESET",
+        "ReviewLoaded",
+        "ReviewLoadFailed"
       ],
       "eventPayloads": {
         "SUBMIT_REVIEW": [
           {
             "name": "target",
-            "type": "string",
-            "required": true
+            "type": "string"
+          }
+        ],
+        "ReviewLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -13189,11 +13955,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Teaching assistant organism. Composes conversation + memory + classifier atoms with tabbed views and a concept browse list. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength.",
+      "description": "std-agent-tutor as a Function",
       "statePattern": "assessing, idle, teaching",
       "complexity": {
         "states": 3,
-        "events": 6,
+        "events": 9,
         "transitions": 6
       },
       "defaultEntity": {
@@ -13300,7 +14066,10 @@
         "ASSESSMENT_COMPLETE",
         "EXPLAIN_MORE",
         "START_QUIZ",
-        "RESET"
+        "RESET",
+        "ASSESSMENT_DONE",
+        "TutorSessionLoaded",
+        "TutorSessionLoadFailed"
       ],
       "eventPayloads": {
         "START_SESSION": [
@@ -13308,6 +14077,12 @@
             "name": "topic",
             "type": "string",
             "required": true
+          }
+        ],
+        "TutorSessionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
@@ -13317,11 +14092,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "API gateway management organism. Composes: stdList(Route) + stdCircuitBreaker(Backend) + stdDisplay(Analytics)",
+      "description": "std-api-gateway as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 6,
         "transitions": 1
       },
       "defaultEntity": {
@@ -13340,8 +14115,7 @@
           },
           {
             "name": "method",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "backend",
@@ -13388,12 +14162,19 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "RouteLoaded",
+        "RouteLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "RouteLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -13434,11 +14215,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Arcade game organism. Composes: stdGameflow(ArcadeState) + stdGameCanvas2d(ArcadeCanvas) + stdScoreBoard(ArcadeScore) + stdGameHud(ArcadeHud)",
+      "description": "std-arcade-game as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 8,
+        "events": 10,
         "transitions": 10
       },
       "defaultEntity": {
@@ -13522,25 +14303,34 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "ArcadeStateLoaded",
+        "ArcadeStateLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ArcadeStateLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-booking-system": {
       "name": "std-booking-system",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Booking system organism. Composes molecules via compose: - stdList(Provider): provider directory with CRUD - stdWizard(Booking): booking wizard - stdList(Appointment): appointment list with CRUD - stdDisplay(Schedule): schedule overview dashboard",
+      "description": "std-booking-system as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -13616,12 +14406,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "BOOK",
+        "ProviderLoaded",
+        "ProviderLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "ProviderLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -13662,11 +14460,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "CI/CD pipeline organism. Composes: stdList(Build) + stdDisplay(Stage) + stdAsync(Deployment)",
+      "description": "std-cicd-pipeline as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 6,
         "transitions": 1
       },
       "defaultEntity": {
@@ -13685,8 +14483,7 @@
           },
           {
             "name": "status",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "commit",
@@ -13732,12 +14529,19 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "BuildLoaded",
+        "BuildLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "BuildLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -13778,11 +14582,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Content management organism. Composes molecules via compose: - stdList(Article): article management with CRUD - stdDetail(MediaAsset): media library browse + view - stdList(Category): category management",
+      "description": "std-cms as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 8,
         "transitions": 1
       },
       "defaultEntity": {
@@ -13819,7 +14623,7 @@
           },
           {
             "name": "publishedAt",
-            "type": "date"
+            "type": "datetime"
           },
           {
             "name": "pendingId",
@@ -13857,12 +14661,21 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "PUBLISH",
+        "CATEGORIZE",
+        "ArticleLoaded",
+        "ArticleLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "ArticleLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -13903,11 +14716,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Coding academy organism. Composes: stdSequencerGame(SeqChallenge) + stdBuilderGame(BuildChallenge) + stdEventHandlerGame(EventChallenge) + stdDisplay(StudentProgress)",
+      "description": "std-coding-academy as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -13990,22 +14803,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "SeqChallengeLoaded",
+        "SeqChallengeLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "SeqChallengeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-crm": {
       "name": "std-crm",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Customer relationship management organism. Composes molecules via compose: - stdList(Contact): CRUD list of contacts - stdList(Deal): CRUD list of deals - stdDisplay(Pipeline): read-only pipeline dashboard - stdMessaging(Note): notes/communication thread",
+      "description": "std-crm as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14078,12 +14900,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "CONVERT_LEAD",
+        "ContactLoaded",
+        "ContactLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "ContactLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14124,11 +14954,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "DevOps monitoring organism. Composes: stdCircuitBreaker(ServiceNode) + stdDisplay(AlertMetric) + stdList(LogEntry) + stdDisplay(SystemMetric)",
+      "description": "std-devops-dashboard as a Function",
       "statePattern": "closed, halfOpen, open",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 8
       },
       "defaultEntity": {
@@ -14147,8 +14977,7 @@
           },
           {
             "name": "status",
-            "type": "string",
-            "required": true
+            "type": "string"
           },
           {
             "name": "url",
@@ -14156,7 +14985,7 @@
           },
           {
             "name": "lastChecked",
-            "type": "date"
+            "type": "datetime"
           },
           {
             "name": "failureCount",
@@ -14232,20 +15061,29 @@
         "FAILURE",
         "SUCCESS",
         "TIMEOUT",
-        "RESET"
+        "RESET",
+        "ServiceNodeLoaded",
+        "ServiceNodeLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ServiceNodeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-ecommerce": {
       "name": "std-ecommerce",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "E-commerce organism. Composes molecules via compose: - stdList(Product): product catalog with CRUD - stdCart(CartItem): shopping cart with add/remove - stdWizard(Checkout): checkout wizard - stdList(OrderRecord): order history",
+      "description": "std-ecommerce as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14320,12 +15158,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "ADD_TO_CART",
+        "ProductLoaded",
+        "ProductLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "ProductLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14366,11 +15212,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Finance tracker organism. Composes: stdList(Transaction) + stdDisplay(FinanceSummary) + stdDetail(FinanceReport)",
+      "description": "std-finance-tracker as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 6,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14398,7 +15244,7 @@
           },
           {
             "name": "date",
-            "type": "date"
+            "type": "datetime"
           },
           {
             "name": "pendingId",
@@ -14436,12 +15282,19 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "TransactionLoaded",
+        "TransactionLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "TransactionLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14482,11 +15335,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Healthcare organism. Composes molecules via compose: - stdList(Patient): patient registry with CRUD - stdList(Appointment): appointment management - stdWizard(IntakeForm): patient intake wizard - stdDetail(Prescription): prescription browse + view - stdDisplay(Dashboard): clinic dashboard KPIs",
+      "description": "std-healthcare as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 6,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14510,7 +15363,7 @@
           },
           {
             "name": "dateOfBirth",
-            "type": "date",
+            "type": "datetime",
             "required": true
           },
           {
@@ -14562,12 +15415,19 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "PatientLoaded",
+        "PatientLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "PatientLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14608,11 +15468,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Helpdesk organism. Composes molecules via compose: - stdList(Ticket): CRUD list of support tickets - stdMessaging(Response): messaging thread for ticket responses - stdDisplay(SupportMetrics): read-only metrics dashboard",
+      "description": "std-helpdesk as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14685,12 +15545,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "ASSIGN",
+        "TicketLoaded",
+        "TicketLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "TicketLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14731,11 +15599,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "HR portal organism. Composes molecules via compose: - stdList(Employee): CRUD list of employees - stdWizard(Onboarding): multi-step onboarding wizard - stdList(TimeOff): CRUD list of time-off requests - stdDisplay(OrgChart): read-only org chart dashboard",
+      "description": "std-hr-portal as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14769,7 +15637,7 @@
           },
           {
             "name": "startDate",
-            "type": "date",
+            "type": "datetime",
             "default": ""
           },
           {
@@ -14808,12 +15676,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "ONBOARD",
+        "EmployeeLoaded",
+        "EmployeeLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "EmployeeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -14854,11 +15730,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "IoT dashboard organism. Composes: stdDisplay(SensorReading) + stdList(Device) + stdCircuitBreaker(DeviceAlert)",
+      "description": "std-iot-dashboard as a Function",
       "statePattern": "displaying, loading, refreshing",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 5
       },
       "defaultEntity": {
@@ -14911,20 +15787,29 @@
       "connectableEvents": [
         "LOADED",
         "REFRESH",
-        "REFRESHED"
+        "REFRESHED",
+        "SensorReadingLoaded",
+        "SensorReadingLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "SensorReadingLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-lms": {
       "name": "std-lms",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Learning management system organism. Composes molecules via compose: - stdList(Course): CRUD list of courses - stdWizard(Enrollment): multi-step enrollment wizard - stdDisplay(Progress): read-only progress dashboard",
+      "description": "std-lms as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -14997,12 +15882,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "ENROLL",
+        "CourseLoaded",
+        "CourseLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "CourseLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -15043,11 +15936,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Logic training organism. Composes: stdDebuggerGame(DebugChallenge) + stdNegotiatorGame(NegotiateChallenge) + stdScoreBoard(TrainingScore)",
+      "description": "std-logic-training as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -15129,22 +16022,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "DebugChallengeLoaded",
+        "DebugChallengeLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "DebugChallengeLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-platformer-app": {
       "name": "std-platformer-app",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Platformer game organism. Composes: stdPlatformerGame(PlatLevel) + stdScoreBoard(PlatScore) + stdInventory(Collectible)",
+      "description": "std-platformer-app as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 12,
+        "events": 14,
         "transitions": 14
       },
       "defaultEntity": {
@@ -15238,29 +16140,38 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "LEFT",
         "RIGHT",
         "JUMP",
         "STOP",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "PlatLevelLoaded",
+        "PlatLevelLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PlatLevelLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-project-manager": {
       "name": "std-project-manager",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Project management organism. Composes molecules via compose: - stdList(Task): task management with CRUD - stdList(Sprint): sprint management with CRUD - stdDisplay(Burndown): burndown chart dashboard",
+      "description": "std-project-manager as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 6,
         "transitions": 1
       },
       "defaultEntity": {
@@ -15302,7 +16213,7 @@
           },
           {
             "name": "dueDate",
-            "type": "date"
+            "type": "datetime"
           },
           {
             "name": "pendingId",
@@ -15340,12 +16251,19 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "TaskLoaded",
+        "TaskLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "TaskLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -15386,11 +16304,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Puzzle game organism. Composes: stdPuzzleGame(PuzzleLevel) + stdScoreBoard(PuzzleScore)",
+      "description": "std-puzzle-app as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 10,
+        "events": 12,
         "transitions": 12
       },
       "defaultEntity": {
@@ -15489,27 +16407,36 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "MOVE",
         "HINT",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "PuzzleLevelLoaded",
+        "PuzzleLevelLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PuzzleLevelLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-realtime-chat": {
       "name": "std-realtime-chat",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Realtime chat organism. Composes: stdMessaging(ChatMessage) + stdList(Channel) + stdDisplay(OnlineUser)",
+      "description": "std-realtime-chat as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 4,
         "transitions": 1
       },
       "defaultEntity": {
@@ -15537,7 +16464,7 @@
           },
           {
             "name": "timestamp",
-            "type": "date"
+            "type": "datetime"
           }
         ]
       },
@@ -15550,9 +16477,6 @@
         "message-circle"
       ],
       "composableWith": [
-        "std-agent-assistant",
-        "std-agent-chat-thread",
-        "std-agent-conversation",
         "std-agent-search",
         "std-agent-session",
         "std-api-gateway",
@@ -15572,10 +16496,17 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "COMPOSE",
+        "ChatMessageLoaded",
+        "ChatMessageLoadFailed",
         "VIEW"
       ],
       "eventPayloads": {
+        "ChatMessageLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -15594,11 +16525,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "RPG game organism. Composes: stdTurnBasedBattle(BattleState) + stdOverworld(WorldZone) + stdInventory(RpgItem) + stdQuest(Mission)",
+      "description": "std-rpg-game as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 9,
+        "events": 12,
         "transitions": 11
       },
       "defaultEntity": {
@@ -15681,26 +16612,36 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "END_TURN",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "LOOT_DROPPED",
+        "BattleStateLoaded",
+        "BattleStateLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "BattleStateLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-service-marketplace": {
       "name": "std-service-marketplace",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Service marketplace organism. Composes molecules and atoms via compose: - stdList(Product): product catalog with CRUD - stdServiceOauth(AuthSession): OAuth login with standalone provider picker - stdServicePaymentFlow(OrderPayment): Stripe payment + email receipt - stdList(Order): order history with CRUD",
+      "description": "std-service-marketplace as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 5,
+        "events": 7,
         "transitions": 1
       },
       "defaultEntity": {
@@ -15771,12 +16712,20 @@
         "std-social-feed"
       ],
       "connectableEvents": [
-        "CREATE",
+        "CHECKOUT",
+        "ProductLoaded",
+        "ProductLoadFailed",
         "VIEW",
         "EDIT",
         "DELETE"
       ],
       "eventPayloads": {
+        "ProductLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -15817,7 +16766,7 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Content research assistant organism. Composes service atoms/molecules via compose: - stdServiceContentPipeline(Research): YouTube search + LLM summarization - stdServiceRedis(CacheEntry): Redis cache management (standalone) - stdServiceStorage(Report): saving research reports to storage (standalone) - stdServiceCustomBearer(KnowledgeQuery): custom knowledge API queries (standalone)",
+      "description": "std-service-research-assistant as a Function",
       "statePattern": "complete, error, idle, results, searching, summarizing",
       "complexity": {
         "states": 6,
@@ -15882,7 +16831,6 @@
         "std-agent-planner",
         "std-agent-rag",
         "std-agent-reviewer",
-        "std-agent-search",
         "std-agent-step-progress",
         "std-agent-token-gauge",
         "std-agent-tool-loop",
@@ -15924,17 +16872,24 @@
       "connectableEvents": [
         "SEARCH",
         "SEARCH_COMPLETE",
-        "SELECT_AND_SUMMARIZE",
-        "VIDEO_FETCHED",
-        "SUMMARY_COMPLETE",
         "FAILED",
-        "RESET"
+        "SELECT_AND_SUMMARIZE",
+        "RESET",
+        "VIDEO_FETCHED",
+        "SUMMARY_COMPLETE"
       ],
       "eventPayloads": {
         "SEARCH_COMPLETE": [
           {
             "name": "results",
             "type": "array",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
             "required": true
           }
         ],
@@ -15963,13 +16918,6 @@
             "type": "string",
             "required": true
           }
-        ],
-        "FAILED": [
-          {
-            "name": "error",
-            "type": "string",
-            "required": true
-          }
         ]
       }
     },
@@ -15978,11 +16926,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Social feed organism. Composes molecules via compose: - stdDetail(Post): browse + create + view posts - stdMessaging(Comment): messaging thread for comments",
+      "description": "std-social-feed as a Function",
       "statePattern": "browsing",
       "complexity": {
         "states": 1,
-        "events": 3,
+        "events": 5,
         "transitions": 1
       },
       "defaultEntity": {
@@ -16011,7 +16959,7 @@
           },
           {
             "name": "createdAt",
-            "type": "date",
+            "type": "datetime",
             "default": ""
           },
           {
@@ -16050,10 +16998,18 @@
         "std-service-marketplace"
       ],
       "connectableEvents": [
-        "CREATE",
+        "COMMENT",
+        "PostLoaded",
+        "PostLoadFailed",
         "VIEW"
       ],
       "eventPayloads": {
+        "PostLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ],
         "VIEW": [
           {
             "name": "id",
@@ -16072,11 +17028,11 @@
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "STEM lab organism. Composes: stdSimulatorGame(Experiment) + stdClassifierGame(Classification) + stdDisplay(LabResult)",
+      "description": "std-stem-lab as a Function",
       "statePattern": "complete, menu, playing",
       "complexity": {
         "states": 3,
-        "events": 5,
+        "events": 7,
         "transitions": 5
       },
       "defaultEntity": {
@@ -16158,22 +17114,31 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "COMPLETE",
         "RESTART",
-        "NAVIGATE"
+        "ExperimentLoaded",
+        "ExperimentLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ExperimentLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-strategy-game": {
       "name": "std-strategy-game",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Strategy game organism. Composes: stdTurnBasedBattle(ArmyBattle) + stdOverworld(Territory) + stdDisplay(Resource)",
+      "description": "std-strategy-game as a Function",
       "statePattern": "gameover, menu, paused, playing",
       "complexity": {
         "states": 4,
-        "events": 9,
+        "events": 11,
         "transitions": 11
       },
       "defaultEntity": {
@@ -16257,26 +17222,35 @@
       ],
       "connectableEvents": [
         "START",
+        "NAVIGATE",
         "END_TURN",
         "PAUSE",
-        "RESUME",
         "GAME_OVER",
-        "RESTART",
+        "RESUME",
         "CLOSE",
-        "NAVIGATE"
+        "RESTART",
+        "ArmyBattleLoaded",
+        "ArmyBattleLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "ArmyBattleLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     },
     "std-trading-dashboard": {
       "name": "std-trading-dashboard",
       "level": "organism",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "Trading dashboard organism. Composes: stdDisplay(Portfolio) + stdList(TradeOrder) + stdAsync(MarketFeed)",
+      "description": "std-trading-dashboard as a Function",
       "statePattern": "displaying, loading, refreshing",
       "complexity": {
         "states": 3,
-        "events": 4,
+        "events": 6,
         "transitions": 5
       },
       "defaultEntity": {
@@ -16331,9 +17305,18 @@
       "connectableEvents": [
         "LOADED",
         "REFRESH",
-        "REFRESHED"
+        "REFRESHED",
+        "PortfolioLoaded",
+        "PortfolioLoadFailed"
       ],
-      "eventPayloads": {}
+      "eventPayloads": {
+        "PortfolioLoadFailed": [
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
     }
   }
 }

@@ -1,129 +1,138 @@
 app std-list "1.0.0"
 "std-list as a Function"
+;;
+;; Daisy-chain composition showcase: no `on EVENT { ... }` trait-ref overrides.
+;; Modal + Confirmation trait refs are configured via `config: { ... }` at the
+;; call site. Side effects (persist) live in a sibling coordinator trait
+;; (`ListItemPersistor`) that listens for the modal/confirmation trait emits.
+;;
+;; Mirrors std-cart's structure. std-list omits the read-only VIEW path that the
+;; old version had — form-section's mode set only supports "create" | "edit",
+;; and a dedicated detail-view pattern is tracked separately (std-detail).
 
 orbital ListItemOrbital {
-  uses Browse from "std/behaviors/std-browse"
   uses Confirmation from "std/behaviors/std-confirmation"
-  uses Modal from "std/behaviors/std-modal"
+  uses Modal        from "std/behaviors/std-modal"
 
   entity ListItem [persistent: listitems] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    pendingId   : string = ""
   }
 
-  type ListItemLoaded     = Event ListItem                  "Fired when ListItem finishes loading"
-  type ListItemLoadFailed = Event { message : string } "Fired when ListItem fails to load"
-  trait ListItemBrowse = Browse.traits.BrowseItemBrowse -> ListItem {
-    on INIT {
-        (ref ListItem)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "ListItems", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create ListItem", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ListItem", emptyIcon: "inbox", emptyTitle: "No listitems yet", emptyDescription: "Create your first listitem to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }] })
+  type ListItemLoaded     = Event { data : [ListItem] }              "Fired when the ListItem collection finishes loading; payload.data holds the list"
+  type ListItemLoadFailed = Event { error : string, code : string } "Fired when the ListItem collection fails to load"
+
+  trait ListItemBrowse -> ListItem [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ListItem { emit: { success: "ListItemLoaded", failure: "ListItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading list…" }] })
+      ListItemLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "ListItems", variant: "h2" }] }, { type: "button", label: "Create", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      ListItemLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load list" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    state browsing {
+      INIT -> loading
+        (fetch ListItem { emit: { success: "ListItemLoaded", failure: "ListItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ListItem { emit: { success: "ListItemLoaded", failure: "ListItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    emits: [ListItemLoaded, ListItemLoadFailed]
     listens {
-      ListItemCreate LIST_ITEM_CREATED -> INIT
-      ListItemEdit   LIST_ITEM_UPDATED -> INIT
-      ListItemDelete CONFIRM_DELETE    -> INIT
+      ListItemLoadFailed { error : string!, code : string }
+      ListItemPersistor ITEM_CREATED -> INIT
+      ListItemPersistor ITEM_UPDATED -> INIT
+      ListItemPersistor ITEM_DELETED -> INIT
     }
   }
+
+  ;; Create modal: configured via `config`, no effects overrides.
+  ;; SAVE is renamed to LIST_ITEM_CREATED so the Persistor coordinator
+  ;; distinguishes Create-SAVE from Edit-SAVE without source-scoped listens.
   trait ListItemCreate = Modal.traits.ModalRecordModal -> ListItem {
+    config: {
+      icon:  "plus-circle",
+      title: "Create ListItem",
+      fields: ["name", "description", "status"],
+      mode:  "create"
+    }
     events {
       OPEN: CREATE
       SAVE: LIST_ITEM_CREATED
     }
-    on INIT {
-        (ref ListItem)
-    }
-    on CREATE {
-        (fetch ListItem)
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create ListItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ListItem", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on LIST_ITEM_CREATED {
-        (persist create ListItem @payload.data)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
   }
+
+  ;; Edit modal: configured via `config`, no effects overrides.
+  ;; SAVE is renamed to LIST_ITEM_UPDATED so the Persistor coordinator
+  ;; distinguishes Edit-SAVE from Create-SAVE.
   trait ListItemEdit = Modal.traits.ModalRecordModal -> ListItem {
+    config: {
+      icon:  "edit",
+      title: "Edit ListItem",
+      fields: ["name", "description", "status"],
+      mode:  "edit"
+    }
     events {
       OPEN: EDIT
       SAVE: LIST_ITEM_UPDATED
     }
-    on INIT {
-        (ref ListItem)
-    }
-    on EDIT {
-        (fetch ListItem { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit ListItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ListItem", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"], entityId: "@entity.id" }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on LIST_ITEM_UPDATED {
-        (persist update ListItem @payload.data)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
   }
-  trait ListItemView = Modal.traits.ModalRecordModal -> ListItem {
-    events {
-      OPEN: VIEW
-      SAVE: LIST_ITEM_VIEWED
-    }
-    on INIT {
-        (ref ListItem)
-    }
-    on VIEW {
-        (fetch ListItem { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on LIST_ITEM_VIEWED {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-  }
+
+  ;; Delete-confirm: configured via `config`, no effects overrides.
   trait ListItemDelete = Confirmation.traits.ConfirmActionConfirmation -> ListItem {
+    config: {
+      icon:         "alert-triangle",
+      title:        "Delete ListItem",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
     events {
       REQUEST: DELETE
       CONFIRM: CONFIRM_DELETE
     }
-    on INIT {
-        (ref ListItem)
+  }
+
+  ;; Coordinator trait: owns the persist side-effects triggered by the
+  ;; Modal/Confirmation trait refs' emits. Replaces the old per-ref
+  ;; `on SAVE { (persist ...) }` override pattern.
+  trait ListItemPersistor -> ListItem [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create ListItem @payload.data)
+        (emit ITEM_CREATED { id: "@payload.data.id" })
+      DO_UPDATE -> idle
+        (persist update ListItem @payload.data)
+        (emit ITEM_UPDATED { id: "@payload.data.id" })
+      DO_DELETE -> idle
+        (persist delete ListItem @payload.id)
+        (emit ITEM_DELETED { id: "@payload.id" })
     }
-    on DELETE {
-        (set @entity.pendingId @payload.id)
-        (fetch ListItem { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete ListItem", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    emits {
+      ITEM_CREATED external { id : string! }
+      ITEM_UPDATED external { id : string! }
+      ITEM_DELETED external { id : string! }
     }
-    on CONFIRM_DELETE {
-        (persist delete ListItem @entity.pendingId)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref ListItem)
-    }
-    on CANCEL {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref ListItem)
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref ListItem)
+    listens {
+      DO_CREATE { data : ListItem }
+      DO_UPDATE { data : ListItem }
+      DO_DELETE { id   : string!  }
+      ListItemCreate LIST_ITEM_CREATED -> DO_CREATE
+      ListItemEdit   LIST_ITEM_UPDATED -> DO_UPDATE
+      ListItemDelete CONFIRM_DELETE    -> DO_DELETE
     }
   }
-  page "/listitems" as ListItemPage -> ListItemBrowse, ListItemCreate, ListItemEdit, ListItemView, ListItemDelete
+
+  page "/listitems" as ListItemPage -> ListItemBrowse, ListItemCreate, ListItemEdit, ListItemDelete, ListItemPersistor
 }

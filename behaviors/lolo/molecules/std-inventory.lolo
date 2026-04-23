@@ -1,108 +1,132 @@
 app std-inventory "1.0.0"
 "std-inventory as a Function"
+;;
+;; Daisy-chain composition: Modal (Add) + Confirmation (Use, Drop) trait
+;; refs configured via `config: { ... }`. Side effects live in an
+;; InventoryItemPersistor coordinator that listens for the refs' emits.
+;; Use and Drop both share std-confirmation (both are "confirm an action"
+;; dialogs); events renamed distinctly to avoid the shared-atom event
+;; collision (see `docs/Almadar_Std_Gaps.md` G5).
 
 orbital InventoryItemOrbital {
-  uses Browse from "std/behaviors/std-browse"
   uses Confirmation from "std/behaviors/std-confirmation"
-  uses Modal from "std/behaviors/std-modal"
+  uses Modal        from "std/behaviors/std-modal"
 
   entity InventoryItem [persistent: inventoryitems] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
-    pendingId : string = ""
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    pendingId   : string = ""
   }
 
-  type InventoryItemLoaded     = Event InventoryItem                  "Fired when InventoryItem finishes loading"
-  type InventoryItemLoadFailed = Event { message : string } "Fired when InventoryItem fails to load"
-  trait InventoryItemBrowse = Browse.traits.BrowseItemBrowse -> InventoryItem {
-    on INIT {
-        (ref InventoryItem)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package", size: "lg" }, { type: "typography", content: "InventoryItems Inventory", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add InventoryItem", event: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "InventoryItem", emptyIcon: "inbox", emptyTitle: "No items yet", emptyDescription: "Add your first item to get started.", itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost", size: "sm" }, { label: "Drop", event: "DROP", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }] })
+  type InventoryItemLoaded     = Event { data : [InventoryItem] }        "Fired when the InventoryItem collection finishes loading; payload.data holds the list"
+  type InventoryItemLoadFailed = Event { error : string, code : string } "Fired when the InventoryItem collection fails to load"
+
+  trait InventoryItemBrowse -> InventoryItem [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch InventoryItem { emit: { success: "InventoryItemLoaded", failure: "InventoryItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading inventory…" }] })
+      InventoryItemLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "package", size: "lg" }, { type: "typography", content: "Inventory", variant: "h2" }] }, { type: "button", label: "Add Item", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      InventoryItemLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load inventory" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    state browsing {
+      INIT -> loading
+        (fetch InventoryItem { emit: { success: "InventoryItemLoaded", failure: "InventoryItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    state error {
+      INIT -> loading
+        (fetch InventoryItem { emit: { success: "InventoryItemLoaded", failure: "InventoryItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    emits: [InventoryItemLoaded, InventoryItemLoadFailed]
     listens {
-      InventoryItemAdd  ITEM_ADDED     -> INIT
-      InventoryItemUse  ITEM_USED      -> INIT
-      InventoryItemDrop CONFIRM_DROP   -> INIT
+      InventoryItemLoadFailed { error : string, code : string }
+      InventoryItemPersistor ITEM_ADDED  -> INIT
+      InventoryItemPersistor ITEM_USED   -> INIT
+      InventoryItemPersistor ITEM_DROPPED -> INIT
     }
   }
+
+  ;; Add: configured via `config`, no effects overrides.
   trait InventoryItemAdd = Modal.traits.ModalRecordModal -> InventoryItem {
+    config: {
+      icon:  "plus-circle",
+      title: "Add Item",
+      fields: ["name", "description", "status"],
+      mode:  "create"
+    }
     events {
       OPEN: ADD_ITEM
       SAVE: ITEM_ADDED
     }
-    on INIT {
-        (ref InventoryItem)
-    }
-    on ADD_ITEM {
-        (fetch InventoryItem)
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Add InventoryItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "InventoryItem", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on ITEM_ADDED {
-        (persist create InventoryItem @payload.data)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
   }
-  trait InventoryItemUse = Modal.traits.ModalRecordModal -> InventoryItem {
+
+  ;; Use: confirmation dialog. Renamed to avoid collision with Drop.
+  trait InventoryItemUse = Confirmation.traits.ConfirmActionConfirmation -> InventoryItem {
+    config: {
+      icon:         "zap",
+      title:        "Use Item",
+      alertMessage: "Consume this item?",
+      confirmLabel: "Confirm Use"
+    }
     events {
-      OPEN: USE_ITEM
-      SAVE: ITEM_USED
-    }
-    on INIT {
-        (ref InventoryItem)
-    }
-    on USE_ITEM {
-        (fetch InventoryItem { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap", size: "md" }, { type: "typography", content: "Use InventoryItem", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", event: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", event: "ITEM_USED", variant: "primary", icon: "check" }] }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on ITEM_USED {
-        (persist update InventoryItem @payload.data)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
+      REQUEST: USE_ITEM
+      CONFIRM: ITEM_USED
     }
   }
+
+  ;; Drop: confirmation dialog.
   trait InventoryItemDrop = Confirmation.traits.ConfirmActionConfirmation -> InventoryItem {
+    config: {
+      icon:         "alert-triangle",
+      title:        "Drop Item",
+      alertMessage: "Are you sure you want to drop this item? This action cannot be undone.",
+      confirmLabel: "Drop"
+    }
     events {
       REQUEST: DROP
-      CONFIRM: CONFIRM_DROP
-    }
-    on INIT {
-        (ref InventoryItem)
-    }
-    on DROP {
-        (set @entity.pendingId @payload.id)
-        (fetch InventoryItem { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Drop InventoryItem", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to drop this inventoryitem?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", event: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
-    }
-    on CONFIRM_DROP {
-        (persist delete InventoryItem @entity.pendingId)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref InventoryItem)
-    }
-    on CANCEL {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref InventoryItem)
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (ref InventoryItem)
+      CONFIRM: ITEM_DROPPED
     }
   }
-  page "/inventoryitems" as InventoryItemPage -> InventoryItemBrowse, InventoryItemAdd, InventoryItemUse, InventoryItemDrop
+
+  ;; Coordinator: side-effects for Add / Use / Drop. Both Use and Drop
+  ;; remove the item (Use = consumed, Drop = discarded); semantically
+  ;; distinct user intents that share the same persistence side-effect.
+  trait InventoryItemPersistor -> InventoryItem [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_ADD -> idle
+        (persist create InventoryItem @payload.data)
+        (emit ITEM_ADDED { id: "@payload.data.id" })
+      DO_USE -> idle
+        (persist delete InventoryItem @payload.id)
+        (emit ITEM_USED { id: "@payload.id" })
+      DO_DROP -> idle
+        (persist delete InventoryItem @payload.id)
+        (emit ITEM_DROPPED { id: "@payload.id" })
+    }
+    emits {
+      ITEM_ADDED   external { id : string! }
+      ITEM_USED    external { id : string! }
+      ITEM_DROPPED external { id : string! }
+    }
+    listens {
+      DO_ADD  { data : InventoryItem }
+      DO_USE  { id   : string! }
+      DO_DROP { id   : string! }
+      InventoryItemAdd  ITEM_ADDED   -> DO_ADD
+      InventoryItemUse  ITEM_USED    -> DO_USE
+      InventoryItemDrop ITEM_DROPPED -> DO_DROP
+    }
+  }
+
+  page "/inventoryitems" as InventoryItemPage -> InventoryItemBrowse, InventoryItemAdd, InventoryItemUse, InventoryItemDrop, InventoryItemPersistor
 }

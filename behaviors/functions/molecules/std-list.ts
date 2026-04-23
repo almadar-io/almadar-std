@@ -97,11 +97,11 @@ export function stdListListItemEditTrait(params: StdListParams): TraitReference 
   });
 }
 
-/** Trait descriptor: `List.traits.ListItemView`. */
-export function stdListListItemViewTrait(params: StdListParams): TraitReference {
+/** Trait descriptor: `List.traits.ListItemDelete`. */
+export function stdListListItemDeleteTrait(params: StdListParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ListItemView`,
+    ref: `${ALIAS}.traits.ListItemDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events } : {}),
@@ -112,11 +112,11 @@ export function stdListListItemViewTrait(params: StdListParams): TraitReference 
   });
 }
 
-/** Trait descriptor: `List.traits.ListItemDelete`. */
-export function stdListListItemDeleteTrait(params: StdListParams): TraitReference {
+/** Trait descriptor: `List.traits.ListItemPersistor`. */
+export function stdListListItemPersistorTrait(params: StdListParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ListItemDelete`,
+    ref: `${ALIAS}.traits.ListItemPersistor`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events } : {}),
@@ -152,8 +152,8 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       stdListListItemBrowseTrait(params),
       stdListListItemCreateTrait(params),
       stdListListItemEditTrait(params),
-      stdListListItemViewTrait(params),
       stdListListItemDeleteTrait(params),
+      stdListListItemPersistorTrait(params),
     ],
     pages: [
       stdListPage(params),

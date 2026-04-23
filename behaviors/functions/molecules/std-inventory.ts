@@ -112,6 +112,21 @@ export function stdInventoryInventoryItemDropTrait(params: StdInventoryParams): 
   });
 }
 
+/** Trait descriptor: `Inventory.traits.InventoryItemPersistor`. */
+export function stdInventoryInventoryItemPersistorTrait(params: StdInventoryParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.InventoryItemPersistor`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config } : {}),
+  });
+}
+
 /** Page descriptor: `Inventory.pages.InventoryItemPage`. */
 export function stdInventoryPage(params: StdInventoryParams): PageRefObject {
   return makePageRef({
@@ -138,6 +153,7 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
       stdInventoryInventoryItemAddTrait(params),
       stdInventoryInventoryItemUseTrait(params),
       stdInventoryInventoryItemDropTrait(params),
+      stdInventoryInventoryItemPersistorTrait(params),
     ],
     pages: [
       stdInventoryPage(params),

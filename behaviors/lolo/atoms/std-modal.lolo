@@ -29,7 +29,8 @@ orbital ModalRecordOrbital {
       INIT -> closed
         (fetch ModalRecord)
       OPEN -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "@config.icon", size: "md" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ModalRecord", mode: "@config.mode", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: "@config.fields" }] })
+        (set @entity.id @payload.id)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "@config.icon", size: "md" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ModalRecord", entityId: "@entity.id", mode: "@config.mode", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: "@config.fields" }] })
     }
     state open {
       CLOSE -> closed
@@ -38,7 +39,10 @@ orbital ModalRecordOrbital {
       SAVE -> closed
         (render-ui modal null)
     }
-    ;; consumer: a sibling coordinator trait listens for SAVE to run (persist create ...)
+    ;; consumer: a sibling coordinator trait listens for SAVE to run (persist create|update ...)
+    ;; For edit mode, OPEN's payload.id seeds @entity.id so form-section
+    ;; pre-fills the target row AND carries that id into the SAVE payload
+    ;; (so (persist update X @payload.data) can find the right row).
     listens {
       OPEN { id : string }
       SAVE { data : object! }
