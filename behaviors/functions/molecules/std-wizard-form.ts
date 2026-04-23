@@ -52,21 +52,6 @@ export interface StdWizardFormParams {
   pagePath?: string;
 }
 
-/** Trait descriptor: `WizardForm.traits.WizardFormInput`. */
-export function stdWizardFormWizardFormInputTrait(params: StdWizardFormParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.WizardFormInput`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
-  });
-}
-
 /** Trait descriptor: `WizardForm.traits.WizardFormWizard`. */
 export function stdWizardFormWizardFormWizardTrait(params: StdWizardFormParams): TraitReference {
   return makeTraitRef({
@@ -87,21 +72,6 @@ export function stdWizardFormWizardFormValidateTrait(params: StdWizardFormParams
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.WizardFormValidate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
-  });
-}
-
-/** Trait descriptor: `WizardForm.traits.WizardFormLayout`. */
-export function stdWizardFormWizardFormLayoutTrait(params: StdWizardFormParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.WizardFormLayout`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events } : {}),
@@ -134,10 +104,8 @@ export function stdWizardForm(params: StdWizardFormParams): OrbitalDefinition {
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdWizardFormWizardFormInputTrait(params),
       stdWizardFormWizardFormWizardTrait(params),
       stdWizardFormWizardFormValidateTrait(params),
-      stdWizardFormWizardFormLayoutTrait(params),
     ],
     pages: [
       stdWizardFormPage(params),

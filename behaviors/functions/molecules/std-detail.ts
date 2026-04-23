@@ -97,6 +97,21 @@ export function stdDetailDetailRecordViewTrait(params: StdDetailParams): TraitRe
   });
 }
 
+/** Trait descriptor: `Detail.traits.DetailRecordPersistor`. */
+export function stdDetailDetailRecordPersistorTrait(params: StdDetailParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.DetailRecordPersistor`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config } : {}),
+  });
+}
+
 /** Page descriptor: `Detail.pages.DetailRecordPage`. */
 export function stdDetailPage(params: StdDetailParams): PageRefObject {
   return makePageRef({
@@ -122,6 +137,7 @@ export function stdDetail(params: StdDetailParams): OrbitalDefinition {
       stdDetailDetailRecordBrowseTrait(params),
       stdDetailDetailRecordCreateTrait(params),
       stdDetailDetailRecordViewTrait(params),
+      stdDetailDetailRecordPersistorTrait(params),
     ],
     pages: [
       stdDetailPage(params),

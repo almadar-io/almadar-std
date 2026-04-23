@@ -1,73 +1,97 @@
 app std-messaging "1.0.0"
 "std-messaging as a Function"
+;;
+;; Messaging list: browse threads, compose new, view one. Same structural
+;; pattern as std-detail — View is inlined because std-modal's form-section
+;; doesn't render read-only views (see G6 in gaps doc).
 
 orbital ChatMessageOrbital {
-  uses Browse from "std/behaviors/std-browse"
   uses Modal from "std/behaviors/std-modal"
 
   entity ChatMessage [persistent: chatmessages] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type ChatMessageLoaded     = Event ChatMessage                  "Fired when ChatMessage finishes loading"
-  type ChatMessageLoadFailed = Event { message : string } "Fired when ChatMessage fails to load"
-  trait ChatMessageBrowse = Browse.traits.BrowseItemBrowse -> ChatMessage {
-    on INIT {
-        (ref ChatMessage)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ChatMessages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ChatMessage", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "message-circle" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "caption", format: "date" }], variant: "compact" }] })
+  type ChatMessageLoaded     = Event { data : [ChatMessage] }           "Fired when the ChatMessage collection finishes loading"
+  type ChatMessageLoadFailed = Event { error : string, code : string }  "Fired when the ChatMessage collection fails to load"
+
+  trait ChatMessageBrowse -> ChatMessage [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading messages…" }] })
+      ChatMessageLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "message-circle" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      ChatMessageLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load messages" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    state browsing {
+      INIT -> loading
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
     listens {
-      ChatMessageCompose SEND         -> INIT
-      ChatMessageView    MESSAGE_VIEWED -> INIT
+      ChatMessageLoadFailed { error : string, code : string }
+      ChatMessagePersistor CHAT_MESSAGE_SENT -> INIT
     }
   }
+
   trait ChatMessageCompose = Modal.traits.ModalRecordModal -> ChatMessage {
+    config: {
+      icon:  "edit",
+      title: "New Message",
+      fields: ["name", "description", "status"],
+      mode:  "create"
+    }
     events {
       OPEN: COMPOSE
-      SAVE: SEND
+      SAVE: CHAT_MESSAGE_SENT
     }
-    on INIT {
-        (ref ChatMessage)
-    }
-    on COMPOSE {
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "New ChatMessage", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ChatMessage", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
-    }
-    on CLOSE {
+  }
+
+  trait ChatMessageView -> ChatMessage [interaction, instance] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (fetch ChatMessage)
+      VIEW -> closed
+        (set @entity.id @payload.id)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
+      CLOSE -> closed
         (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
     }
-    on SEND {
+    listens {
+      VIEW { id : string! }
+    }
+  }
+
+  trait ChatMessagePersistor -> ChatMessage [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_SEND -> idle
         (persist create ChatMessage @payload.data)
-        (render-ui modal null)
-        (render-ui main { type: "box" })
+        (emit CHAT_MESSAGE_SENT { id: "@payload.data.id" })
+    }
+    emits {
+      CHAT_MESSAGE_SENT external { id : string! }
+    }
+    listens {
+      DO_SEND { data : ChatMessage }
+      ChatMessageCompose CHAT_MESSAGE_SENT -> DO_SEND
     }
   }
-  trait ChatMessageView = Modal.traits.ModalRecordModal -> ChatMessage {
-    events {
-      OPEN: VIEW
-      SAVE: MESSAGE_VIEWED
-    }
-    on INIT {
-        (ref ChatMessage)
-    }
-    on VIEW {
-        (fetch ChatMessage { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
-    }
-    on CLOSE {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-    }
-    on MESSAGE_VIEWED {
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-  }
-  page "/chatmessages" as ChatMessagePage -> ChatMessageBrowse, ChatMessageCompose, ChatMessageView
+
+  page "/chatmessages" as ChatMessagePage -> ChatMessageBrowse, ChatMessageCompose, ChatMessageView, ChatMessagePersistor
 }

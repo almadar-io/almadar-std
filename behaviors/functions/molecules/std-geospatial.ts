@@ -97,6 +97,21 @@ export function stdGeospatialLocationConfirmSelectTrait(params: StdGeospatialPar
   });
 }
 
+/** Trait descriptor: `Geospatial.traits.LocationSelectionFlow`. */
+export function stdGeospatialLocationSelectionFlowTrait(params: StdGeospatialParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.LocationSelectionFlow`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config } : {}),
+  });
+}
+
 /** Page descriptor: `Geospatial.pages.LocationPage`. */
 export function stdGeospatialPage(params: StdGeospatialParams): PageRefObject {
   return makePageRef({
@@ -122,6 +137,7 @@ export function stdGeospatial(params: StdGeospatialParams): OrbitalDefinition {
       stdGeospatialLocationBrowseTrait(params),
       stdGeospatialLocationSelectTrait(params),
       stdGeospatialLocationConfirmSelectTrait(params),
+      stdGeospatialLocationSelectionFlowTrait(params),
     ],
     pages: [
       stdGeospatialPage(params),

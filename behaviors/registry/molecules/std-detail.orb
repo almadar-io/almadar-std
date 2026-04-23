@@ -7,10 +7,6 @@
       "name": "DetailRecordOrbital",
       "uses": [
         {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        },
-        {
           "from": "std/behaviors/std-modal",
           "as": "Modal"
         }
@@ -22,11 +18,13 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "description",
@@ -50,366 +48,586 @@
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
           "name": "DetailRecordBrowse",
+          "category": "interaction",
           "linkedEntity": "DetailRecord",
+          "emits": [
+            {
+              "event": "DetailRecordLoaded",
+              "description": "Fired when the DetailRecord collection finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[DetailRecord]"
+                }
+              ]
+            },
+            {
+              "event": "DetailRecordLoadFailed",
+              "description": "Fired when the DetailRecord collection fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "listens": [
             {
               "event": "DETAIL_RECORD_CREATED",
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "DetailRecordCreate"
+                "trait": "DetailRecordPersistor"
               }
             }
           ],
-          "effects": {
-            "BrowseItemLoaded": [
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "stack",
-                  "children": [
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DetailRecordLoaded",
+                "name": "DetailRecord loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[DetailRecord]"
+                  }
+                ]
+              },
+              {
+                "key": "DetailRecordLoadFailed",
+                "name": "DetailRecord load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DetailRecord",
                     {
-                      "gap": "md",
-                      "justify": "space-between",
+                      "emit": {
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "file-text",
-                              "size": "lg"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "DetailRecords"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center"
+                          "size": "lg",
+                          "type": "spinner"
                         },
                         {
-                          "event": "CREATE",
-                          "label": "Create DetailRecord",
-                          "icon": "plus",
+                          "type": "typography",
+                          "content": "Loading records…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "DetailRecordLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "justify": "between",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "type": "icon",
+                                  "name": "file-text"
+                                },
+                                {
+                                  "content": "DetailRecords",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "variant": "primary",
+                              "icon": "plus",
+                              "label": "Create",
+                              "type": "button",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "label": "View",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "icon": "file-text",
+                              "label": "Name",
+                              "name": "name"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "DetailRecordLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "xl",
+                          "color": "destructive",
+                          "type": "icon",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Failed to load records"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@payload.error",
+                          "color": "muted"
+                        },
+                        {
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
                           "type": "button",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "action": "INIT"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
-                      "direction": "horizontal"
-                    },
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DetailRecord",
                     {
-                      "type": "divider"
-                    },
-                    {
-                      "emptyTitle": "No detailrecords yet",
-                      "emptyDescription": "Create your first detailrecord to get started.",
-                      "columns": [
-                        {
-                          "icon": "file-text",
-                          "label": "Name",
-                          "name": "name",
-                          "variant": "h4"
-                        },
-                        {
-                          "label": "Description",
-                          "variant": "badge",
-                          "name": "description"
-                        },
-                        {
-                          "label": "Status",
-                          "name": "status",
-                          "variant": "caption"
-                        }
-                      ],
-                      "entity": "DetailRecord",
-                      "emptyIcon": "inbox",
-                      "type": "data-grid",
-                      "itemActions": [
-                        {
-                          "label": "View",
-                          "size": "sm",
-                          "event": "VIEW",
-                          "variant": "ghost"
-                        }
-                      ]
+                      "emit": {
+                        "success": "DetailRecordLoaded",
+                        "failure": "DetailRecordLoadFailed"
+                      }
                     }
                   ],
-                  "direction": "vertical",
-                  "gap": "lg",
-                  "className": "max-w-5xl mx-auto w-full"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DetailRecord",
+                    {
+                      "emit": {
+                        "failure": "DetailRecordLoadFailed",
+                        "success": "DetailRecordLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "ref": "Modal.traits.ModalRecordModal",
           "name": "DetailRecordCreate",
           "linkedEntity": "DetailRecord",
+          "config": {
+            "icon": "plus-circle",
+            "fields": [
+              "name",
+              "description",
+              "status"
+            ],
+            "mode": "create",
+            "title": "New DetailRecord"
+          },
           "events": {
             "SAVE": "DETAIL_RECORD_CREATED",
             "OPEN": "CREATE"
-          },
-          "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ],
-            "CREATE": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "gap": "md",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "gap": "sm",
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "name": "plus-circle",
-                          "size": "md",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "New DetailRecord",
-                          "type": "typography",
-                          "variant": "h3"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "form-section",
-                      "mode": "create",
-                      "submitEvent": "SAVE",
-                      "cancelEvent": "CLOSE",
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ],
-                      "entity": "DetailRecord"
-                    }
-                  ],
-                  "direction": "vertical"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
-            ],
-            "DETAIL_RECORD_CREATED": [
-              [
-                "persist",
-                "create",
-                "DetailRecord",
-                "@payload.data"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
-            ]
           }
         },
         {
-          "ref": "Modal.traits.ModalRecordModal",
           "name": "DetailRecordView",
+          "category": "interaction",
           "linkedEntity": "DetailRecord",
-          "events": {
-            "OPEN": "VIEW",
-            "SAVE": "DETAIL_RECORD_VIEWED"
-          },
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              }
             ],
-            "DETAIL_RECORD_VIEWED": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
             ],
-            "VIEW": [
-              [
-                "fetch",
-                "DetailRecord",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "type": "stack",
-                  "gap": "md",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "align": "center",
-                      "children": [
-                        {
-                          "name": "eye",
-                          "type": "icon",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "@entity.name"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DetailRecord"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
                     {
                       "gap": "md",
-                      "direction": "horizontal",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "Name",
-                          "type": "typography",
-                          "variant": "caption"
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "eye",
+                              "size": "md",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.name"
-                        }
-                      ],
-                      "type": "stack"
-                    },
-                    {
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "content": "Description",
-                          "type": "typography"
+                          "type": "divider"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.description"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Status",
-                          "variant": "caption"
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Name"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ]
                         },
                         {
-                          "content": "@entity.status",
-                          "type": "typography",
-                          "variant": "body"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "justify": "end",
-                      "gap": "sm",
-                      "type": "stack",
-                      "children": [
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Description",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
                         {
-                          "type": "button",
-                          "variant": "ghost",
-                          "event": "CLOSE",
-                          "label": "Close"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Status",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.status",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Close",
+                              "variant": "ghost",
+                              "action": "CLOSE"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "type": "stack"
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
             ]
-          }
+          },
+          "scope": "instance"
+        },
+        {
+          "name": "DetailRecordPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "DetailRecord",
+          "emits": [
+            {
+              "event": "DETAIL_RECORD_CREATED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "DETAIL_RECORD_CREATED",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DetailRecordCreate"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "DetailRecord"
+                  }
+                ]
+              },
+              {
+                "key": "DETAIL_RECORD_CREATED",
+                "name": "Detail Record Created"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "DetailRecord",
+                    "@payload.data"
+                  ],
+                  [
+                    "emit",
+                    "DETAIL_RECORD_CREATED",
+                    {
+                      "id": "@payload.data.id"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -425,6 +643,9 @@
             },
             {
               "ref": "DetailRecordView"
+            },
+            {
+              "ref": "DetailRecordPersistor"
             }
           ]
         }

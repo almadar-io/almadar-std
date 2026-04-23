@@ -97,6 +97,21 @@ export function stdMessagingChatMessageViewTrait(params: StdMessagingParams): Tr
   });
 }
 
+/** Trait descriptor: `Messaging.traits.ChatMessagePersistor`. */
+export function stdMessagingChatMessagePersistorTrait(params: StdMessagingParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.ChatMessagePersistor`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config } : {}),
+  });
+}
+
 /** Page descriptor: `Messaging.pages.ChatMessagePage`. */
 export function stdMessagingPage(params: StdMessagingParams): PageRefObject {
   return makePageRef({
@@ -122,6 +137,7 @@ export function stdMessaging(params: StdMessagingParams): OrbitalDefinition {
       stdMessagingChatMessageBrowseTrait(params),
       stdMessagingChatMessageComposeTrait(params),
       stdMessagingChatMessageViewTrait(params),
+      stdMessagingChatMessagePersistorTrait(params),
     ],
     pages: [
       stdMessagingPage(params),

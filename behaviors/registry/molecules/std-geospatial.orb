@@ -7,16 +7,8 @@
       "name": "LocationOrbital",
       "uses": [
         {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        },
-        {
           "from": "std/behaviors/std-confirmation",
           "as": "Confirmation"
-        },
-        {
-          "from": "std/behaviors/std-modal",
-          "as": "Modal"
         }
       ],
       "entity": {
@@ -26,11 +18,13 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "description",
@@ -59,18 +53,38 @@
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
           "name": "LocationBrowse",
+          "category": "interaction",
           "linkedEntity": "Location",
-          "listens": [
+          "emits": [
             {
-              "event": "CONFIRM_SELECT",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "LocationSelect"
-              }
+              "event": "LocationLoaded",
+              "description": "Fired when the Location collection finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[Location]"
+                }
+              ]
             },
+            {
+              "event": "LocationLoadFailed",
+              "description": "Fired when the Location collection fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
             {
               "event": "CONFIRMED",
               "triggers": "INIT",
@@ -80,457 +94,577 @@
               }
             }
           ],
-          "effects": {
-            "INIT": [
-              [
-                "ref",
-                "Location"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "className": "max-w-5xl mx-auto w-full",
-                  "children": [
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LocationLoaded",
+                "name": "Location loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[Location]"
+                  }
+                ]
+              },
+              {
+                "key": "LocationLoadFailed",
+                "name": "Location load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Location",
                     {
-                      "justify": "space-between",
-                      "direction": "horizontal",
+                      "emit": {
+                        "failure": "LocationLoadFailed",
+                        "success": "LocationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "align": "center",
                       "children": [
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading locations…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "LocationLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "map-pin",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Locations",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            }
+                          ],
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [
+                            {
+                              "icon": "map-pin",
+                              "label": "Name",
+                              "name": "name",
+                              "variant": "h4"
+                            },
+                            {
+                              "name": "description",
+                              "label": "Description",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "label": "Select",
+                              "event": "SELECT",
+                              "variant": "ghost"
+                            }
+                          ]
+                        }
+                      ],
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "LocationLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "color": "destructive",
+                          "size": "xl",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Failed to load locations",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@payload.error",
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "variant": "primary",
+                          "action": "INIT",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Retry"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Location",
+                    {
+                      "emit": {
+                        "success": "LocationLoaded",
+                        "failure": "LocationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Location",
+                    {
+                      "emit": {
+                        "success": "LocationLoaded",
+                        "failure": "LocationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "name": "LocationSelect",
+          "category": "interaction",
+          "linkedEntity": "Location",
+          "emits": [
+            {
+              "event": "CONFIRM_SELECT",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT",
+                "name": "Select",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "CONFIRM_SELECT",
+                "name": "Confirm Select"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Location"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "SELECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "map-pin",
+                              "size": "md"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
                         {
                           "children": [
                             {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "map-pin"
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Name"
                             },
                             {
-                              "variant": "h2",
+                              "variant": "body",
                               "type": "typography",
-                              "content": "Locations Picker"
+                              "content": "@entity.name"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.description",
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm",
+                          "gap": "md"
+                        },
+                        {
                           "direction": "horizontal",
-                          "align": "center"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "columns": [
-                        {
-                          "label": "Name",
-                          "name": "name",
-                          "variant": "h4",
-                          "icon": "map-pin"
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.status",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "name": "description",
-                          "colorMap": {
-                            "error": "destructive",
-                            "archived": "neutral",
-                            "active": "success",
-                            "pending": "warning",
-                            "completed": "success",
-                            "draft": "warning",
-                            "done": "success",
-                            "inactive": "neutral",
-                            "scheduled": "warning",
-                            "disabled": "neutral",
-                            "failed": "destructive",
-                            "cancelled": "destructive"
-                          },
-                          "label": "Description",
-                          "variant": "badge"
+                          "type": "divider"
                         },
                         {
-                          "variant": "caption",
-                          "name": "status",
-                          "label": "Status"
-                        }
-                      ],
-                      "entity": "Location",
-                      "type": "data-grid",
-                      "emptyTitle": "No locations found",
-                      "emptyDescription": "No locations are available to select.",
-                      "emptyIcon": "inbox",
-                      "itemActions": [
-                        {
-                          "label": "Select Location",
-                          "size": "sm",
-                          "variant": "ghost",
-                          "event": "SELECT"
+                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "end",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Cancel",
+                              "type": "button",
+                              "action": "CLOSE",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Confirm Selection",
+                              "type": "button",
+                              "action": "CONFIRM_SELECT",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary",
+                              "icon": "check"
+                            }
+                          ]
                         }
                       ]
-                    },
-                    {
-                      "icon": "plus",
-                      "label": "Create",
-                      "tooltip": "Create",
-                      "event": "INIT",
-                      "type": "floating-action-button"
                     }
-                  ],
-                  "gap": "lg"
-                }
-              ]
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CONFIRM_SELECT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
             ]
-          }
-        },
-        {
-          "ref": "Modal.traits.ModalRecordModal",
-          "name": "LocationSelect",
-          "linkedEntity": "Location",
-          "events": {
-            "SAVE": "CONFIRM_SELECT",
-            "OPEN": "SELECT"
           },
-          "effects": {
-            "SELECT": [
-              [
-                "fetch",
-                "Location",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "gap": "md",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "size": "md",
-                          "name": "map-pin"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "@entity.name"
-                        }
-                      ],
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "gap": "md",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "content": "Name",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.name",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Description"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.description",
-                          "variant": "body"
-                        }
-                      ]
-                    },
-                    {
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "content": "Status",
-                          "type": "typography",
-                          "variant": "caption"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.status",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "content": "Created At",
-                          "variant": "caption",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "@entity.createdAt",
-                          "variant": "body",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Pending ID"
-                        },
-                        {
-                          "content": "@entity.pendingId",
-                          "type": "typography",
-                          "variant": "body"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "variant": "ghost",
-                          "label": "Cancel",
-                          "event": "CLOSE",
-                          "type": "button"
-                        },
-                        {
-                          "label": "Confirm Selection",
-                          "icon": "check",
-                          "type": "button",
-                          "event": "CONFIRM_SELECT",
-                          "variant": "primary"
-                        }
-                      ],
-                      "justify": "end"
-                    }
-                  ],
-                  "type": "stack",
-                  "direction": "vertical"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "ref",
-                "Location"
-              ]
-            ],
-            "CONFIRM_SELECT": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ]
-          }
+          "scope": "instance"
         },
         {
           "ref": "Confirmation.traits.ConfirmActionConfirmation",
           "name": "LocationConfirmSelect",
           "linkedEntity": "Location",
-          "events": {
-            "CONFIRM": "CONFIRMED",
-            "REQUEST": "CONFIRM_SELECT"
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Confirm Location",
+            "alertMessage": "Are you sure you want to select this location?",
+            "confirmLabel": "Confirm"
           },
-          "effects": {
-            "INIT": [
-              [
-                "ref",
-                "Location"
-              ]
-            ],
-            "CONFIRM_SELECT": [
-              [
-                "set",
-                "@entity.pendingId",
-                "@payload.id"
-              ],
-              [
-                "fetch",
-                "Location",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "align": "center",
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "size": "md"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Confirm Location Selection",
-                          "type": "typography"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "variant": "danger",
-                      "message": "Are you sure you want to select this location?",
-                      "type": "alert"
-                    },
-                    {
-                      "justify": "end",
-                      "gap": "sm",
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "button",
-                          "event": "CANCEL",
-                          "variant": "ghost",
-                          "label": "Cancel"
-                        },
-                        {
-                          "icon": "check",
-                          "label": "Confirm",
-                          "event": "CONFIRMED",
-                          "type": "button",
-                          "variant": "danger"
-                        }
-                      ]
-                    }
-                  ],
-                  "gap": "md"
-                }
-              ]
-            ],
-            "CONFIRMED": [
-              [
-                "fetch",
-                "Location"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "ref",
-                "Location"
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "ref",
-                "Location"
-              ]
-            ],
-            "CANCEL": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "ref",
-                "Location"
-              ]
-            ]
+          "events": {
+            "REQUEST": "CONFIRM_SELECT",
+            "CONFIRM": "CONFIRMED"
           }
+        },
+        {
+          "name": "LocationSelectionFlow",
+          "category": "lifecycle",
+          "linkedEntity": "Location",
+          "emits": [
+            {
+              "event": "LocationSelected",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "CONFIRMED",
+              "triggers": "DO_EMIT_SELECTED",
+              "source": {
+                "kind": "trait",
+                "trait": "LocationConfirmSelect"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_EMIT_SELECTED",
+                "name": "Do Emit Selected",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "LocationSelected",
+                "name": "Location selected",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_EMIT_SELECTED",
+                "effects": [
+                  [
+                    "emit",
+                    "LocationSelected",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -546,6 +680,9 @@
             },
             {
               "ref": "LocationConfirmSelect"
+            },
+            {
+              "ref": "LocationSelectionFlow"
             }
           ]
         }

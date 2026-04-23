@@ -1,81 +1,103 @@
 app std-detail "1.0.0"
 "std-detail as a Function"
 ;;
-;; Browse + Modal (create) + Modal (view). The composition wire:
-;;   DetailRecordCreate.SAVE external -> DetailRecordBrowse listens -> INIT refresh.
-;; Trait refs inherit event keys from their base atoms (BrowseItemLoaded from
-;; std-browse, ModalRecordLoaded from std-modal). Override effects reuse those
-;; keys since trait refs don't declare their own `emits:` block.
+;; Detail browse: list, create new, view one. The View trait is inlined
+;; (not a ref) because std-modal's form-section can't render a read-only
+;; detail view — mode "view" isn't supported. Per G6 in the gaps doc,
+;; eventually std-modal could grow a view mode; until then, view flows
+;; author their own read-only render-ui.
 
 orbital DetailRecordOrbital {
-  uses Browse from "std/behaviors/std-browse"
-  uses Modal  from "std/behaviors/std-modal"
+  uses Modal from "std/behaviors/std-modal"
 
   entity DetailRecord [persistent: detailrecords] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  trait DetailRecordBrowse = Browse.traits.BrowseItemBrowse -> DetailRecord {
-    on INIT {
-      (fetch DetailRecord)
+  type DetailRecordLoaded     = Event { data : [DetailRecord] }          "Fired when the DetailRecord collection finishes loading"
+  type DetailRecordLoadFailed = Event { error : string, code : string }  "Fired when the DetailRecord collection fails to load"
+
+  trait DetailRecordBrowse -> DetailRecord [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch DetailRecord { emit: { success: "DetailRecordLoaded", failure: "DetailRecordLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading records…" }] })
+      DetailRecordLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "DetailRecords", variant: "h2" }] }, { type: "button", label: "Create", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "file-text" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      DetailRecordLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load records" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
-    on BrowseItemLoaded {
-      (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "DetailRecords", variant: "h2" }] }, { type: "button", label: "Create DetailRecord", event: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: "DetailRecord", emptyIcon: "inbox", emptyTitle: "No detailrecords yet", emptyDescription: "Create your first detailrecord to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "file-text" }, { name: "description", label: "Description", variant: "badge" }, { name: "status", label: "Status", variant: "caption" }] }] })
+    state browsing {
+      INIT -> loading
+        (fetch DetailRecord { emit: { success: "DetailRecordLoaded", failure: "DetailRecordLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
     }
+    state error {
+      INIT -> loading
+        (fetch DetailRecord { emit: { success: "DetailRecordLoaded", failure: "DetailRecordLoadFailed" } })
+        (render-ui main { type: "spinner", size: "lg" })
+    }
+    emits: [DetailRecordLoaded, DetailRecordLoadFailed]
     listens {
-      BrowseItemLoadFailed { message : string }
-      DetailRecordCreate DETAIL_RECORD_CREATED -> INIT
+      DetailRecordLoadFailed { error : string, code : string }
+      DetailRecordPersistor DETAIL_RECORD_CREATED -> INIT
     }
   }
 
+  ;; Create: ref std-modal with create mode. Config-only, no effects.
   trait DetailRecordCreate = Modal.traits.ModalRecordModal -> DetailRecord {
+    config: {
+      icon:  "plus-circle",
+      title: "New DetailRecord",
+      fields: ["name", "description", "status"],
+      mode:  "create"
+    }
     events {
       OPEN: CREATE
       SAVE: DETAIL_RECORD_CREATED
     }
-    on INIT {
-      (fetch DetailRecord)
+  }
+
+  ;; View: own-trait since std-modal can't render a read-only detail view.
+  ;; VIEW fetches target row by @payload.id, renders detail on open.
+  trait DetailRecordView -> DetailRecord [interaction, instance] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (fetch DetailRecord)
+      VIEW -> closed
+        (set @entity.id @payload.id)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
+      CLOSE -> closed
+        (render-ui modal null)
     }
-    on CREATE {
-      (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New DetailRecord", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "DetailRecord", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
-    }
-    on CLOSE {
-      (render-ui modal null)
-        (render-ui main { type: "box" })
-      (notify Cancelled info)
-    }
-    on DETAIL_RECORD_CREATED {
-      (persist create DetailRecord @payload.data)
-      (render-ui modal null)
-      (render-ui main { type: "box" })
+    listens {
+      VIEW { id : string! }
     }
   }
 
-  trait DetailRecordView = Modal.traits.ModalRecordModal -> DetailRecord {
-    events {
-      OPEN: VIEW
-      SAVE: DETAIL_RECORD_VIEWED
+  ;; Coordinator: persist side-effects for create.
+  trait DetailRecordPersistor -> DetailRecord [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create DetailRecord @payload.data)
+        (emit DETAIL_RECORD_CREATED { id: "@payload.data.id" })
     }
-    on INIT {
-      (fetch DetailRecord)
+    emits {
+      DETAIL_RECORD_CREATED external { id : string! }
     }
-    on VIEW {
-      (fetch DetailRecord { id: "@payload.id" })
-      (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
-    }
-    on CLOSE {
-      (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-    on DETAIL_RECORD_VIEWED {
-      (render-ui modal null)
-      (render-ui main { type: "box" })
+    listens {
+      DO_CREATE { data : DetailRecord }
+      DetailRecordCreate DETAIL_RECORD_CREATED -> DO_CREATE
     }
   }
 
-  page "/detailrecords" as DetailRecordPage -> DetailRecordBrowse, DetailRecordCreate, DetailRecordView
+  page "/detailrecords" as DetailRecordPage -> DetailRecordBrowse, DetailRecordCreate, DetailRecordView, DetailRecordPersistor
 }
