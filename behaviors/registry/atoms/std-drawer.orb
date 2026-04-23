@@ -162,12 +162,15 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -175,53 +178,50 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Details"
+                                  "content": "Details",
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
+                              "align": "center",
                               "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "variant": "primary",
-                              "icon": "panel-right",
                               "type": "button",
                               "label": "Open",
+                              "variant": "primary",
+                              "icon": "panel-right",
                               "action": "OPEN"
                             }
-                          ],
-                          "align": "center",
-                          "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": [],
                           "type": "data-grid",
+                          "entity": "DrawerContent",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "direction": "vertical",
                               "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.name"
+                                  "content": "@item.name",
+                                  "variant": "h4"
                                 }
                               ],
-                              "direction": "vertical"
+                              "type": "stack"
                             }
-                          ],
-                          "fields": [],
-                          "entity": "DrawerContent"
+                          ]
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "lg"
                     }
@@ -238,8 +238,8 @@
                     "DrawerContent",
                     {
                       "emit": {
-                        "failure": "DrawerContentLoadFailed",
-                        "success": "DrawerContentLoaded"
+                        "success": "DrawerContentLoaded",
+                        "failure": "DrawerContentLoadFailed"
                       }
                     }
                   ],
@@ -247,17 +247,144 @@
                     "render-ui",
                     "drawer",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "drawer",
                           "isOpen": true,
-                          "title": "Details",
                           "children": [
                             {
                               "type": "stack",
                               "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Name"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "name"
+                                      ],
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "justify": "between",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "variant": "caption",
+                                      "content": "Description",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "description"
+                                      ],
+                                      "type": "typography"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "variant": "caption",
+                                      "type": "typography",
+                                      "content": "Status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "status"
+                                      ],
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "justify": "between",
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "md"
+                                },
+                                {
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CreatedAt"
+                                    },
+                                    {
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "createdAt"
+                                      ],
+                                      "type": "typography",
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "gap": "md",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "stack",
+                                  "justify": "end",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "action": "CLOSE",
+                                      "variant": "ghost",
+                                      "label": "Close"
+                                    }
+                                  ],
+                                  "direction": "horizontal"
+                                }
+                              ]
+                            }
+                          ],
+                          "title": "Details"
+                        },
+                        {
+                          "onClose": "CLOSE",
+                          "type": "side-panel",
+                          "position": "right",
+                          "children": [
+                            {
                               "children": [
                                 {
                                   "children": [
@@ -279,146 +406,17 @@
                                       "type": "typography"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "md"
-                                },
-                                {
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "variant": "caption",
-                                      "type": "typography",
-                                      "content": "Description"
-                                    },
-                                    {
-                                      "variant": "body",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "description"
-                                      ],
-                                      "type": "typography"
-                                    }
-                                  ],
-                                  "justify": "between"
-                                },
-                                {
-                                  "gap": "md",
-                                  "justify": "between",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "content": "Status",
-                                      "variant": "caption",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "status"
-                                      ]
-                                    }
-                                  ],
-                                  "type": "stack"
-                                },
-                                {
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "variant": "caption",
-                                      "content": "CreatedAt",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "createdAt"
-                                      ],
-                                      "type": "typography",
-                                      "variant": "body"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "justify": "end",
-                                  "children": [
-                                    {
-                                      "label": "Close",
-                                      "variant": "ghost",
-                                      "action": "CLOSE",
-                                      "type": "button"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "gap": "md"
-                            }
-                          ]
-                        },
-                        {
-                          "isOpen": true,
-                          "type": "side-panel",
-                          "position": "right",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
                                   "type": "stack",
                                   "justify": "between",
-                                  "children": [
-                                    {
-                                      "variant": "caption",
-                                      "type": "typography",
-                                      "content": "Name"
-                                    },
-                                    {
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "name"
-                                      ],
-                                      "type": "typography",
-                                      "variant": "body"
-                                    }
-                                  ],
                                   "gap": "md",
                                   "direction": "horizontal"
                                 },
                                 {
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "variant": "caption",
                                       "type": "typography",
+                                      "variant": "caption",
                                       "content": "Description"
                                     },
                                     {
@@ -434,25 +432,22 @@
                                       ]
                                     }
                                   ],
-                                  "gap": "md",
                                   "direction": "horizontal",
-                                  "justify": "between",
-                                  "type": "stack"
+                                  "gap": "md",
+                                  "justify": "between"
                                 },
                                 {
-                                  "justify": "between",
-                                  "gap": "md",
                                   "direction": "horizontal",
-                                  "type": "stack",
+                                  "justify": "between",
                                   "children": [
                                     {
                                       "variant": "caption",
-                                      "type": "typography",
-                                      "content": "Status"
+                                      "content": "Status",
+                                      "type": "typography"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
+                                      "type": "typography",
                                       "content": [
                                         "object/get",
                                         [
@@ -462,19 +457,19 @@
                                         "status"
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
-                                  "justify": "between",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "CreatedAt"
+                                      "content": "CreatedAt",
+                                      "variant": "caption"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "body",
                                       "content": [
                                         "object/get",
                                         [
@@ -482,22 +477,27 @@
                                           "@entity"
                                         ],
                                         "createdAt"
-                                      ]
+                                      ],
+                                      "type": "typography",
+                                      "variant": "body"
                                     }
                                   ],
-                                  "direction": "horizontal",
+                                  "justify": "between",
                                   "type": "stack",
                                   "gap": "md"
                                 }
                               ],
+                              "type": "stack",
                               "direction": "vertical",
-                              "type": "stack"
+                              "gap": "md"
                             }
                           ],
-                          "onClose": "CLOSE",
+                          "isOpen": true,
                           "title": "Details"
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "none"
                     }
                   ]
@@ -518,8 +518,8 @@
                     "DrawerContent",
                     {
                       "emit": {
-                        "failure": "DrawerContentLoadFailed",
-                        "success": "DrawerContentLoaded"
+                        "success": "DrawerContentLoaded",
+                        "failure": "DrawerContentLoadFailed"
                       }
                     }
                   ],
@@ -527,45 +527,48 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "panel-right",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "panel-right"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Details",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "align": "center"
+                              "gap": "md"
                             },
                             {
-                              "icon": "panel-right",
+                              "type": "button",
                               "action": "OPEN",
                               "variant": "primary",
-                              "type": "button",
-                              "label": "Open"
+                              "label": "Open",
+                              "icon": "panel-right"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "entity": "DrawerContent",
                           "renderItem": [
                             "fn",
                             "item",
@@ -574,21 +577,18 @@
                               "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "h4",
+                                  "type": "typography",
                                   "content": "@item.name",
-                                  "type": "typography"
+                                  "variant": "h4"
                                 }
                               ],
                               "type": "stack"
                             }
                           ],
                           "fields": [],
-                          "entity": "DrawerContent"
+                          "type": "data-grid"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]

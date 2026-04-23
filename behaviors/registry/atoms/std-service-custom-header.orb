@@ -139,6 +139,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "ServiceCustomHeaderCustomHeaderApiCompleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "result",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ServiceCustomHeaderCustomHeaderApiFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -264,6 +288,30 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "ServiceCustomHeaderCustomHeaderApiCompleted",
+                "name": "ServiceCustomHeader custom header api completed",
+                "payload": [
+                  {
+                    "name": "result",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceCustomHeaderCustomHeaderApiFailed",
+                "name": "ServiceCustomHeader custom header api failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -286,6 +334,8 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
                       "children": [
@@ -294,49 +344,47 @@
                           "type": "icon"
                         },
                         {
+                          "content": "API Tester",
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "API Tester"
+                          "variant": "h2"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "/users"
+                          "placeholder": "/users",
+                          "type": "input"
                         },
                         {
+                          "type": "select",
                           "options": [
                             {
-                              "label": "GET",
-                              "value": "GET"
+                              "value": "GET",
+                              "label": "GET"
                             },
                             {
-                              "value": "POST",
-                              "label": "POST"
+                              "label": "POST",
+                              "value": "POST"
                             },
                             {
-                              "label": "PUT",
-                              "value": "PUT"
+                              "value": "PUT",
+                              "label": "PUT"
                             },
                             {
                               "label": "DELETE",
                               "value": "DELETE"
                             }
-                          ],
-                          "type": "select"
+                          ]
                         },
                         {
-                          "type": "textarea",
-                          "placeholder": "JSON request body"
+                          "placeholder": "JSON request body",
+                          "type": "textarea"
                         },
                         {
-                          "icon": "send",
-                          "label": "Send Request",
-                          "variant": "primary",
+                          "type": "button",
                           "action": "CALL_API",
-                          "type": "button"
+                          "variant": "primary",
+                          "icon": "send",
+                          "label": "Send Request"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -351,8 +399,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "title": "Calling API...",
-                      "message": "Sending request to servicecustomheader endpoint..."
+                      "message": "Sending request to servicecustomheader endpoint...",
+                      "title": "Calling API..."
                     }
                   ],
                   [
@@ -363,6 +411,12 @@
                       "method": "@entity.method",
                       "body": "@entity.requestBody",
                       "endpoint": "@entity.endpoint"
+                    },
+                    {
+                      "emit": {
+                        "success": "ServiceCustomHeaderCustomHeaderApiCompleted",
+                        "failure": "ServiceCustomHeaderCustomHeaderApiFailed"
+                      }
                     }
                   ]
                 ]
@@ -386,8 +440,10 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "name": "check-circle",
@@ -395,8 +451,8 @@
                         },
                         {
                           "content": "Response",
-                          "type": "typography",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "type": "typography"
                         },
                         {
                           "variant": "info",
@@ -404,20 +460,18 @@
                           "label": "@entity.statusCode"
                         },
                         {
-                          "content": "@entity.responseData",
+                          "type": "code",
                           "language": "json",
-                          "type": "code"
+                          "content": "@entity.responseData"
                         },
                         {
                           "action": "RESET",
-                          "variant": "ghost",
-                          "label": "New Request",
                           "type": "button",
+                          "label": "New Request",
+                          "variant": "ghost",
                           "icon": "rotate-ccw"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -436,10 +490,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
+                      "message": "@entity.error",
                       "title": "Request Failed",
-                      "onRetry": "RETRY",
-                      "message": "@entity.error"
+                      "type": "error-state",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -454,8 +508,8 @@
                     "main",
                     {
                       "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
@@ -463,9 +517,9 @@
                           "name": "globe"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "API Tester"
+                          "content": "API Tester",
+                          "variant": "h2"
                         },
                         {
                           "type": "input",
@@ -475,12 +529,12 @@
                           "type": "select",
                           "options": [
                             {
-                              "value": "GET",
-                              "label": "GET"
+                              "label": "GET",
+                              "value": "GET"
                             },
                             {
-                              "value": "POST",
-                              "label": "POST"
+                              "label": "POST",
+                              "value": "POST"
                             },
                             {
                               "label": "PUT",
@@ -493,15 +547,15 @@
                           ]
                         },
                         {
-                          "placeholder": "JSON request body",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "JSON request body"
                         },
                         {
+                          "action": "CALL_API",
                           "type": "button",
                           "icon": "send",
-                          "label": "Send Request",
-                          "action": "CALL_API",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "label": "Send Request"
                         }
                       ]
                     }
@@ -519,14 +573,76 @@
                     {
                       "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "globe",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "API Tester",
+                          "variant": "h2"
+                        },
+                        {
+                          "placeholder": "/users",
+                          "type": "input"
+                        },
+                        {
+                          "type": "select",
+                          "options": [
+                            {
+                              "value": "GET",
+                              "label": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "label": "DELETE",
+                              "value": "DELETE"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "textarea",
+                          "placeholder": "JSON request body"
+                        },
+                        {
+                          "label": "Send Request",
+                          "action": "CALL_API",
+                          "icon": "send",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "children": [
                         {
                           "type": "icon",
                           "name": "globe"
                         },
                         {
-                          "type": "typography",
                           "variant": "h2",
+                          "type": "typography",
                           "content": "API Tester"
                         },
                         {
@@ -544,8 +660,8 @@
                               "value": "POST"
                             },
                             {
-                              "label": "PUT",
-                              "value": "PUT"
+                              "value": "PUT",
+                              "label": "PUT"
                             },
                             {
                               "value": "DELETE",
@@ -566,72 +682,10 @@
                           "variant": "primary"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
+                      "gap": "lg",
                       "align": "center",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "globe"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "API Tester",
-                          "variant": "h2"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "/users"
-                        },
-                        {
-                          "type": "select",
-                          "options": [
-                            {
-                              "value": "GET",
-                              "label": "GET"
-                            },
-                            {
-                              "value": "POST",
-                              "label": "POST"
-                            },
-                            {
-                              "value": "PUT",
-                              "label": "PUT"
-                            },
-                            {
-                              "label": "DELETE",
-                              "value": "DELETE"
-                            }
-                          ]
-                        },
-                        {
-                          "placeholder": "JSON request body",
-                          "type": "textarea"
-                        },
-                        {
-                          "action": "CALL_API",
-                          "type": "button",
-                          "variant": "primary",
-                          "icon": "send",
-                          "label": "Send Request"
-                        }
-                      ],
-                      "gap": "lg"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]

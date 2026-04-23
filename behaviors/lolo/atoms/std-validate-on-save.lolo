@@ -13,6 +13,8 @@ orbital ValidateOnSave {
   }
   type ValidateOnSaveLoaded = Event { data : [ValidateOnSave] }
   type ValidateOnSaveLoadFailed = Event { error : string, code : string }
+  type ValidateOnSaveOrbitalCliCompleted = Event { result : object }
+  type ValidateOnSaveOrbitalCliFailed = Event { error : string, code : string }
   trait OrbFileWatcher -> ValidateOnSave [interaction, instance] {
     initial: idle
     state idle {
@@ -29,7 +31,7 @@ orbital ValidateOnSave {
         (set @entity.status validating)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validating..." })
         (render-ui center { type: "loading-state", title: "Running orbital validate..." })
-        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" } { emit: { success: "ValidateOnSaveOrbitalCliCompleted", failure: "ValidateOnSaveOrbitalCliFailed" } })
     }
     state validating {
       VALIDATION_PASSED -> valid
@@ -56,12 +58,12 @@ orbital ValidateOnSave {
         (set @entity.status validating)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
         (render-ui center { type: "loading-state", title: "Running orbital validate..." })
-        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" } { emit: { success: "ValidateOnSaveOrbitalCliCompleted", failure: "ValidateOnSaveOrbitalCliFailed" } })
       REFRESH -> validating
         (set @entity.status validating)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
         (render-ui center { type: "loading-state", title: "Running orbital validate..." })
-        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" } { emit: { success: "ValidateOnSaveOrbitalCliCompleted", failure: "ValidateOnSaveOrbitalCliFailed" } })
     }
     state invalid {
       OS_FILE_MODIFIED -> validating
@@ -70,12 +72,12 @@ orbital ValidateOnSave {
         (set @entity.status validating)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
         (render-ui center { type: "loading-state", title: "Running orbital validate..." })
-        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" } { emit: { success: "ValidateOnSaveOrbitalCliCompleted", failure: "ValidateOnSaveOrbitalCliFailed" } })
       REFRESH -> validating
         (set @entity.status validating)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
         (render-ui center { type: "loading-state", title: "Running orbital validate..." })
-        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" } { emit: { success: "ValidateOnSaveOrbitalCliCompleted", failure: "ValidateOnSaveOrbitalCliFailed" } })
     }
     listens {
       VALIDATION_PASSED { warnings : array }
@@ -83,6 +85,8 @@ orbital ValidateOnSave {
       OS_FILE_MODIFIED { path : string }
     
       ValidateOnSaveLoadFailed { error : string, code : string }
+    
+      ValidateOnSaveOrbitalCliFailed { error : string, code : string }
     }
   }
   page "/validator" as ValidatorPage -> OrbFileWatcher

@@ -137,6 +137,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "ServiceEmailEmailCompleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "result",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ServiceEmailEmailFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -256,6 +280,30 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "ServiceEmailEmailCompleted",
+                "name": "ServiceEmail email completed",
+                "payload": [
+                  {
+                    "name": "result",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceEmailEmailFailed",
+                "name": "ServiceEmail email failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -269,8 +317,8 @@
                     "ServiceEmail",
                     {
                       "emit": {
-                        "failure": "ServiceEmailLoadFailed",
-                        "success": "ServiceEmailLoaded"
+                        "success": "ServiceEmailLoaded",
+                        "failure": "ServiceEmailLoadFailed"
                       }
                     }
                   ],
@@ -278,25 +326,27 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "stretch",
                       "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "mail",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "mail"
                             },
                             {
                               "variant": "h2",
-                              "content": "ServiceEmail Email",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "ServiceEmail Email"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -306,23 +356,21 @@
                           "placeholder": "recipient@example.com"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "Email subject"
+                          "placeholder": "Email subject",
+                          "type": "input"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
                         },
                         {
-                          "type": "button",
                           "variant": "primary",
                           "icon": "send",
+                          "label": "Send",
                           "action": "SEND",
-                          "label": "Send"
+                          "type": "button"
                         }
-                      ],
-                      "align": "stretch",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -336,9 +384,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
+                      "message": "Delivering serviceemail email...",
                       "title": "Sending email...",
-                      "message": "Delivering serviceemail email..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -347,8 +395,14 @@
                     "send",
                     {
                       "subject": "@entity.subject",
-                      "body": "@entity.body",
-                      "to": "@entity.to"
+                      "to": "@entity.to",
+                      "body": "@entity.body"
+                    },
+                    {
+                      "emit": {
+                        "success": "ServiceEmailEmailCompleted",
+                        "failure": "ServiceEmailEmailFailed"
+                      }
                     }
                   ]
                 ]
@@ -367,28 +421,28 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
+                          "type": "alert",
                           "message": "Email sent successfully"
                         },
                         {
-                          "label": "Send Another",
-                          "icon": "rotate-ccw",
                           "type": "button",
                           "action": "RESET",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "icon": "rotate-ccw",
+                          "label": "Send Another"
                         }
                       ],
                       "align": "center",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -407,40 +461,40 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "title": "Send Failed",
+                          "onRetry": "RETRY",
                           "type": "error-state",
-                          "message": "Could not deliver the email.",
-                          "onRetry": "RETRY"
+                          "message": "Could not deliver the email."
                         },
                         {
-                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
                               "icon": "refresh-cw",
-                              "type": "button",
-                              "label": "Retry",
                               "action": "RETRY",
-                              "variant": "primary"
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Retry"
                             },
                             {
                               "type": "button",
-                              "icon": "rotate-ccw",
-                              "action": "RESET",
+                              "label": "Reset",
                               "variant": "ghost",
-                              "label": "Reset"
+                              "action": "RESET",
+                              "icon": "rotate-ccw"
                             }
                           ],
-                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
-                          "justify": "center"
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -459,23 +513,24 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "stretch",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
+                              "content": "ServiceEmail Email",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceEmail Email"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -485,25 +540,24 @@
                           "placeholder": "recipient@example.com"
                         },
                         {
-                          "placeholder": "Email subject",
-                          "type": "input"
+                          "type": "input",
+                          "placeholder": "Email subject"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
                         },
                         {
-                          "action": "SEND",
-                          "label": "Send",
-                          "icon": "send",
                           "variant": "primary",
+                          "label": "Send",
+                          "action": "SEND",
+                          "icon": "send",
                           "type": "button"
                         }
                       ],
                       "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
-                      "align": "stretch"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -517,24 +571,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
+                      "align": "stretch",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "ServiceEmail Email"
+                              "content": "ServiceEmail Email",
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -544,12 +599,12 @@
                           "type": "input"
                         },
                         {
-                          "placeholder": "Email subject",
-                          "type": "input"
+                          "type": "input",
+                          "placeholder": "Email subject"
                         },
                         {
-                          "type": "textarea",
-                          "placeholder": "Write your message..."
+                          "placeholder": "Write your message...",
+                          "type": "textarea"
                         },
                         {
                           "label": "Send",
@@ -559,9 +614,8 @@
                           "icon": "send"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "stretch",
-                      "type": "stack"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -580,32 +634,32 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
                               "type": "typography",
                               "content": "ServiceEmail Email"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "recipient@example.com"
+                          "placeholder": "recipient@example.com",
+                          "type": "input"
                         },
                         {
                           "placeholder": "Email subject",
@@ -616,14 +670,14 @@
                           "type": "textarea"
                         },
                         {
-                          "type": "button",
-                          "label": "Send",
                           "action": "SEND",
-                          "variant": "primary",
-                          "icon": "send"
+                          "label": "Send",
+                          "type": "button",
+                          "icon": "send",
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "lg",
                       "align": "stretch"
                     }
                   ]

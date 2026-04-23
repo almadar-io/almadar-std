@@ -19,6 +19,8 @@ orbital ServiceStorageOrbital {
 
   type ServiceStorageLoaded     = Event ServiceStorage                  "Fired when ServiceStorage finishes loading"
   type ServiceStorageLoadFailed = Event { message : string } "Fired when ServiceStorage fails to load"
+  type ServiceStorageStorageCompleted = Event { result : object }
+  type ServiceStorageStorageFailed = Event { error : string, code : string }
   trait ServiceStorageStorage -> ServiceStorage [interaction, instance] {
     initial: idle
     state idle {
@@ -27,16 +29,16 @@ orbital ServiceStorageOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "ServiceStorage Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "bucket-name" }, { type: "input", placeholder: "path/to/file.txt" }, { type: "input", placeholder: "path/prefix/" }, { type: "textarea", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", action: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", action: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", action: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", action: "DELETE_FILE", variant: "danger", icon: "trash-2" }] }] })
       UPLOAD_FILE -> executing
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey", content: "@entity.content" })
+        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey", content: "@entity.content" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
       DOWNLOAD_FILE -> executing
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" })
+        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
       LIST_FILES -> executing
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage list { bucket: "@entity.bucket", prefix: "@entity.prefix" })
+        (call-service storage list { bucket: "@entity.bucket", prefix: "@entity.prefix" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
       DELETE_FILE -> executing
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" })
+        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
     }
     state executing {
       EXECUTED -> complete
@@ -62,8 +64,10 @@ orbital ServiceStorageOrbital {
       EXECUTED { data : string! }
       FAILED { error : string! }
           ServiceStorageLoadFailed { message : string }
+    
+      ServiceStorageStorageFailed { error : string, code : string }
     }
-    emits: [ServiceStorageLoaded, ServiceStorageLoadFailed]
+    emits: [ServiceStorageLoaded, ServiceStorageLoadFailed, ServiceStorageStorageCompleted, ServiceStorageStorageFailed]
   }
   page "/servicestorages" as ServiceStoragePage -> ServiceStorageStorage
 }

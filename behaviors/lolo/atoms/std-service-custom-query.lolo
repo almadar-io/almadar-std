@@ -19,6 +19,8 @@ orbital ServiceCustomQueryOrbital {
 
   type ServiceCustomQueryLoaded     = Event ServiceCustomQuery                  "Fired when ServiceCustomQuery finishes loading"
   type ServiceCustomQueryLoadFailed = Event { message : string } "Fired when ServiceCustomQuery fails to load"
+  type ServiceCustomQueryCustomQueryApiCompleted = Event { result : object }
+  type ServiceCustomQueryCustomQueryApiFailed = Event { error : string, code : string }
   trait ServiceCustomQueryCustomQuery -> ServiceCustomQuery [interaction, instance] {
     initial: idle
     state idle {
@@ -27,7 +29,7 @@ orbital ServiceCustomQueryOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Query Auth API Tester", variant: "h2" }, { type: "input", placeholder: "/users" }, { type: "select", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", placeholder: "JSON request body" }, { type: "button", label: "Send Request", action: "CALL_API", variant: "primary", icon: "send" }] })
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomquery endpoint..." })
-        (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomQueryCustomQueryApiCompleted", failure: "ServiceCustomQueryCustomQueryApiFailed" } })
     }
     state calling {
       API_RESPONSE -> complete
@@ -52,8 +54,10 @@ orbital ServiceCustomQueryOrbital {
       API_RESPONSE { data : string!, statusCode : number! }
       FAILED { error : string! }
           ServiceCustomQueryLoadFailed { message : string }
+    
+      ServiceCustomQueryCustomQueryApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomQueryLoaded, ServiceCustomQueryLoadFailed]
+    emits: [ServiceCustomQueryLoaded, ServiceCustomQueryLoadFailed, ServiceCustomQueryCustomQueryApiCompleted, ServiceCustomQueryCustomQueryApiFailed]
   }
   page "/servicecustomquerys" as ServiceCustomQueryPage -> ServiceCustomQueryCustomQuery
 }

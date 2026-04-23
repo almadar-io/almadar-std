@@ -17,6 +17,8 @@ orbital ServiceLlmOrbital {
 
   type ServiceLlmLoaded     = Event ServiceLlm                  "Fired when ServiceLlm finishes loading"
   type ServiceLlmLoadFailed = Event { message : string } "Fired when ServiceLlm fails to load"
+  type ServiceLlmLlmCompleted = Event { result : object }
+  type ServiceLlmLlmFailed = Event { error : string, code : string }
   trait ServiceLlmLlm -> ServiceLlm [interaction, instance] {
     initial: idle
     state idle {
@@ -26,15 +28,15 @@ orbital ServiceLlmOrbital {
       GENERATE -> processing
         (set @entity.action generate)
         (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm generate { userPrompt: "@entity.inputText" })
+        (call-service llm generate { userPrompt: "@entity.inputText" } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
       CLASSIFY -> processing
         (set @entity.action classify)
         (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm classify { text: "@entity.inputText", categories: ["positive", "negative", "neutral"] })
+        (call-service llm classify { text: "@entity.inputText", categories: ["positive", "negative", "neutral"] } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
       SUMMARIZE -> processing
         (set @entity.action summarize)
         (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm summarize { text: "@entity.inputText" })
+        (call-service llm summarize { text: "@entity.inputText" } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
     }
     state processing {
       COMPLETE -> complete
@@ -63,8 +65,10 @@ orbital ServiceLlmOrbital {
       COMPLETE { content : string! }
       FAILED { error : string! }
           ServiceLlmLoadFailed { message : string }
+    
+      ServiceLlmLlmFailed { error : string, code : string }
     }
-    emits: [ServiceLlmLoaded, ServiceLlmLoadFailed]
+    emits: [ServiceLlmLoaded, ServiceLlmLoadFailed, ServiceLlmLlmCompleted, ServiceLlmLlmFailed]
   }
   page "/servicellms" as ServiceLlmPage -> ServiceLlmLlm
 }

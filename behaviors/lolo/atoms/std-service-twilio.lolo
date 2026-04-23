@@ -18,6 +18,8 @@ orbital ServiceTwilioOrbital {
 
   type ServiceTwilioLoaded     = Event ServiceTwilio                  "Fired when ServiceTwilio finishes loading"
   type ServiceTwilioLoadFailed = Event { message : string } "Fired when ServiceTwilio fails to load"
+  type ServiceTwilioTwilioCompleted = Event { result : object }
+  type ServiceTwilioTwilioFailed = Event { error : string, code : string }
   trait ServiceTwilioTwilio -> ServiceTwilio [interaction, instance] {
     initial: idle
     state idle {
@@ -26,10 +28,10 @@ orbital ServiceTwilioOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
       SEND_SMS -> sending
         (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
-        (call-service twilio "sendSMS" { to: "@entity.to", body: "@entity.messageBody" })
+        (call-service twilio "sendSMS" { to: "@entity.to", body: "@entity.messageBody" } { emit: { success: "ServiceTwilioTwilioCompleted", failure: "ServiceTwilioTwilioFailed" } })
       SEND_WHATSAPP -> sending
         (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
-        (call-service twilio "sendWhatsApp" { to: "@entity.to", body: "@entity.messageBody" })
+        (call-service twilio "sendWhatsApp" { to: "@entity.to", body: "@entity.messageBody" } { emit: { success: "ServiceTwilioTwilioCompleted", failure: "ServiceTwilioTwilioFailed" } })
     }
     state sending {
       SENT -> sent
@@ -57,8 +59,10 @@ orbital ServiceTwilioOrbital {
       SENT { messageSid : string }
       FAILED { error : string! }
           ServiceTwilioLoadFailed { message : string }
+    
+      ServiceTwilioTwilioFailed { error : string, code : string }
     }
-    emits: [ServiceTwilioLoaded, ServiceTwilioLoadFailed]
+    emits: [ServiceTwilioLoaded, ServiceTwilioLoadFailed, ServiceTwilioTwilioCompleted, ServiceTwilioTwilioFailed]
   }
   page "/servicetwilios" as ServiceTwilioPage -> ServiceTwilioTwilio
 }

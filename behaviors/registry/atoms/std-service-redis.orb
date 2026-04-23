@@ -130,6 +130,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "ServiceRedisRedisCompleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "result",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "ServiceRedisRedisFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -250,6 +274,30 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "ServiceRedisRedisCompleted",
+                "name": "ServiceRedis redis completed",
+                "payload": [
+                  {
+                    "name": "result",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceRedisRedisFailed",
+                "name": "ServiceRedis redis failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -263,8 +311,8 @@
                     "ServiceRedis",
                     {
                       "emit": {
-                        "success": "ServiceRedisLoaded",
-                        "failure": "ServiceRedisLoadFailed"
+                        "failure": "ServiceRedisLoadFailed",
+                        "success": "ServiceRedisLoaded"
                       }
                     }
                   ],
@@ -272,39 +320,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "database"
+                              "name": "database",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Redis Cache",
                               "variant": "h2",
-                              "content": "Redis Cache"
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
                           "children": [
                             {
-                              "placeholder": "cache-key",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "cache-key"
                             },
                             {
-                              "type": "input",
-                              "placeholder": "cache-value"
+                              "placeholder": "cache-value",
+                              "type": "input"
                             },
                             {
                               "type": "input",
@@ -312,41 +359,42 @@
                               "placeholder": "3600"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical"
                         },
                         {
+                          "justify": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "download",
-                              "label": "Get",
                               "action": "GET_KEY",
-                              "type": "button",
-                              "variant": "primary"
+                              "label": "Get",
+                              "variant": "primary",
+                              "icon": "download",
+                              "type": "button"
                             },
                             {
+                              "variant": "primary",
+                              "action": "SET_KEY",
                               "type": "button",
                               "label": "Set",
-                              "action": "SET_KEY",
-                              "icon": "upload",
-                              "variant": "primary"
+                              "icon": "upload"
                             },
                             {
+                              "label": "Delete",
+                              "variant": "danger",
                               "icon": "trash-2",
                               "action": "DELETE_KEY",
-                              "label": "Delete",
-                              "type": "button",
-                              "variant": "danger"
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "center",
                           "gap": "sm"
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -360,9 +408,9 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Executing...",
                       "message": "Running redis operation...",
-                      "type": "loading-state",
-                      "title": "Executing..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -371,6 +419,12 @@
                     "get",
                     {
                       "key": "@entity.key"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ServiceRedisRedisFailed",
+                        "success": "ServiceRedisRedisCompleted"
+                      }
                     }
                   ]
                 ]
@@ -384,9 +438,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
+                      "message": "Running redis operation...",
                       "title": "Executing...",
-                      "message": "Running redis operation..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -397,6 +451,12 @@
                       "value": "@entity.value",
                       "ttl": "@entity.ttl",
                       "key": "@entity.key"
+                    },
+                    {
+                      "emit": {
+                        "success": "ServiceRedisRedisCompleted",
+                        "failure": "ServiceRedisRedisFailed"
+                      }
                     }
                   ]
                 ]
@@ -410,9 +470,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Running redis operation...",
                       "type": "loading-state",
-                      "title": "Executing...",
-                      "message": "Running redis operation..."
+                      "title": "Executing..."
                     }
                   ],
                   [
@@ -421,6 +481,12 @@
                     "delete",
                     {
                       "key": "@entity.key"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ServiceRedisRedisFailed",
+                        "success": "ServiceRedisRedisCompleted"
+                      }
                     }
                   ]
                 ]
@@ -439,34 +505,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "success",
                           "message": "Operation complete",
+                          "variant": "success",
                           "type": "alert"
                         },
                         {
-                          "type": "typography",
-                          "content": "@entity.result",
+                          "color": "muted",
                           "variant": "body",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "@entity.result"
                         },
                         {
-                          "label": "Reset",
                           "type": "button",
-                          "variant": "ghost",
+                          "label": "Reset",
+                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "action": "RESET"
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -485,9 +551,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
-                      "onRetry": "RESET",
                       "title": "Redis Error",
+                      "onRetry": "RESET",
+                      "type": "error-state",
                       "message": "@entity.error"
                     }
                   ]
@@ -502,13 +568,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -520,13 +582,15 @@
                               "variant": "h2"
                             }
                           ],
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
                               "type": "input",
@@ -543,40 +607,42 @@
                             }
                           ],
                           "direction": "vertical",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
-                          "justify": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "action": "GET_KEY",
+                              "type": "button",
                               "label": "Get",
-                              "variant": "primary",
                               "icon": "download",
-                              "type": "button"
+                              "variant": "primary"
                             },
                             {
                               "type": "button",
+                              "icon": "upload",
                               "action": "SET_KEY",
                               "variant": "primary",
-                              "icon": "upload",
                               "label": "Set"
                             },
                             {
-                              "label": "Delete",
-                              "action": "DELETE_KEY",
-                              "type": "button",
                               "variant": "danger",
-                              "icon": "trash-2"
+                              "type": "button",
+                              "icon": "trash-2",
+                              "label": "Delete",
+                              "action": "DELETE_KEY"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "justify": "center",
+                          "direction": "horizontal"
                         }
                       ],
+                      "type": "stack",
                       "align": "center",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -591,80 +657,80 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "database",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "database"
                             },
                             {
                               "content": "Redis Cache",
                               "type": "typography",
                               "variant": "h2"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "cache-key"
+                              "placeholder": "cache-key",
+                              "type": "input"
                             },
                             {
-                              "type": "input",
-                              "placeholder": "cache-value"
+                              "placeholder": "cache-value",
+                              "type": "input"
                             },
                             {
                               "placeholder": "3600",
-                              "type": "input",
-                              "inputType": "number"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "icon": "download",
-                              "action": "GET_KEY",
-                              "type": "button",
-                              "label": "Get",
-                              "variant": "primary"
-                            },
-                            {
-                              "icon": "upload",
-                              "action": "SET_KEY",
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Set"
-                            },
-                            {
-                              "variant": "danger",
-                              "icon": "trash-2",
-                              "label": "Delete",
-                              "action": "DELETE_KEY",
-                              "type": "button"
+                              "inputType": "number",
+                              "type": "input"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Get",
+                              "icon": "download",
+                              "variant": "primary",
+                              "action": "GET_KEY"
+                            },
+                            {
+                              "label": "Set",
+                              "icon": "upload",
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "SET_KEY"
+                            },
+                            {
+                              "type": "button",
+                              "icon": "trash-2",
+                              "variant": "danger",
+                              "label": "Delete",
+                              "action": "DELETE_KEY"
+                            }
+                          ],
+                          "gap": "sm",
                           "justify": "center"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]

@@ -18,6 +18,8 @@ orbital ServiceOauthOrbital {
 
   type ServiceOauthLoaded     = Event ServiceOauth                  "Fired when ServiceOauth finishes loading"
   type ServiceOauthLoadFailed = Event { message : string } "Fired when ServiceOauth fails to load"
+  type ServiceOauthOauthCompleted = Event { result : object }
+  type ServiceOauthOauthFailed = Event { error : string, code : string }
   trait ServiceOauthOauth -> ServiceOauth [interaction, instance] {
     initial: unauthenticated
     state unauthenticated {
@@ -26,14 +28,14 @@ orbital ServiceOauthOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", action: "LOGIN", variant: "primary", icon: "log-in" }] })
       LOGIN -> authorizing
         (render-ui main { type: "loading-state", title: "Authorizing...", message: "Redirecting to provider for authorization." })
-        (call-service oauth authorize { provider: "@entity.provider", scopes: ["openid", "email"] })
+        (call-service oauth authorize { provider: "@entity.provider", scopes: ["openid", "email"] } { emit: { success: "ServiceOauthOauthCompleted", failure: "ServiceOauthOauthFailed" } })
     }
     state authorizing {
       AUTH_URL_RECEIVED -> authorizing
         (set @entity.authUrl @payload.authUrl)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "external-link" }, { type: "typography", content: "Authorization Required", variant: "h2" }, { type: "typography", content: "@entity.authUrl", variant: "body", color: "muted" }, { type: "input", placeholder: "Paste authorization code here" }, { type: "button", label: "Submit", action: "CALLBACK", variant: "primary", icon: "check" }] })
       CALLBACK -> authenticated
-        (call-service oauth token { code: "@payload.code" })
+        (call-service oauth token { code: "@payload.code" } { emit: { success: "ServiceOauthOauthCompleted", failure: "ServiceOauthOauthFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", action: "REFRESH", variant: "ghost", icon: "refresh-cw" }, { type: "button", label: "Logout", action: "LOGOUT", variant: "ghost", icon: "log-out" }] }] })
       FAILED -> error
         (set @entity.error @payload.error)
@@ -47,7 +49,7 @@ orbital ServiceOauthOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", action: "REFRESH", variant: "ghost", icon: "refresh-cw" }, { type: "button", label: "Logout", action: "LOGOUT", variant: "ghost", icon: "log-out" }] }] })
       REFRESH -> refreshing
         (render-ui main { type: "loading-state", title: "Refreshing token...", message: "Obtaining a new access token." })
-        (call-service oauth refresh { refreshToken: "@entity.refreshToken" })
+        (call-service oauth refresh { refreshToken: "@entity.refreshToken" } { emit: { success: "ServiceOauthOauthCompleted", failure: "ServiceOauthOauthFailed" } })
       LOGOUT -> unauthenticated
         (set @entity.authStatus unauthenticated)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", action: "LOGIN", variant: "primary", icon: "log-in" }] })
@@ -71,8 +73,10 @@ orbital ServiceOauthOrbital {
       TOKEN_REFRESHED { accessToken : string! }
       FAILED { error : string! }
           ServiceOauthLoadFailed { message : string }
+    
+      ServiceOauthOauthFailed { error : string, code : string }
     }
-    emits: [ServiceOauthLoaded, ServiceOauthLoadFailed]
+    emits: [ServiceOauthLoaded, ServiceOauthLoadFailed, ServiceOauthOauthCompleted, ServiceOauthOauthFailed]
   }
   page "/serviceoauths" as ServiceOauthPage -> ServiceOauthOauth
 }

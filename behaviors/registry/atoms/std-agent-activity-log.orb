@@ -354,6 +354,92 @@
                     "AgentActivityLog",
                     {
                       "emit": {
+                        "success": "AgentActivityLogLoaded",
+                        "failure": "AgentActivityLogLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "activity",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Activity Log",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "action": "CLEAR",
+                              "type": "button",
+                              "icon": "trash",
+                              "label": "Clear",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [],
+                          "entity": "AgentActivityLog",
+                          "type": "timeline"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "logging",
+                "to": "logging",
+                "event": "LOG_ENTRY",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentActivityLog",
+                    {
+                      "timestamp": "@now",
+                      "action": "@payload.action",
+                      "status": "@payload.status",
+                      "detail": "@payload.detail"
+                    },
+                    {
+                      "emit": {
+                        "failure": "AgentActivityLogSaveFailed",
+                        "success": "AgentActivityLogSaved"
+                      }
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentActivityLog",
+                    {
+                      "emit": {
                         "failure": "AgentActivityLogLoadFailed",
                         "success": "AgentActivityLogLoaded"
                       }
@@ -364,41 +450,41 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "justify": "between",
+                          "align": "center",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "activity",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Activity Log",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Activity Log"
                                 }
-                              ],
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             },
                             {
+                              "label": "Clear",
                               "icon": "trash",
                               "action": "CLEAR",
-                              "type": "button",
                               "variant": "ghost",
-                              "label": "Clear"
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -416,22 +502,16 @@
               {
                 "from": "logging",
                 "to": "logging",
-                "event": "LOG_ENTRY",
+                "event": "CLEAR",
                 "effects": [
                   [
                     "persist",
-                    "create",
+                    "delete",
                     "AgentActivityLog",
                     {
-                      "action": "@payload.action",
-                      "detail": "@payload.detail",
-                      "status": "@payload.status",
-                      "timestamp": "@now"
-                    },
-                    {
                       "emit": {
-                        "success": "AgentActivityLogSaved",
-                        "failure": "AgentActivityLogSaveFailed"
+                        "failure": "AgentActivityLogDeleteFailed",
+                        "success": "AgentActivityLogDeleted"
                       }
                     }
                   ],
@@ -453,10 +533,7 @@
                       "children": [
                         {
                           "type": "stack",
-                          "justify": "between",
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
@@ -464,8 +541,8 @@
                               "gap": "sm",
                               "children": [
                                 {
-                                  "name": "activity",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "activity"
                                 },
                                 {
                                   "type": "typography",
@@ -476,105 +553,28 @@
                               "direction": "horizontal"
                             },
                             {
-                              "label": "Clear",
-                              "action": "CLEAR",
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "trash"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "timeline",
-                          "fields": [],
-                          "entity": "AgentActivityLog"
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "AgentActivityLog",
-                    {
-                      "emit": {
-                        "success": "AgentActivityLogDeleted",
-                        "failure": "AgentActivityLogDeleteFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "AgentActivityLog",
-                    {
-                      "emit": {
-                        "success": "AgentActivityLogLoaded",
-                        "failure": "AgentActivityLogLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "activity"
-                                },
-                                {
-                                  "content": "Activity Log",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack"
-                            },
-                            {
                               "icon": "trash",
                               "label": "Clear",
-                              "type": "button",
                               "action": "CLEAR",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "type": "button"
                             }
                           ],
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
-                          "type": "stack"
+                          "justify": "between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "timeline",
                           "fields": [],
-                          "entity": "AgentActivityLog"
+                          "entity": "AgentActivityLog",
+                          "type": "timeline"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]

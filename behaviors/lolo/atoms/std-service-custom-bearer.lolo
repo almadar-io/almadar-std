@@ -19,6 +19,8 @@ orbital ServiceCustomBearerOrbital {
 
   type ServiceCustomBearerLoaded     = Event ServiceCustomBearer                  "Fired when ServiceCustomBearer finishes loading"
   type ServiceCustomBearerLoadFailed = Event { message : string } "Fired when ServiceCustomBearer fails to load"
+  type ServiceCustomBearerCustomBearerApiCompleted = Event { result : object }
+  type ServiceCustomBearerCustomBearerApiFailed = Event { error : string, code : string }
   trait ServiceCustomBearerCustomBearer -> ServiceCustomBearer [interaction, instance] {
     initial: idle
     state idle {
@@ -27,7 +29,7 @@ orbital ServiceCustomBearerOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield" }, { type: "typography", content: "Bearer API Tester", variant: "h2" }, { type: "input", placeholder: "/users" }, { type: "select", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", placeholder: "JSON request body" }, { type: "button", label: "Send Request", action: "CALL_API", variant: "primary", icon: "send" }] })
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustombearer endpoint..." })
-        (call-service custom-bearer-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+        (call-service custom-bearer-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" } { emit: { success: "ServiceCustomBearerCustomBearerApiCompleted", failure: "ServiceCustomBearerCustomBearerApiFailed" } })
     }
     state calling {
       API_RESPONSE -> complete
@@ -52,8 +54,10 @@ orbital ServiceCustomBearerOrbital {
       API_RESPONSE { data : string!, statusCode : number! }
       FAILED { error : string! }
           ServiceCustomBearerLoadFailed { message : string }
+    
+      ServiceCustomBearerCustomBearerApiFailed { error : string, code : string }
     }
-    emits: [ServiceCustomBearerLoaded, ServiceCustomBearerLoadFailed]
+    emits: [ServiceCustomBearerLoaded, ServiceCustomBearerLoadFailed, ServiceCustomBearerCustomBearerApiCompleted, ServiceCustomBearerCustomBearerApiFailed]
   }
   page "/servicecustombearers" as ServiceCustomBearerPage -> ServiceCustomBearerCustomBearer
 }

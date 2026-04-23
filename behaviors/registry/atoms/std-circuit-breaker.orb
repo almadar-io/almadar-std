@@ -203,8 +203,8 @@
                     "ServiceNode",
                     {
                       "emit": {
-                        "failure": "ServiceNodeLoadFailed",
-                        "success": "ServiceNodeLoaded"
+                        "success": "ServiceNodeLoaded",
+                        "failure": "ServiceNodeLoadFailed"
                       }
                     }
                   ],
@@ -212,36 +212,37 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "direction": "horizontal",
+                          "justify": "between",
                           "gap": "md",
                           "type": "stack",
-                          "align": "center",
-                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "shield"
+                                  "name": "shield",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "ServiceNode",
-                                  "variant": "h2"
+                                  "content": "ServiceNode"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
-                              "type": "status-dot",
-                              "status": "online",
+                              "pulse": false,
                               "label": "Circuit Closed",
-                              "pulse": false
+                              "type": "status-dot",
+                              "status": "online"
                             }
                           ]
                         },
@@ -249,12 +250,11 @@
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
+                          "message": "Service is healthy. All requests are being processed.",
                           "variant": "success",
-                          "message": "Service is healthy. All requests are being processed."
+                          "type": "alert"
                         },
                         {
-                          "cols": 2.0,
                           "children": [
                             {
                               "value": [
@@ -265,12 +265,10 @@
                                 ],
                                 "failureCount"
                               ],
-                              "type": "stat-display",
-                              "label": "Failures"
+                              "label": "Failures",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Successes",
-                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -278,10 +276,121 @@
                                   "@entity"
                                 ],
                                 "successCount"
-                              ]
+                              ],
+                              "label": "Successes",
+                              "type": "stat-display"
                             }
                           ],
-                          "type": "simple-grid"
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "min": 0.0,
+                          "type": "meter",
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "failureCount"
+                          ],
+                          "max": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "threshold"
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "FAILURE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "alert-triangle"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "ServiceNode",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "pulse": true,
+                              "label": "Circuit Open",
+                              "status": "critical",
+                              "type": "status-dot"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "Circuit is open. Requests are being rejected to prevent cascading failures.",
+                          "variant": "error",
+                          "type": "alert"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "Failures",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "failureCount"
+                              ],
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Successes",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "successCount"
+                              ],
+                              "type": "stat-display"
+                            }
+                          ]
                         },
                         {
                           "value": [
@@ -300,8 +409,210 @@
                             ],
                             "threshold"
                           ],
+                          "type": "meter",
+                          "min": 0.0
+                        },
+                        {
+                          "action": "RESET",
+                          "icon": "rotate-ccw",
+                          "variant": "ghost",
+                          "label": "Reset",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "SUCCESS",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "shield"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "ServiceNode",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "md"
+                            },
+                            {
+                              "pulse": false,
+                              "status": "online",
+                              "label": "Circuit Closed",
+                              "type": "status-dot"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "Service is healthy. All requests are being processed.",
+                          "variant": "success",
+                          "type": "alert"
+                        },
+                        {
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "failureCount"
+                              ]
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "successCount"
+                              ],
+                              "label": "Successes"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
                           "min": 0.0,
-                          "type": "meter"
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "failureCount"
+                          ],
+                          "type": "meter",
+                          "max": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "threshold"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "halfOpen",
+                "event": "TIMEOUT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "activity",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "ServiceNode",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "status": "warning",
+                              "pulse": true,
+                              "label": "Circuit Half-Open",
+                              "type": "status-dot"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "Testing recovery. Limited requests are being allowed through.",
+                          "type": "alert",
+                          "variant": "warning"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "Failures",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "failureCount"
+                              ],
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "successCount"
+                              ],
+                              "label": "Successes"
+                            }
+                          ]
                         }
                       ],
                       "gap": "lg",
@@ -312,63 +623,62 @@
                 ]
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "FAILURE",
+                "from": "open",
+                "to": "closed",
+                "event": "RESET",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "md",
+                              "align": "center",
                               "direction": "horizontal",
                               "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "alert-triangle",
+                                  "name": "shield",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "ServiceNode",
+                                  "variant": "h2",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             },
                             {
+                              "status": "online",
+                              "pulse": false,
                               "type": "status-dot",
-                              "status": "critical",
-                              "label": "Circuit Open",
-                              "pulse": true
+                              "label": "Circuit Closed"
                             }
                           ],
-                          "align": "center"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
+                          "message": "Service is healthy. All requests are being processed.",
+                          "variant": "success",
+                          "type": "alert"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Failures",
                               "type": "stat-display",
+                              "label": "Failures",
                               "value": [
                                 "object/get",
                                 [
@@ -391,10 +701,11 @@
                               "type": "stat-display"
                             }
                           ],
-                          "cols": 2.0
+                          "cols": 2.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "meter",
+                          "min": 0.0,
                           "value": [
                             "object/get",
                             [
@@ -403,7 +714,6 @@
                             ],
                             "failureCount"
                           ],
-                          "min": 0.0,
                           "max": [
                             "object/get",
                             [
@@ -411,23 +721,17 @@
                               "@entity"
                             ],
                             "threshold"
-                          ]
-                        },
-                        {
-                          "icon": "rotate-ccw",
-                          "type": "button",
-                          "variant": "ghost",
-                          "label": "Reset",
-                          "action": "RESET"
+                          ],
+                          "type": "meter"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
-                "from": "closed",
+                "from": "halfOpen",
                 "to": "closed",
                 "event": "SUCCESS",
                 "effects": [
@@ -435,16 +739,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
                           "justify": "between",
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "children": [
@@ -453,23 +754,25 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "ServiceNode",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md",
                               "align": "center"
                             },
                             {
-                              "status": "online",
+                              "label": "Circuit Closed",
                               "pulse": false,
                               "type": "status-dot",
-                              "label": "Circuit Closed"
+                              "status": "online"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -494,203 +797,6 @@
                               "label": "Failures"
                             },
                             {
-                              "label": "Successes",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "successCount"
-                              ],
-                              "type": "stat-display"
-                            }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
-                        },
-                        {
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "failureCount"
-                          ],
-                          "max": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "threshold"
-                          ],
-                          "min": 0.0,
-                          "type": "meter"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "halfOpen",
-                "event": "TIMEOUT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "activity",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "ServiceNode",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "label": "Circuit Half-Open",
-                              "status": "warning",
-                              "pulse": true,
-                              "type": "status-dot"
-                            }
-                          ],
-                          "gap": "md",
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "warning",
-                          "message": "Testing recovery. Limited requests are being allowed through.",
-                          "type": "alert"
-                        },
-                        {
-                          "cols": 2.0,
-                          "children": [
-                            {
-                              "label": "Failures",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "failureCount"
-                              ],
-                              "type": "stat-display"
-                            },
-                            {
-                              "type": "stat-display",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "successCount"
-                              ],
-                              "label": "Successes"
-                            }
-                          ],
-                          "type": "simple-grid"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "align": "center",
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "name": "shield",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "ServiceNode"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "align": "center"
-                            },
-                            {
-                              "type": "status-dot",
-                              "status": "online",
-                              "label": "Circuit Closed",
-                              "pulse": false
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "success",
-                          "message": "Service is healthy. All requests are being processed.",
-                          "type": "alert"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "children": [
-                            {
-                              "label": "Failures",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "failureCount"
-                              ],
-                              "type": "stat-display"
-                            },
-                            {
                               "type": "stat-display",
                               "label": "Successes",
                               "value": [
@@ -703,125 +809,11 @@
                               ]
                             }
                           ],
+                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
-                          "type": "meter",
-                          "max": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "threshold"
-                          ],
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "failureCount"
-                          ],
-                          "min": 0.0
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "SUCCESS",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "shield",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "ServiceNode",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "status-dot",
-                              "label": "Circuit Closed",
-                              "pulse": false,
-                              "status": "online"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "justify": "between",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "success",
-                          "type": "alert",
-                          "message": "Service is healthy. All requests are being processed."
-                        },
-                        {
-                          "cols": 2.0,
-                          "type": "simple-grid",
-                          "children": [
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "failureCount"
-                              ],
-                              "label": "Failures",
-                              "type": "stat-display"
-                            },
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "successCount"
-                              ],
-                              "type": "stat-display",
-                              "label": "Successes"
-                            }
-                          ]
-                        },
-                        {
                           "min": 0.0,
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "failureCount"
-                          ],
-                          "type": "meter",
                           "max": [
                             "object/get",
                             [
@@ -829,10 +821,18 @@
                               "@entity"
                             ],
                             "threshold"
+                          ],
+                          "type": "meter",
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "failureCount"
                           ]
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -847,38 +847,40 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "justify": "between",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle"
+                                  "name": "alert-triangle",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "ServiceNode"
+                                  "content": "ServiceNode",
+                                  "type": "typography"
                                 }
                               ],
-                              "align": "center",
-                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md",
-                              "direction": "horizontal"
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
-                              "status": "critical",
                               "type": "status-dot",
+                              "pulse": true,
                               "label": "Circuit Open",
-                              "pulse": true
+                              "status": "critical"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -889,126 +891,10 @@
                           "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
                         },
                         {
-                          "children": [
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "failureCount"
-                              ],
-                              "type": "stat-display",
-                              "label": "Failures"
-                            },
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "successCount"
-                              ],
-                              "label": "Successes",
-                              "type": "stat-display"
-                            }
-                          ],
                           "type": "simple-grid",
-                          "cols": 2.0
-                        },
-                        {
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "failureCount"
-                          ],
-                          "type": "meter",
-                          "max": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "threshold"
-                          ],
-                          "min": 0.0
-                        },
-                        {
-                          "action": "RESET",
-                          "variant": "ghost",
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "label": "Reset"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "name": "shield",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "ServiceNode",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "status-dot",
-                              "pulse": false,
-                              "status": "online",
-                              "label": "Circuit Closed"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "message": "Service is healthy. All requests are being processed.",
-                          "variant": "success",
-                          "type": "alert"
-                        },
-                        {
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Failures",
                               "value": [
                                 "object/get",
@@ -1017,10 +903,10 @@
                                   "@entity"
                                 ],
                                 "failureCount"
-                              ]
+                              ],
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Successes",
                               "value": [
                                 "object/get",
                                 [
@@ -1029,10 +915,10 @@
                                 ],
                                 "successCount"
                               ],
+                              "label": "Successes",
                               "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "max": [
@@ -1053,10 +939,124 @@
                             ],
                             "failureCount"
                           ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Reset",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "halfOpen",
+                "to": "closed",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "shield",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "ServiceNode",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "label": "Circuit Closed",
+                              "type": "status-dot",
+                              "status": "online",
+                              "pulse": false
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "success",
+                          "type": "alert",
+                          "message": "Service is healthy. All requests are being processed."
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "Failures",
+                              "type": "stat-display",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "failureCount"
+                              ]
+                            },
+                            {
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "successCount"
+                              ],
+                              "label": "Successes",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "min": 0.0,
+                          "type": "meter",
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "failureCount"
+                          ],
+                          "max": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "threshold"
+                          ]
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
