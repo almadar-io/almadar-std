@@ -70,6 +70,10 @@
                     "name": "id",
                     "type": "string",
                     "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
                   }
                 ]
               },
@@ -109,15 +113,18 @@
                     "@payload.id"
                   ],
                   [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "size": "md",
@@ -125,48 +132,61 @@
                               "name": "@config.icon"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "@config.alertMessage",
+                          "variant": "error",
                           "type": "alert",
-                          "variant": "error"
+                          "message": "@config.alertMessage"
+                        },
+                        {
+                          "variant": "h4",
+                          "type": "typography",
+                          "content": "@entity.name"
+                        },
+                        {
+                          "content": "@entity.pendingId",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "label": "Cancel",
+                              "type": "button",
                               "action": "CANCEL",
-                              "type": "button"
+                              "variant": "ghost",
+                              "label": "Cancel"
                             },
                             {
-                              "action": "CONFIRM",
+                              "type": "button",
+                              "label": "@config.confirmLabel",
                               "icon": "check",
+                              "variant": "danger",
+                              "action": "CONFIRM",
                               "actionPayload": {
                                 "id": "@payload.id"
-                              },
-                              "type": "button",
-                              "variant": "danger",
-                              "label": "@config.confirmLabel"
+                              }
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "end"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
