@@ -226,36 +226,35 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "move",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "move"
                                 },
                                 {
                                   "content": "MovableEntitys Movement",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "type": "status-dot",
                               "status": "offline",
-                              "label": "Idle"
+                              "label": "Idle",
+                              "type": "status-dot"
                             }
                           ]
                         },
@@ -266,7 +265,6 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "label": "X",
                               "value": [
                                 "object/get",
                                 [
@@ -275,9 +273,11 @@
                                 ],
                                 "x"
                               ],
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "X"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Y",
                               "value": [
                                 "object/get",
@@ -286,22 +286,23 @@
                                   "@entity"
                                 ],
                                 "y"
-                              ],
-                              "type": "stat-display"
+                              ]
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
-                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "caption",
+                              "type": "typography",
                               "content": "Name",
-                              "type": "typography"
+                              "variant": "caption"
                             },
                             {
                               "variant": "body",
+                              "type": "typography",
                               "content": [
                                 "object/get",
                                 [
@@ -309,21 +310,19 @@
                                   "@entity"
                                 ],
                                 "name"
-                              ],
-                              "type": "typography"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
+                              "type": "typography",
                               "variant": "caption",
-                              "content": "Description",
-                              "type": "typography"
+                              "content": "Description"
                             },
                             {
                               "content": [
@@ -341,11 +340,190 @@
                           "gap": "md"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Status",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "status"
+                              ],
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "CreatedAt",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "createdAt"
+                              ],
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "action": "MOVE",
+                              "variant": "primary",
+                              "label": "Move",
+                              "type": "button",
+                              "icon": "navigation"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "moving",
+                "event": "MOVE",
+                "effects": [
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "failure": "MovableEntityLoadFailed",
+                        "success": "MovableEntityLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "move"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "pulse": true,
+                              "status": "online",
+                              "type": "status-dot",
+                              "label": "Moving"
+                            }
+                          ],
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "X",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "x"
+                              ]
+                            },
+                            {
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "y"
+                              ],
+                              "type": "stat-display",
+                              "label": "Y"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Name"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "name"
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
                           "children": [
                             {
                               "type": "typography",
                               "variant": "caption",
-                              "content": "Status"
+                              "content": "Description"
                             },
                             {
                               "type": "typography",
@@ -356,27 +534,51 @@
                                   "array/first",
                                   "@entity"
                                 ],
-                                "status"
+                                "description"
                               ]
                             }
                           ],
-                          "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "content": "Status",
                               "type": "typography",
-                              "content": "CreatedAt",
                               "variant": "caption"
                             },
                             {
                               "type": "typography",
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "status"
+                              ],
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "CreatedAt"
+                            },
+                            {
                               "variant": "body",
+                              "type": "typography",
                               "content": [
                                 "object/get",
                                 [
@@ -392,29 +594,32 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "end",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Move",
-                              "action": "MOVE",
-                              "variant": "primary",
-                              "icon": "navigation",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "STOP",
+                              "icon": "square",
+                              "label": "Stop"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "justify": "end",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
-                "from": "idle",
-                "to": "moving",
-                "event": "MOVE",
+                "from": "moving",
+                "to": "idle",
+                "event": "STOP",
                 "effects": [
                   [
                     "fetch",
@@ -431,211 +636,6 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "move"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "MovableEntitys Movement"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "label": "Moving",
-                              "type": "status-dot",
-                              "status": "online",
-                              "pulse": true
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "x"
-                              ],
-                              "type": "stat-display",
-                              "label": "X"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Y",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "y"
-                              ]
-                            }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Name",
-                              "variant": "caption"
-                            },
-                            {
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "name"
-                              ],
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Description"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "description"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Status",
-                              "type": "typography"
-                            },
-                            {
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "status"
-                              ],
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "content": "CreatedAt",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "createdAt"
-                              ],
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Stop",
-                              "action": "STOP",
-                              "variant": "danger",
-                              "icon": "square"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "moving",
-                "to": "idle",
-                "event": "STOP",
-                "effects": [
-                  [
-                    "fetch",
-                    "MovableEntity",
-                    {
-                      "emit": {
-                        "failure": "MovableEntityLoadFailed",
-                        "success": "MovableEntityLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical",
                       "children": [
@@ -648,23 +648,23 @@
                             {
                               "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "move"
+                                  "name": "move",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "MovableEntitys Movement",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "status": "offline",
+                              "type": "status-dot",
                               "label": "Idle",
-                              "type": "status-dot"
+                              "status": "offline"
                             }
                           ]
                         },
@@ -672,8 +672,11 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
+                              "label": "X",
                               "value": [
                                 "object/get",
                                 [
@@ -682,12 +685,11 @@
                                 ],
                                 "x"
                               ],
-                              "type": "stat-display",
-                              "label": "X"
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Y",
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -697,21 +699,19 @@
                                 "y"
                               ]
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Name"
+                              "content": "Name",
+                              "type": "typography"
                             },
                             {
-                              "variant": "body",
                               "content": [
                                 "object/get",
                                 [
@@ -720,19 +720,23 @@
                                 ],
                                 "name"
                               ],
+                              "variant": "body",
                               "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
+                              "type": "typography",
                               "variant": "caption",
-                              "content": "Description",
-                              "type": "typography"
+                              "content": "Description"
                             },
                             {
+                              "type": "typography",
+                              "variant": "body",
                               "content": [
                                 "object/get",
                                 [
@@ -740,22 +744,44 @@
                                   "@entity"
                                 ],
                                 "description"
-                              ],
-                              "type": "typography",
-                              "variant": "body"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Status"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "status"
+                              ]
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "CreatedAt",
+                              "variant": "caption"
                             },
                             {
                               "variant": "body",
@@ -765,55 +791,29 @@
                                   "array/first",
                                   "@entity"
                                 ],
-                                "status"
-                              ],
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "CreatedAt",
-                              "type": "typography"
-                            },
-                            {
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
                                 "createdAt"
                               ],
-                              "type": "typography",
-                              "variant": "body"
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "justify": "end",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "navigation",
-                              "type": "button",
                               "action": "MOVE",
+                              "label": "Move",
+                              "type": "button",
                               "variant": "primary",
-                              "label": "Move"
+                              "icon": "navigation"
                             }
                           ],
-                          "gap": "sm"
+                          "justify": "end",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ]
                     }
@@ -829,56 +829,56 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
+                              "type": "typography",
                               "content": "Collision Detected",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "body",
                           "content": "A collision has been detected. Resolve to continue.",
+                          "variant": "body",
                           "type": "typography"
                         },
                         {
+                          "justify": "end",
+                          "gap": "sm",
                           "children": [
                             {
-                              "action": "CANCEL",
                               "label": "Cancel",
+                              "variant": "ghost",
                               "type": "button",
-                              "variant": "ghost"
+                              "action": "CANCEL"
                             },
                             {
-                              "type": "button",
-                              "action": "RESOLVE",
                               "icon": "check",
+                              "action": "RESOLVE",
                               "variant": "primary",
+                              "type": "button",
                               "label": "Resolve"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "justify": "end"
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -898,8 +898,8 @@
                     "MovableEntity",
                     {
                       "emit": {
-                        "failure": "MovableEntityLoadFailed",
-                        "success": "MovableEntityLoaded"
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
                       }
                     }
                   ],
@@ -907,45 +907,47 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "move"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "MovableEntitys Movement"
-                                }
-                              ],
+                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "md",
-                              "direction": "horizontal"
+                              "children": [
+                                {
+                                  "name": "move",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ]
                             },
                             {
-                              "label": "Idle",
                               "type": "status-dot",
-                              "status": "offline"
+                              "status": "offline",
+                              "label": "Idle"
                             }
                           ],
-                          "justify": "between",
-                          "gap": "md",
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
+                              "type": "stat-display",
+                              "label": "X",
                               "value": [
                                 "object/get",
                                 [
@@ -953,11 +955,10 @@
                                   "@entity"
                                 ],
                                 "x"
-                              ],
-                              "type": "stat-display",
-                              "label": "X"
+                              ]
                             },
                             {
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -966,20 +967,19 @@
                                 ],
                                 "y"
                               ],
-                              "type": "stat-display",
                               "label": "Y"
                             }
                           ],
-                          "cols": 2.0,
                           "type": "simple-grid"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
+                              "content": "Name",
                               "variant": "caption",
-                              "type": "typography",
-                              "content": "Name"
+                              "type": "typography"
                             },
                             {
                               "variant": "body",
@@ -994,11 +994,9 @@
                               "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
@@ -1007,8 +1005,6 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
-                              "type": "typography",
                               "content": [
                                 "object/get",
                                 [
@@ -1016,23 +1012,23 @@
                                   "@entity"
                                 ],
                                 "description"
-                              ]
+                              ],
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "Status",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Status"
                             },
                             {
-                              "variant": "body",
                               "content": [
                                 "object/get",
                                 [
@@ -1041,22 +1037,21 @@
                                 ],
                                 "status"
                               ],
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "CreatedAt"
+                              "content": "CreatedAt",
+                              "type": "typography"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
                               "content": [
                                 "object/get",
@@ -1065,29 +1060,34 @@
                                   "@entity"
                                 ],
                                 "createdAt"
-                              ]
+                              ],
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "icon": "navigation",
-                              "action": "MOVE",
                               "label": "Move",
-                              "variant": "primary"
+                              "action": "MOVE",
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "navigation"
                             }
-                          ],
-                          "justify": "end",
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1118,43 +1118,44 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "justify": "between",
                           "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "move"
                                 },
                                 {
-                                  "content": "MovableEntitys Movement",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
-                              "type": "status-dot",
                               "status": "offline",
+                              "type": "status-dot",
                               "label": "Idle"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -1163,10 +1164,10 @@
                                 ],
                                 "x"
                               ],
-                              "label": "X"
+                              "label": "X",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -1175,19 +1176,20 @@
                                 ],
                                 "y"
                               ],
+                              "type": "stat-display",
                               "label": "Y"
                             }
                           ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          "cols": 2.0
                         },
                         {
-                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
+                              "content": "Name",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Name"
+                              "variant": "caption"
                             },
                             {
                               "type": "typography",
@@ -1202,19 +1204,18 @@
                               ]
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "variant": "caption",
                               "type": "typography",
-                              "content": "Description"
+                              "content": "Description",
+                              "variant": "caption"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
                               "content": [
                                 "object/get",
@@ -1223,22 +1224,21 @@
                                   "@entity"
                                 ],
                                 "description"
-                              ]
+                              ],
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "gap": "md",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
+                              "content": "Status",
+                              "variant": "caption"
                             },
                             {
-                              "type": "typography",
                               "content": [
                                 "object/get",
                                 [
@@ -1247,22 +1247,21 @@
                                 ],
                                 "status"
                               ],
+                              "type": "typography",
                               "variant": "body"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "caption",
                               "type": "typography",
-                              "content": "CreatedAt",
-                              "variant": "caption"
+                              "content": "CreatedAt"
                             },
                             {
-                              "type": "typography",
                               "content": [
                                 "object/get",
                                 [
@@ -1271,10 +1270,12 @@
                                 ],
                                 "createdAt"
                               ],
-                              "variant": "body"
+                              "variant": "body",
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
@@ -1287,16 +1288,15 @@
                           "justify": "end",
                           "children": [
                             {
-                              "variant": "primary",
                               "type": "button",
+                              "variant": "primary",
+                              "label": "Move",
                               "icon": "navigation",
-                              "action": "MOVE",
-                              "label": "Move"
+                              "action": "MOVE"
                             }
                           ]
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1316,8 +1316,8 @@
                     "MovableEntity",
                     {
                       "emit": {
-                        "success": "MovableEntityLoaded",
-                        "failure": "MovableEntityLoadFailed"
+                        "failure": "MovableEntityLoadFailed",
+                        "success": "MovableEntityLoaded"
                       }
                     }
                   ],
@@ -1325,47 +1325,43 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "gap": "md",
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "move"
+                                  "name": "move",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "content": "MovableEntitys Movement",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "type": "status-dot",
-                              "status": "offline",
-                              "label": "Idle"
+                              "label": "Idle",
+                              "status": "offline"
                             }
                           ],
                           "gap": "md",
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "X",
                               "value": [
                                 "object/get",
@@ -1374,10 +1370,10 @@
                                   "@entity"
                                 ],
                                 "x"
-                              ]
+                              ],
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Y",
                               "value": [
                                 "object/get",
@@ -1386,22 +1382,22 @@
                                   "@entity"
                                 ],
                                 "y"
-                              ]
+                              ],
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
-                              "content": "Name",
                               "type": "typography",
+                              "content": "Name",
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
                               "content": [
                                 "object/get",
                                 [
@@ -1410,21 +1406,21 @@
                                 ],
                                 "name"
                               ],
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
-                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Description",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "content": "Description"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
                               "content": [
                                 "object/get",
@@ -1433,13 +1429,14 @@
                                   "@entity"
                                 ],
                                 "description"
-                              ]
+                              ],
+                              "type": "typography"
                             }
                           ],
+                          "gap": "md",
                           "type": "stack"
                         },
                         {
-                          "gap": "md",
                           "children": [
                             {
                               "content": "Status",
@@ -1455,25 +1452,25 @@
                                 ],
                                 "status"
                               ],
-                              "variant": "body",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
+                          "direction": "horizontal",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "variant": "caption",
                               "content": "CreatedAt",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "type": "typography",
+                              "variant": "body",
                               "content": [
                                 "object/get",
                                 [
@@ -1482,30 +1479,33 @@
                                 ],
                                 "createdAt"
                               ],
-                              "variant": "body"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
-                          "justify": "end",
                           "children": [
                             {
                               "variant": "primary",
+                              "label": "Move",
                               "type": "button",
                               "action": "MOVE",
-                              "label": "Move",
                               "icon": "navigation"
                             }
                           ],
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "justify": "end"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]

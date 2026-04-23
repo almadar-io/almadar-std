@@ -95,15 +95,17 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "md",
+                              "align": "center",
+                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
@@ -116,23 +118,153 @@
                                   "type": "typography"
                                 }
                               ],
-                              "align": "center",
-                              "type": "stack"
+                              "gap": "md"
                             },
                             {
+                              "type": "status-dot",
                               "pulse": false,
                               "status": "online",
-                              "label": "Open",
-                              "type": "status-dot"
+                              "label": "Open"
                             }
                           ],
-                          "justify": "between",
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "align": "center",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "count"
+                              ],
+                              "label": "Requests",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Window",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "window"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "count"
+                          ],
+                          "type": "meter",
+                          "max": 100.0,
+                          "min": 0.0
+                        },
+                        {
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "count"
+                          ],
+                          "showPercentage": true,
+                          "max": 100.0,
+                          "type": "progress-bar"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "action": "REQUEST",
+                              "label": "Request",
+                              "icon": "send",
+                              "type": "button"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Reset",
+                              "action": "RESET",
+                              "type": "button",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "open",
+                "event": "REQUEST",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "shield"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "RateBucket Rate Limiter"
+                                }
+                              ],
+                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "label": "Open",
+                              "type": "status-dot",
+                              "status": "online",
+                              "pulse": false
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
@@ -148,6 +280,8 @@
                               "label": "Requests"
                             },
                             {
+                              "label": "Window",
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -155,147 +289,12 @@
                                   "@entity"
                                 ],
                                 "window"
-                              ],
-                              "type": "stat-display",
-                              "label": "Window"
-                            }
-                          ],
-                          "type": "simple-grid"
-                        },
-                        {
-                          "min": 0.0,
-                          "max": 100.0,
-                          "type": "meter",
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "count"
-                          ]
-                        },
-                        {
-                          "type": "progress-bar",
-                          "max": 100.0,
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "count"
-                          ],
-                          "showPercentage": true
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "variant": "primary",
-                              "icon": "send",
-                              "action": "REQUEST",
-                              "label": "Request"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Reset",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "action": "RESET"
-                            }
-                          ],
-                          "type": "stack",
-                          "justify": "center"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "open",
-                "event": "REQUEST",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "align": "center",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "shield"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "RateBucket Rate Limiter"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "status": "online",
-                              "type": "status-dot",
-                              "label": "Open",
-                              "pulse": false
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "cols": 2.0,
-                          "type": "simple-grid",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Requests",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "count"
                               ]
-                            },
-                            {
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "window"
-                              ],
-                              "type": "stat-display",
-                              "label": "Window"
                             }
                           ]
                         },
                         {
+                          "max": 100.0,
                           "type": "meter",
                           "value": [
                             "object/get",
@@ -305,10 +304,10 @@
                             ],
                             "count"
                           ],
-                          "max": 100.0,
                           "min": 0.0
                         },
                         {
+                          "showPercentage": true,
                           "value": [
                             "object/get",
                             [
@@ -318,32 +317,33 @@
                             "count"
                           ],
                           "type": "progress-bar",
-                          "max": 100.0,
-                          "showPercentage": true
+                          "max": 100.0
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
                           "justify": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
+                              "label": "Request",
                               "variant": "primary",
-                              "icon": "send",
                               "action": "REQUEST",
-                              "label": "Request"
+                              "icon": "send"
                             },
                             {
-                              "variant": "ghost",
                               "type": "button",
+                              "action": "RESET",
+                              "variant": "ghost",
                               "label": "Reset",
-                              "icon": "rotate-ccw",
-                              "action": "RESET"
+                              "icon": "rotate-ccw"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -362,17 +362,17 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
-                          "justify": "between",
+                          "gap": "md",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -380,33 +380,33 @@
                                 },
                                 {
                                   "content": "RateBucket Rate Limiter",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "md"
+                              ]
                             },
                             {
+                              "pulse": true,
                               "type": "status-dot",
-                              "label": "Throttled",
                               "status": "critical",
-                              "pulse": true
+                              "label": "Throttled"
                             }
                           ],
-                          "gap": "md"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "variant": "error",
-                          "message": "Rate limit exceeded. Requests are being throttled."
+                          "message": "Rate limit exceeded. Requests are being throttled.",
+                          "variant": "error"
                         },
                         {
+                          "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
@@ -421,8 +421,6 @@
                               ]
                             },
                             {
-                              "label": "Window",
-                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -430,15 +428,13 @@
                                   "@entity"
                                 ],
                                 "window"
-                              ]
+                              ],
+                              "type": "stat-display",
+                              "label": "Window"
                             }
-                          ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
-                          "min": 0.0,
-                          "type": "meter",
                           "value": [
                             "object/get",
                             [
@@ -447,24 +443,28 @@
                             ],
                             "count"
                           ],
-                          "max": 100.0
+                          "type": "meter",
+                          "max": 100.0,
+                          "min": 0.0
                         },
                         {
-                          "justify": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Reset",
-                              "variant": "primary",
                               "icon": "rotate-ccw",
-                              "action": "RESET"
+                              "variant": "primary",
+                              "action": "RESET",
+                              "label": "Reset"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -489,49 +489,47 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "align": "center",
                               "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
-                                  "name": "shield",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "shield"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "RateBucket Rate Limiter",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "status": "online",
                               "pulse": false,
+                              "status": "online",
                               "label": "Open",
                               "type": "status-dot"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
                               "label": "Requests",
-                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -539,11 +537,11 @@
                                   "@entity"
                                 ],
                                 "count"
-                              ]
+                              ],
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Window",
                               "value": [
                                 "object/get",
                                 [
@@ -551,10 +549,10 @@
                                   "@entity"
                                 ],
                                 "window"
-                              ]
+                              ],
+                              "label": "Window"
                             }
                           ],
-                          "cols": 2.0,
                           "type": "simple-grid"
                         },
                         {
@@ -567,12 +565,11 @@
                             "count"
                           ],
                           "min": 0.0,
-                          "type": "meter",
-                          "max": 100.0
+                          "max": 100.0,
+                          "type": "meter"
                         },
                         {
-                          "showPercentage": true,
-                          "max": 100.0,
+                          "type": "progress-bar",
                           "value": [
                             "object/get",
                             [
@@ -581,31 +578,34 @@
                             ],
                             "count"
                           ],
-                          "type": "progress-bar"
+                          "max": 100.0,
+                          "showPercentage": true
                         },
                         {
-                          "children": [
-                            {
-                              "variant": "primary",
-                              "icon": "send",
-                              "type": "button",
-                              "label": "Request",
-                              "action": "REQUEST"
-                            },
-                            {
-                              "action": "RESET",
-                              "type": "button",
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
-                              "variant": "ghost"
-                            }
-                          ],
                           "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
-                          "justify": "center"
+                          "justify": "center",
+                          "children": [
+                            {
+                              "action": "REQUEST",
+                              "icon": "send",
+                              "label": "Request",
+                              "variant": "primary",
+                              "type": "button"
+                            },
+                            {
+                              "action": "RESET",
+                              "icon": "rotate-ccw",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Reset"
+                            }
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -629,38 +629,35 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "justify": "between",
-                          "gap": "md",
                           "align": "center",
+                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "shield"
+                                  "name": "shield",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "RateBucket Rate Limiter",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
-                              "type": "status-dot",
                               "pulse": false,
+                              "status": "online",
                               "label": "Open",
-                              "status": "online"
+                              "type": "status-dot"
                             }
                           ],
                           "direction": "horizontal"
@@ -669,10 +666,9 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Requests",
                               "value": [
                                 "object/get",
                                 [
@@ -680,10 +676,12 @@
                                   "@entity"
                                 ],
                                 "count"
-                              ]
+                              ],
+                              "label": "Requests",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
+                              "label": "Window",
                               "value": [
                                 "object/get",
                                 [
@@ -692,13 +690,13 @@
                                 ],
                                 "window"
                               ],
-                              "label": "Window"
+                              "type": "stat-display"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
+                          "type": "meter",
                           "value": [
                             "object/get",
                             [
@@ -707,11 +705,11 @@
                             ],
                             "count"
                           ],
-                          "min": 0.0,
-                          "type": "meter",
-                          "max": 100.0
+                          "max": 100.0,
+                          "min": 0.0
                         },
                         {
+                          "type": "progress-bar",
                           "value": [
                             "object/get",
                             [
@@ -721,32 +719,34 @@
                             "count"
                           ],
                           "showPercentage": true,
-                          "type": "progress-bar",
                           "max": 100.0
                         },
                         {
                           "children": [
                             {
-                              "icon": "send",
-                              "label": "Request",
+                              "action": "REQUEST",
                               "type": "button",
                               "variant": "primary",
-                              "action": "REQUEST"
+                              "icon": "send",
+                              "label": "Request"
                             },
                             {
-                              "variant": "ghost",
-                              "action": "RESET",
                               "icon": "rotate-ccw",
+                              "action": "RESET",
                               "type": "button",
-                              "label": "Reset"
+                              "label": "Reset",
+                              "variant": "ghost"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "justify": "center",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -760,52 +760,55 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
+                              "align": "center",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield"
                                 },
                                 {
+                                  "content": "RateBucket Rate Limiter",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "RateBucket Rate Limiter"
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "md",
                               "direction": "horizontal"
                             },
                             {
-                              "label": "Throttled",
                               "type": "status-dot",
+                              "pulse": true,
                               "status": "critical",
-                              "pulse": true
+                              "label": "Throttled"
                             }
                           ],
-                          "justify": "between",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          "justify": "between",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "Rate limit exceeded. Requests are being throttled.",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "Rate limit exceeded. Requests are being throttled."
                         },
                         {
-                          "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
+                              "label": "Requests",
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -813,9 +816,7 @@
                                   "@entity"
                                 ],
                                 "count"
-                              ],
-                              "label": "Requests",
-                              "type": "stat-display"
+                              ]
                             },
                             {
                               "value": [
@@ -826,12 +827,15 @@
                                 ],
                                 "window"
                               ],
-                              "label": "Window",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Window"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
                         },
                         {
+                          "type": "meter",
                           "value": [
                             "object/get",
                             [
@@ -840,29 +844,25 @@
                             ],
                             "count"
                           ],
-                          "max": 100.0,
-                          "type": "meter",
-                          "min": 0.0
+                          "min": 0.0,
+                          "max": 100.0
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "primary",
                               "label": "Reset",
                               "icon": "rotate-ccw",
-                              "action": "RESET",
-                              "type": "button"
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "RESET"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
