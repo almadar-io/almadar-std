@@ -197,8 +197,8 @@
                     "CacheEntry",
                     {
                       "emit": {
-                        "failure": "CacheEntryLoadFailed",
-                        "success": "CacheEntryLoaded"
+                        "success": "CacheEntryLoaded",
+                        "failure": "CacheEntryLoadFailed"
                       }
                     }
                   ],
@@ -206,16 +206,23 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
+                              "type": "stack",
                               "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
                               "children": [
                                 {
+                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "gap": "md",
                                   "children": [
                                     {
@@ -223,48 +230,41 @@
                                       "name": "database"
                                     },
                                     {
+                                      "content": "CacheEntrys Cache",
                                       "type": "typography",
-                                      "variant": "h2",
-                                      "content": "CacheEntrys Cache"
+                                      "variant": "h2"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
-                                  "variant": "primary",
                                   "type": "button",
-                                  "label": "Fetch",
+                                  "variant": "primary",
+                                  "icon": "download",
                                   "action": "FETCH",
-                                  "icon": "download"
+                                  "label": "Fetch"
                                 }
-                              ],
-                              "type": "stack",
-                              "justify": "between",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "label": "Empty",
-                              "pulse": false,
                               "type": "status-dot",
-                              "status": "inactive"
+                              "status": "offline",
+                              "pulse": false
                             }
-                          ],
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "title": "Cache is empty",
+                          "icon": "inbox",
                           "type": "empty-state",
-                          "description": "Fetch data to populate the cache.",
-                          "icon": "inbox"
+                          "description": "Fetch data to populate the cache."
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -288,58 +288,61 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "database"
+                                  "name": "database",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "CacheEntrys Cache",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
-                                  "pulse": false,
+                                  "label": "Cached",
                                   "type": "status-dot",
-                                  "status": "success",
-                                  "label": "Cached"
+                                  "status": "online",
+                                  "pulse": false
                                 },
                                 {
-                                  "variant": "ghost",
                                   "type": "button",
                                   "action": "INVALIDATE",
-                                  "icon": "trash",
-                                  "label": "Invalidate"
+                                  "label": "Invalidate",
+                                  "variant": "ghost",
+                                  "icon": "trash"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ],
-                          "type": "stack",
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
+                              "type": "stat-display",
                               "label": "Hit Count",
                               "value": [
                                 "object/get",
@@ -348,11 +351,9 @@
                                   "@entity"
                                 ],
                                 "hitCount"
-                              ],
-                              "type": "stat-display"
+                              ]
                             },
                             {
-                              "label": "Cache Age",
                               "value": [
                                 "object/get",
                                 [
@@ -361,27 +362,22 @@
                                 ],
                                 "cacheAge"
                               ],
+                              "label": "Cache Age",
                               "type": "stat-display"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
-                          "type": "data-grid",
-                          "fields": [],
                           "entity": "CacheEntry",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
@@ -390,13 +386,13 @@
                                       "align": "center",
                                       "children": [
                                         {
-                                          "name": "database",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "database"
                                         },
                                         {
+                                          "type": "typography",
                                           "variant": "h4",
-                                          "content": "@item.name",
-                                          "type": "typography"
+                                          "content": "@item.name"
                                         }
                                       ],
                                       "gap": "sm"
@@ -405,20 +401,24 @@
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
-                                  ]
+                                  ],
+                                  "justify": "between",
+                                  "direction": "horizontal",
+                                  "type": "stack"
                                 },
                                 {
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "content": "@item.status"
+                                  "content": "@item.status",
+                                  "type": "typography"
                                 }
                               ],
                               "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "fields": []
                         }
                       ],
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical"
                     }
@@ -444,49 +444,52 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
                           "justify": "between",
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "database"
                                 },
                                 {
+                                  "content": "CacheEntrys Cache",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "CacheEntrys Cache"
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "pulse": false,
-                                  "type": "status-dot",
-                                  "status": "success",
-                                  "label": "Cached"
+                                  "status": "online",
+                                  "label": "Cached",
+                                  "type": "status-dot"
                                 },
                                 {
-                                  "type": "button",
-                                  "action": "INVALIDATE",
+                                  "label": "Invalidate",
                                   "icon": "trash",
+                                  "action": "INVALIDATE",
                                   "variant": "ghost",
-                                  "label": "Invalidate"
+                                  "type": "button"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center"
+                              ]
                             }
                           ]
                         },
@@ -494,6 +497,8 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
                               "label": "Hit Count",
@@ -519,64 +524,59 @@
                               ],
                               "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "fields": [],
-                          "type": "data-grid",
+                          "entity": "CacheEntry",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
+                                  "direction": "horizontal",
+                                  "justify": "between",
                                   "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
+                                      "type": "stack",
+                                      "gap": "sm",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "database"
                                         },
                                         {
+                                          "type": "typography",
                                           "variant": "h4",
-                                          "content": "@item.name",
-                                          "type": "typography"
+                                          "content": "@item.name"
                                         }
                                       ],
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "type": "stack",
                                       "align": "center"
                                     },
                                     {
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
-                                  ],
-                                  "justify": "between",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@item.status",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "@item.status"
                                 }
                               ],
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "entity": "CacheEntry"
+                          "type": "data-grid",
+                          "fields": []
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -606,59 +606,59 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "stack",
+                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "database",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "database"
                                 },
                                 {
-                                  "content": "CacheEntrys Cache",
                                   "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "label": "Cached",
-                                  "status": "success",
-                                  "pulse": false,
-                                  "type": "status-dot"
-                                },
-                                {
-                                  "icon": "trash",
-                                  "action": "INVALIDATE",
-                                  "label": "Invalidate",
-                                  "variant": "ghost",
-                                  "type": "button"
+                                  "type": "typography",
+                                  "content": "CacheEntrys Cache"
                                 }
                               ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "pulse": false,
+                                  "type": "status-dot",
+                                  "label": "Cached",
+                                  "status": "online"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "type": "button",
+                                  "label": "Invalidate",
+                                  "icon": "trash",
+                                  "action": "INVALIDATE"
+                                }
+                              ],
+                              "type": "stack",
+                              "align": "center"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between"
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
@@ -673,8 +673,8 @@
                               ]
                             },
                             {
-                              "label": "Cache Age",
                               "type": "stat-display",
+                              "label": "Cache Age",
                               "value": [
                                 "object/get",
                                 [
@@ -687,22 +687,21 @@
                           ]
                         },
                         {
-                          "type": "data-grid",
-                          "fields": [],
-                          "entity": "CacheEntry",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
+                              "direction": "vertical",
                               "gap": "sm",
                               "children": [
                                 {
                                   "justify": "between",
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "gap": "sm",
                                       "direction": "horizontal",
                                       "children": [
                                         {
@@ -715,30 +714,31 @@
                                           "content": "@item.name"
                                         }
                                       ],
+                                      "type": "stack",
+                                      "gap": "sm",
                                       "align": "center"
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.description"
+                                      "label": "@item.description",
+                                      "type": "badge"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center"
+                                  ]
                                 },
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "@item.status"
                                 }
-                              ],
-                              "direction": "vertical"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "fields": [],
+                          "entity": "CacheEntry"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -752,114 +752,114 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
                           "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "name": "database",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "CacheEntrys Cache",
                                   "variant": "h2",
+                                  "content": "CacheEntrys Cache",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "status": "warning",
-                                  "label": "Stale",
+                                  "pulse": true,
                                   "type": "status-dot",
-                                  "pulse": true
+                                  "label": "Stale",
+                                  "status": "warning"
                                 },
                                 {
-                                  "action": "REFRESH",
                                   "type": "button",
+                                  "action": "REFRESH",
                                   "variant": "primary",
                                   "icon": "refresh-cw",
                                   "label": "Refresh"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              "align": "center",
+                              "gap": "sm"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "message": "Cache data is stale. Refresh to get the latest data.",
                           "type": "alert",
-                          "variant": "warning",
-                          "message": "Cache data is stale. Refresh to get the latest data."
+                          "variant": "warning"
                         },
                         {
+                          "type": "data-grid",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
+                                  "direction": "horizontal",
                                   "type": "stack",
+                                  "align": "center",
+                                  "justify": "between",
                                   "children": [
                                     {
+                                      "align": "center",
+                                      "gap": "sm",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "database"
                                         },
                                         {
-                                          "type": "typography",
                                           "variant": "h4",
-                                          "content": "@item.name"
+                                          "content": "@item.name",
+                                          "type": "typography"
                                         }
                                       ],
-                                      "type": "stack",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "direction": "horizontal"
+                                      "type": "stack"
                                     },
                                     {
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
-                                  ],
-                                  "justify": "between",
-                                  "align": "center",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
-                                  "variant": "caption",
                                   "content": "@item.status",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
-                              "direction": "vertical",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "entity": "CacheEntry",
-                          "fields": [],
-                          "type": "data-grid"
+                          "entity": "CacheEntry"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -885,56 +885,54 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "database",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "database"
                                 },
                                 {
-                                  "content": "CacheEntrys Cache",
+                                  "type": "typography",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "content": "CacheEntrys Cache"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
+                                  "status": "online",
                                   "pulse": false,
-                                  "status": "success",
                                   "label": "Cached",
                                   "type": "status-dot"
                                 },
                                 {
-                                  "icon": "trash",
-                                  "label": "Invalidate",
-                                  "variant": "ghost",
                                   "action": "INVALIDATE",
-                                  "type": "button"
+                                  "variant": "ghost",
+                                  "icon": "trash",
+                                  "type": "button",
+                                  "label": "Invalidate"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
                               "value": [
@@ -949,6 +947,7 @@
                               "label": "Hit Count"
                             },
                             {
+                              "label": "Cache Age",
                               "value": [
                                 "object/get",
                                 [
@@ -957,35 +956,40 @@
                                 ],
                                 "cacheAge"
                               ],
-                              "label": "Cache Age",
                               "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
                         },
                         {
+                          "entity": "CacheEntry",
+                          "type": "data-grid",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "justify": "between",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
-                                      "type": "stack",
                                       "gap": "sm",
+                                      "type": "stack",
                                       "align": "center",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "database"
+                                          "name": "database",
+                                          "type": "icon"
                                         },
                                         {
+                                          "content": "@item.name",
                                           "variant": "h4",
-                                          "type": "typography",
-                                          "content": "@item.name"
+                                          "type": "typography"
                                         }
                                       ]
                                     },
@@ -994,28 +998,24 @@
                                       "label": "@item.description"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center"
+                                  "align": "center",
+                                  "direction": "horizontal"
                                 },
                                 {
+                                  "variant": "caption",
                                   "content": "@item.status",
-                                  "type": "typography",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "sm",
+                              "direction": "vertical"
                             }
-                          ],
-                          "type": "data-grid",
-                          "fields": [],
-                          "entity": "CacheEntry"
+                          ]
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1030,8 +1030,8 @@
                     "CacheEntry",
                     {
                       "emit": {
-                        "success": "CacheEntryLoaded",
-                        "failure": "CacheEntryLoadFailed"
+                        "failure": "CacheEntryLoadFailed",
+                        "success": "CacheEntryLoaded"
                       }
                     }
                   ],
@@ -1039,23 +1039,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "database"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "CacheEntrys Cache"
                                 }
                               ]
@@ -1063,37 +1064,36 @@
                             {
                               "children": [
                                 {
-                                  "label": "Cached",
                                   "pulse": false,
                                   "type": "status-dot",
-                                  "status": "success"
+                                  "status": "online",
+                                  "label": "Cached"
                                 },
                                 {
-                                  "label": "Invalidate",
-                                  "icon": "trash",
-                                  "action": "INVALIDATE",
                                   "type": "button",
-                                  "variant": "ghost"
+                                  "action": "INVALIDATE",
+                                  "variant": "ghost",
+                                  "icon": "trash",
+                                  "label": "Invalidate"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center",
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center"
                             }
                           ],
-                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
+                              "label": "Hit Count",
                               "value": [
                                 "object/get",
                                 [
@@ -1102,11 +1102,11 @@
                                 ],
                                 "hitCount"
                               ],
-                              "label": "Hit Count"
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Cache Age",
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -1117,30 +1117,23 @@
                               ]
                             }
                           ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          "cols": 2.0
                         },
                         {
-                          "entity": "CacheEntry",
-                          "fields": [],
                           "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "sm",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "direction": "horizontal",
-                                  "justify": "between",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "gap": "sm",
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "align": "center",
                                       "children": [
                                         {
@@ -1152,25 +1145,32 @@
                                           "variant": "h4",
                                           "content": "@item.name"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm"
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.description"
+                                      "label": "@item.description",
+                                      "type": "badge"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "justify": "between"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "content": "@item.status",
                                   "type": "typography",
-                                  "content": "@item.status"
+                                  "variant": "caption"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "entity": "CacheEntry",
+                          "fields": []
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]

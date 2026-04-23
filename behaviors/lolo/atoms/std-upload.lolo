@@ -16,7 +16,7 @@ orbital UploadFileOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", event: "UPLOAD", multiple: false, maxSize: 10485760 }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", action: "UPLOAD", maxSize: 10485760 }] })
       UPLOAD -> uploading
         (set @entity.fileName @payload.fileName)
         (set @entity.uploadStatus uploading)
@@ -33,7 +33,7 @@ orbital UploadFileOrbital {
     state complete {
       RESET -> idle
         (set @entity.uploadStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", event: "UPLOAD", multiple: false, maxSize: 10485760 }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", action: "UPLOAD", maxSize: 10485760 }] })
     }
     state error {
       RETRY -> uploading
@@ -41,7 +41,7 @@ orbital UploadFileOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Uploading...", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "fileName"] }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "spinner" }] })
       RESET -> idle
         (set @entity.uploadStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", event: "UPLOAD", multiple: false, maxSize: 10485760 }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", action: "UPLOAD", maxSize: 10485760 }] })
     }
     listens {
       UPLOAD { fileName : string! }

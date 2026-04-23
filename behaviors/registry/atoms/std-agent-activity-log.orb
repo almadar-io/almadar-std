@@ -267,22 +267,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "between",
                           "align": "center",
+                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
                               "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "activity",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "activity"
                                 },
                                 {
                                   "content": "Activity Log",
@@ -290,19 +293,16 @@
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center",
                               "direction": "horizontal"
                             },
                             {
-                              "icon": "trash",
-                              "label": "Clear",
                               "variant": "ghost",
-                              "action": "CLEAR",
-                              "type": "button"
+                              "label": "Clear",
+                              "icon": "trash",
+                              "type": "button",
+                              "action": "CLEAR"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -310,59 +310,7 @@
                         {
                           "entity": "AgentActivityLog",
                           "type": "timeline",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.status"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h4",
-                                      "content": "@item.action"
-                                    }
-                                  ],
-                                  "gap": "sm"
-                                },
-                                {
-                                  "color": "muted",
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@item.detail"
-                                },
-                                {
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "content": "@item.timestamp",
-                                      "type": "typography",
-                                      "color": "muted",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "label": "@item.duration",
-                                      "variant": "outline",
-                                      "type": "badge"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "type": "stack"
-                            }
-                          ]
+                          "fields": []
                         }
                       ]
                     }
@@ -379,10 +327,10 @@
                     "create",
                     "AgentActivityLog",
                     {
+                      "action": "@payload.action",
                       "status": "@payload.status",
-                      "detail": "@payload.detail",
                       "timestamp": "@now",
-                      "action": "@payload.action"
+                      "detail": "@payload.detail"
                     }
                   ],
                   [
@@ -390,8 +338,8 @@
                     "AgentActivityLog",
                     {
                       "emit": {
-                        "success": "AgentActivityLogLoaded",
-                        "failure": "AgentActivityLogLoadFailed"
+                        "failure": "AgentActivityLogLoadFailed",
+                        "success": "AgentActivityLogLoaded"
                       }
                     }
                   ],
@@ -399,17 +347,18 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
                               "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -417,23 +366,22 @@
                                 },
                                 {
                                   "content": "Activity Log",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "sm"
                             },
                             {
-                              "variant": "ghost",
-                              "icon": "trash",
                               "label": "Clear",
-                              "action": "CLEAR",
-                              "type": "button"
+                              "icon": "trash",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLEAR"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -441,62 +389,10 @@
                         {
                           "type": "timeline",
                           "entity": "AgentActivityLog",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.status"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h4",
-                                      "content": "@item.action"
-                                    }
-                                  ],
-                                  "align": "center",
-                                  "type": "stack"
-                                },
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "@item.detail",
-                                  "variant": "body"
-                                },
-                                {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "color": "muted",
-                                      "content": "@item.timestamp",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "variant": "outline",
-                                      "type": "badge",
-                                      "label": "@item.duration"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "direction": "horizontal"
-                                }
-                              ],
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical"
-                            }
-                          ]
+                          "fields": []
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -525,18 +421,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
+                          "justify": "between",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -544,85 +440,33 @@
                                 },
                                 {
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Activity Log"
+                                  "content": "Activity Log",
+                                  "type": "typography"
                                 }
                               ],
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "label": "Clear",
+                              "variant": "ghost",
                               "type": "button",
                               "action": "CLEAR",
-                              "variant": "ghost",
+                              "label": "Clear",
                               "icon": "trash"
                             }
-                          ],
-                          "justify": "between",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "direction": "vertical",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "label": "@item.status",
-                                      "type": "badge"
-                                    },
-                                    {
-                                      "variant": "h4",
-                                      "content": "@item.action",
-                                      "type": "typography"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.detail",
-                                  "color": "muted"
-                                },
-                                {
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "color": "muted",
-                                      "content": "@item.timestamp"
-                                    },
-                                    {
-                                      "label": "@item.duration",
-                                      "type": "badge",
-                                      "variant": "outline"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "gap": "xs"
-                            }
-                          ],
+                          "type": "timeline",
                           "entity": "AgentActivityLog",
-                          "type": "timeline"
+                          "fields": []
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]

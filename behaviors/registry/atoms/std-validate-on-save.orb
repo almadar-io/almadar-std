@@ -153,9 +153,9 @@
                     "render-ui",
                     "center",
                     {
+                      "title": "Waiting for file changes",
                       "description": "Watching **/*.orb. Save an .orb file to trigger validation.",
-                      "type": "empty-state",
-                      "title": "Waiting for file changes"
+                      "type": "empty-state"
                     }
                   ]
                 ]
@@ -185,8 +185,8 @@
                     "main",
                     {
                       "type": "page-header",
-                      "title": "Orb File Validator",
-                      "subtitle": "Validating..."
+                      "subtitle": "Validating...",
+                      "title": "Orb File Validator"
                     }
                   ],
                   [
@@ -203,8 +203,8 @@
                     "validate",
                     {
                       "path": "@payload.path",
-                      "onError": "VALIDATION_FAILED",
-                      "onSuccess": "VALIDATION_PASSED"
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
                     }
                   ]
                 ]
@@ -238,7 +238,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "page-header",
                       "actions": [
                         {
                           "event": "REFRESH",
@@ -247,45 +246,46 @@
                         }
                       ],
                       "subtitle": "Validation passed",
-                      "title": "Orb File Validator"
+                      "title": "Orb File Validator",
+                      "type": "page-header"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "path"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.path",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "valid",
+                          "content": "path",
                           "variant": "caption"
                         },
                         {
                           "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.path"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "valid"
+                        },
+                        {
                           "content": "@entity.valid",
+                          "type": "typography",
                           "variant": "body"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
-                          "content": "status",
-                          "variant": "caption"
+                          "content": "status"
                         },
                         {
-                          "type": "typography",
+                          "content": "@entity.status",
                           "variant": "body",
-                          "content": "@entity.status"
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
@@ -293,12 +293,12 @@
                           "content": "timestamp"
                         },
                         {
+                          "type": "typography",
                           "content": "@entity.timestamp",
-                          "variant": "body",
-                          "type": "typography"
+                          "variant": "body"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ],
                   [
@@ -337,25 +337,22 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Orb File Validator",
+                      "subtitle": "Validation failed",
+                      "type": "page-header",
                       "actions": [
                         {
                           "label": "Validate Now",
                           "variant": "primary",
                           "event": "REFRESH"
                         }
-                      ],
-                      "type": "page-header",
-                      "subtitle": "Validation failed",
-                      "title": "Orb File Validator"
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "content": "path",
@@ -363,41 +360,44 @@
                           "variant": "caption"
                         },
                         {
+                          "content": "@entity.path",
                           "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.path"
+                          "type": "typography"
                         },
                         {
-                          "variant": "caption",
                           "content": "status",
+                          "variant": "caption",
                           "type": "typography"
                         },
                         {
+                          "type": "typography",
                           "variant": "body",
-                          "content": "@entity.status",
-                          "type": "typography"
+                          "content": "@entity.status"
                         },
                         {
                           "variant": "caption",
-                          "content": "errors",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "errors"
                         },
                         {
+                          "variant": "body",
                           "content": "@entity.errors",
-                          "type": "typography",
-                          "variant": "body"
-                        },
-                        {
-                          "variant": "caption",
-                          "content": "warnings",
                           "type": "typography"
                         },
                         {
-                          "variant": "body",
+                          "variant": "caption",
                           "type": "typography",
-                          "content": "@entity.warnings"
+                          "content": "warnings"
+                        },
+                        {
+                          "content": "@entity.warnings",
+                          "variant": "body",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ],
                   [
@@ -431,17 +431,17 @@
                     "render-ui",
                     "main",
                     {
-                      "subtitle": "Re-validating...",
                       "type": "page-header",
-                      "title": "Orb File Validator"
+                      "title": "Orb File Validator",
+                      "subtitle": "Re-validating..."
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "title": "Running orbital validate...",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
                     }
                   ],
                   [
@@ -449,9 +449,9 @@
                     "orbital-cli",
                     "validate",
                     {
-                      "onError": "VALIDATION_FAILED",
+                      "onSuccess": "VALIDATION_PASSED",
                       "path": "@payload.path",
-                      "onSuccess": "VALIDATION_PASSED"
+                      "onError": "VALIDATION_FAILED"
                     }
                   ]
                 ]
@@ -470,8 +470,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Orb File Validator",
                       "type": "page-header",
+                      "title": "Orb File Validator",
                       "subtitle": "Re-validating..."
                     }
                   ],
@@ -479,8 +479,8 @@
                     "render-ui",
                     "center",
                     {
-                      "type": "loading-state",
-                      "title": "Running orbital validate..."
+                      "title": "Running orbital validate...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -489,8 +489,8 @@
                     "validate",
                     {
                       "path": "@entity.path",
-                      "onError": "VALIDATION_FAILED",
-                      "onSuccess": "VALIDATION_PASSED"
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
                     }
                   ]
                 ]
@@ -519,8 +519,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Orb File Validator",
                       "type": "page-header",
+                      "title": "Orb File Validator",
                       "subtitle": "Re-validating..."
                     }
                   ],
@@ -538,8 +538,8 @@
                     "validate",
                     {
                       "onError": "VALIDATION_FAILED",
-                      "onSuccess": "VALIDATION_PASSED",
-                      "path": "@payload.path"
+                      "path": "@payload.path",
+                      "onSuccess": "VALIDATION_PASSED"
                     }
                   ]
                 ]
@@ -559,16 +559,16 @@
                     "main",
                     {
                       "subtitle": "Re-validating...",
-                      "title": "Orb File Validator",
-                      "type": "page-header"
+                      "type": "page-header",
+                      "title": "Orb File Validator"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "title": "Running orbital validate...",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
                     }
                   ],
                   [
@@ -577,8 +577,8 @@
                     "validate",
                     {
                       "onError": "VALIDATION_FAILED",
-                      "onSuccess": "VALIDATION_PASSED",
-                      "path": "@entity.path"
+                      "path": "@entity.path",
+                      "onSuccess": "VALIDATION_PASSED"
                     }
                   ]
                 ]

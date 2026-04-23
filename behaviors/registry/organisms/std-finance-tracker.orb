@@ -233,64 +233,88 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Finance Tracker",
                       "children": [
                         {
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
-                              "justify": "between",
                               "align": "center",
                               "children": [
                                 {
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "credit-card"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Transactions"
+                                      "content": "Transactions",
+                                      "variant": "h2"
                                     }
-                                  ],
-                                  "align": "center",
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "type": "stack",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Create Transaction",
                                       "variant": "primary",
+                                      "type": "button",
+                                      "action": "CREATE",
                                       "icon": "plus",
-                                      "action": "CREATE"
+                                      "label": "Create Transaction"
                                     }
-                                  ],
-                                  "gap": "sm",
-                                  "direction": "horizontal"
+                                  ]
                                 }
                               ],
+                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md"
+                              "gap": "md",
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "variant": "card",
+                              "gap": "sm",
+                              "itemActions": [
+                                {
+                                  "variant": "ghost",
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "event": "EDIT",
+                                  "label": "Edit"
+                                },
+                                {
+                                  "event": "DELETE",
+                                  "variant": "danger",
+                                  "label": "Delete"
+                                }
+                              ],
+                              "entity": "Transaction",
+                              "type": "data-list",
+                              "fields": [],
                               "columns": [
                                 {
-                                  "name": "description",
                                   "icon": "credit-card",
+                                  "name": "description",
                                   "variant": "h3"
                                 },
                                 {
-                                  "name": "category",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "name": "category"
                                 },
                                 {
                                   "variant": "h4",
@@ -299,38 +323,12 @@
                                 },
                                 {
                                   "name": "date",
-                                  "format": "date",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "format": "date"
                                 }
-                              ],
-                              "entity": "Transaction",
-                              "type": "data-list",
-                              "gap": "sm",
-                              "variant": "card",
-                              "itemActions": [
-                                {
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "label": "View"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost"
-                                },
-                                {
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "label": "Delete"
-                                }
-                              ],
-                              "fields": []
+                              ]
                             }
-                          ],
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack",
-                          "direction": "vertical"
+                          ]
                         }
                       ],
                       "navItems": [
@@ -340,16 +338,18 @@
                           "icon": "dollar-sign"
                         },
                         {
-                          "label": "Summary",
+                          "href": "/summary",
                           "icon": "layout-list",
-                          "href": "/summary"
+                          "label": "Summary"
                         },
                         {
                           "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
+                          "icon": "bar-chart",
+                          "href": "/reports"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Finance Tracker"
                     }
                   ]
                 ]
@@ -523,8 +523,8 @@
                     "Transaction",
                     {
                       "emit": {
-                        "success": "TransactionLoaded",
-                        "failure": "TransactionLoadFailed"
+                        "failure": "TransactionLoadFailed",
+                        "success": "TransactionLoaded"
                       }
                     }
                   ],
@@ -532,29 +532,30 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "Create Transaction",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
+                          "mode": "create",
                           "fields": [
                             "description",
                             "amount",
@@ -563,12 +564,11 @@
                           ],
                           "entity": "Transaction",
                           "submitEvent": "SAVE",
-                          "mode": "create"
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -801,19 +801,19 @@
                     "fetch",
                     "Transaction",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "TransactionLoaded",
                         "failure": "TransactionLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
@@ -823,31 +823,31 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Edit Transaction"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entityId": "@entity.id",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "description",
                             "amount",
                             "category",
                             "date"
                           ],
-                          "type": "form-section",
-                          "submitEvent": "SAVE",
                           "entity": "Transaction",
-                          "mode": "edit",
-                          "cancelEvent": "CLOSE",
-                          "entityId": "@entity.id"
+                          "submitEvent": "SAVE"
                         }
                       ]
                     }
@@ -1070,8 +1070,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "TransactionLoaded",
-                        "failure": "TransactionLoadFailed"
+                        "failure": "TransactionLoadFailed",
+                        "success": "TransactionLoaded"
                       }
                     }
                   ],
@@ -1079,14 +1079,9 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "eye",
@@ -1097,7 +1092,11 @@
                               "content": "@entity.description",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1106,8 +1105,8 @@
                           "children": [
                             {
                               "content": "Description",
-                              "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
                               "type": "typography",
@@ -1115,42 +1114,8 @@
                               "content": "@entity.description"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Amount"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.amount",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Category",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.category",
-                              "type": "typography"
-                            }
-                          ],
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
@@ -1159,43 +1124,78 @@
                           "gap": "md",
                           "children": [
                             {
+                              "content": "Amount",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.amount",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
                               "type": "typography",
                               "variant": "caption",
-                              "content": "Date"
+                              "content": "Category"
                             },
                             {
                               "type": "typography",
                               "variant": "body",
-                              "content": "@entity.date"
+                              "content": "@entity.category"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Date"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.date",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "justify": "end",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "label": "Edit",
-                              "action": "EDIT",
-                              "type": "button",
                               "variant": "primary",
-                              "icon": "edit"
+                              "icon": "edit",
+                              "type": "button",
+                              "action": "EDIT"
                             },
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE",
+                              "label": "Close",
                               "type": "button",
-                              "label": "Close"
+                              "variant": "ghost",
+                              "action": "CLOSE"
                             }
                           ],
-                          "justify": "end",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1420,34 +1420,35 @@
                     "fetch",
                     "Transaction",
                     {
+                      "id": "@payload.id",
                       "emit": {
                         "failure": "TransactionLoadFailed",
                         "success": "TransactionLoaded"
-                      },
-                      "id": "@payload.id"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "alert-triangle"
                             },
                             {
-                              "type": "typography",
+                              "content": "Delete Transaction",
                               "variant": "h3",
-                              "content": "Delete Transaction"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1455,33 +1456,32 @@
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
+                          "message": "This action cannot be undone.",
                           "variant": "error",
-                          "message": "This action cannot be undone."
+                          "type": "alert"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
                               "action": "CANCEL",
+                              "label": "Cancel",
                               "variant": "ghost",
-                              "label": "Cancel"
+                              "type": "button"
                             },
                             {
-                              "action": "CONFIRM_DELETE",
-                              "type": "button",
-                              "icon": "check",
                               "label": "Delete",
-                              "variant": "danger"
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "CONFIRM_DELETE",
+                              "icon": "check"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "end"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1748,275 +1748,6 @@
                     "FinanceSummary",
                     {
                       "emit": {
-                        "success": "FinanceSummaryLoaded",
-                        "failure": "FinanceSummaryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Financial Summary"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "pie-chart"
-                                        },
-                                        {
-                                          "variant": "h2",
-                                          "type": "typography",
-                                          "content": "Financial Summary"
-                                        }
-                                      ],
-                                      "gap": "md",
-                                      "direction": "horizontal"
-                                    },
-                                    {
-                                      "action": "REFRESH",
-                                      "type": "button",
-                                      "label": "Refresh",
-                                      "variant": "secondary",
-                                      "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "justify": "between",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "totalIncome"
-                                          ],
-                                          "type": "stat-display",
-                                          "label": "TotalIncome"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "totalExpenses"
-                                          ],
-                                          "label": "TotalExpenses"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "Balance",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "balance"
-                                          ]
-                                        },
-                                        {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "savingsRate"
-                                          ],
-                                          "label": "SavingsRate",
-                                          "type": "stat-display"
-                                        }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
-                                    }
-                                  ],
-                                  "padding": "md",
-                                  "type": "box"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "cols": 2.0,
-                                  "gap": "md",
-                                  "type": "grid",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Graph View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "type": "graph-view",
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "x": 50.0,
-                                      "id": "a",
-                                      "y": 100.0,
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b",
-                                      "x": 200.0,
-                                      "y": 50.0
-                                    },
-                                    {
-                                      "id": "c",
-                                      "y": 100.0,
-                                      "label": "End",
-                                      "x": 350.0
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "edges": [
-                                    {
-                                      "to": "b",
-                                      "from": "a"
-                                    },
-                                    {
-                                      "to": "c",
-                                      "from": "b"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "lg",
-                              "type": "stack"
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Finance Tracker",
-                      "navItems": [
-                        {
-                          "icon": "dollar-sign",
-                          "label": "Transactions",
-                          "href": "/transactions"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "href": "/summary",
-                          "label": "Summary"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "LOADED",
-                "effects": [
-                  [
-                    "fetch",
-                    "FinanceSummary",
-                    {
-                      "emit": {
                         "failure": "FinanceSummaryLoadFailed",
                         "success": "FinanceSummaryLoaded"
                       }
@@ -2026,17 +1757,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "gap": "lg",
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -2045,47 +1775,54 @@
                                     {
                                       "label": "Financial Summary"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "gap": "md",
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "gap": "md",
-                                      "type": "stack",
                                       "direction": "horizontal",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "pie-chart"
+                                          "name": "pie-chart",
+                                          "type": "icon"
                                         },
                                         {
-                                          "variant": "h2",
+                                          "type": "typography",
                                           "content": "Financial Summary",
-                                          "type": "typography"
+                                          "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md"
                                     },
                                     {
                                       "label": "Refresh",
                                       "type": "button",
-                                      "variant": "secondary",
                                       "action": "REFRESH",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "variant": "secondary"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
+                                  "gap": "md",
                                   "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "box",
+                                  "padding": "md",
                                   "children": [
                                     {
+                                      "cols": 3.0,
+                                      "type": "simple-grid",
                                       "children": [
                                         {
+                                          "label": "TotalIncome",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2093,13 +1830,9 @@
                                               "@entity"
                                             ],
                                             "totalIncome"
-                                          ],
-                                          "type": "stat-display",
-                                          "label": "TotalIncome"
+                                          ]
                                         },
                                         {
-                                          "label": "TotalExpenses",
-                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2107,10 +1840,12 @@
                                               "@entity"
                                             ],
                                             "totalExpenses"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalExpenses"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "label": "Balance",
                                           "value": [
                                             "object/get",
                                             [
@@ -2119,9 +1854,10 @@
                                             ],
                                             "balance"
                                           ],
-                                          "label": "Balance"
+                                          "type": "stat-display"
                                         },
                                         {
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2130,46 +1866,41 @@
                                             ],
                                             "savingsRate"
                                           ],
-                                          "type": "stat-display",
                                           "label": "SavingsRate"
                                         }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
+                                      ]
                                     }
-                                  ],
-                                  "padding": "md",
-                                  "type": "box"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
                                           "type": "typography",
                                           "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "variant": "caption",
                                           "type": "typography",
+                                          "variant": "caption",
                                           "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
                                   ],
-                                  "type": "grid",
-                                  "cols": 2.0,
-                                  "gap": "md"
+                                  "gap": "md",
+                                  "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
@@ -2187,107 +1918,107 @@
                                       "date": "Mar"
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
+                                  "height": 200.0,
+                                  "type": "graph-view",
+                                  "width": 400.0,
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a",
                                       "y": 100.0,
+                                      "id": "a",
+                                      "label": "Start",
                                       "x": 50.0
                                     },
                                     {
-                                      "y": 50.0,
-                                      "id": "b",
                                       "x": 200.0,
+                                      "id": "b",
+                                      "y": 50.0,
                                       "label": "Process"
                                     },
                                     {
                                       "y": 100.0,
-                                      "x": 350.0,
+                                      "label": "End",
                                       "id": "c",
-                                      "label": "End"
+                                      "x": 350.0
                                     }
                                   ],
-                                  "height": 200.0,
                                   "edges": [
                                     {
-                                      "to": "b",
-                                      "from": "a"
+                                      "from": "a",
+                                      "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
-                                  ],
-                                  "type": "graph-view",
-                                  "width": 400.0
+                                  ]
                                 }
-                              ],
-                              "direction": "vertical"
+                              ]
                             }
                           ]
                         }
                       ],
+                      "appName": "Finance Tracker",
                       "navItems": [
                         {
-                          "icon": "dollar-sign",
                           "label": "Transactions",
-                          "href": "/transactions"
+                          "href": "/transactions",
+                          "icon": "dollar-sign"
                         },
                         {
                           "icon": "layout-list",
-                          "label": "Summary",
-                          "href": "/summary"
+                          "href": "/summary",
+                          "label": "Summary"
                         },
                         {
-                          "href": "/reports",
                           "icon": "bar-chart",
+                          "href": "/reports",
                           "label": "Reports"
                         }
                       ],
-                      "appName": "Finance Tracker"
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
               },
               {
-                "from": "displaying",
+                "from": "loading",
                 "to": "displaying",
-                "event": "INIT",
+                "event": "LOADED",
                 "effects": [
                   [
                     "fetch",
                     "FinanceSummary",
                     {
                       "emit": {
-                        "failure": "FinanceSummaryLoadFailed",
-                        "success": "FinanceSummaryLoaded"
+                        "success": "FinanceSummaryLoaded",
+                        "failure": "FinanceSummaryLoadFailed"
                       }
                     }
                   ],
@@ -2295,57 +2026,62 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "href": "/transactions",
-                          "icon": "dollar-sign",
-                          "label": "Transactions"
+                          "label": "Transactions",
+                          "icon": "dollar-sign"
                         },
                         {
-                          "label": "Summary",
                           "href": "/summary",
+                          "label": "Summary",
                           "icon": "layout-list"
                         },
                         {
+                          "icon": "bar-chart",
                           "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
+                          "href": "/reports"
                         }
                       ],
+                      "appName": "Finance Tracker",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
+                              "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Financial Summary"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
                                   "gap": "md",
                                   "justify": "between",
+                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "children": [
                                     {
+                                      "direction": "horizontal",
                                       "gap": "md",
                                       "type": "stack",
-                                      "direction": "horizontal",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "pie-chart"
+                                          "name": "pie-chart",
+                                          "type": "icon"
                                         },
                                         {
-                                          "variant": "h2",
                                           "type": "typography",
+                                          "variant": "h2",
                                           "content": "Financial Summary"
                                         }
                                       ]
@@ -2353,26 +2089,21 @@
                                     {
                                       "icon": "refresh-cw",
                                       "type": "button",
-                                      "variant": "secondary",
                                       "label": "Refresh",
+                                      "variant": "secondary",
                                       "action": "REFRESH"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
+                                  "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
                                       "children": [
                                         {
-                                          "label": "TotalIncome",
                                           "value": [
                                             "object/get",
                                             [
@@ -2381,6 +2112,7 @@
                                             ],
                                             "totalIncome"
                                           ],
+                                          "label": "TotalIncome",
                                           "type": "stat-display"
                                         },
                                         {
@@ -2396,6 +2128,7 @@
                                           ]
                                         },
                                         {
+                                          "type": "stat-display",
                                           "label": "Balance",
                                           "value": [
                                             "object/get",
@@ -2404,10 +2137,10 @@
                                               "@entity"
                                             ],
                                             "balance"
-                                          ],
-                                          "type": "stat-display"
+                                          ]
                                         },
                                         {
+                                          "label": "SavingsRate",
                                           "value": [
                                             "object/get",
                                             [
@@ -2416,43 +2149,44 @@
                                             ],
                                             "savingsRate"
                                           ],
-                                          "type": "stat-display",
-                                          "label": "SavingsRate"
+                                          "type": "stat-display"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid",
+                                      "cols": 3.0
                                     }
                                   ],
-                                  "padding": "md"
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "cols": 2.0,
-                                  "gap": "md",
-                                  "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "content": "Chart View",
-                                          "variant": "caption"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Graph View",
                                           "variant": "caption",
                                           "type": "typography"
                                         }
                                       ],
                                       "type": "card"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "content": "Graph View"
+                                        }
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "cols": 2.0,
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
@@ -2470,51 +2204,322 @@
                                       "date": "Mar"
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "value": 22.0,
                                       "date": "May"
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
+                                      "color": "muted",
+                                      "label": "Previous"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "width": 400.0,
+                                  "height": 200.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "label": "Start",
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "id": "b",
+                                      "x": 200.0,
+                                      "label": "Process",
+                                      "y": 50.0
+                                    },
+                                    {
+                                      "x": 350.0,
+                                      "id": "c",
+                                      "label": "End",
+                                      "y": 100.0
+                                    }
+                                  ],
+                                  "edges": [
+                                    {
+                                      "from": "a",
+                                      "to": "b"
+                                    },
+                                    {
+                                      "from": "b",
+                                      "to": "c"
+                                    }
+                                  ],
+                                  "type": "graph-view"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "FinanceSummary",
+                    {
+                      "emit": {
+                        "success": "FinanceSummaryLoaded",
+                        "failure": "FinanceSummaryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "Finance Tracker",
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "icon": "dollar-sign",
+                          "href": "/transactions",
+                          "label": "Transactions"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "href": "/summary",
+                          "label": "Summary"
+                        },
+                        {
+                          "label": "Reports",
+                          "href": "/reports",
+                          "icon": "bar-chart"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "scaled-diagram",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "items": [
+                                    {
+                                      "href": "/",
+                                      "label": "Home"
+                                    },
+                                    {
+                                      "label": "Financial Summary"
+                                    }
+                                  ],
+                                  "type": "breadcrumb"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "gap": "md",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "name": "pie-chart",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h2",
+                                          "content": "Financial Summary"
+                                        }
+                                      ],
+                                      "direction": "horizontal"
+                                    },
+                                    {
+                                      "icon": "refresh-cw",
+                                      "variant": "secondary",
+                                      "action": "REFRESH",
+                                      "type": "button",
+                                      "label": "Refresh"
+                                    }
+                                  ],
+                                  "justify": "between"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "totalIncome"
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalIncome"
+                                        },
+                                        {
+                                          "label": "TotalExpenses",
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "totalExpenses"
+                                          ],
+                                          "type": "stat-display"
+                                        },
+                                        {
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "balance"
+                                          ],
+                                          "label": "Balance",
+                                          "type": "stat-display"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "SavingsRate",
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "savingsRate"
+                                          ]
+                                        }
+                                      ],
+                                      "type": "simple-grid",
+                                      "cols": 3.0
+                                    }
+                                  ],
+                                  "padding": "md"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "Chart View",
+                                          "variant": "caption"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "Graph View",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "type": "card"
+                                    }
+                                  ],
+                                  "type": "grid",
+                                  "gap": "md",
+                                  "cols": 2.0
+                                },
+                                {
+                                  "data": [
+                                    {
+                                      "date": "Jan",
+                                      "value": 12.0
+                                    },
+                                    {
+                                      "date": "Feb",
+                                      "value": 19.0
+                                    },
+                                    {
+                                      "value": 15.0,
+                                      "date": "Mar"
+                                    },
+                                    {
+                                      "date": "Apr",
+                                      "value": 25.0
+                                    },
+                                    {
+                                      "date": "May",
+                                      "value": 22.0
+                                    },
+                                    {
+                                      "date": "Jun",
+                                      "value": 30.0
+                                    }
+                                  ],
+                                  "type": "line-chart"
+                                },
+                                {
+                                  "type": "chart-legend",
+                                  "items": [
+                                    {
+                                      "color": "primary",
+                                      "label": "Current"
+                                    },
+                                    {
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
+                                  "width": 400.0,
+                                  "type": "graph-view",
+                                  "height": 200.0,
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a",
+                                      "y": 100.0,
                                       "x": 50.0,
-                                      "y": 100.0
+                                      "label": "Start",
+                                      "id": "a"
                                     },
                                     {
+                                      "id": "b",
                                       "x": 200.0,
-                                      "y": 50.0,
                                       "label": "Process",
-                                      "id": "b"
+                                      "y": 50.0
                                     },
                                     {
                                       "id": "c",
-                                      "x": 350.0,
                                       "label": "End",
-                                      "y": 100.0
+                                      "y": 100.0,
+                                      "x": 350.0
                                     }
                                   ],
                                   "edges": [
@@ -2526,21 +2531,16 @@
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "height": 200.0,
-                                  "type": "graph-view",
-                                  "width": 400.0
+                                  ]
                                 }
                               ],
+                              "direction": "vertical",
                               "type": "stack",
-                              "gap": "lg",
-                              "direction": "vertical"
+                              "gap": "lg"
                             }
                           ]
                         }
-                      ],
-                      "appName": "Finance Tracker",
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -2564,6 +2564,24 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/transactions",
+                          "icon": "dollar-sign",
+                          "label": "Transactions"
+                        },
+                        {
+                          "href": "/summary",
+                          "label": "Summary",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Reports",
+                          "href": "/reports",
+                          "icon": "bar-chart"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "scaled-diagram",
@@ -2585,12 +2603,12 @@
                                   ]
                                 },
                                 {
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "type": "stack",
                                   "justify": "between",
                                   "children": [
                                     {
+                                      "gap": "md",
+                                      "type": "stack",
                                       "direction": "horizontal",
                                       "children": [
                                         {
@@ -2598,318 +2616,30 @@
                                           "type": "icon"
                                         },
                                         {
-                                          "content": "Financial Summary",
                                           "variant": "h2",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "gap": "md",
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "variant": "secondary",
-                                      "action": "REFRESH"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "label": "TotalIncome",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "totalIncome"
-                                          ]
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "totalExpenses"
-                                          ],
-                                          "label": "TotalExpenses"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "balance"
-                                          ],
-                                          "label": "Balance"
-                                        },
-                                        {
-                                          "label": "SavingsRate",
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "savingsRate"
-                                          ]
-                                        }
-                                      ],
-                                      "cols": 3.0,
-                                      "type": "simple-grid"
-                                    }
-                                  ],
-                                  "padding": "md",
-                                  "type": "box"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
                                           "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "gap": "md"
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "width": 400.0,
-                                  "height": 200.0,
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "y": 100.0,
-                                      "label": "Start",
-                                      "x": 50.0
-                                    },
-                                    {
-                                      "y": 50.0,
-                                      "label": "Process",
-                                      "id": "b",
-                                      "x": 200.0
-                                    },
-                                    {
-                                      "label": "End",
-                                      "y": 100.0,
-                                      "x": 350.0,
-                                      "id": "c"
-                                    }
-                                  ],
-                                  "edges": [
-                                    {
-                                      "from": "a",
-                                      "to": "b"
-                                    },
-                                    {
-                                      "to": "c",
-                                      "from": "b"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "direction": "vertical"
-                            }
-                          ]
-                        }
-                      ],
-                      "appName": "Finance Tracker",
-                      "navItems": [
-                        {
-                          "href": "/transactions",
-                          "icon": "dollar-sign",
-                          "label": "Transactions"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Summary",
-                          "href": "/summary"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ],
-                      "type": "dashboard-layout"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "refreshing",
-                "to": "displaying",
-                "event": "REFRESHED",
-                "effects": [
-                  [
-                    "fetch",
-                    "FinanceSummary",
-                    {
-                      "emit": {
-                        "success": "FinanceSummaryLoaded",
-                        "failure": "FinanceSummaryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "label": "Transactions",
-                          "href": "/transactions",
-                          "icon": "dollar-sign"
-                        },
-                        {
-                          "href": "/summary",
-                          "icon": "layout-list",
-                          "label": "Summary"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ],
-                      "appName": "Finance Tracker",
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Financial Summary"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "gap": "md",
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "pie-chart"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "content": "Financial Summary",
-                                          "variant": "h2"
+                                          "content": "Financial Summary"
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "button",
+                                      "variant": "secondary",
                                       "label": "Refresh",
-                                      "action": "REFRESH",
                                       "icon": "refresh-cw",
-                                      "variant": "secondary"
+                                      "type": "button",
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "type": "stack"
+                                  "gap": "md",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
@@ -2936,6 +2666,8 @@
                                           ]
                                         },
                                         {
+                                          "type": "stat-display",
+                                          "label": "Balance",
                                           "value": [
                                             "object/get",
                                             [
@@ -2943,9 +2675,7 @@
                                               "@entity"
                                             ],
                                             "balance"
-                                          ],
-                                          "type": "stat-display",
-                                          "label": "Balance"
+                                          ]
                                         },
                                         {
                                           "label": "SavingsRate",
@@ -2959,7 +2689,197 @@
                                           ],
                                           "type": "stat-display"
                                         }
+                                      ],
+                                      "cols": 3.0,
+                                      "type": "simple-grid"
+                                    }
+                                  ],
+                                  "type": "box"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "gap": "md",
+                                  "type": "grid",
+                                  "children": [
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "Chart View",
+                                          "variant": "caption"
+                                        }
                                       ]
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "variant": "caption",
+                                          "content": "Graph View",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "type": "card"
+                                    }
+                                  ],
+                                  "cols": 2.0
+                                },
+                                {
+                                  "data": [
+                                    {
+                                      "value": 12.0,
+                                      "date": "Jan"
+                                    },
+                                    {
+                                      "date": "Feb",
+                                      "value": 19.0
+                                    },
+                                    {
+                                      "value": 15.0,
+                                      "date": "Mar"
+                                    },
+                                    {
+                                      "date": "Apr",
+                                      "value": 25.0
+                                    },
+                                    {
+                                      "date": "May",
+                                      "value": 22.0
+                                    },
+                                    {
+                                      "date": "Jun",
+                                      "value": 30.0
+                                    }
+                                  ],
+                                  "type": "line-chart"
+                                },
+                                {
+                                  "type": "chart-legend",
+                                  "items": [
+                                    {
+                                      "color": "primary",
+                                      "label": "Current"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "label": "Previous"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "nodes": [
+                                    {
+                                      "label": "Start",
+                                      "y": 100.0,
+                                      "x": 50.0,
+                                      "id": "a"
+                                    },
+                                    {
+                                      "y": 50.0,
+                                      "label": "Process",
+                                      "x": 200.0,
+                                      "id": "b"
+                                    },
+                                    {
+                                      "y": 100.0,
+                                      "id": "c",
+                                      "label": "End",
+                                      "x": 350.0
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "width": 400.0,
+                                  "edges": [
+                                    {
+                                      "from": "a",
+                                      "to": "b"
+                                    },
+                                    {
+                                      "from": "b",
+                                      "to": "c"
+                                    }
+                                  ],
+                                  "type": "graph-view"
+                                }
+                              ],
+                              "direction": "vertical"
+                            }
+                          ]
+                        }
+                      ],
+                      "appName": "Finance Tracker"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "refreshing",
+                "to": "displaying",
+                "event": "REFRESHED",
+                "effects": [
+                  [
+                    "fetch",
+                    "FinanceSummary",
+                    {
+                      "emit": {
+                        "failure": "FinanceSummaryLoadFailed",
+                        "success": "FinanceSummaryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "lg",
+                              "children": [
+                                {
+                                  "type": "breadcrumb",
+                                  "items": [
+                                    {
+                                      "href": "/",
+                                      "label": "Home"
+                                    },
+                                    {
+                                      "label": "Financial Summary"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "gap": "md",
+                                      "direction": "horizontal",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "pie-chart"
+                                        },
+                                        {
+                                          "content": "Financial Summary",
+                                          "type": "typography",
+                                          "variant": "h2"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "Refresh",
+                                      "action": "REFRESH",
+                                      "type": "button",
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw"
                                     }
                                   ]
                                 },
@@ -2967,13 +2887,77 @@
                                   "type": "divider"
                                 },
                                 {
+                                  "children": [
+                                    {
+                                      "cols": 3.0,
+                                      "children": [
+                                        {
+                                          "type": "stat-display",
+                                          "label": "TotalIncome",
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "totalIncome"
+                                          ]
+                                        },
+                                        {
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "totalExpenses"
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalExpenses"
+                                        },
+                                        {
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "balance"
+                                          ],
+                                          "label": "Balance",
+                                          "type": "stat-display"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "SavingsRate",
+                                          "value": [
+                                            "object/get",
+                                            [
+                                              "array/first",
+                                              "@entity"
+                                            ],
+                                            "savingsRate"
+                                          ]
+                                        }
+                                      ],
+                                      "type": "simple-grid"
+                                    }
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
                                   "gap": "md",
+                                  "cols": 2.0,
                                   "children": [
                                     {
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Chart View"
                                         }
                                       ],
@@ -2990,7 +2974,6 @@
                                       "type": "card"
                                     }
                                   ],
-                                  "cols": 2.0,
                                   "type": "grid"
                                 },
                                 {
@@ -3009,8 +2992,8 @@
                                       "date": "Mar"
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "value": 22.0,
@@ -3023,41 +3006,41 @@
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
                                       "color": "muted",
                                       "label": "Previous"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
-                                  "width": 400.0,
-                                  "height": 200.0,
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a",
                                       "y": 100.0,
+                                      "id": "a",
+                                      "label": "Start",
                                       "x": 50.0
                                     },
                                     {
                                       "id": "b",
+                                      "label": "Process",
                                       "y": 50.0,
-                                      "x": 200.0,
-                                      "label": "Process"
+                                      "x": 200.0
                                     },
                                     {
-                                      "y": 100.0,
-                                      "x": 350.0,
                                       "id": "c",
-                                      "label": "End"
+                                      "y": 100.0,
+                                      "label": "End",
+                                      "x": 350.0
                                     }
                                   ],
+                                  "width": 400.0,
+                                  "height": 200.0,
                                   "type": "graph-view",
                                   "edges": [
                                     {
@@ -3065,20 +3048,37 @@
                                       "from": "a"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ]
                                 }
                               ],
-                              "gap": "lg",
-                              "type": "stack",
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "navItems": [
+                        {
+                          "label": "Transactions",
+                          "href": "/transactions",
+                          "icon": "dollar-sign"
+                        },
+                        {
+                          "href": "/summary",
+                          "icon": "layout-list",
+                          "label": "Summary"
+                        },
+                        {
+                          "href": "/reports",
+                          "icon": "bar-chart",
+                          "label": "Reports"
+                        }
+                      ],
+                      "appName": "Finance Tracker"
                     }
                   ]
                 ]
@@ -3248,36 +3248,37 @@
                     {
                       "navItems": [
                         {
-                          "icon": "dollar-sign",
                           "label": "Transactions",
-                          "href": "/transactions"
+                          "href": "/transactions",
+                          "icon": "dollar-sign"
                         },
                         {
-                          "icon": "layout-list",
                           "label": "Summary",
+                          "icon": "layout-list",
                           "href": "/summary"
                         },
                         {
-                          "href": "/reports",
                           "label": "Reports",
+                          "href": "/reports",
                           "icon": "bar-chart"
                         }
                       ],
+                      "appName": "Finance Tracker",
+                      "type": "dashboard-layout",
                       "children": [
                         {
                           "children": [
                             {
                               "direction": "horizontal",
-                              "type": "stack",
                               "gap": "md",
                               "justify": "between",
                               "align": "center",
                               "children": [
                                 {
-                                  "align": "center",
                                   "direction": "horizontal",
                                   "gap": "sm",
                                   "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -3285,12 +3286,14 @@
                                     },
                                     {
                                       "variant": "h2",
-                                      "content": "Reports",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "Reports"
                                     }
                                   ]
                                 },
                                 {
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "variant": "primary",
@@ -3300,60 +3303,57 @@
                                       "icon": "plus"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  "type": "stack"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "entity": "FinanceReport",
+                              "type": "data-list",
                               "columns": [
                                 {
-                                  "icon": "file-text",
+                                  "variant": "h3",
                                   "name": "title",
-                                  "variant": "h3"
+                                  "icon": "file-text"
                                 },
                                 {
-                                  "name": "period",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "name": "period"
                                 },
                                 {
-                                  "name": "total",
                                   "variant": "h4",
-                                  "format": "currency"
+                                  "format": "currency",
+                                  "name": "total"
                                 },
                                 {
-                                  "variant": "caption",
                                   "name": "generatedAt",
-                                  "label": "Generated",
-                                  "format": "date"
+                                  "variant": "caption",
+                                  "format": "date",
+                                  "label": "Generated"
                                 }
                               ],
-                              "type": "data-list",
-                              "variant": "card",
-                              "entity": "FinanceReport",
                               "itemActions": [
                                 {
-                                  "event": "VIEW",
                                   "variant": "ghost",
+                                  "event": "VIEW",
                                   "label": "View"
                                 }
                               ],
+                              "variant": "card",
                               "fields": [],
                               "gap": "sm"
                             }
                           ],
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full"
+                          "className": "max-w-5xl mx-auto w-full",
+                          "gap": "lg"
                         }
-                      ],
-                      "appName": "Finance Tracker",
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -3504,8 +3504,8 @@
                     "FinanceReport",
                     {
                       "emit": {
-                        "success": "FinanceReportLoaded",
-                        "failure": "FinanceReportLoadFailed"
+                        "failure": "FinanceReportLoadFailed",
+                        "success": "FinanceReportLoaded"
                       }
                     }
                   ],
@@ -3513,13 +3513,11 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "plus-circle",
@@ -3531,25 +3529,27 @@
                               "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "submitEvent": "SAVE",
+                          "entity": "FinanceReport",
+                          "type": "form-section",
                           "cancelEvent": "CLOSE",
                           "mode": "create",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "title",
                             "period",
                             "total",
                             "generatedAt"
-                          ],
-                          "entity": "FinanceReport",
-                          "type": "form-section"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3748,11 +3748,11 @@
                     "fetch",
                     "FinanceReport",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "success": "FinanceReportLoaded",
-                        "failure": "FinanceReportLoadFailed"
-                      }
+                        "failure": "FinanceReportLoadFailed",
+                        "success": "FinanceReportLoaded"
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
@@ -3761,80 +3761,77 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
-                              "content": "@entity.title"
+                              "content": "@entity.title",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "caption",
                               "content": "Title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
                               "variant": "body",
+                              "content": "@entity.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
                               "type": "typography",
-                              "content": "@entity.title"
+                              "variant": "caption",
+                              "content": "Period"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.period",
+                              "variant": "body"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "content": "Period",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "content": "@entity.period",
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
                           "gap": "md",
                           "children": [
                             {
-                              "content": "Total",
+                              "variant": "caption",
                               "type": "typography",
-                              "variant": "caption"
+                              "content": "Total"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.total",
-                              "type": "typography"
+                              "content": "@entity.total"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
@@ -3842,33 +3839,36 @@
                               "content": "Generated At"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.generatedAt",
-                              "variant": "body"
+                              "variant": "body",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "justify": "end",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "action": "CLOSE",
                               "variant": "ghost",
                               "type": "button",
-                              "label": "Close",
-                              "action": "CLOSE"
+                              "label": "Close"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
