@@ -1,5 +1,29 @@
 app std-wizard "1.0.0"
-"std-wizard as a Function"
+"std-wizard as a Function — DEPRECATED"
+;;
+;; DEPRECATED. Do not use this atom in new behaviors.
+;;
+;; A wizard's essence is its step sequence, and step count varies per
+;; consumer (3 for sign-up, 5 for onboarding, 7 for checkout). Encoding
+;; a fixed-topology state machine in an atom is a false abstraction —
+;; consumers either waste states they don't need or rewrite the atom
+;; anyway. Atoms exist to encode *portable* state-machine topology
+;; (Modal = open/closed, Confirmation = idle/confirming); wizards fail
+;; that bar.
+;;
+;; Correct pattern: each consumer writes their own wizard trait at the
+;; molecule tier with states for its exact step count. Reuse UI via
+;; the `wizard-progress`, `wizard-navigation`, and `progress-dots`
+;; patterns from @almadar/patterns. See `std-wizard-form` for the
+;; worked reference.
+;;
+;; Why kept on disk: backward compatibility for any existing consumer;
+;; removal would break their trait refs. Remove in a future major bump
+;; once no imports remain.
+;;
+;; See docs/Almadar_Std_Behaviors.md "Atom-tier criterion" for the
+;; principle.
+
 
 orbital WizardEntryOrbital {
   entity WizardEntry [runtime] {

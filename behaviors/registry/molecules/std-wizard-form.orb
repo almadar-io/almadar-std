@@ -1,20 +1,10 @@
 {
   "name": "std-wizard-form",
   "version": "1.0.0",
-  "description": "std-wizard-form as a Function",
+  "description": "std-wizard-form — canonical molecule-level wizard example",
   "orbitals": [
     {
       "name": "WizardFormOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-wizard",
-          "as": "Wizard"
-        },
-        {
-          "from": "std/behaviors/std-validate-on-save",
-          "as": "Validate"
-        }
-      ],
       "entity": {
         "name": "WizardFormEntry",
         "collection": "wizardformentries",
@@ -26,29 +16,681 @@
             "required": true
           },
           {
-            "name": "step",
-            "type": "string"
-          },
-          {
             "name": "name",
             "type": "string"
           },
           {
             "name": "email",
             "type": "string"
+          },
+          {
+            "name": "theme",
+            "type": "string"
           }
         ]
       },
       "traits": [
         {
-          "ref": "Wizard.traits.WizardEntryWizard",
-          "name": "WizardFormWizard",
-          "linkedEntity": "WizardFormEntry"
-        },
-        {
-          "ref": "Validate.traits.OrbFileWatcher",
-          "name": "WizardFormValidate",
-          "linkedEntity": "WizardFormEntry"
+          "name": "WizardFormFlow",
+          "category": "interaction",
+          "linkedEntity": "WizardFormEntry",
+          "emits": [
+            {
+              "event": "WizardFormSaved",
+              "description": "Fired when wizard flow completes successfully",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WizardFormSaveFailed",
+              "description": "Fired when the final persist fails",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "personal",
+                "isInitial": true
+              },
+              {
+                "name": "preferences"
+              },
+              {
+                "name": "review"
+              },
+              {
+                "name": "persisting"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "NEXT",
+                "name": "Next",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PREV",
+                "name": "Prev"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "WizardFormSaved",
+                "name": "Wizard form saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WizardFormSaveFailed",
+                "name": "Wizard form save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "personal",
+                "to": "personal",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardFormEntry"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "content": "Sign-up",
+                          "variant": "h2",
+                          "type": "typography"
+                        },
+                        {
+                          "currentStep": 0.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Personal Info",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "email"
+                          ],
+                          "mode": "create",
+                          "entity": "WizardFormEntry",
+                          "submitEvent": "NEXT"
+                        },
+                        {
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "showNext": true,
+                          "totalSteps": 3.0,
+                          "currentStep": 0.0,
+                          "onNext": "NEXT",
+                          "showBack": false
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "personal",
+                "to": "preferences",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Sign-up"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Preferences"
+                        },
+                        {
+                          "submitEvent": "NEXT",
+                          "fields": [
+                            "theme"
+                          ],
+                          "mode": "edit",
+                          "entity": "WizardFormEntry",
+                          "cancelEvent": "PREV",
+                          "type": "form-section"
+                        },
+                        {
+                          "showBack": true,
+                          "onNext": "NEXT",
+                          "type": "wizard-navigation",
+                          "currentStep": 1.0,
+                          "showComplete": false,
+                          "totalSteps": 3.0,
+                          "showNext": true,
+                          "onBack": "PREV"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "preferences",
+                "to": "review",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Sign-up"
+                        },
+                        {
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "currentStep": 2.0,
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Review"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Name",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.name",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Email",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.email",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "justify": "between",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Theme"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.theme"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "direction": "vertical"
+                        },
+                        {
+                          "onComplete": "COMPLETE",
+                          "showNext": false,
+                          "onBack": "PREV",
+                          "totalSteps": 3.0,
+                          "type": "wizard-navigation",
+                          "currentStep": 2.0,
+                          "showBack": true,
+                          "showComplete": true
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "preferences",
+                "to": "personal",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "variant": "h2",
+                          "content": "Sign-up",
+                          "type": "typography"
+                        },
+                        {
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "currentStep": 0.0,
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Personal Info",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "fields": [
+                            "name",
+                            "email"
+                          ],
+                          "mode": "edit",
+                          "entity": "WizardFormEntry",
+                          "type": "form-section",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT"
+                        },
+                        {
+                          "totalSteps": 3.0,
+                          "onNext": "NEXT",
+                          "showBack": false,
+                          "currentStep": 0.0,
+                          "showNext": true,
+                          "type": "wizard-navigation",
+                          "showComplete": false
+                        }
+                      ],
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "persisting",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "WizardFormEntry",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "WizardFormSaved",
+                        "failure": "WizardFormSaveFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Completing sign-up…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "preferences",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "content": "Sign-up",
+                          "variant": "h2",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "currentStep": 1.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Preferences",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "mode": "edit",
+                          "fields": [
+                            "theme"
+                          ],
+                          "entity": "WizardFormEntry",
+                          "cancelEvent": "PREV",
+                          "type": "form-section",
+                          "submitEvent": "NEXT"
+                        },
+                        {
+                          "showBack": true,
+                          "showComplete": false,
+                          "onNext": "NEXT",
+                          "totalSteps": 3.0,
+                          "showNext": true,
+                          "onBack": "PREV",
+                          "currentStep": 1.0,
+                          "type": "wizard-navigation"
+                        }
+                      ],
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "persisting",
+                "to": "complete",
+                "event": "WizardFormSaved",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle"
+                        },
+                        {
+                          "content": "Welcome!",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "Your account has been created.",
+                          "type": "typography"
+                        },
+                        {
+                          "label": "Start Over",
+                          "action": "RESTART",
+                          "type": "button",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "persisting",
+                "to": "review",
+                "event": "WizardFormSaveFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "alert-triangle",
+                          "color": "destructive"
+                        },
+                        {
+                          "variant": "h2",
+                          "content": "Sign-up Failed",
+                          "type": "typography"
+                        },
+                        {
+                          "message": "@payload.error",
+                          "type": "alert",
+                          "variant": "error"
+                        },
+                        {
+                          "label": "Retry",
+                          "type": "button",
+                          "action": "COMPLETE",
+                          "variant": "primary",
+                          "icon": "refresh-cw"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "personal",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Sign-up"
+                        },
+                        {
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 0.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Personal Info",
+                          "type": "typography"
+                        },
+                        {
+                          "mode": "create",
+                          "type": "form-section",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "email"
+                          ],
+                          "submitEvent": "NEXT",
+                          "entity": "WizardFormEntry"
+                        },
+                        {
+                          "type": "wizard-navigation",
+                          "totalSteps": 3.0,
+                          "onNext": "NEXT",
+                          "currentStep": 0.0,
+                          "showBack": false,
+                          "showNext": true,
+                          "showComplete": false
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -57,7 +699,7 @@
           "path": "/wizard-form",
           "traits": [
             {
-              "ref": "WizardFormWizard"
+              "ref": "WizardFormFlow"
             }
           ]
         }

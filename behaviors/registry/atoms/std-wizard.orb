@@ -1,7 +1,7 @@
 {
   "name": "std-wizard",
   "version": "1.0.0",
-  "description": "std-wizard as a Function",
+  "description": "std-wizard as a Function — DEPRECATED",
   "orbitals": [
     {
       "name": "WizardEntryOrbital",
@@ -232,8 +232,8 @@
                     "WizardEntry",
                     {
                       "emit": {
-                        "failure": "WizardEntryLoadFailed",
-                        "success": "WizardEntryLoaded"
+                        "success": "WizardEntryLoaded",
+                        "failure": "WizardEntryLoadFailed"
                       }
                     }
                   ],
@@ -241,82 +241,82 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "container",
                       "maxWidth": "lg",
-                      "padding": "lg",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "clipboard",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "clipboard"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Setup Wizard",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
+                              "count": 3.0,
                               "type": "progress-dots",
-                              "currentIndex": 0.0,
-                              "count": 3.0
+                              "currentIndex": 0.0
                             },
                             {
                               "currentStep": 0.0,
-                              "type": "wizard-progress",
                               "steps": [
                                 "Personal Info",
                                 "Settings",
                                 "Review"
-                              ]
+                              ],
+                              "type": "wizard-progress"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "typography",
                               "content": "Personal Info",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "type": "form-section",
+                              "mode": "create",
+                              "cancelEvent": "INIT",
                               "fields": [
                                 "name",
                                 "description"
                               ],
-                              "mode": "create",
-                              "cancelEvent": "INIT",
-                              "submitEvent": "NEXT"
+                              "submitEvent": "NEXT",
+                              "type": "form-section"
                             },
                             {
                               "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
                               "justify": "end",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "icon": "arrow-right",
                                   "type": "button",
                                   "variant": "primary",
+                                  "icon": "arrow-right",
                                   "label": "Next",
                                   "action": "NEXT"
                                 }
                               ]
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack"
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "type": "container",
+                      "padding": "lg"
                     }
                   ]
                 ]
@@ -342,15 +342,14 @@
                     {
                       "padding": "lg",
                       "type": "container",
-                      "maxWidth": "lg",
                       "children": [
                         {
                           "gap": "lg",
-                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -362,8 +361,7 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center"
+                              "gap": "sm"
                             },
                             {
                               "type": "progress-dots",
@@ -371,47 +369,154 @@
                               "currentIndex": 1.0
                             },
                             {
-                              "type": "wizard-progress",
                               "steps": [
                                 "Personal Info",
                                 "Settings",
                                 "Review"
                               ],
-                              "currentStep": 1.0
+                              "currentStep": 1.0,
+                              "type": "wizard-progress"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "typography",
                               "content": "Settings",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "mode": "create",
-                              "type": "form-section",
                               "fields": [
                                 "status"
                               ],
+                              "submitEvent": "NEXT",
+                              "mode": "create",
                               "cancelEvent": "PREV",
-                              "submitEvent": "NEXT"
+                              "type": "form-section"
+                            },
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "justify": "end",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "label": "Back",
+                                  "type": "button",
+                                  "icon": "arrow-left",
+                                  "variant": "ghost",
+                                  "action": "PREV"
+                                },
+                                {
+                                  "action": "NEXT",
+                                  "type": "button",
+                                  "label": "Next",
+                                  "variant": "primary",
+                                  "icon": "arrow-right"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "vertical"
+                        }
+                      ],
+                      "maxWidth": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step2",
+                "to": "step3",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardEntry",
+                    {
+                      "emit": {
+                        "success": "WizardEntryLoaded",
+                        "failure": "WizardEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "padding": "lg",
+                      "type": "container",
+                      "maxWidth": "lg",
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "clipboard",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Setup Wizard",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "progress-dots",
+                              "count": 3.0,
+                              "currentIndex": 2.0
+                            },
+                            {
+                              "currentStep": 2.0,
+                              "steps": [
+                                "Personal Info",
+                                "Settings",
+                                "Review"
+                              ],
+                              "type": "wizard-progress"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "content": "Review",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "mode": "create",
+                              "submitEvent": "NEXT",
+                              "cancelEvent": "PREV",
+                              "fields": [
+                                "createdAt"
+                              ],
+                              "type": "form-section"
                             },
                             {
                               "type": "stack",
                               "justify": "end",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "label": "Back",
-                                  "action": "PREV",
                                   "variant": "ghost",
-                                  "icon": "arrow-left"
+                                  "icon": "arrow-left",
+                                  "type": "button",
+                                  "action": "PREV",
+                                  "label": "Back"
                                 },
                                 {
-                                  "label": "Next",
-                                  "action": "NEXT",
-                                  "type": "button",
                                   "variant": "primary",
+                                  "type": "button",
+                                  "action": "NEXT",
+                                  "label": "Next",
                                   "icon": "arrow-right"
                                 }
                               ],
@@ -428,16 +533,16 @@
               },
               {
                 "from": "step2",
-                "to": "step3",
-                "event": "NEXT",
+                "to": "step1",
+                "event": "PREV",
                 "effects": [
                   [
                     "fetch",
                     "WizardEntry",
                     {
                       "emit": {
-                        "failure": "WizardEntryLoadFailed",
-                        "success": "WizardEntryLoaded"
+                        "success": "WizardEntryLoaded",
+                        "failure": "WizardEntryLoadFailed"
                       }
                     }
                   ],
@@ -445,9 +550,9 @@
                     "render-ui",
                     "main",
                     {
-                      "padding": "lg",
                       "children": [
                         {
+                          "direction": "vertical",
                           "children": [
                             {
                               "children": [
@@ -456,24 +561,24 @@
                                   "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Setup Wizard",
-                                  "variant": "h2"
+                                  "content": "Setup Wizard"
                                 }
                               ],
-                              "align": "center",
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
                               "gap": "sm"
                             },
                             {
-                              "currentIndex": 2.0,
-                              "type": "progress-dots",
-                              "count": 3.0
+                              "currentIndex": 0.0,
+                              "count": 3.0,
+                              "type": "progress-dots"
                             },
                             {
+                              "currentStep": 0.0,
                               "type": "wizard-progress",
-                              "currentStep": 2.0,
                               "steps": [
                                 "Personal Info",
                                 "Settings",
@@ -485,147 +590,42 @@
                             },
                             {
                               "type": "typography",
-                              "content": "Review",
+                              "content": "Personal Info",
                               "variant": "h3"
                             },
                             {
                               "submitEvent": "NEXT",
-                              "type": "form-section",
-                              "fields": [
-                                "createdAt"
-                              ],
-                              "cancelEvent": "PREV",
-                              "mode": "create"
-                            },
-                            {
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "justify": "end",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "ghost",
-                                  "type": "button",
-                                  "icon": "arrow-left",
-                                  "action": "PREV",
-                                  "label": "Back"
-                                },
-                                {
-                                  "action": "NEXT",
-                                  "variant": "primary",
-                                  "label": "Next",
-                                  "icon": "arrow-right",
-                                  "type": "button"
-                                }
-                              ]
-                            }
-                          ],
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "type": "stack"
-                        }
-                      ],
-                      "maxWidth": "lg",
-                      "type": "container"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "step2",
-                "to": "step1",
-                "event": "PREV",
-                "effects": [
-                  [
-                    "fetch",
-                    "WizardEntry",
-                    {
-                      "emit": {
-                        "failure": "WizardEntryLoadFailed",
-                        "success": "WizardEntryLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "padding": "lg",
-                      "maxWidth": "lg",
-                      "type": "container",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "clipboard",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Setup Wizard",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "align": "center"
-                            },
-                            {
-                              "count": 3.0,
-                              "currentIndex": 0.0,
-                              "type": "progress-dots"
-                            },
-                            {
-                              "type": "wizard-progress",
-                              "currentStep": 0.0,
-                              "steps": [
-                                "Personal Info",
-                                "Settings",
-                                "Review"
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "h3",
-                              "content": "Personal Info",
-                              "type": "typography"
-                            },
-                            {
-                              "mode": "create",
-                              "submitEvent": "NEXT",
-                              "cancelEvent": "INIT",
                               "fields": [
                                 "name",
                                 "description"
                               ],
-                              "type": "form-section"
+                              "type": "form-section",
+                              "mode": "create",
+                              "cancelEvent": "INIT"
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "justify": "end",
                               "children": [
                                 {
-                                  "label": "Next",
-                                  "icon": "arrow-right",
                                   "action": "NEXT",
+                                  "icon": "arrow-right",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "label": "Next"
                                 }
                               ],
                               "gap": "sm"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg"
+                          "gap": "lg",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "maxWidth": "lg",
+                      "padding": "lg",
+                      "type": "container"
                     }
                   ]
                 ]
@@ -650,130 +650,130 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clipboard"
+                              "name": "clipboard",
+                              "type": "icon"
                             },
                             {
                               "content": "Setup Wizard",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "badge",
                           "label": "Review"
                         },
                         {
-                          "type": "wizard-progress",
+                          "currentStep": 3.0,
                           "steps": [
                             "Personal Info",
                             "Settings",
                             "Review"
                           ],
-                          "currentStep": 3.0
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
                           "type": "stack",
                           "gap": "sm",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "justify": "between",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Name",
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "content": "Name"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.name"
+                                  "content": "@entity.name",
+                                  "variant": "body"
                                 }
                               ],
-                              "gap": "md",
                               "type": "stack",
-                              "justify": "between",
                               "direction": "horizontal"
                             },
                             {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Description",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ],
                               "gap": "md",
                               "justify": "between",
                               "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Description",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.description",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
                               "type": "stack"
                             },
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Status",
+                                  "type": "typography",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "content": "Status"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.status"
+                                  "content": "@entity.status",
+                                  "type": "typography"
                                 }
                               ],
                               "justify": "between",
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
+                              "justify": "between",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "content": "Created At"
+                                  "content": "Created At",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.createdAt",
                                   "variant": "body",
+                                  "content": "@entity.createdAt",
                                   "type": "typography"
                                 }
                               ],
-                              "justify": "between",
+                              "direction": "horizontal",
                               "gap": "md"
                             }
                           ]
                         },
                         {
-                          "showComplete": true,
-                          "showNext": false,
-                          "showBack": true,
-                          "totalSteps": 4.0,
                           "type": "wizard-navigation",
-                          "currentStep": 3.0
+                          "showComplete": true,
+                          "currentStep": 3.0,
+                          "showBack": true,
+                          "showNext": false,
+                          "totalSteps": 4.0
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -798,87 +798,87 @@
                     "main",
                     {
                       "maxWidth": "lg",
+                      "padding": "lg",
                       "type": "container",
                       "children": [
                         {
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "clipboard"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Setup Wizard",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "sm",
-                              "align": "center"
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
+                              "count": 3.0,
                               "currentIndex": 1.0,
-                              "type": "progress-dots",
-                              "count": 3.0
+                              "type": "progress-dots"
                             },
                             {
+                              "type": "wizard-progress",
+                              "currentStep": 1.0,
                               "steps": [
                                 "Personal Info",
                                 "Settings",
                                 "Review"
-                              ],
-                              "currentStep": 1.0,
-                              "type": "wizard-progress"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Settings"
+                              "content": "Settings",
+                              "type": "typography"
                             },
                             {
-                              "type": "form-section",
-                              "cancelEvent": "PREV",
-                              "mode": "create",
-                              "submitEvent": "NEXT",
                               "fields": [
                                 "status"
-                              ]
+                              ],
+                              "type": "form-section",
+                              "mode": "create",
+                              "cancelEvent": "PREV",
+                              "submitEvent": "NEXT"
                             },
                             {
+                              "justify": "end",
                               "direction": "horizontal",
                               "type": "stack",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "icon": "arrow-left",
-                                  "label": "Back",
+                                  "variant": "ghost",
                                   "type": "button",
                                   "action": "PREV",
-                                  "variant": "ghost"
+                                  "label": "Back",
+                                  "icon": "arrow-left"
                                 },
                                 {
-                                  "label": "Next",
-                                  "variant": "primary",
-                                  "type": "button",
                                   "icon": "arrow-right",
-                                  "action": "NEXT"
+                                  "action": "NEXT",
+                                  "type": "button",
+                                  "label": "Next",
+                                  "variant": "primary"
                                 }
-                              ],
-                              "justify": "end"
+                              ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack"
                         }
-                      ],
-                      "padding": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -902,56 +902,57 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "container",
+                      "padding": "lg",
                       "maxWidth": "lg",
+                      "type": "container",
                       "children": [
                         {
                           "type": "stack",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
                               "direction": "horizontal",
+                              "gap": "sm",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "clipboard",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Setup Wizard",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
+                              "currentIndex": 2.0,
                               "type": "progress-dots",
-                              "count": 3.0,
-                              "currentIndex": 2.0
+                              "count": 3.0
                             },
                             {
+                              "type": "wizard-progress",
                               "steps": [
                                 "Personal Info",
                                 "Settings",
                                 "Review"
                               ],
-                              "currentStep": 2.0,
-                              "type": "wizard-progress"
+                              "currentStep": 2.0
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "content": "Review",
                               "type": "typography",
+                              "content": "Review",
                               "variant": "h3"
                             },
                             {
-                              "cancelEvent": "PREV",
-                              "submitEvent": "NEXT",
                               "mode": "create",
                               "type": "form-section",
+                              "cancelEvent": "PREV",
+                              "submitEvent": "NEXT",
                               "fields": [
                                 "createdAt"
                               ]
@@ -960,30 +961,29 @@
                               "type": "stack",
                               "gap": "sm",
                               "direction": "horizontal",
-                              "justify": "end",
                               "children": [
                                 {
-                                  "variant": "ghost",
-                                  "label": "Back",
                                   "icon": "arrow-left",
+                                  "action": "PREV",
                                   "type": "button",
-                                  "action": "PREV"
+                                  "label": "Back",
+                                  "variant": "ghost"
                                 },
                                 {
-                                  "label": "Next",
                                   "variant": "primary",
-                                  "type": "button",
                                   "action": "NEXT",
+                                  "type": "button",
+                                  "label": "Next",
                                   "icon": "arrow-right"
                                 }
-                              ]
+                              ],
+                              "justify": "end"
                             }
                           ],
                           "gap": "lg",
                           "direction": "vertical"
                         }
-                      ],
-                      "padding": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1014,8 +1014,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "align": "center",
                       "children": [
@@ -1025,19 +1025,19 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Complete!"
+                          "content": "Complete!",
+                          "variant": "h2"
                         },
                         {
-                          "content": "Your wizardentry has been created successfully.",
                           "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "Your wizardentry has been created successfully."
                         },
                         {
-                          "action": "RESTART",
                           "label": "Start New",
-                          "type": "button",
                           "variant": "primary",
+                          "type": "button",
+                          "action": "RESTART",
                           "icon": "refresh-cw"
                         }
                       ]
@@ -1055,8 +1055,8 @@
                     "WizardEntry",
                     {
                       "emit": {
-                        "success": "WizardEntryLoaded",
-                        "failure": "WizardEntryLoadFailed"
+                        "failure": "WizardEntryLoadFailed",
+                        "success": "WizardEntryLoaded"
                       }
                     }
                   ],
@@ -1065,29 +1065,29 @@
                     "main",
                     {
                       "type": "container",
-                      "maxWidth": "lg",
                       "padding": "lg",
                       "children": [
                         {
+                          "gap": "lg",
                           "direction": "vertical",
                           "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "clipboard",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Setup Wizard",
                                   "variant": "h2",
+                                  "content": "Setup Wizard",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center"
                             },
                             {
                               "type": "progress-dots",
@@ -1095,51 +1095,51 @@
                               "currentIndex": 0.0
                             },
                             {
+                              "type": "wizard-progress",
                               "steps": [
                                 "Personal Info",
                                 "Settings",
                                 "Review"
                               ],
-                              "currentStep": 0.0,
-                              "type": "wizard-progress"
+                              "currentStep": 0.0
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "content": "Personal Info",
                               "type": "typography",
+                              "content": "Personal Info",
                               "variant": "h3"
                             },
                             {
-                              "submitEvent": "NEXT",
                               "fields": [
                                 "name",
                                 "description"
                               ],
+                              "cancelEvent": "INIT",
+                              "submitEvent": "NEXT",
                               "type": "form-section",
-                              "mode": "create",
-                              "cancelEvent": "INIT"
+                              "mode": "create"
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "justify": "end",
                               "children": [
                                 {
-                                  "icon": "arrow-right",
                                   "label": "Next",
-                                  "type": "button",
+                                  "action": "NEXT",
+                                  "icon": "arrow-right",
                                   "variant": "primary",
-                                  "action": "NEXT"
+                                  "type": "button"
                                 }
-                              ],
-                              "gap": "sm",
-                              "justify": "end",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
-                          ],
-                          "gap": "lg"
+                          ]
                         }
-                      ]
+                      ],
+                      "maxWidth": "lg"
                     }
                   ]
                 ]
@@ -1163,33 +1163,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "container",
                       "maxWidth": "lg",
                       "padding": "lg",
                       "children": [
                         {
+                          "gap": "lg",
+                          "type": "stack",
                           "direction": "vertical",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "clipboard"
+                                  "name": "clipboard",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "Setup Wizard"
                                 }
-                              ],
-                              "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              ]
                             },
                             {
+                              "count": 3.0,
                               "type": "progress-dots",
-                              "currentIndex": 0.0,
-                              "count": 3.0
+                              "currentIndex": 0.0
                             },
                             {
                               "currentStep": 0.0,
@@ -1205,40 +1208,37 @@
                             },
                             {
                               "content": "Personal Info",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "mode": "create",
                               "type": "form-section",
+                              "mode": "create",
                               "cancelEvent": "INIT",
+                              "submitEvent": "NEXT",
                               "fields": [
                                 "name",
                                 "description"
-                              ],
-                              "submitEvent": "NEXT"
+                              ]
                             },
                             {
-                              "type": "stack",
                               "gap": "sm",
-                              "direction": "horizontal",
                               "justify": "end",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "label": "Next",
                                   "action": "NEXT",
                                   "type": "button",
-                                  "variant": "primary",
                                   "icon": "arrow-right",
-                                  "label": "Next"
+                                  "variant": "primary"
                                 }
                               ]
                             }
-                          ],
-                          "gap": "lg",
-                          "type": "stack"
+                          ]
                         }
-                      ],
-                      "type": "container"
+                      ]
                     }
                   ]
                 ]

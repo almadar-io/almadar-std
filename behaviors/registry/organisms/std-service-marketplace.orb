@@ -261,37 +261,19 @@
                     "main",
                     {
                       "appName": "ServiceMarketplace",
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/products",
-                          "label": "Products",
-                          "icon": "package"
-                        },
-                        {
-                          "href": "/login",
-                          "icon": "layout-list",
-                          "label": "Login"
-                        },
-                        {
-                          "icon": "credit-card",
-                          "label": "Checkout",
-                          "href": "/checkout"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "label": "Orders",
-                          "href": "/orders"
-                        }
-                      ],
                       "children": [
                         {
+                          "gap": "lg",
+                          "direction": "vertical",
                           "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -299,81 +281,79 @@
                                     },
                                     {
                                       "variant": "h2",
-                                      "content": "Products",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "Products"
                                     }
                                   ],
                                   "direction": "horizontal",
-                                  "align": "center",
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  "gap": "sm",
+                                  "type": "stack"
                                 },
                                 {
                                   "gap": "sm",
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "children": [
                                     {
-                                      "action": "CREATE",
-                                      "type": "button",
                                       "variant": "primary",
+                                      "icon": "plus",
                                       "label": "Create Product",
-                                      "icon": "plus"
+                                      "type": "button",
+                                      "action": "CREATE"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 }
                               ],
-                              "justify": "between",
-                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack"
+                              "justify": "between",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "data-grid",
                               "itemActions": [
                                 {
+                                  "variant": "ghost",
                                   "label": "View",
-                                  "event": "VIEW",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "event": "EDIT",
+                                  "label": "Edit",
                                   "variant": "ghost"
                                 },
                                 {
-                                  "variant": "ghost",
-                                  "label": "Edit",
-                                  "event": "EDIT"
-                                },
-                                {
-                                  "label": "Delete",
+                                  "event": "DELETE",
                                   "variant": "danger",
-                                  "event": "DELETE"
+                                  "label": "Delete"
                                 }
                               ],
                               "entity": "Product",
                               "fields": [],
+                              "type": "data-grid",
                               "columns": [
                                 {
-                                  "name": "name",
                                   "label": "Name",
+                                  "name": "name",
                                   "variant": "h4",
                                   "icon": "shopping-bag"
                                 },
                                 {
                                   "label": "Description",
                                   "colorMap": {
-                                    "pending": "warning",
-                                    "error": "destructive",
-                                    "failed": "destructive",
-                                    "archived": "neutral",
                                     "done": "success",
-                                    "completed": "success",
-                                    "disabled": "neutral",
                                     "cancelled": "destructive",
+                                    "pending": "warning",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "failed": "destructive",
+                                    "scheduled": "warning",
                                     "active": "success",
                                     "draft": "warning",
-                                    "scheduled": "warning",
-                                    "inactive": "neutral"
+                                    "inactive": "neutral",
+                                    "error": "destructive",
+                                    "completed": "success"
                                   },
                                   "name": "description",
                                   "variant": "badge"
@@ -385,12 +365,32 @@
                                 }
                               ]
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack"
+                          ]
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "package",
+                          "label": "Products",
+                          "href": "/products"
+                        },
+                        {
+                          "href": "/login",
+                          "label": "Login",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "href": "/checkout",
+                          "label": "Checkout",
+                          "icon": "credit-card"
+                        },
+                        {
+                          "href": "/orders",
+                          "icon": "clipboard-list",
+                          "label": "Orders"
+                        }
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -572,8 +572,8 @@
                     "Product",
                     {
                       "emit": {
-                        "failure": "ProductLoadFailed",
-                        "success": "ProductLoaded"
+                        "success": "ProductLoaded",
+                        "failure": "ProductLoadFailed"
                       }
                     }
                   ],
@@ -581,8 +581,13 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -594,16 +599,12 @@
                               "content": "Create Product"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
                             "description",
@@ -611,14 +612,13 @@
                             "category",
                             "inStock"
                           ],
-                          "submitEvent": "SAVE",
                           "entity": "Product",
-                          "mode": "create"
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -859,33 +859,31 @@
                     "fetch",
                     "Product",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "failure": "ProductLoadFailed",
                         "success": "ProductLoaded"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "Edit Product",
-                              "variant": "h3"
+                              "content": "Edit Product"
                             }
                           ]
                         },
@@ -893,7 +891,11 @@
                           "type": "divider"
                         },
                         {
-                          "entityId": "@entity.id",
+                          "entity": "Product",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "name",
                             "description",
@@ -901,14 +903,12 @@
                             "category",
                             "inStock"
                           ],
-                          "entity": "Product",
-                          "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE"
+                          "entityId": "@entity.id"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1136,8 +1136,8 @@
                     "Product",
                     {
                       "emit": {
-                        "failure": "ProductLoadFailed",
-                        "success": "ProductLoaded"
+                        "success": "ProductLoaded",
+                        "failure": "ProductLoadFailed"
                       },
                       "id": "@payload.id"
                     }
@@ -1146,140 +1146,140 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "eye"
+                              "name": "eye",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.name",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.name"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "content": "Name",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "content": "@entity.name",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "content": "Description",
                               "variant": "caption",
+                              "content": "Name",
                               "type": "typography"
                             },
                             {
                               "type": "typography",
                               "variant": "body",
-                              "content": "@entity.description"
+                              "content": "@entity.name"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "content": "Price",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "content": "@entity.price",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
                           "gap": "md",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Category",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "content": "Description"
                             },
                             {
-                              "content": "@entity.category",
                               "variant": "body",
+                              "content": "@entity.description",
                               "type": "typography"
                             }
                           ]
                         },
                         {
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "content": "In Stock",
+                              "variant": "caption",
+                              "content": "Price",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.price",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
                               "type": "typography",
+                              "content": "Category",
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.inStock"
+                              "variant": "body",
+                              "content": "@entity.category"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "In Stock"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.inStock",
+                              "type": "typography"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "justify": "end",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "label": "Edit",
+                              "action": "EDIT",
                               "variant": "primary",
                               "type": "button",
-                              "icon": "edit",
-                              "action": "EDIT"
+                              "icon": "edit"
                             },
                             {
                               "action": "CLOSE",
                               "variant": "ghost",
-                              "label": "Close",
-                              "type": "button"
+                              "type": "button",
+                              "label": "Close"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1514,8 +1514,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "ProductLoaded",
-                        "failure": "ProductLoadFailed"
+                        "failure": "ProductLoadFailed",
+                        "success": "ProductLoaded"
                       }
                     }
                   ],
@@ -1523,55 +1523,55 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "Delete Product",
+                              "variant": "h3",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "variant": "error",
-                          "message": "This action cannot be undone."
+                          "message": "This action cannot be undone.",
+                          "variant": "error"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "justify": "end",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
-                              "action": "CANCEL",
                               "variant": "ghost",
-                              "label": "Cancel"
+                              "label": "Cancel",
+                              "action": "CANCEL"
                             },
                             {
-                              "icon": "check",
-                              "type": "button",
                               "label": "Delete",
                               "action": "CONFIRM_DELETE",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "type": "button",
+                              "icon": "check"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         }
                       ]
                     }
@@ -1928,8 +1928,8 @@
                     "AuthSession",
                     {
                       "emit": {
-                        "failure": "AuthSessionLoadFailed",
-                        "success": "AuthSessionLoaded"
+                        "success": "AuthSessionLoaded",
+                        "failure": "AuthSessionLoadFailed"
                       }
                     }
                   ],
@@ -1937,28 +1937,52 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "ServiceMarketplace",
+                      "navItems": [
+                        {
+                          "href": "/products",
+                          "icon": "package",
+                          "label": "Products"
+                        },
+                        {
+                          "label": "Login",
+                          "icon": "layout-list",
+                          "href": "/login"
+                        },
+                        {
+                          "icon": "credit-card",
+                          "label": "Checkout",
+                          "href": "/checkout"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "label": "Orders",
+                          "href": "/orders"
+                        }
+                      ],
                       "children": [
                         {
+                          "direction": "vertical",
+                          "align": "center",
                           "type": "stack",
                           "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "lock"
+                                  "name": "lock",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Sign In",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
                               "type": "divider"
@@ -1983,38 +2007,14 @@
                             {
                               "type": "button",
                               "label": "Login",
-                              "variant": "primary",
                               "icon": "log-in",
-                              "action": "LOGIN"
+                              "action": "LOGIN",
+                              "variant": "primary"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "ServiceMarketplace",
-                      "navItems": [
-                        {
-                          "href": "/products",
-                          "label": "Products",
-                          "icon": "package"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Login",
-                          "href": "/login"
-                        },
-                        {
-                          "icon": "credit-card",
-                          "label": "Checkout",
-                          "href": "/checkout"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2028,36 +2028,36 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "title": "Authorizing...",
-                          "message": "Redirecting to provider for authorization.",
-                          "type": "loading-state"
-                        }
-                      ],
-                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
-                          "label": "Products",
                           "href": "/products",
-                          "icon": "package"
+                          "icon": "package",
+                          "label": "Products"
                         },
                         {
-                          "label": "Login",
                           "href": "/login",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Login"
                         },
                         {
                           "label": "Checkout",
-                          "icon": "credit-card",
-                          "href": "/checkout"
+                          "href": "/checkout",
+                          "icon": "credit-card"
                         },
                         {
-                          "icon": "clipboard-list",
+                          "label": "Orders",
                           "href": "/orders",
-                          "label": "Orders"
+                          "icon": "clipboard-list"
                         }
                       ],
+                      "children": [
+                        {
+                          "type": "loading-state",
+                          "title": "Authorizing...",
+                          "message": "Redirecting to provider for authorization."
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
                       "type": "dashboard-layout"
                     }
                   ],
@@ -2089,64 +2089,64 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "label": "Products",
-                          "icon": "package",
-                          "href": "/products"
-                        },
-                        {
-                          "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Checkout",
-                          "href": "/checkout",
-                          "icon": "credit-card"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "href": "/orders",
-                          "label": "Orders"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "appName": "ServiceMarketplace",
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
                           "gap": "lg",
-                          "type": "stack",
-                          "align": "center",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "external-link"
+                              "name": "external-link",
+                              "type": "icon"
                             },
                             {
-                              "content": "Authorization Required",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Authorization Required"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.authUrl",
                               "color": "muted",
-                              "type": "typography"
+                              "content": "@entity.authUrl"
                             },
                             {
-                              "placeholder": "Paste authorization code here",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "Paste authorization code here"
                             },
                             {
                               "variant": "primary",
+                              "icon": "check",
                               "type": "button",
                               "action": "CALLBACK",
-                              "icon": "check",
                               "label": "Submit"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "package",
+                          "label": "Products",
+                          "href": "/products"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "href": "/login",
+                          "label": "Login"
+                        },
+                        {
+                          "label": "Checkout",
+                          "icon": "credit-card",
+                          "href": "/checkout"
+                        },
+                        {
+                          "label": "Orders",
+                          "href": "/orders",
+                          "icon": "clipboard-list"
                         }
                       ]
                     }
@@ -2170,71 +2170,71 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "ServiceMarketplace",
-                      "navItems": [
-                        {
-                          "icon": "package",
-                          "label": "Products",
-                          "href": "/products"
-                        },
-                        {
-                          "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "icon": "credit-card",
-                          "href": "/checkout",
-                          "label": "Checkout"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "label": "Orders",
-                          "href": "/orders"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "check-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "check-circle"
                             },
                             {
-                              "type": "alert",
+                              "variant": "success",
                               "message": "Authenticated successfully",
-                              "variant": "success"
+                              "type": "alert"
                             },
                             {
-                              "justify": "center",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "justify": "center",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "icon": "refresh-cw",
-                                  "action": "REFRESH",
+                                  "variant": "ghost",
                                   "label": "Refresh Token",
-                                  "variant": "ghost"
+                                  "action": "REFRESH",
+                                  "icon": "refresh-cw",
+                                  "type": "button"
                                 },
                                 {
                                   "action": "LOGOUT",
-                                  "icon": "log-out",
-                                  "variant": "ghost",
                                   "type": "button",
-                                  "label": "Logout"
+                                  "label": "Logout",
+                                  "icon": "log-out",
+                                  "variant": "ghost"
                                 }
                               ],
                               "gap": "sm"
                             }
                           ],
                           "gap": "lg",
-                          "direction": "vertical",
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "label": "Products",
+                          "href": "/products",
+                          "icon": "package"
+                        },
+                        {
+                          "label": "Login",
+                          "icon": "layout-list",
+                          "href": "/login"
+                        },
+                        {
+                          "href": "/checkout",
+                          "label": "Checkout",
+                          "icon": "credit-card"
+                        },
+                        {
+                          "label": "Orders",
+                          "href": "/orders",
+                          "icon": "clipboard-list"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace"
                     }
                   ]
                 ]
@@ -2253,31 +2253,29 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "ServiceMarketplace",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
                           "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "title": "Authentication Failed",
-                              "message": "@entity.error",
+                              "type": "error-state",
                               "onRetry": "RETRY",
-                              "type": "error-state"
+                              "title": "Authentication Failed",
+                              "message": "@entity.error"
                             },
                             {
+                              "action": "RETRY",
                               "icon": "rotate-ccw",
                               "type": "button",
                               "variant": "primary",
-                              "label": "Try Again",
-                              "action": "RETRY"
+                              "label": "Try Again"
                             }
                           ],
-                          "gap": "lg"
+                          "align": "center"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "label": "Products",
@@ -2286,8 +2284,8 @@
                         },
                         {
                           "label": "Login",
-                          "icon": "layout-list",
-                          "href": "/login"
+                          "href": "/login",
+                          "icon": "layout-list"
                         },
                         {
                           "icon": "credit-card",
@@ -2296,10 +2294,12 @@
                         },
                         {
                           "icon": "clipboard-list",
-                          "href": "/orders",
-                          "label": "Orders"
+                          "label": "Orders",
+                          "href": "/orders"
                         }
-                      ]
+                      ],
+                      "appName": "ServiceMarketplace",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2328,11 +2328,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "children": [
                         {
-                          "gap": "lg",
-                          "type": "stack",
                           "align": "center",
+                          "direction": "vertical",
                           "children": [
                             {
                               "type": "icon",
@@ -2344,37 +2345,37 @@
                               "variant": "success"
                             },
                             {
-                              "justify": "center",
                               "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "justify": "center",
                               "children": [
                                 {
                                   "label": "Refresh Token",
-                                  "variant": "ghost",
-                                  "icon": "refresh-cw",
                                   "type": "button",
-                                  "action": "REFRESH"
+                                  "action": "REFRESH",
+                                  "variant": "ghost",
+                                  "icon": "refresh-cw"
                                 },
                                 {
+                                  "variant": "ghost",
                                   "type": "button",
-                                  "action": "LOGOUT",
                                   "label": "Logout",
                                   "icon": "log-out",
-                                  "variant": "ghost"
+                                  "action": "LOGOUT"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "direction": "vertical"
+                          "type": "stack",
+                          "gap": "lg"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
+                          "href": "/products",
                           "icon": "package",
-                          "label": "Products",
-                          "href": "/products"
+                          "label": "Products"
                         },
                         {
                           "href": "/login",
@@ -2382,17 +2383,16 @@
                           "icon": "layout-list"
                         },
                         {
+                          "icon": "credit-card",
                           "label": "Checkout",
-                          "href": "/checkout",
-                          "icon": "credit-card"
+                          "href": "/checkout"
                         },
                         {
                           "icon": "clipboard-list",
                           "label": "Orders",
                           "href": "/orders"
                         }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      ]
                     }
                   ]
                 ]
@@ -2413,9 +2413,9 @@
                           "icon": "package"
                         },
                         {
-                          "label": "Login",
                           "href": "/login",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Login"
                         },
                         {
                           "label": "Checkout",
@@ -2423,9 +2423,9 @@
                           "icon": "credit-card"
                         },
                         {
+                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list",
-                          "label": "Orders"
+                          "icon": "clipboard-list"
                         }
                       ],
                       "type": "dashboard-layout",
@@ -2433,8 +2433,8 @@
                       "children": [
                         {
                           "message": "Obtaining a new access token.",
-                          "type": "loading-state",
-                          "title": "Refreshing token..."
+                          "title": "Refreshing token...",
+                          "type": "loading-state"
                         }
                       ]
                     }
@@ -2463,18 +2463,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/products",
+                          "label": "Products",
+                          "icon": "package"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "href": "/login",
+                          "label": "Login"
+                        },
+                        {
+                          "label": "Checkout",
+                          "href": "/checkout",
+                          "icon": "credit-card"
+                        },
+                        {
+                          "label": "Orders",
+                          "href": "/orders",
+                          "icon": "clipboard-list"
+                        }
+                      ],
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "vertical",
                           "gap": "lg",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -2485,7 +2504,9 @@
                                   "type": "typography",
                                   "content": "Sign In"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
@@ -2502,45 +2523,24 @@
                                   "label": "GitHub"
                                 },
                                 {
-                                  "value": "microsoft",
-                                  "label": "Microsoft"
+                                  "label": "Microsoft",
+                                  "value": "microsoft"
                                 }
                               ]
                             },
                             {
                               "type": "button",
                               "label": "Login",
-                              "icon": "log-in",
                               "variant": "primary",
+                              "icon": "log-in",
                               "action": "LOGIN"
                             }
                           ],
-                          "direction": "vertical"
+                          "type": "stack"
                         }
                       ],
                       "appName": "ServiceMarketplace",
-                      "navItems": [
-                        {
-                          "icon": "package",
-                          "label": "Products",
-                          "href": "/products"
-                        },
-                        {
-                          "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/checkout",
-                          "icon": "credit-card",
-                          "label": "Checkout"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "label": "Orders",
-                          "href": "/orders"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2559,15 +2559,16 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
-                          "align": "center",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "check-circle"
+                              "name": "check-circle",
+                              "type": "icon"
                             },
                             {
                               "variant": "success",
@@ -2575,43 +2576,42 @@
                               "message": "Authenticated successfully"
                             },
                             {
+                              "type": "stack",
                               "direction": "horizontal",
                               "justify": "center",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "label": "Refresh Token",
+                                  "type": "button",
+                                  "action": "REFRESH",
                                   "variant": "ghost",
                                   "icon": "refresh-cw",
-                                  "action": "REFRESH",
-                                  "type": "button"
+                                  "label": "Refresh Token"
                                 },
                                 {
-                                  "icon": "log-out",
-                                  "variant": "ghost",
                                   "type": "button",
-                                  "label": "Logout",
-                                  "action": "LOGOUT"
+                                  "variant": "ghost",
+                                  "icon": "log-out",
+                                  "action": "LOGOUT",
+                                  "label": "Logout"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             }
                           ],
-                          "gap": "lg"
+                          "align": "center",
+                          "direction": "vertical"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "href": "/products",
-                          "icon": "package",
-                          "label": "Products"
+                          "label": "Products",
+                          "icon": "package"
                         },
                         {
-                          "icon": "layout-list",
                           "href": "/login",
-                          "label": "Login"
+                          "label": "Login",
+                          "icon": "layout-list"
                         },
                         {
                           "href": "/checkout",
@@ -2619,9 +2619,9 @@
                           "label": "Checkout"
                         },
                         {
-                          "label": "Orders",
+                          "icon": "clipboard-list",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "label": "Orders"
                         }
                       ]
                     }
@@ -2642,53 +2642,53 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "label": "Products",
-                          "icon": "package",
-                          "href": "/products"
-                        },
-                        {
-                          "href": "/login",
-                          "label": "Login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Checkout",
-                          "href": "/checkout",
-                          "icon": "credit-card"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical",
                           "align": "center",
                           "children": [
                             {
                               "title": "Authentication Failed",
+                              "type": "error-state",
                               "message": "@entity.error",
-                              "onRetry": "RETRY",
-                              "type": "error-state"
+                              "onRetry": "RETRY"
                             },
                             {
                               "type": "button",
                               "action": "RETRY",
-                              "variant": "primary",
                               "label": "Try Again",
+                              "variant": "primary",
                               "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical"
                         }
                       ],
-                      "appName": "ServiceMarketplace"
+                      "navItems": [
+                        {
+                          "icon": "package",
+                          "label": "Products",
+                          "href": "/products"
+                        },
+                        {
+                          "label": "Login",
+                          "href": "/login",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "icon": "credit-card",
+                          "label": "Checkout",
+                          "href": "/checkout"
+                        },
+                        {
+                          "href": "/orders",
+                          "icon": "clipboard-list",
+                          "label": "Orders"
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2702,27 +2702,53 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "label": "Products",
+                          "icon": "package",
+                          "href": "/products"
+                        },
+                        {
+                          "label": "Login",
+                          "href": "/login",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "icon": "credit-card",
+                          "label": "Checkout",
+                          "href": "/checkout"
+                        },
+                        {
+                          "label": "Orders",
+                          "href": "/orders",
+                          "icon": "clipboard-list"
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
                       "children": [
                         {
+                          "gap": "lg",
                           "type": "stack",
+                          "align": "center",
                           "direction": "vertical",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "lock",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Sign In",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "Sign In"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -2730,12 +2756,12 @@
                             {
                               "options": [
                                 {
-                                  "value": "google",
-                                  "label": "Google"
+                                  "label": "Google",
+                                  "value": "google"
                                 },
                                 {
-                                  "label": "GitHub",
-                                  "value": "github"
+                                  "value": "github",
+                                  "label": "GitHub"
                                 },
                                 {
                                   "label": "Microsoft",
@@ -2747,39 +2773,13 @@
                             {
                               "icon": "log-in",
                               "action": "LOGIN",
-                              "type": "button",
                               "label": "Login",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "button"
                             }
-                          ],
-                          "gap": "lg",
-                          "align": "center"
+                          ]
                         }
-                      ],
-                      "appName": "ServiceMarketplace",
-                      "navItems": [
-                        {
-                          "href": "/products",
-                          "label": "Products",
-                          "icon": "package"
-                        },
-                        {
-                          "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/checkout",
-                          "label": "Checkout",
-                          "icon": "credit-card"
-                        },
-                        {
-                          "label": "Orders",
-                          "icon": "clipboard-list",
-                          "href": "/orders"
-                        }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -3077,8 +3077,8 @@
                     "OrderPayment",
                     {
                       "emit": {
-                        "success": "OrderPaymentLoaded",
-                        "failure": "OrderPaymentLoadFailed"
+                        "failure": "OrderPaymentLoadFailed",
+                        "success": "OrderPaymentLoaded"
                       }
                     }
                   ],
@@ -3086,74 +3086,7 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "credit-card"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "content": "Payment",
-                                  "type": "typography"
-                                }
-                              ],
-                              "align": "center",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "input",
-                                  "inputType": "number",
-                                  "placeholder": "0.00"
-                                },
-                                {
-                                  "options": [
-                                    {
-                                      "label": "USD",
-                                      "value": "usd"
-                                    },
-                                    {
-                                      "label": "EUR",
-                                      "value": "eur"
-                                    },
-                                    {
-                                      "label": "GBP",
-                                      "value": "gbp"
-                                    }
-                                  ],
-                                  "type": "select"
-                                }
-                              ]
-                            },
-                            {
-                              "action": "CREATE_PAYMENT",
-                              "icon": "credit-card",
-                              "type": "button",
-                              "label": "Pay",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
                       "appName": "ServiceMarketplace",
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "href": "/products",
@@ -3162,8 +3095,8 @@
                         },
                         {
                           "href": "/login",
-                          "icon": "layout-list",
-                          "label": "Login"
+                          "label": "Login",
+                          "icon": "layout-list"
                         },
                         {
                           "href": "/checkout",
@@ -3171,9 +3104,76 @@
                           "icon": "credit-card"
                         },
                         {
-                          "label": "Orders",
                           "icon": "clipboard-list",
-                          "href": "/orders"
+                          "href": "/orders",
+                          "label": "Orders"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "credit-card"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Payment",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "inputType": "number",
+                                  "placeholder": "0.00",
+                                  "type": "input"
+                                },
+                                {
+                                  "type": "select",
+                                  "options": [
+                                    {
+                                      "value": "usd",
+                                      "label": "USD"
+                                    },
+                                    {
+                                      "value": "eur",
+                                      "label": "EUR"
+                                    },
+                                    {
+                                      "label": "GBP",
+                                      "value": "gbp"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "variant": "primary",
+                              "action": "CREATE_PAYMENT",
+                              "icon": "credit-card",
+                              "type": "button",
+                              "label": "Pay"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "lg",
+                          "align": "center"
                         }
                       ]
                     }
@@ -3189,35 +3189,35 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "message": "Setting up your payment intent.",
-                          "type": "loading-state",
-                          "title": "Creating payment..."
-                        }
-                      ],
-                      "appName": "ServiceMarketplace",
                       "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "icon": "package",
-                          "href": "/products",
-                          "label": "Products"
+                          "label": "Products",
+                          "href": "/products"
                         },
                         {
-                          "label": "Login",
                           "icon": "layout-list",
-                          "href": "/login"
+                          "href": "/login",
+                          "label": "Login"
                         },
                         {
-                          "href": "/checkout",
+                          "icon": "credit-card",
                           "label": "Checkout",
-                          "icon": "credit-card"
+                          "href": "/checkout"
                         },
                         {
+                          "icon": "clipboard-list",
                           "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
+                          "href": "/orders"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "title": "Creating payment...",
+                          "type": "loading-state",
+                          "message": "Setting up your payment intent."
                         }
                       ]
                     }
@@ -3227,8 +3227,8 @@
                     "stripe",
                     "createPaymentIntent",
                     {
-                      "currency": "@entity.currency",
-                      "amount": "@entity.amount"
+                      "amount": "@entity.amount",
+                      "currency": "@entity.currency"
                     }
                   ]
                 ]
@@ -3252,20 +3252,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "children": [
                         {
                           "type": "loading-state",
-                          "title": "Confirming payment...",
-                          "message": "Processing your payment."
+                          "message": "Processing your payment.",
+                          "title": "Confirming payment..."
                         }
                       ],
-                      "appName": "ServiceMarketplace",
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/products",
+                          "icon": "package",
                           "label": "Products",
-                          "icon": "package"
+                          "href": "/products"
                         },
                         {
                           "href": "/login",
@@ -3274,13 +3274,13 @@
                         },
                         {
                           "label": "Checkout",
-                          "icon": "credit-card",
-                          "href": "/checkout"
+                          "href": "/checkout",
+                          "icon": "credit-card"
                         },
                         {
                           "label": "Orders",
-                          "icon": "clipboard-list",
-                          "href": "/orders"
+                          "href": "/orders",
+                          "icon": "clipboard-list"
                         }
                       ]
                     }
@@ -3311,13 +3311,12 @@
                     {
                       "children": [
                         {
-                          "message": "@entity.error",
-                          "title": "Payment Failed",
                           "type": "error-state",
-                          "onRetry": "RETRY"
+                          "message": "@entity.error",
+                          "onRetry": "RETRY",
+                          "title": "Payment Failed"
                         }
                       ],
-                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "href": "/products",
@@ -3325,22 +3324,23 @@
                           "label": "Products"
                         },
                         {
-                          "icon": "layout-list",
+                          "label": "Login",
                           "href": "/login",
-                          "label": "Login"
+                          "icon": "layout-list"
                         },
                         {
+                          "icon": "credit-card",
                           "label": "Checkout",
-                          "href": "/checkout",
-                          "icon": "credit-card"
+                          "href": "/checkout"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "icon": "clipboard-list",
+                          "label": "Orders"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace"
                     }
                   ]
                 ]
@@ -3363,62 +3363,62 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "check-circle"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "success",
-                              "message": "Payment successful! Sending receipt..."
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.paymentIntentId",
-                              "type": "typography",
-                              "color": "muted"
-                            },
-                            {
-                              "label": "New Payment",
-                              "icon": "rotate-ccw",
-                              "action": "RESET",
-                              "variant": "ghost",
-                              "type": "button"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "align": "center"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "icon": "package",
                           "href": "/products",
-                          "label": "Products"
+                          "label": "Products",
+                          "icon": "package"
                         },
                         {
+                          "icon": "layout-list",
                           "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
+                          "href": "/login"
                         },
                         {
+                          "icon": "credit-card",
                           "label": "Checkout",
-                          "href": "/checkout",
-                          "icon": "credit-card"
+                          "href": "/checkout"
                         },
                         {
-                          "icon": "clipboard-list",
                           "label": "Orders",
-                          "href": "/orders"
+                          "href": "/orders",
+                          "icon": "clipboard-list"
                         }
                       ],
-                      "appName": "ServiceMarketplace"
+                      "appName": "ServiceMarketplace",
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "name": "check-circle",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "success",
+                              "message": "Payment successful! Sending receipt...",
+                              "type": "alert"
+                            },
+                            {
+                              "type": "typography",
+                              "color": "muted",
+                              "content": "@entity.paymentIntentId",
+                              "variant": "body"
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Payment",
+                              "action": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "lg"
+                        }
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3437,38 +3437,38 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/products",
+                          "icon": "package",
+                          "label": "Products"
+                        },
+                        {
+                          "href": "/login",
+                          "icon": "layout-list",
+                          "label": "Login"
+                        },
+                        {
+                          "label": "Checkout",
+                          "icon": "credit-card",
+                          "href": "/checkout"
+                        },
+                        {
+                          "label": "Orders",
+                          "icon": "clipboard-list",
+                          "href": "/orders"
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
                       "children": [
                         {
-                          "message": "@entity.error",
                           "type": "error-state",
+                          "message": "@entity.error",
                           "title": "Payment Failed",
                           "onRetry": "RETRY"
                         }
                       ],
-                      "navItems": [
-                        {
-                          "icon": "package",
-                          "href": "/products",
-                          "label": "Products"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Login",
-                          "href": "/login"
-                        },
-                        {
-                          "href": "/checkout",
-                          "icon": "credit-card",
-                          "label": "Checkout"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "href": "/orders",
-                          "label": "Orders"
-                        }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3483,61 +3483,62 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
-                          "icon": "package",
+                          "href": "/products",
                           "label": "Products",
-                          "href": "/products"
+                          "icon": "package"
                         },
                         {
-                          "label": "Login",
                           "href": "/login",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Login"
                         },
                         {
-                          "label": "Checkout",
                           "icon": "credit-card",
+                          "label": "Checkout",
                           "href": "/checkout"
                         },
                         {
-                          "href": "/orders",
                           "icon": "clipboard-list",
-                          "label": "Orders"
+                          "label": "Orders",
+                          "href": "/orders"
                         }
                       ],
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "credit-card",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "credit-card"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Payment",
-                                  "variant": "h2"
+                                  "content": "Payment"
                                 }
                               ],
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "direction": "vertical",
                               "type": "stack",
                               "children": [
                                 {
+                                  "inputType": "number",
                                   "placeholder": "0.00",
-                                  "type": "input",
-                                  "inputType": "number"
+                                  "type": "input"
                                 },
                                 {
                                   "options": [
@@ -3557,21 +3558,20 @@
                                   "type": "select"
                                 }
                               ],
-                              "gap": "md"
+                              "gap": "md",
+                              "direction": "vertical"
                             },
                             {
-                              "type": "button",
+                              "action": "CREATE_PAYMENT",
                               "icon": "credit-card",
-                              "label": "Pay",
                               "variant": "primary",
-                              "action": "CREATE_PAYMENT"
+                              "type": "button",
+                              "label": "Pay"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          "align": "center"
                         }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      ]
                     }
                   ]
                 ]
@@ -3585,94 +3585,94 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "ServiceMarketplace",
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "align": "center",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "name": "credit-card",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Payment"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "direction": "vertical",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "input",
-                                  "inputType": "number",
-                                  "placeholder": "0.00"
-                                },
-                                {
-                                  "options": [
-                                    {
-                                      "value": "usd",
-                                      "label": "USD"
-                                    },
-                                    {
-                                      "label": "EUR",
-                                      "value": "eur"
-                                    },
-                                    {
-                                      "label": "GBP",
-                                      "value": "gbp"
-                                    }
-                                  ],
-                                  "type": "select"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Pay",
-                              "action": "CREATE_PAYMENT",
-                              "icon": "credit-card",
-                              "variant": "primary"
-                            }
-                          ],
-                          "gap": "lg"
-                        }
-                      ],
                       "navItems": [
                         {
-                          "href": "/products",
                           "label": "Products",
+                          "href": "/products",
                           "icon": "package"
                         },
                         {
-                          "href": "/login",
                           "label": "Login",
+                          "href": "/login",
                           "icon": "layout-list"
                         },
                         {
-                          "label": "Checkout",
                           "icon": "credit-card",
+                          "label": "Checkout",
                           "href": "/checkout"
                         },
                         {
                           "href": "/orders",
                           "label": "Orders",
                           "icon": "clipboard-list"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "credit-card",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Payment",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "input",
+                                  "placeholder": "0.00",
+                                  "inputType": "number"
+                                },
+                                {
+                                  "options": [
+                                    {
+                                      "label": "USD",
+                                      "value": "usd"
+                                    },
+                                    {
+                                      "label": "EUR",
+                                      "value": "eur"
+                                    },
+                                    {
+                                      "value": "gbp",
+                                      "label": "GBP"
+                                    }
+                                  ],
+                                  "type": "select"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "icon": "credit-card",
+                              "action": "CREATE_PAYMENT",
+                              "label": "Pay",
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
+                          "align": "center"
                         }
                       ]
                     }
@@ -3688,86 +3688,20 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "credit-card"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Payment"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "input",
-                                  "placeholder": "0.00",
-                                  "inputType": "number"
-                                },
-                                {
-                                  "options": [
-                                    {
-                                      "value": "usd",
-                                      "label": "USD"
-                                    },
-                                    {
-                                      "value": "eur",
-                                      "label": "EUR"
-                                    },
-                                    {
-                                      "value": "gbp",
-                                      "label": "GBP"
-                                    }
-                                  ],
-                                  "type": "select"
-                                }
-                              ],
-                              "direction": "vertical"
-                            },
-                            {
-                              "variant": "primary",
-                              "icon": "credit-card",
-                              "action": "CREATE_PAYMENT",
-                              "type": "button",
-                              "label": "Pay"
-                            }
-                          ],
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "align": "center"
-                        }
-                      ],
                       "navItems": [
                         {
                           "label": "Products",
-                          "icon": "package",
-                          "href": "/products"
+                          "href": "/products",
+                          "icon": "package"
                         },
                         {
-                          "label": "Login",
                           "icon": "layout-list",
+                          "label": "Login",
                           "href": "/login"
                         },
                         {
-                          "label": "Checkout",
                           "href": "/checkout",
+                          "label": "Checkout",
                           "icon": "credit-card"
                         },
                         {
@@ -3777,7 +3711,73 @@
                         }
                       ],
                       "appName": "ServiceMarketplace",
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "lg",
+                          "align": "center",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "credit-card",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Payment"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "input",
+                                  "inputType": "number",
+                                  "placeholder": "0.00"
+                                },
+                                {
+                                  "type": "select",
+                                  "options": [
+                                    {
+                                      "label": "USD",
+                                      "value": "usd"
+                                    },
+                                    {
+                                      "value": "eur",
+                                      "label": "EUR"
+                                    },
+                                    {
+                                      "label": "GBP",
+                                      "value": "gbp"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "direction": "vertical"
+                            },
+                            {
+                              "label": "Pay",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "CREATE_PAYMENT",
+                              "icon": "credit-card"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3849,6 +3849,7 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "label": "Products",
@@ -3862,36 +3863,35 @@
                         },
                         {
                           "icon": "credit-card",
-                          "href": "/checkout",
-                          "label": "Checkout"
+                          "label": "Checkout",
+                          "href": "/checkout"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "icon": "clipboard-list",
+                          "label": "Orders"
                         }
                       ],
                       "children": [
                         {
+                          "direction": "vertical",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "mail"
                             },
                             {
-                              "variant": "body",
-                              "type": "typography",
+                              "color": "muted",
                               "content": "Receipt will be sent after payment.",
-                              "color": "muted"
+                              "type": "typography",
+                              "variant": "body"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "vertical",
                           "type": "stack",
-                          "align": "center"
+                          "gap": "md"
                         }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      ]
                     }
                   ]
                 ]
@@ -3905,6 +3905,15 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "message": "Delivering your payment receipt.",
+                          "title": "Sending receipt...",
+                          "type": "loading-state"
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "icon": "package",
@@ -3913,29 +3922,20 @@
                         },
                         {
                           "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "href": "/login"
                         },
                         {
                           "icon": "credit-card",
-                          "label": "Checkout",
-                          "href": "/checkout"
+                          "href": "/checkout",
+                          "label": "Checkout"
                         },
                         {
-                          "href": "/orders",
                           "icon": "clipboard-list",
-                          "label": "Orders"
+                          "label": "Orders",
+                          "href": "/orders"
                         }
-                      ],
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "title": "Sending receipt...",
-                          "type": "loading-state",
-                          "message": "Delivering your payment receipt."
-                        }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      ]
                     }
                   ],
                   [
@@ -3943,9 +3943,9 @@
                     "email",
                     "send",
                     {
-                      "body": "@entity.body",
                       "to": "@entity.to",
-                      "subject": "@entity.subject"
+                      "subject": "@entity.subject",
+                      "body": "@entity.body"
                     }
                   ]
                 ]
@@ -3964,31 +3964,10 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "icon": "package",
-                          "label": "Products",
-                          "href": "/products"
-                        },
-                        {
-                          "label": "Login",
-                          "icon": "layout-list",
-                          "href": "/login"
-                        },
-                        {
-                          "label": "Checkout",
-                          "icon": "credit-card",
-                          "href": "/checkout"
-                        },
-                        {
-                          "href": "/orders",
-                          "label": "Orders",
-                          "icon": "clipboard-list"
-                        }
-                      ],
                       "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
@@ -3996,17 +3975,38 @@
                               "name": "check-circle"
                             },
                             {
-                              "message": "Receipt sent successfully",
                               "type": "alert",
-                              "variant": "success"
+                              "variant": "success",
+                              "message": "Receipt sent successfully"
                             }
                           ],
-                          "direction": "vertical",
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "vertical"
                         }
                       ],
-                      "appName": "ServiceMarketplace"
+                      "appName": "ServiceMarketplace",
+                      "navItems": [
+                        {
+                          "label": "Products",
+                          "href": "/products",
+                          "icon": "package"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "href": "/login",
+                          "label": "Login"
+                        },
+                        {
+                          "href": "/checkout",
+                          "icon": "credit-card",
+                          "label": "Checkout"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "label": "Orders",
+                          "href": "/orders"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -4026,12 +4026,35 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "onRetry": "RETRY_RECEIPT",
+                              "message": "Could not send receipt email.",
+                              "type": "error-state",
+                              "title": "Receipt Failed"
+                            },
+                            {
+                              "variant": "primary",
+                              "icon": "refresh-cw",
+                              "type": "button",
+                              "label": "Retry",
+                              "action": "RETRY_RECEIPT"
+                            }
+                          ]
+                        }
+                      ],
                       "appName": "ServiceMarketplace",
                       "navItems": [
                         {
-                          "href": "/products",
+                          "icon": "package",
                           "label": "Products",
-                          "icon": "package"
+                          "href": "/products"
                         },
                         {
                           "href": "/login",
@@ -4039,37 +4062,14 @@
                           "label": "Login"
                         },
                         {
+                          "href": "/checkout",
                           "label": "Checkout",
-                          "icon": "credit-card",
-                          "href": "/checkout"
+                          "icon": "credit-card"
                         },
                         {
+                          "label": "Orders",
                           "icon": "clipboard-list",
-                          "href": "/orders",
-                          "label": "Orders"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "onRetry": "RETRY_RECEIPT",
-                              "type": "error-state",
-                              "title": "Receipt Failed",
-                              "message": "Could not send receipt email."
-                            },
-                            {
-                              "action": "RETRY_RECEIPT",
-                              "label": "Retry",
-                              "type": "button",
-                              "icon": "refresh-cw",
-                              "variant": "primary"
-                            }
-                          ],
-                          "align": "center",
-                          "gap": "md",
-                          "type": "stack"
+                          "href": "/orders"
                         }
                       ]
                     }
@@ -4085,8 +4085,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Resending receipt..."
+                      "title": "Resending receipt...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -4094,8 +4094,8 @@
                     "email",
                     "send",
                     {
-                      "subject": "@entity.subject",
                       "to": "@entity.to",
+                      "subject": "@entity.subject",
                       "body": "@entity.body"
                     }
                   ]
@@ -4110,7 +4110,7 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "appName": "ServiceMarketplace",
                       "navItems": [
                         {
                           "label": "Products",
@@ -4119,28 +4119,28 @@
                         },
                         {
                           "label": "Login",
-                          "icon": "layout-list",
-                          "href": "/login"
+                          "href": "/login",
+                          "icon": "layout-list"
                         },
                         {
-                          "href": "/checkout",
                           "icon": "credit-card",
-                          "label": "Checkout"
+                          "label": "Checkout",
+                          "href": "/checkout"
                         },
                         {
-                          "href": "/orders",
                           "icon": "clipboard-list",
+                          "href": "/orders",
                           "label": "Orders"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "message": "Delivering your payment receipt.",
                           "title": "Sending receipt...",
-                          "type": "loading-state"
+                          "type": "loading-state",
+                          "message": "Delivering your payment receipt."
                         }
-                      ],
-                      "appName": "ServiceMarketplace"
+                      ]
                     }
                   ],
                   [
@@ -4148,8 +4148,8 @@
                     "email",
                     "send",
                     {
-                      "body": "@entity.body",
                       "subject": "@entity.subject",
+                      "body": "@entity.body",
                       "to": "@entity.to"
                     }
                   ]
@@ -4360,33 +4360,18 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "href": "/products",
-                          "label": "Products",
-                          "icon": "package"
-                        },
-                        {
-                          "label": "Login",
-                          "href": "/login",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "icon": "credit-card",
-                          "href": "/checkout",
-                          "label": "Checkout"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        }
-                      ],
                       "children": [
                         {
+                          "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
+                              "align": "center",
+                              "gap": "md",
                               "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
                                   "children": [
@@ -4395,102 +4380,117 @@
                                       "name": "list"
                                     },
                                     {
+                                      "type": "typography",
                                       "content": "Orders",
-                                      "variant": "h2",
-                                      "type": "typography"
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "gap": "sm",
                                   "type": "stack",
+                                  "align": "center",
                                   "direction": "horizontal",
-                                  "align": "center"
+                                  "gap": "sm"
                                 },
                                 {
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "label": "Create Order",
-                                      "variant": "primary",
-                                      "icon": "plus",
+                                      "type": "button",
                                       "action": "CREATE",
-                                      "type": "button"
+                                      "variant": "primary",
+                                      "label": "Create Order",
+                                      "icon": "plus"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "gap": "sm"
                                 }
                               ],
-                              "align": "center",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between"
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "data-grid",
                               "fields": [],
-                              "entity": "Order",
                               "itemActions": [
                                 {
-                                  "variant": "ghost",
                                   "label": "View",
+                                  "variant": "ghost",
                                   "event": "VIEW"
                                 },
                                 {
-                                  "variant": "ghost",
                                   "event": "EDIT",
-                                  "label": "Edit"
+                                  "label": "Edit",
+                                  "variant": "ghost"
                                 },
                                 {
-                                  "label": "Delete",
                                   "event": "DELETE",
-                                  "variant": "danger"
+                                  "variant": "danger",
+                                  "label": "Delete"
                                 }
                               ],
-                              "type": "data-grid",
                               "columns": [
                                 {
+                                  "label": "Product Name",
                                   "variant": "h4",
                                   "name": "productName",
-                                  "icon": "list",
-                                  "label": "Product Name"
+                                  "icon": "list"
                                 },
                                 {
                                   "name": "amount",
                                   "label": "Amount",
+                                  "variant": "badge",
                                   "colorMap": {
-                                    "failed": "destructive",
-                                    "inactive": "neutral",
+                                    "done": "success",
                                     "active": "success",
                                     "disabled": "neutral",
                                     "draft": "warning",
                                     "error": "destructive",
-                                    "pending": "warning",
-                                    "cancelled": "destructive",
                                     "scheduled": "warning",
+                                    "cancelled": "destructive",
+                                    "completed": "success",
                                     "archived": "neutral",
-                                    "done": "success",
-                                    "completed": "success"
-                                  },
-                                  "variant": "badge"
+                                    "failed": "destructive",
+                                    "inactive": "neutral",
+                                    "pending": "warning"
+                                  }
                                 },
                                 {
-                                  "name": "paymentStatus",
                                   "label": "Payment Status",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "name": "paymentStatus"
                                 }
-                              ]
+                              ],
+                              "entity": "Order"
                             }
-                          ],
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "direction": "vertical",
-                          "gap": "lg"
+                          ]
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "ServiceMarketplace"
+                      "navItems": [
+                        {
+                          "icon": "package",
+                          "label": "Products",
+                          "href": "/products"
+                        },
+                        {
+                          "label": "Login",
+                          "icon": "layout-list",
+                          "href": "/login"
+                        },
+                        {
+                          "icon": "credit-card",
+                          "href": "/checkout",
+                          "label": "Checkout"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "href": "/orders",
+                          "label": "Orders"
+                        }
+                      ],
+                      "appName": "ServiceMarketplace",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -4665,31 +4665,32 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
+                              "content": "Create Order",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Create Order"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "form-section",
+                          "entity": "Order",
                           "mode": "create",
                           "submitEvent": "SAVE",
-                          "entity": "Order",
-                          "type": "form-section",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "productName",
@@ -4699,9 +4700,8 @@
                           ]
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -4925,11 +4925,11 @@
                     "fetch",
                     "Order",
                     {
+                      "id": "@payload.id",
                       "emit": {
                         "success": "OrderLoaded",
                         "failure": "OrderLoadFailed"
-                      },
-                      "id": "@payload.id"
+                      }
                     }
                   ],
                   [
@@ -4938,41 +4938,41 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "edit",
                               "type": "icon"
                             },
                             {
-                              "content": "Edit Order",
                               "type": "typography",
+                              "content": "Edit Order",
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "entityId": "@entity.id",
                           "type": "form-section",
+                          "entity": "Order",
+                          "mode": "edit",
+                          "entityId": "@entity.id",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "productName",
                             "amount",
                             "paymentStatus",
                             "orderDate"
-                          ],
-                          "entity": "Order",
-                          "cancelEvent": "CLOSE"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -5184,35 +5184,34 @@
                     "fetch",
                     "Order",
                     {
+                      "id": "@payload.id",
                       "emit": {
                         "failure": "OrderLoadFailed",
                         "success": "OrderLoaded"
-                      },
-                      "id": "@payload.id"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "eye"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "@entity.productName"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -5225,52 +5224,50 @@
                               "type": "typography"
                             },
                             {
-                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.productName"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "content": "Amount",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.amount"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Payment Status",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.paymentStatus",
-                              "type": "typography",
+                              "content": "@entity.productName",
                               "variant": "body"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
+                          "children": [
+                            {
+                              "content": "Amount",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.amount"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Payment Status"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.paymentStatus"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
                           "children": [
                             {
                               "content": "Order Date",
@@ -5283,35 +5280,38 @@
                               "variant": "body"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
                               "action": "EDIT",
+                              "type": "button",
                               "label": "Edit",
                               "variant": "primary",
-                              "type": "button",
                               "icon": "edit"
                             },
                             {
-                              "label": "Close",
-                              "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE"
+                              "label": "Close",
+                              "action": "CLOSE",
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm",
                           "direction": "horizontal",
                           "justify": "end"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -5539,57 +5539,57 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Delete Order"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "error",
                           "message": "This action cannot be undone.",
+                          "variant": "error",
                           "type": "alert"
                         },
                         {
-                          "justify": "end",
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Cancel",
                               "variant": "ghost",
+                              "type": "button",
                               "action": "CANCEL"
                             },
                             {
                               "icon": "check",
-                              "label": "Delete",
                               "type": "button",
-                              "action": "CONFIRM_DELETE",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Delete",
+                              "action": "CONFIRM_DELETE"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
