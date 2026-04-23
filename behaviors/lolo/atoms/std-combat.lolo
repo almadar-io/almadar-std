@@ -20,25 +20,25 @@ orbital CombatantOrbital {
     state ready {
       INIT -> ready
         (fetch Combatant { emit: { success: "CombatantLoaded", failure: "CombatantLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", event: "ATTACK", variant: "primary", icon: "swords" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", action: "ATTACK", variant: "primary", icon: "swords" }] })
       ATTACK -> attacking
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Cooldown End", event: "HIT", variant: "secondary", icon: "clock" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Cooldown End", action: "HIT", variant: "secondary", icon: "clock" }] })
     }
     state attacking {
       HIT -> cooldown
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "badge", label: "Cooling down..." }] })
       DEFEAT -> defeated
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-over-screen", title: "Defeated", variant: "defeat" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-over-screen", title: "Defeated", variant: "defeat" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
     }
     state cooldown {
       COOLDOWN_END -> ready
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", event: "ATTACK", variant: "primary", icon: "swords" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", action: "ATTACK", variant: "primary", icon: "swords" }] })
       DEFEAT -> defeated
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-over-screen", title: "Defeated", variant: "defeat" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-over-screen", title: "Defeated", variant: "defeat" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
     }
     state defeated {
       RESET -> ready
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", event: "ATTACK", variant: "primary", icon: "swords" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", action: "ATTACK", variant: "primary", icon: "swords" }] })
     }
     listens {
       ATTACK { targetId : string! }

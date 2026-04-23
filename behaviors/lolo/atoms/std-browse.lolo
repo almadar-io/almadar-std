@@ -18,21 +18,21 @@ orbital BrowseItemOrbital {
     state loading {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading BrowseItems…" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading BrowseItems…" }] })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "BrowseItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BrowseItem", fields: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "BrowseItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BrowseItem", fields: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] })
       BrowseItemLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load BrowseItems" }, { type: "typography", variant: "body", color: "muted", content: "@payload.message" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load BrowseItems" }, { type: "typography", variant: "body", color: "muted", content: "@payload.message" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     state browsing {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing…" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing…" }] })
     }
     state error {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Retrying…" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Retrying…" }] })
     }
     emits: [BrowseItemLoaded, BrowseItemLoadFailed]
     listens {

@@ -153,6 +153,108 @@
                     "TabContent",
                     {
                       "emit": {
+                        "success": "TabContentLoaded",
+                        "failure": "TabContentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "layout-grid",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
+                              "content": "TabContents",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "tabs",
+                          "onTabChange": "SELECT_TAB",
+                          "tabs": [
+                            {
+                              "label": "Name",
+                              "value": "name"
+                            },
+                            {
+                              "value": "description",
+                              "label": "Description"
+                            },
+                            {
+                              "label": "Status",
+                              "value": "status"
+                            },
+                            {
+                              "label": "CreatedAt",
+                              "value": "createdAt"
+                            }
+                          ],
+                          "defaultActiveTab": "name"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "TabContent",
+                          "fields": [],
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "content": "@item.name",
+                                  "variant": "h4",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@item.name",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "className": "transition-shadow hover:shadow-md cursor-pointer"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "TabContent",
+                    {
+                      "emit": {
                         "failure": "TabContentLoadFailed",
                         "success": "TabContentLoaded"
                       }
@@ -167,30 +269,31 @@
                         {
                           "children": [
                             {
-                              "name": "layout-grid",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "layout-grid"
                             },
                             {
+                              "content": "TabContents",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "TabContents"
+                              "type": "typography"
                             }
                           ],
+                          "align": "center",
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "onTabChange": "SELECT_TAB",
+                          "activeTab": "@payload.tab",
                           "defaultActiveTab": "name",
                           "tabs": [
                             {
-                              "label": "Name",
-                              "value": "name"
+                              "value": "name",
+                              "label": "Name"
                             },
                             {
                               "value": "description",
@@ -211,139 +314,36 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "TabContent",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "@item.name",
                                   "type": "typography",
+                                  "content": "@item.name",
                                   "variant": "h4"
                                 },
                                 {
+                                  "color": "muted",
                                   "variant": "caption",
-                                  "content": "@item.name",
-                                  "color": "muted",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "type": "stack",
-                              "gap": "sm"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "type": "data-grid",
-                          "fields": []
-                        }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "SELECT_TAB",
-                "effects": [
-                  [
-                    "fetch",
-                    "TabContent",
-                    {
-                      "emit": {
-                        "success": "TabContentLoaded",
-                        "failure": "TabContentLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "layout-grid",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h2",
-                              "content": "TabContents"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "tabs": [
-                            {
-                              "value": "name",
-                              "label": "Name"
-                            },
-                            {
-                              "label": "Description",
-                              "value": "description"
-                            },
-                            {
-                              "value": "status",
-                              "label": "Status"
-                            },
-                            {
-                              "label": "CreatedAt",
-                              "value": "createdAt"
-                            }
-                          ],
-                          "activeTab": "@payload.tab",
-                          "defaultActiveTab": "name",
-                          "onTabChange": "SELECT_TAB",
-                          "type": "tabs"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "variant": "h4",
-                                  "content": "@item.name",
-                                  "type": "typography"
-                                },
-                                {
-                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "@item.name"
                                 }
                               ],
-                              "direction": "vertical",
-                              "type": "stack"
+                              "gap": "sm",
+                              "direction": "vertical"
                             }
                           ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "type": "data-grid",
+                          "fields": [],
                           "entity": "TabContent",
-                          "fields": []
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]

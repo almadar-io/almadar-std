@@ -27,7 +27,7 @@ orbital ServicePaymentFlowOrbital {
     state idle {
       INIT -> idle
         (fetch ServicePaymentFlow { emit: { success: "ServicePaymentFlowLoaded", failure: "ServicePaymentFlowLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
         (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" })
@@ -46,20 +46,20 @@ orbital ServicePaymentFlowOrbital {
       PAYMENT_CONFIRMED -> succeeded
         (set @entity.paymentStatus succeeded)
         (emit SEND_RECEIPT)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Payment successful! Sending receipt..." }, { type: "typography", variant: "body", color: "muted", content: "@entity.paymentIntentId" }, { type: "button", label: "New Payment", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Payment successful! Sending receipt..." }, { type: "typography", variant: "body", color: "muted", content: "@entity.paymentIntentId" }, { type: "button", label: "New Payment", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
         (set @entity.error @payload.error)
         (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state succeeded {
       RESET -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
     }
     state error {
       RETRY -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
       RESET -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
     }
     emits {
       SEND_RECEIPT
@@ -75,7 +75,7 @@ orbital ServicePaymentFlowOrbital {
     initial: waiting
     state waiting {
       INIT -> waiting
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "mail", size: "md" }, { type: "typography", content: "Receipt will be sent after payment.", variant: "body", color: "muted" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "Receipt will be sent after payment.", variant: "body", color: "muted" }] })
       SEND_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
         (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
@@ -83,10 +83,10 @@ orbital ServicePaymentFlowOrbital {
     state sending {
       SENT -> sent
         (set @entity.sendStatus sent)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "check-circle", size: "md" }, { type: "alert", variant: "success", message: "Receipt sent successfully" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Receipt sent successfully" }] })
       FAILED -> receiptError
         (set @entity.sendStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "error-state", title: "Receipt Failed", message: "Could not send receipt email.", onRetry: "RETRY_RECEIPT" }, { type: "button", label: "Retry", event: "RETRY_RECEIPT", variant: "primary", icon: "refresh-cw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "error-state", title: "Receipt Failed", message: "Could not send receipt email.", onRetry: "RETRY_RECEIPT" }, { type: "button", label: "Retry", action: "RETRY_RECEIPT", variant: "primary", icon: "refresh-cw" }] })
     }
     state sent {
       SEND_RECEIPT -> sending

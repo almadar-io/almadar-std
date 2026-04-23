@@ -26,21 +26,21 @@ orbital LocationOrbital {
     state loading {
       INIT -> loading
         (fetch Location { emit: { success: "LocationLoaded", failure: "LocationLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading locations…" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading locations…" }] })
       LocationLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map-pin", size: "lg" }, { type: "typography", content: "Locations", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Select", event: "SELECT", variant: "ghost" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "map-pin" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map-pin" }, { type: "typography", content: "Locations", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Select", event: "SELECT", variant: "ghost" }], fields: [{ name: "name", label: "Name", variant: "h4", icon: "map-pin" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }] })
       LocationLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load locations" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load locations" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     state browsing {
       INIT -> loading
         (fetch Location { emit: { success: "LocationLoaded", failure: "LocationLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
+        (render-ui main { type: "spinner" })
     }
     state error {
       INIT -> loading
         (fetch Location { emit: { success: "LocationLoaded", failure: "LocationLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
+        (render-ui main { type: "spinner" })
     }
     emits: [LocationLoaded, LocationLoadFailed]
     listens {
@@ -57,7 +57,7 @@ orbital LocationOrbital {
         (fetch Location)
       SELECT -> open
         (set @entity.id @payload.id)
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Selection", action: "CONFIRM_SELECT", actionPayload: { id: "@entity.id" }, variant: "primary", icon: "check" }] }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Selection", action: "CONFIRM_SELECT", actionPayload: { id: "@entity.id" }, variant: "primary", icon: "check" }] }] })
     }
     state open {
       CLOSE -> closed

@@ -279,8 +279,8 @@
                     "ServiceStorage",
                     {
                       "emit": {
-                        "success": "ServiceStorageLoaded",
-                        "failure": "ServiceStorageLoadFailed"
+                        "failure": "ServiceStorageLoadFailed",
+                        "success": "ServiceStorageLoaded"
                       }
                     }
                   ],
@@ -291,90 +291,81 @@
                       "align": "stretch",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "md",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "hard-drive",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
-                              "content": "ServiceStorage Storage",
                               "type": "typography",
+                              "content": "ServiceStorage Storage",
                               "variant": "h2"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "input",
-                          "bind": "@entity.bucket",
-                          "label": "Bucket",
                           "placeholder": "bucket-name"
                         },
                         {
-                          "label": "File Key",
                           "type": "input",
-                          "placeholder": "path/to/file.txt",
-                          "bind": "@entity.fileKey"
+                          "placeholder": "path/to/file.txt"
                         },
                         {
                           "type": "input",
-                          "placeholder": "path/prefix/",
-                          "bind": "@entity.prefix",
-                          "label": "Prefix"
+                          "placeholder": "path/prefix/"
                         },
                         {
-                          "label": "Content",
-                          "bind": "@entity.content",
                           "type": "textarea",
                           "placeholder": "File content..."
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "action": "UPLOAD_FILE",
                               "icon": "upload",
+                              "type": "button",
                               "variant": "primary",
-                              "type": "button",
-                              "label": "Upload",
-                              "event": "UPLOAD_FILE"
+                              "label": "Upload"
                             },
                             {
                               "type": "button",
-                              "event": "DOWNLOAD_FILE",
                               "label": "Download",
-                              "icon": "download",
-                              "variant": "secondary"
+                              "action": "DOWNLOAD_FILE",
+                              "variant": "secondary",
+                              "icon": "download"
                             },
                             {
-                              "event": "LIST_FILES",
                               "label": "List",
                               "icon": "list",
+                              "type": "button",
                               "variant": "secondary",
-                              "type": "button"
+                              "action": "LIST_FILES"
                             },
                             {
-                              "event": "DELETE_FILE",
-                              "icon": "trash-2",
                               "label": "Delete",
-                              "variant": "danger",
-                              "type": "button"
+                              "action": "DELETE_FILE",
+                              "icon": "trash-2",
+                              "type": "button",
+                              "variant": "danger"
                             }
                           ],
-                          "justify": "center",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "center"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -388,9 +379,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Executing storage operation on servicestorage...",
                       "type": "loading-state",
-                      "title": "Processing..."
+                      "title": "Processing...",
+                      "message": "Executing storage operation on servicestorage..."
                     }
                   ],
                   [
@@ -398,9 +389,9 @@
                     "storage",
                     "upload",
                     {
+                      "key": "@entity.fileKey",
                       "bucket": "@entity.bucket",
-                      "content": "@entity.content",
-                      "key": "@entity.fileKey"
+                      "content": "@entity.content"
                     }
                   ]
                 ]
@@ -414,9 +405,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Executing storage operation on servicestorage...",
                       "type": "loading-state",
-                      "title": "Processing...",
-                      "message": "Executing storage operation on servicestorage..."
+                      "title": "Processing..."
                     }
                   ],
                   [
@@ -440,8 +431,8 @@
                     "main",
                     {
                       "message": "Executing storage operation on servicestorage...",
-                      "title": "Processing...",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Processing..."
                     }
                   ],
                   [
@@ -449,8 +440,8 @@
                     "storage",
                     "list",
                     {
-                      "bucket": "@entity.bucket",
-                      "prefix": "@entity.prefix"
+                      "prefix": "@entity.prefix",
+                      "bucket": "@entity.bucket"
                     }
                   ]
                 ]
@@ -464,9 +455,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Executing storage operation on servicestorage...",
+                      "title": "Processing...",
                       "type": "loading-state",
-                      "title": "Processing..."
+                      "message": "Executing storage operation on servicestorage..."
                     }
                   ],
                   [
@@ -474,8 +465,8 @@
                     "storage",
                     "delete",
                     {
-                      "key": "@entity.fileKey",
-                      "bucket": "@entity.bucket"
+                      "bucket": "@entity.bucket",
+                      "key": "@entity.fileKey"
                     }
                   ]
                 ]
@@ -500,13 +491,11 @@
                     "main",
                     {
                       "gap": "lg",
-                      "align": "center",
                       "direction": "vertical",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "size": "lg",
                           "name": "check-circle"
                         },
                         {
@@ -521,13 +510,14 @@
                           "content": "@entity.result"
                         },
                         {
+                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "label": "Back",
-                          "type": "button",
                           "variant": "ghost",
-                          "event": "RESET"
+                          "label": "Back",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -551,24 +541,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
                           "type": "error-state",
-                          "message": "@entity.error",
-                          "title": "Operation Failed"
+                          "title": "Operation Failed",
+                          "message": "@entity.error"
                         },
                         {
-                          "type": "button",
+                          "action": "RESET",
                           "label": "Back",
-                          "event": "RESET",
                           "icon": "rotate-ccw",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -587,91 +577,82 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "stretch",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "stretch",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "hard-drive",
-                              "size": "lg",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "hard-drive"
                             },
                             {
-                              "variant": "h2",
+                              "content": "ServiceStorage Storage",
                               "type": "typography",
-                              "content": "ServiceStorage Storage"
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
                           "placeholder": "bucket-name",
-                          "bind": "@entity.bucket",
-                          "label": "Bucket"
+                          "type": "input"
                         },
                         {
-                          "label": "File Key",
                           "placeholder": "path/to/file.txt",
-                          "bind": "@entity.fileKey",
                           "type": "input"
                         },
                         {
                           "placeholder": "path/prefix/",
-                          "type": "input",
-                          "bind": "@entity.prefix",
-                          "label": "Prefix"
+                          "type": "input"
                         },
                         {
-                          "type": "textarea",
-                          "label": "Content",
                           "placeholder": "File content...",
-                          "bind": "@entity.content"
+                          "type": "textarea"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "event": "UPLOAD_FILE",
-                              "label": "Upload",
+                              "action": "UPLOAD_FILE",
                               "icon": "upload",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Upload",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
                               "icon": "download",
+                              "type": "button",
                               "label": "Download",
-                              "variant": "secondary",
-                              "event": "DOWNLOAD_FILE"
+                              "action": "DOWNLOAD_FILE",
+                              "variant": "secondary"
                             },
                             {
+                              "action": "LIST_FILES",
                               "label": "List",
-                              "type": "button",
-                              "variant": "secondary",
                               "icon": "list",
-                              "event": "LIST_FILES"
+                              "variant": "secondary",
+                              "type": "button"
                             },
                             {
-                              "variant": "danger",
                               "icon": "trash-2",
-                              "event": "DELETE_FILE",
+                              "action": "DELETE_FILE",
                               "type": "button",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "variant": "danger"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center"
+                          ]
                         }
                       ]
                     }
@@ -692,25 +673,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "stretch",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
                           "gap": "md",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "hard-drive",
-                              "size": "lg"
+                              "name": "hard-drive"
                             },
                             {
-                              "content": "ServiceStorage Storage",
                               "type": "typography",
+                              "content": "ServiceStorage Storage",
                               "variant": "h2"
                             }
                           ]
@@ -719,66 +697,60 @@
                           "type": "divider"
                         },
                         {
-                          "placeholder": "bucket-name",
                           "type": "input",
-                          "bind": "@entity.bucket",
-                          "label": "Bucket"
+                          "placeholder": "bucket-name"
                         },
                         {
-                          "type": "input",
-                          "label": "File Key",
                           "placeholder": "path/to/file.txt",
-                          "bind": "@entity.fileKey"
+                          "type": "input"
                         },
                         {
-                          "label": "Prefix",
-                          "bind": "@entity.prefix",
                           "type": "input",
                           "placeholder": "path/prefix/"
                         },
                         {
-                          "type": "textarea",
-                          "bind": "@entity.content",
-                          "label": "Content",
-                          "placeholder": "File content..."
+                          "placeholder": "File content...",
+                          "type": "textarea"
                         },
                         {
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "icon": "upload",
-                              "event": "UPLOAD_FILE",
-                              "type": "button",
                               "variant": "primary",
-                              "label": "Upload"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "secondary",
-                              "label": "Download",
-                              "event": "DOWNLOAD_FILE",
-                              "icon": "download"
-                            },
-                            {
-                              "label": "List",
-                              "variant": "secondary",
-                              "event": "LIST_FILES",
-                              "icon": "list",
+                              "label": "Upload",
+                              "action": "UPLOAD_FILE",
                               "type": "button"
                             },
                             {
                               "type": "button",
-                              "icon": "trash-2",
-                              "event": "DELETE_FILE",
+                              "action": "DOWNLOAD_FILE",
+                              "variant": "secondary",
+                              "icon": "download",
+                              "label": "Download"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "secondary",
+                              "icon": "list",
+                              "label": "List",
+                              "action": "LIST_FILES"
+                            },
+                            {
+                              "type": "button",
                               "variant": "danger",
-                              "label": "Delete"
+                              "icon": "trash-2",
+                              "label": "Delete",
+                              "action": "DELETE_FILE"
                             }
-                          ],
-                          "justify": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
