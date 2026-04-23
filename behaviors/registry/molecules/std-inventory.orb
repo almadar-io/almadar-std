@@ -177,22 +177,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading inventory…"
+                          "content": "Loading inventory…",
+                          "type": "typography"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
-                      "type": "stack"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -206,41 +206,37 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
                           "justify": "between",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "package"
+                                  "name": "package",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Inventory",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ]
                             },
                             {
-                              "icon": "plus",
-                              "variant": "primary",
-                              "type": "button",
                               "action": "ADD_ITEM",
-                              "label": "Add Item"
+                              "variant": "primary",
+                              "label": "Add Item",
+                              "type": "button",
+                              "icon": "plus"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -248,38 +244,42 @@
                         {
                           "fields": [
                             {
-                              "icon": "package",
                               "label": "Name",
-                              "variant": "h4",
-                              "name": "name"
+                              "name": "name",
+                              "icon": "package",
+                              "variant": "h4"
                             },
                             {
-                              "label": "Description",
                               "name": "description",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Description"
                             },
                             {
-                              "name": "status",
+                              "label": "Status",
                               "variant": "badge",
-                              "label": "Status"
+                              "name": "status"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "label": "Use",
+                              "variant": "ghost",
+                              "event": "USE_ITEM"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "DROP",
+                              "label": "Drop"
                             }
                           ],
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "USE_ITEM",
-                              "label": "Use",
-                              "variant": "ghost"
-                            },
-                            {
-                              "event": "DROP",
-                              "label": "Drop",
-                              "variant": "danger"
-                            }
-                          ]
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -294,35 +294,35 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "type": "icon",
+                          "name": "alert-triangle",
                           "color": "destructive"
                         },
                         {
                           "variant": "h3",
-                          "content": "Failed to load inventory",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Failed to load inventory"
                         },
                         {
                           "content": "@payload.error",
+                          "type": "typography",
                           "variant": "body",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
-                          "action": "INIT",
                           "type": "button",
-                          "variant": "primary",
                           "icon": "rotate-ccw",
-                          "label": "Retry"
+                          "label": "Retry",
+                          "variant": "primary",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -337,8 +337,8 @@
                     "InventoryItem",
                     {
                       "emit": {
-                        "failure": "InventoryItemLoadFailed",
-                        "success": "InventoryItemLoaded"
+                        "success": "InventoryItemLoaded",
+                        "failure": "InventoryItemLoadFailed"
                       }
                     }
                   ],
@@ -384,14 +384,14 @@
           "name": "InventoryItemAdd",
           "linkedEntity": "InventoryItem",
           "config": {
-            "icon": "plus-circle",
             "title": "Add Item",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "mode": "create"
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "SAVE": "ITEM_ADDED",
@@ -403,10 +403,10 @@
           "name": "InventoryItemUse",
           "linkedEntity": "InventoryItem",
           "config": {
-            "icon": "zap",
             "confirmLabel": "Confirm Use",
+            "alertMessage": "Consume this item?",
             "title": "Use Item",
-            "alertMessage": "Consume this item?"
+            "icon": "zap"
           },
           "events": {
             "REQUEST": "USE_ITEM",
@@ -418,10 +418,10 @@
           "name": "InventoryItemDrop",
           "linkedEntity": "InventoryItem",
           "config": {
+            "title": "Drop Item",
             "alertMessage": "Are you sure you want to drop this item? This action cannot be undone.",
             "confirmLabel": "Drop",
-            "icon": "alert-triangle",
-            "title": "Drop Item"
+            "icon": "alert-triangle"
           },
           "events": {
             "CONFIRM": "ITEM_DROPPED",

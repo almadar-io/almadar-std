@@ -227,16 +227,14 @@
                     "main",
                     {
                       "gap": "lg",
-                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "align": "center",
-                          "justify": "between",
+                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "terminal",
@@ -244,81 +242,52 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "AgentSession Manager"
+                                  "content": "AgentSession Manager",
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "gap": "sm",
                               "type": "stack",
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "action": "FORK",
+                                  "label": "Fork",
                                   "variant": "secondary",
                                   "icon": "git-branch",
-                                  "type": "button",
-                                  "label": "Fork"
+                                  "type": "button"
                                 },
                                 {
-                                  "icon": "tag",
                                   "action": "LABEL",
-                                  "type": "button",
                                   "variant": "secondary",
-                                  "label": "Label"
+                                  "icon": "tag",
+                                  "label": "Label",
+                                  "type": "button"
                                 },
                                 {
-                                  "icon": "square",
                                   "label": "End",
                                   "type": "button",
+                                  "icon": "square",
                                   "action": "END",
                                   "variant": "ghost"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             }
                           ],
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "label": "Session ID",
-                              "variant": "h4",
-                              "icon": "terminal",
-                              "name": "sessionId"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge",
-                              "colorMap": {
-                                "pending": "warning",
-                                "draft": "warning",
-                                "inactive": "neutral",
-                                "archived": "neutral",
-                                "scheduled": "warning",
-                                "done": "success",
-                                "disabled": "neutral",
-                                "cancelled": "destructive",
-                                "failed": "destructive",
-                                "error": "destructive",
-                                "completed": "success",
-                                "active": "success"
-                              },
-                              "label": "Status"
-                            },
-                            {
-                              "label": "Label",
-                              "variant": "caption",
-                              "name": "label"
-                            }
-                          ],
                           "itemActions": [
                             {
                               "label": "View",
@@ -326,12 +295,43 @@
                               "variant": "ghost"
                             }
                           ],
-                          "entity": "AgentSession",
-                          "type": "data-grid"
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "icon": "terminal",
+                              "name": "sessionId",
+                              "label": "Session ID"
+                            },
+                            {
+                              "colorMap": {
+                                "failed": "destructive",
+                                "pending": "warning",
+                                "done": "success",
+                                "inactive": "neutral",
+                                "active": "success",
+                                "scheduled": "warning",
+                                "archived": "neutral",
+                                "completed": "success",
+                                "error": "destructive",
+                                "draft": "warning",
+                                "cancelled": "destructive",
+                                "disabled": "neutral"
+                              },
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "label",
+                              "label": "Label"
+                            }
+                          ],
+                          "entity": "AgentSession"
                         }
                       ],
-                      "className": "max-w-5xl mx-auto w-full",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -525,9 +525,12 @@
                     "modal",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -539,41 +542,38 @@
                               "content": "Label Session"
                             }
                           ],
-                          "gap": "sm",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Session:"
+                              "content": "Session:",
+                              "type": "typography"
                             },
                             {
-                              "label": "@entity.sessionId",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.sessionId"
                             }
                           ],
+                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal"
                         },
                         {
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
                           "submitEvent": "SAVE",
+                          "mode": "edit",
                           "fields": [
                             "label"
                           ],
-                          "entity": "AgentSession",
-                          "type": "form-section",
-                          "mode": "edit",
-                          "cancelEvent": "CLOSE"
+                          "entity": "AgentSession"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -862,9 +862,9 @@
                     "render-ui",
                     "main",
                     {
-                      "description": "Session is ready",
-                      "icon": "git-branch",
                       "type": "empty-state",
+                      "icon": "git-branch",
+                      "description": "Session is ready",
                       "title": "Session"
                     }
                   ]
@@ -891,10 +891,10 @@
                     "create",
                     "AgentSession",
                     {
-                      "status": "forked",
-                      "parentId": "@entity.parentId",
+                      "sessionId": "@entity.sessionId",
                       "createdAt": "@now",
-                      "sessionId": "@entity.sessionId"
+                      "parentId": "@entity.parentId",
+                      "status": "forked"
                     }
                   ],
                   [
@@ -933,8 +933,8 @@
                     "AgentSession",
                     {
                       "emit": {
-                        "failure": "AgentSessionLoadFailed",
-                        "success": "AgentSessionLoaded"
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
                       }
                     }
                   ]
@@ -977,10 +977,10 @@
                     "create",
                     "AgentSession",
                     {
-                      "parentId": "@entity.parentId",
-                      "createdAt": "@now",
                       "sessionId": "@entity.sessionId",
-                      "status": "forked"
+                      "createdAt": "@now",
+                      "status": "forked",
+                      "parentId": "@entity.parentId"
                     }
                   ],
                   [
@@ -1074,10 +1074,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "empty-state",
-                      "title": "Session",
                       "icon": "git-branch",
-                      "description": "Session is ready"
+                      "type": "empty-state",
+                      "description": "Session is ready",
+                      "title": "Session"
                     }
                   ]
                 ]

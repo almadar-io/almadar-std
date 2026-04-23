@@ -11,7 +11,8 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
@@ -45,38 +46,52 @@
           "emits": [
             {
               "event": "AsyncTaskLoaded",
-              "description": "Fired when AsyncTask finishes loading",
+              "description": "Fired when AsyncTask collection finishes loading",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[AsyncTask]"
                 }
               ]
             },
             {
               "event": "AsyncTaskLoadFailed",
-              "description": "Fired when AsyncTask fails to load",
+              "description": "Fired when AsyncTask load fails",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AsyncTaskSaved",
+              "description": "Fired when persist create succeeds",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AsyncTaskSaveFailed",
+              "description": "Fired when persist create fails",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -90,6 +105,9 @@
               },
               {
                 "name": "loading"
+              },
+              {
+                "name": "persisting"
               },
               {
                 "name": "success"
@@ -130,6 +148,30 @@
                 ]
               },
               {
+                "key": "AsyncTaskSaved",
+                "name": "AsyncTask saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AsyncTaskSaveFailed",
+                "name": "AsyncTask save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "RESET",
                 "name": "Reset"
               },
@@ -142,24 +184,8 @@
                 "name": "AsyncTask loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[AsyncTask]"
                   }
                 ]
               },
@@ -168,7 +194,11 @@
                 "name": "AsyncTask load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -185,8 +215,8 @@
                     "AsyncTask",
                     {
                       "emit": {
-                        "success": "AsyncTaskLoaded",
-                        "failure": "AsyncTaskLoadFailed"
+                        "failure": "AsyncTaskLoadFailed",
+                        "success": "AsyncTaskLoaded"
                       }
                     }
                   ],
@@ -194,45 +224,45 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "loader",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "loader"
                             },
                             {
+                              "content": "AsyncTask",
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "AsyncTask"
+                              "variant": "h2"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "color": "muted",
-                          "variant": "body",
                           "type": "typography",
-                          "content": "Ready to start asynctask operation."
+                          "content": "Ready to start asynctask operation.",
+                          "variant": "body",
+                          "color": "muted"
                         },
                         {
                           "type": "button",
-                          "label": "Start",
                           "action": "START",
                           "variant": "primary",
-                          "icon": "play"
+                          "icon": "play",
+                          "label": "Start"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -246,70 +276,57 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "title": "Loading...",
                           "message": "Processing asynctask...",
-                          "type": "loading-state",
-                          "title": "Loading..."
+                          "type": "loading-state"
                         },
                         {
                           "variant": "text",
                           "type": "skeleton"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
               },
               {
                 "from": "loading",
-                "to": "success",
+                "to": "persisting",
                 "event": "LOADED",
                 "effects": [
                   [
                     "persist",
                     "create",
                     "AsyncTask",
-                    "@payload.data"
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "AsyncTaskSaved",
+                        "failure": "AsyncTaskSaveFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "name": "check-circle",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "alert",
-                          "message": "Operation completed successfully.",
-                          "variant": "success"
-                        },
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "justify": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Reset",
-                              "variant": "ghost",
-                              "action": "RESET",
-                              "type": "button",
-                              "icon": "rotate-ccw"
-                            }
-                          ]
-                        }
-                      ],
-                      "align": "center",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "loading-state",
+                          "title": "Saving...",
+                          "message": "Persisting asynctask..."
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -323,40 +340,115 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "onRetry": "RETRY",
                           "title": "Operation Failed",
+                          "onRetry": "RETRY",
                           "type": "error-state",
                           "message": "An error occurred. Please try again."
                         },
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "RETRY",
-                              "icon": "refresh-cw",
                               "label": "Retry",
                               "variant": "primary",
-                              "type": "button"
+                              "icon": "refresh-cw",
+                              "type": "button",
+                              "action": "RETRY"
                             },
                             {
-                              "action": "RESET",
+                              "label": "Reset",
                               "icon": "rotate-ccw",
+                              "action": "RESET",
                               "type": "button",
-                              "variant": "ghost",
-                              "label": "Reset"
+                              "variant": "ghost"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "center"
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "persisting",
+                "to": "success",
+                "event": "AsyncTaskSaved",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle"
+                        },
+                        {
+                          "type": "alert",
+                          "message": "Operation completed successfully.",
+                          "variant": "success"
+                        },
+                        {
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "rotate-ccw",
+                              "action": "RESET",
+                              "label": "Reset",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        }
+                      ],
                       "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "persisting",
+                "to": "error",
+                "event": "AsyncTaskSaveFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "message": "Could not persist asynctask.",
+                          "type": "error-state",
+                          "title": "Save Failed",
+                          "onRetry": "RETRY"
+                        },
+                        {
+                          "action": "RETRY",
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "refresh-cw",
+                          "label": "Retry"
+                        }
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -370,45 +462,45 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "loader"
+                              "name": "loader",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "AsyncTask",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Ready to start asynctask operation.",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "Ready to start asynctask operation.",
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "variant": "primary",
-                          "action": "START",
+                          "icon": "play",
                           "label": "Start",
-                          "icon": "play"
+                          "action": "START",
+                          "variant": "primary",
+                          "type": "button"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -422,43 +514,43 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
                       "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "gap": "md",
+                          "align": "center",
                           "type": "stack",
                           "children": [
                             {
-                              "name": "loader",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "loader"
                             },
                             {
+                              "variant": "h2",
                               "content": "AsyncTask",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "body",
+                          "content": "Ready to start asynctask operation.",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "Ready to start asynctask operation."
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
-                          "label": "Start",
-                          "action": "START",
+                          "icon": "play",
                           "type": "button",
+                          "label": "Start",
                           "variant": "primary",
-                          "icon": "play"
+                          "action": "START"
                         }
                       ]
                     }
@@ -474,20 +566,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "loading-state",
-                          "message": "Processing asynctask...",
-                          "title": "Loading..."
+                          "title": "Loading...",
+                          "message": "Processing asynctask..."
                         },
                         {
-                          "variant": "text",
-                          "type": "skeleton"
+                          "type": "skeleton",
+                          "variant": "text"
                         }
                       ],
+                      "type": "stack",
                       "gap": "lg",
-                      "align": "center",
                       "direction": "vertical"
                     }
                   ]
