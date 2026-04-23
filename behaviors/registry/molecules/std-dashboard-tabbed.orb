@@ -64,6 +64,32 @@
           "name": "DashboardLayout",
           "category": "interaction",
           "linkedEntity": "DashboardItem",
+          "emits": [
+            {
+              "event": "DashboardItemLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DashboardItemLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[DashboardItem]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -75,6 +101,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "DashboardItemLoadFailed",
+                "name": "DashboardItem load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DashboardItemLoaded",
+                "name": "DashboardItem loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[DashboardItem]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -97,22 +147,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@trait.DashboardTabs",
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             "@trait.DashboardSummary",
                             "@trait.DashboardMetrics",
                             "@trait.DashboardRecent"
                           ],
-                          "gap": "md"
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]

@@ -21,7 +21,7 @@ orbital PostOrbital {
     state browsing {
       INIT -> browsing
         (ref Post)
-        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Post", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     emits {
       COMMENT external { id: string }
@@ -58,7 +58,7 @@ orbital PostOrbital {
       SAVE { data : object! }
           PostLoadFailed { message : string }
     }
-    emits: [PostLoaded, PostLoadFailed]
+    emits: [PostLoadFailed, PostLoaded, PostSaveFailed, PostSaved]
   }
   trait PostView -> Post [interaction, collection] {
     initial: closed
@@ -98,11 +98,13 @@ orbital CommentOrbital {
 
   type CommentLoaded     = Event Comment                  "Fired when Comment finishes loading"
   type CommentLoadFailed = Event { message : string } "Fired when Comment fails to load"
+  type CommentSaveFailed = Event { error : string, code : string }
+  type CommentSaved = Event { id : string }
   trait CommentBrowse -> Comment [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Comment)
-        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Comment", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
       CommentCompose SEND -> INIT
@@ -132,7 +134,7 @@ orbital CommentOrbital {
     emits {
       SEND
     }
-    emits: [CommentLoaded, CommentLoadFailed]
+    emits: [CommentLoadFailed, CommentLoaded, CommentSaveFailed, CommentSaved]
     listens {
       CommentLoadFailed { message : string }
       SEND { data : string }

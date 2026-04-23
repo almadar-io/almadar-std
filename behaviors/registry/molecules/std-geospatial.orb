@@ -92,6 +92,14 @@
                 "kind": "trait",
                 "trait": "LocationConfirmSelect"
               }
+            },
+            {
+              "event": "LocationSelected",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "LocationSelectionFlow"
+              }
             }
           ],
           "stateMachine": {
@@ -157,22 +165,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading locations…",
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -186,18 +194,12 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between",
-                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
@@ -205,14 +207,17 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Locations",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -220,10 +225,10 @@
                         {
                           "fields": [
                             {
-                              "variant": "h4",
                               "icon": "map-pin",
+                              "label": "Name",
                               "name": "name",
-                              "label": "Name"
+                              "variant": "h4"
                             },
                             {
                               "name": "description",
@@ -231,12 +236,12 @@
                               "variant": "caption"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ],
-                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "event": "SELECT",
@@ -244,10 +249,13 @@
                               "label": "Select"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical"
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -261,19 +269,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "color": "destructive"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load locations",
-                          "type": "typography"
+                          "content": "Failed to load locations"
                         },
                         {
                           "type": "typography",
@@ -282,15 +291,14 @@
                           "content": "@payload.error"
                         },
                         {
-                          "variant": "primary",
                           "action": "INIT",
-                          "icon": "rotate-ccw",
                           "label": "Retry",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -329,8 +337,8 @@
                     "Location",
                     {
                       "emit": {
-                        "failure": "LocationLoadFailed",
-                        "success": "LocationLoaded"
+                        "success": "LocationLoaded",
+                        "failure": "LocationLoadFailed"
                       }
                     }
                   ],
@@ -360,6 +368,32 @@
                   "name": "id",
                   "type": "string",
                   "required": true
+                }
+              ]
+            },
+            {
+              "event": "LocationLoadFailed",
+              "description": "Fired when the Location collection fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LocationLoaded",
+              "description": "Fired when the Location collection finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[Location]"
                 }
               ]
             }
@@ -397,6 +431,30 @@
               {
                 "key": "CONFIRM_SELECT",
                 "name": "Confirm Select"
+              },
+              {
+                "key": "LocationLoadFailed",
+                "name": "Location load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LocationLoaded",
+                "name": "Location loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[Location]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -410,8 +468,8 @@
                     "Location",
                     {
                       "emit": {
-                        "success": "LocationLoaded",
-                        "failure": "LocationLoadFailed"
+                        "failure": "LocationLoadFailed",
+                        "success": "LocationLoaded"
                       }
                     }
                   ]
@@ -431,25 +489,26 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "map-pin",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.name",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -457,9 +516,9 @@
                         {
                           "children": [
                             {
+                              "content": "Name",
                               "variant": "caption",
-                              "type": "typography",
-                              "content": "Name"
+                              "type": "typography"
                             },
                             {
                               "variant": "body",
@@ -467,41 +526,41 @@
                               "content": "@entity.name"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "md"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
-                              "variant": "caption",
                               "content": "Description",
-                              "type": "typography"
-                            },
-                            {
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.description"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Status",
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
-                              "content": "@entity.status",
+                              "type": "typography",
+                              "content": "@entity.description",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Status",
+                              "variant": "caption",
                               "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.status",
+                              "variant": "body"
                             }
                           ]
                         },
@@ -509,31 +568,30 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "CLOSE",
+                              "variant": "ghost",
                               "label": "Cancel",
-                              "variant": "ghost"
+                              "action": "CLOSE",
+                              "type": "button"
                             },
                             {
                               "variant": "primary",
-                              "action": "CONFIRM_SELECT",
-                              "label": "Confirm Selection",
                               "icon": "check",
                               "type": "button",
+                              "label": "Confirm Selection",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "action": "CONFIRM_SELECT"
                             }
-                          ],
-                          "justify": "end",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -571,10 +629,10 @@
           "name": "LocationConfirmSelect",
           "linkedEntity": "Location",
           "config": {
-            "title": "Confirm Location",
-            "alertMessage": "Are you sure you want to select this location?",
+            "confirmLabel": "Confirm",
             "icon": "alert-triangle",
-            "confirmLabel": "Confirm"
+            "title": "Confirm Location",
+            "alertMessage": "Are you sure you want to select this location?"
           },
           "events": {
             "CONFIRM": "CONFIRMED",

@@ -64,7 +64,7 @@ orbital PipelinePlanOrbital {
         (set @entity.category @payload.category)
         (set @entity.status recalling)
         (agent/recall (str/concat @entity.category " " @entity.task) 5)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "Recalling relevant experience...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "Recalling relevant experience...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.category" }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -76,7 +76,7 @@ orbital PipelinePlanOrbital {
         (set @entity.memoryCount @payload.count)
         (set @entity.status planning)
         (agent/generate (str/concat "Task: " @entity.task "\n" "Category: " @entity.category "\n" "Relevant experience:\n" @entity.relevantMemories "\n\n" "Generate a numbered step-by-step execution plan. " "Include a confidence score (0-100) for how likely this plan will succeed."))
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating plan...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }, { type: "badge", label: ["str/concat", ["str/concat", "@entity.memoryCount"], " memories loaded"] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating plan...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.category" }, { type: "badge", label: "@entity.memoryCount" }] }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -89,7 +89,7 @@ orbital PipelinePlanOrbital {
         (set @entity.status ready)
         (agent/memorize (str/concat "Plan for " @entity.category " task: " @entity.task) pattern-affinity)
         (emit PLAN_READY)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Plan Ready", variant: "h2" }] }, { type: "button", label: "New Plan", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Category", value: "@entity.category", icon: "tag" }, { type: "stat-display", label: "Confidence", value: ["str/concat", ["str/concat", "@entity.confidence"], "%"], icon: "target" }, { type: "stat-display", label: "Memories Used", value: "@entity.memoryCount", icon: "brain" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Execution Plan", variant: "caption" }, { type: "typography", content: "@entity.steps", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Relevant Memories", variant: "caption" }, { type: "typography", content: "@entity.relevantMemories", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Plan Ready", variant: "h2" }] }, { type: "button", label: "New Plan", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Category", value: "@entity.category", icon: "tag" }, { type: "stat-display", label: "Confidence", value: "@entity.confidence", icon: "target" }, { type: "stat-display", label: "Memories Used", value: "@entity.memoryCount", icon: "brain" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Execution Plan", variant: "caption" }, { type: "typography", content: "@entity.steps", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Relevant Memories", variant: "caption" }, { type: "typography", content: "@entity.relevantMemories", variant: "body" }] }] }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -179,7 +179,7 @@ orbital PipelinePlanOrbital {
       SAVE { data : object! }
           PipelinePlanLoadFailed { message : string }
     }
-    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
+    emits: [PipelinePlanLoadFailed, PipelinePlanLoaded, PipelinePlanSaveFailed, PipelinePlanSaved]
   }
   trait PlannerCompletionFlow -> PipelinePlan [interaction, collection] {
     initial: closed
@@ -211,13 +211,13 @@ orbital PipelinePlanOrbital {
       SAVE { data : object! }
           PipelinePlanLoadFailed { message : string }
     }
-    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
+    emits: [PipelinePlanLoadFailed, PipelinePlanLoaded, PipelinePlanSaveFailed, PipelinePlanSaved]
   }
   trait PlannerMemoryLifecycle -> PipelinePlan [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref PipelinePlan)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "PipelinePlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PipelinePlan", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "PipelinePlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
     listens {
       PIN { id : string!, row : object }
@@ -265,6 +265,8 @@ orbital PipelineExecOrbital {
 
   type PipelineExecLoaded     = Event PipelineExec                  "Fired when PipelineExec finishes loading"
   type PipelineExecLoadFailed = Event { message : string } "Fired when PipelineExec fails to load"
+  type PipelineExecSaveFailed = Event { error : string, code : string }
+  type PipelineExecSaved = Event { id : string }
   trait PipelineExecutor -> PipelineExec [interaction, collection] {
     initial: idle
     state idle {
@@ -282,7 +284,7 @@ orbital PipelineExecOrbital {
         (set @entity.currentTool @payload.toolName)
         (set @entity.iterations (+ @entity.iterations 1))
         (agent/invoke @payload.toolName @payload.toolArgs)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: "@entity.maxIterations" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
       FAILED -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -292,7 +294,7 @@ orbital PipelineExecOrbital {
       TOOL_RESULT -> checking
         (set @entity.lastToolResult @payload.output)
         (agent/generate (str/concat "Task: " @entity.task "\nPlan: " @entity.plan "\nTool output: " @payload.output "\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."))
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "eye"}, { type: "typography", content: "Checking result...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"]] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "eye"}, { type: "typography", content: "Checking result...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.iterations" }] }] })
       FAILED -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -308,7 +310,7 @@ orbital PipelineExecOrbital {
         (set @entity.iterations (+ @entity.iterations 1))
         (if (>= (agent/context-usage) 0.8) (agent/compact hybrid) (log "Context below compact threshold"))
         (agent/invoke @payload.toolName @payload.toolArgs)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: "@entity.maxIterations" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
       MAX_ITERATIONS -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -428,7 +430,7 @@ orbital PipelineExecOrbital {
       SAVE internal
       GENERATED internal
     }
-    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    emits: [PipelineExecLoadFailed, PipelineExecLoaded, PipelineExecSaveFailed, PipelineExecSaved]
     listens {
       PipelineExecLoadFailed { message : string }
       SAVE { data : string }
@@ -460,7 +462,7 @@ orbital PipelineExecOrbital {
       SAVE internal
       INVOKED internal
     }
-    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    emits: [PipelineExecLoadFailed, PipelineExecLoaded, PipelineExecSaveFailed, PipelineExecSaved]
     listens {
       PipelineExecLoadFailed { message : string }
       SAVE { data : string }
@@ -548,11 +550,13 @@ orbital PipelineSessionOrbital {
 
   type PipelineSessionLoaded     = Event PipelineSession                  "Fired when PipelineSession finishes loading"
   type PipelineSessionLoadFailed = Event { message : string } "Fired when PipelineSession fails to load"
+  type PipelineSessionUpdateFailed = Event { error : string, code : string }
+  type PipelineSessionUpdated = Event { id : string }
   trait PipelineSessionManager -> PipelineSession [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref PipelineSession)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PipelineSession", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
     }
     listens {
       PipelineSessionAgent FORKED -> INIT
@@ -586,7 +590,7 @@ orbital PipelineSessionOrbital {
     emits {
       LABELED
     }
-    emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
+    emits: [PipelineSessionLoadFailed, PipelineSessionLoaded, PipelineSessionUpdateFailed, PipelineSessionUpdated]
     listens {
       PipelineSessionLoadFailed { message : string }
       SAVE { data : string }
@@ -669,11 +673,13 @@ orbital ExecutionLogOrbital {
 
   type ExecutionLogLoaded     = Event ExecutionLog                  "Fired when ExecutionLog finishes loading"
   type ExecutionLogLoadFailed = Event { message : string } "Fired when ExecutionLog fails to load"
+  type ExecutionLogSaveFailed = Event { error : string, code : string }
+  type ExecutionLogSaved = Event { id : string }
   trait ExecutionLogBrowse -> ExecutionLog [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref ExecutionLog)
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "ExecutionLog Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ExecutionLog", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "ExecutionLog Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
     listens {
       ExecutionLogCreate MEMORIZED -> INIT
@@ -707,7 +713,7 @@ orbital ExecutionLogOrbital {
     emits {
       MEMORIZED
     }
-    emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
+    emits: [ExecutionLogLoadFailed, ExecutionLogLoaded, ExecutionLogSaveFailed, ExecutionLogSaved]
     listens {
       ExecutionLogLoadFailed { message : string }
       SAVE { data : string }
@@ -760,7 +766,7 @@ orbital ExecutionLogOrbital {
           FORGET { id : string }
           REINFORCE { id : string }
     }
-    emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
+    emits: [ExecutionLogLoadFailed, ExecutionLogLoaded, ExecutionLogSaveFailed, ExecutionLogSaved]
   }
   page "/logs" -> ExecutionLogBrowse, ExecutionLogCreate, ExecutionLogAgent
 }

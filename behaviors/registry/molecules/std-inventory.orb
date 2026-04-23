@@ -177,8 +177,6 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -190,9 +188,11 @@
                           "variant": "caption"
                         }
                       ],
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack"
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -206,15 +206,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
                           "justify": "between",
                           "children": [
                             {
-                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
@@ -227,13 +225,13 @@
                                   "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "label": "Add Item",
-                              "icon": "plus",
                               "type": "button",
                               "action": "ADD_ITEM",
+                              "icon": "plus",
+                              "label": "Add Item",
                               "variant": "primary"
                             }
                           ],
@@ -247,23 +245,23 @@
                           "fields": [
                             {
                               "variant": "h4",
-                              "label": "Name",
                               "name": "name",
+                              "label": "Name",
                               "icon": "package"
                             },
                             {
-                              "name": "description",
                               "label": "Description",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "description"
                             },
                             {
-                              "label": "Status",
+                              "name": "status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Status"
                             }
                           ],
-                          "entity": "@payload.data",
                           "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "label": "Use",
@@ -279,7 +277,9 @@
                         }
                       ],
                       "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -294,35 +294,35 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load inventory"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "@payload.error",
-                          "variant": "body",
+                          "content": "Failed to load inventory",
                           "type": "typography"
                         },
                         {
-                          "label": "Retry",
+                          "content": "@payload.error",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
                           "action": "INIT",
-                          "icon": "rotate-ccw",
+                          "label": "Retry",
                           "variant": "primary",
-                          "type": "button"
+                          "icon": "rotate-ccw"
                         }
-                      ],
-                      "className": "py-12",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -337,8 +337,8 @@
                     "InventoryItem",
                     {
                       "emit": {
-                        "failure": "InventoryItemLoadFailed",
-                        "success": "InventoryItemLoaded"
+                        "success": "InventoryItemLoaded",
+                        "failure": "InventoryItemLoadFailed"
                       }
                     }
                   ],
@@ -384,13 +384,13 @@
           "name": "InventoryItemAdd",
           "linkedEntity": "InventoryItem",
           "config": {
-            "mode": "create",
+            "title": "Add Item",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "title": "Add Item",
+            "mode": "create",
             "icon": "plus-circle"
           },
           "events": {
@@ -404,9 +404,9 @@
           "linkedEntity": "InventoryItem",
           "config": {
             "title": "Use Item",
-            "confirmLabel": "Confirm Use",
+            "alertMessage": "Consume this item?",
             "icon": "zap",
-            "alertMessage": "Consume this item?"
+            "confirmLabel": "Confirm Use"
           },
           "events": {
             "CONFIRM": "ITEM_USED",
@@ -418,14 +418,14 @@
           "name": "InventoryItemDrop",
           "linkedEntity": "InventoryItem",
           "config": {
-            "confirmLabel": "Drop",
+            "alertMessage": "Are you sure you want to drop this item? This action cannot be undone.",
             "icon": "alert-triangle",
             "title": "Drop Item",
-            "alertMessage": "Are you sure you want to drop this item? This action cannot be undone."
+            "confirmLabel": "Drop"
           },
           "events": {
-            "CONFIRM": "ITEM_DROPPED",
-            "REQUEST": "DROP"
+            "REQUEST": "DROP",
+            "CONFIRM": "ITEM_DROPPED"
           }
         },
         {

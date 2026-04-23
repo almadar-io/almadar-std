@@ -72,6 +72,32 @@
           "name": "FilteredListLayout",
           "category": "interaction",
           "linkedEntity": "FilteredListItem",
+          "emits": [
+            {
+              "event": "FilteredListItemLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "FilteredListItemLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[FilteredListItem]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -83,6 +109,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "FilteredListItemLoadFailed",
+                "name": "FilteredListItem load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FilteredListItemLoaded",
+                "name": "FilteredListItem loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[FilteredListItem]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,23 +155,23 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]

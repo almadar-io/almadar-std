@@ -63,6 +63,32 @@
           "name": "GalleryFilteredLayout",
           "category": "interaction",
           "linkedEntity": "GalleryFilteredItem",
+          "emits": [
+            {
+              "event": "GalleryFilteredItemLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "GalleryFilteredItemLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[GalleryFilteredItem]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -74,6 +100,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "GalleryFilteredItemLoadFailed",
+                "name": "GalleryFilteredItem load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "GalleryFilteredItemLoaded",
+                "name": "GalleryFilteredItem loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[GalleryFilteredItem]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -87,8 +137,8 @@
                     "GalleryFilteredItem",
                     {
                       "emit": {
-                        "failure": "GalleryFilteredItemLoadFailed",
-                        "success": "GalleryFilteredItemLoaded"
+                        "success": "GalleryFilteredItemLoaded",
+                        "failure": "GalleryFilteredItemLoadFailed"
                       }
                     }
                   ],
@@ -97,20 +147,20 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.GalleryFilteredSearch",
                             "@trait.GalleryFilteredFilter"
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         "@trait.GalleryFilteredGallery"
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]

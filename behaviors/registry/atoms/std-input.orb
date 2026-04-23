@@ -52,6 +52,32 @@
           "name": "TextInputInput",
           "category": "interaction",
           "linkedEntity": "TextInput",
+          "emits": [
+            {
+              "event": "TextInputLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TextInputLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[TextInput]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -106,6 +132,16 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "TextInputLoaded",
+                "name": "TextInput loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[TextInput]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -128,28 +164,32 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "text-cursor-input"
+                              "name": "text-cursor-input",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "TextInput",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "TextInput"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "form-field",
                           "children": [
                             {
                               "placeholder": "Enter textinput...",
@@ -157,26 +197,15 @@
                             }
                           ],
                           "label": "TextInput",
-                          "hint": "Type to enter a value.",
-                          "type": "form-field"
+                          "hint": "Type to enter a value."
                         },
                         {
-                          "color": "muted",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ],
+                          "variant": "caption",
+                          "content": "@entity.value",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -195,23 +224,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "text-cursor-input"
+                              "name": "text-cursor-input",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "TextInput",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
@@ -220,28 +249,21 @@
                           "type": "divider"
                         },
                         {
-                          "type": "form-field",
-                          "hint": "Type to enter a value.",
-                          "label": "TextInput",
                           "children": [
                             {
                               "type": "input",
                               "placeholder": "Enter textinput..."
                             }
-                          ]
+                          ],
+                          "label": "TextInput",
+                          "hint": "Type to enter a value.",
+                          "type": "form-field"
                         },
                         {
                           "variant": "caption",
                           "type": "typography",
                           "color": "muted",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ]
+                          "content": "@entity.value"
                         }
                       ]
                     }
@@ -263,14 +285,12 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -288,29 +308,24 @@
                         },
                         {
                           "label": "TextInput",
+                          "hint": "Type to enter a value.",
                           "children": [
                             {
                               "type": "input",
                               "placeholder": "Enter textinput..."
                             }
                           ],
-                          "hint": "Type to enter a value.",
                           "type": "form-field"
                         },
                         {
                           "type": "typography",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ],
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "@entity.value",
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -329,21 +344,24 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "text-cursor-input"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "TextInput"
+                              "content": "TextInput",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -351,33 +369,23 @@
                           "type": "divider"
                         },
                         {
-                          "hint": "Type to enter a value.",
+                          "label": "TextInput",
+                          "type": "form-field",
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "Enter textinput..."
+                              "placeholder": "Enter textinput...",
+                              "type": "input"
                             }
                           ],
-                          "type": "form-field",
-                          "label": "TextInput"
+                          "hint": "Type to enter a value."
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
+                          "content": "@entity.value",
                           "type": "typography",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ]
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -396,26 +404,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "text-cursor-input"
+                              "name": "text-cursor-input",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
+                              "content": "TextInput",
                               "type": "typography",
-                              "content": "TextInput"
+                              "variant": "h2"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -423,20 +428,23 @@
                         {
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "Enter textinput..."
+                              "placeholder": "Enter textinput...",
+                              "type": "input"
                             }
                           ],
-                          "label": "TextInput",
                           "hint": "Validating...",
+                          "label": "TextInput",
                           "type": "form-field"
                         },
                         {
+                          "message": "Validating input...",
                           "type": "alert",
-                          "variant": "info",
-                          "message": "Validating input..."
+                          "variant": "info"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -455,48 +463,41 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "text-cursor-input"
+                              "name": "text-cursor-input",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "TextInput"
+                              "content": "TextInput",
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-field",
-                          "hint": "Type to enter a value.",
                           "children": [
                             {
-                              "placeholder": "Enter textinput...",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "Enter textinput..."
                             }
                           ],
-                          "label": "TextInput"
+                          "type": "form-field",
+                          "label": "TextInput",
+                          "hint": "Type to enter a value."
                         },
                         {
                           "color": "muted",
-                          "variant": "caption",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ],
-                          "type": "typography"
+                          "content": "@entity.value",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -517,23 +518,24 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "text-cursor-input"
                             },
                             {
-                              "content": "TextInput",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "TextInput"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -546,26 +548,18 @@
                             }
                           ],
                           "label": "TextInput",
-                          "hint": "Type to enter a value.",
-                          "type": "form-field"
+                          "type": "form-field",
+                          "hint": "Type to enter a value."
                         },
                         {
+                          "content": "@entity.value",
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "value"
-                          ]
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -579,47 +573,47 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "text-cursor-input",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
+                              "type": "typography",
                               "content": "TextInput"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "form-field",
-                          "label": "TextInput",
-                          "hint": "Validating...",
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "Enter textinput..."
+                              "placeholder": "Enter textinput...",
+                              "type": "input"
                             }
-                          ]
+                          ],
+                          "label": "TextInput",
+                          "hint": "Validating..."
                         },
                         {
-                          "variant": "info",
                           "message": "Validating input...",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "info"
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]

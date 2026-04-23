@@ -171,8 +171,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
                       }
                     }
                   ],
@@ -180,22 +180,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Loading…",
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -213,24 +213,26 @@
                       "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "filter",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "FilterTargets"
+                                  "content": "FilterTargets",
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
                               "align": "center"
                             },
                             {
@@ -238,58 +240,56 @@
                               "label": "All"
                             }
                           ],
-                          "justify": "between",
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "FilterTarget",
-                          "type": "filter-group",
                           "filters": [
                             {
+                              "field": "status",
                               "label": "Status",
+                              "filterType": "select",
                               "options": [
                                 "active",
                                 "inactive",
                                 "pending"
-                              ],
-                              "filterType": "select",
-                              "field": "status"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "filter-group",
+                          "entity": "FilterTarget"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "FilterTarget",
-                          "type": "data-grid",
-                          "fields": [],
+                          "entity": "@entity",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "h4",
                                   "content": "@item.name",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h4"
                                 },
                                 {
-                                  "content": "@item.status",
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@item.status"
                                 }
                               ],
-                              "type": "stack",
                               "gap": "sm",
-                              "direction": "vertical"
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "fields": []
                         }
                       ],
                       "direction": "vertical"
@@ -306,36 +306,36 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle"
                         },
                         {
                           "variant": "h3",
-                          "content": "Failed to load",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Failed to load"
                         },
                         {
                           "type": "typography",
-                          "content": "@payload.message",
+                          "variant": "body",
                           "color": "muted",
-                          "variant": "body"
+                          "content": "@payload.message"
                         },
                         {
+                          "variant": "primary",
+                          "type": "button",
                           "label": "Retry",
                           "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
-                          "type": "button"
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -350,8 +350,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
                       }
                     }
                   ],
@@ -373,10 +373,6 @@
                     "fetch",
                     "FilterTarget",
                     {
-                      "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
-                      },
                       "filter": [
                         "=",
                         [
@@ -385,72 +381,79 @@
                           "@payload.field"
                         ],
                         "@payload.value"
-                      ]
+                      ],
+                      "emit": {
+                        "success": "FilterTargetLoaded",
+                        "failure": "FilterTargetLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "name": "filter",
                                   "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "FilterTargets",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack"
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "direction": "horizontal",
+                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
+                                  "variant": "primary",
                                   "label": "Filtered",
-                                  "type": "badge",
-                                  "variant": "primary"
+                                  "type": "badge"
                                 },
                                 {
-                                  "label": "Clear All",
+                                  "action": "CLEAR_FILTERS",
                                   "variant": "ghost",
+                                  "label": "Clear All",
                                   "icon": "x",
-                                  "type": "button",
-                                  "action": "CLEAR_FILTERS"
+                                  "type": "button"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "sm"
+                              "type": "stack"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "filter"
+                              "name": "filter",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "color": "muted",
+                              "content": "Filtered by",
                               "variant": "caption",
-                              "content": "Filtered by"
+                              "color": "muted"
                             },
                             {
                               "label": "@payload.field",
@@ -459,18 +462,18 @@
                             },
                             {
                               "variant": "caption",
-                              "content": "=",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "="
                             },
                             {
-                              "label": "@payload.value",
+                              "variant": "primary",
                               "type": "badge",
-                              "variant": "primary"
+                              "label": "@payload.value"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -479,13 +482,13 @@
                           "type": "filter-group",
                           "filters": [
                             {
+                              "filterType": "select",
+                              "label": "Status",
                               "options": [
                                 "active",
                                 "inactive",
                                 "pending"
                               ],
-                              "label": "Status",
-                              "filterType": "select",
                               "field": "status"
                             }
                           ],
@@ -495,36 +498,33 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "FilterTarget",
-                          "fields": [],
-                          "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "@item.name",
-                                  "variant": "h4"
-                                },
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "@item.status",
-                                  "color": "muted"
-                                }
-                              ],
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "variant": "h4",
+                                  "type": "typography",
+                                  "content": "@item.name"
+                                },
+                                {
+                                  "content": "@item.status",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ]
                             }
-                          ]
+                          ],
+                          "fields": [],
+                          "type": "data-grid",
+                          "entity": "@entity"
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -548,8 +548,8 @@
                         "@payload.value"
                       ],
                       "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
+                        "success": "FilterTargetLoaded",
+                        "failure": "FilterTargetLoadFailed"
                       }
                     }
                   ],

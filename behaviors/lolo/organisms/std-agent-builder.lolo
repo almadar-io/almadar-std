@@ -64,7 +64,7 @@ orbital BuildPlanOrbital {
         (set @entity.category @payload.category)
         (set @entity.status recalling)
         (agent/recall (str/concat @entity.category " " @entity.task) 5)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "Recalling relevant experience...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "Recalling relevant experience...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.category" }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -76,7 +76,7 @@ orbital BuildPlanOrbital {
         (set @entity.memoryCount @payload.count)
         (set @entity.status planning)
         (agent/generate (str/concat "Task: " @entity.task "\n" "Category: " @entity.category "\n" "Relevant experience:\n" @entity.relevantMemories "\n\n" "Generate a numbered step-by-step execution plan. " "Include a confidence score (0-100) for how likely this plan will succeed."))
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating plan...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }, { type: "badge", label: ["str/concat", ["str/concat", "@entity.memoryCount"], " memories loaded"] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating plan...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.category" }, { type: "badge", label: "@entity.memoryCount" }] }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -89,7 +89,7 @@ orbital BuildPlanOrbital {
         (set @entity.status ready)
         (agent/memorize (str/concat "Plan for " @entity.category " task: " @entity.task) pattern-affinity)
         (emit PLAN_READY)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Plan Ready", variant: "h2" }] }, { type: "button", label: "New Plan", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Category", value: "@entity.category", icon: "tag" }, { type: "stat-display", label: "Confidence", value: ["str/concat", ["str/concat", "@entity.confidence"], "%"], icon: "target" }, { type: "stat-display", label: "Memories Used", value: "@entity.memoryCount", icon: "brain" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Execution Plan", variant: "caption" }, { type: "typography", content: "@entity.steps", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Relevant Memories", variant: "caption" }, { type: "typography", content: "@entity.relevantMemories", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Plan Ready", variant: "h2" }] }, { type: "button", label: "New Plan", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Category", value: "@entity.category", icon: "tag" }, { type: "stat-display", label: "Confidence", value: "@entity.confidence", icon: "target" }, { type: "stat-display", label: "Memories Used", value: "@entity.memoryCount", icon: "brain" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Execution Plan", variant: "caption" }, { type: "typography", content: "@entity.steps", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Relevant Memories", variant: "caption" }, { type: "typography", content: "@entity.relevantMemories", variant: "body" }] }] }] }] })
       FAILED -> idle
         (set @entity.error @payload.error)
         (set @entity.status error)
@@ -178,7 +178,7 @@ orbital BuildPlanOrbital {
       SAVE { data : object! }
           BuildPlanLoadFailed { message : string }
     }
-    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
+    emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
   trait PlannerCompletionFlow -> BuildPlan [interaction, collection] {
     initial: closed
@@ -210,13 +210,13 @@ orbital BuildPlanOrbital {
       SAVE { data : object! }
           BuildPlanLoadFailed { message : string }
     }
-    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
+    emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
   trait PlannerMemoryLifecycle -> BuildPlan [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref BuildPlan)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "BuildPlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildPlan", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "BuildPlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
     listens {
       PIN { id : string!, row : object }
@@ -264,6 +264,8 @@ orbital BuildLoopOrbital {
 
   type BuildLoopLoaded     = Event BuildLoop                  "Fired when BuildLoop finishes loading"
   type BuildLoopLoadFailed = Event { message : string } "Fired when BuildLoop fails to load"
+  type BuildLoopSaveFailed = Event { error : string, code : string }
+  type BuildLoopSaved = Event { id : string }
   trait SchemaBuilder -> BuildLoop [interaction, collection] {
     initial: idle
     state idle {
@@ -281,7 +283,7 @@ orbital BuildLoopOrbital {
         (set @entity.currentTool @payload.toolName)
         (set @entity.iterations (+ @entity.iterations 1))
         (agent/invoke @payload.toolName @payload.toolArgs)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: "@entity.maxIterations" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
       FAILED -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -291,7 +293,7 @@ orbital BuildLoopOrbital {
       TOOL_RESULT -> checking
         (set @entity.lastToolResult @payload.output)
         (agent/generate (str/concat "Task: " @entity.task "\nPlan: " @entity.plan "\nTool output: " @payload.output "\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."))
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "eye"}, { type: "typography", content: "Checking result...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"]] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "eye"}, { type: "typography", content: "Checking result...", variant: "h3" }, { type: "spinner"}, { type: "badge", label: "@entity.iterations" }] }] })
       FAILED -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -307,7 +309,7 @@ orbital BuildLoopOrbital {
         (set @entity.iterations (+ @entity.iterations 1))
         (if (>= (agent/context-usage) 0.8) (agent/compact hybrid) (log "Context below compact threshold"))
         (agent/invoke @payload.toolName @payload.toolArgs)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool"}, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: "@entity.maxIterations" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner"}] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] }] })
       MAX_ITERATIONS -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -424,7 +426,7 @@ orbital BuildLoopOrbital {
       SAVE internal
       GENERATED internal
     }
-    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
       BuildLoopLoadFailed { message : string }
       SAVE { data : string }
@@ -456,7 +458,7 @@ orbital BuildLoopOrbital {
       SAVE internal
       INVOKED internal
     }
-    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
       BuildLoopLoadFailed { message : string }
       SAVE { data : string }
@@ -557,6 +559,8 @@ orbital BuildFixOrbital {
 
   type BuildFixLoaded     = Event BuildFix                  "Fired when BuildFix finishes loading"
   type BuildFixLoadFailed = Event { message : string } "Fired when BuildFix fails to load"
+  type BuildFixSaveFailed = Event { error : string, code : string }
+  type BuildFixSaved = Event { id : string }
   trait FixLoop -> BuildFix [interaction, collection] {
     initial: idle
     state idle {
@@ -568,7 +572,7 @@ orbital BuildFixOrbital {
         (set @entity.validationErrors "")
         (set @entity.errorCount 0)
         (agent/invoke validate-schema { target: "@entity.target" })
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"], "/", ["str/concat", "@entity.maxAttempts"]] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: "@entity.maxAttempts" }] }] }] })
     }
     state validating {
       VALIDATION_PASSED -> succeeded
@@ -581,7 +585,7 @@ orbital BuildFixOrbital {
         (set @entity.fixAttempts (+ @entity.fixAttempts 1))
         (set @entity.status fixing)
         (agent/generate (str/concat "Target: " @entity.target "\n\nValidation errors:\n" @payload.errors "\n\nGenerate a fix that resolves these errors. Return only the fix content."))
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating fix...", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Validation Errors", variant: "caption" }, { type: "alert", variant: "error", message: "@entity.validationErrors" }] }] }, { type: "spinner"}] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu"}, { type: "typography", content: "Generating fix...", variant: "h2" }] }, { type: "badge", label: "@entity.fixAttempts" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Validation Errors", variant: "caption" }, { type: "alert", variant: "error", message: "@entity.validationErrors" }] }] }, { type: "spinner"}] }] })
       EXCEEDED_ATTEMPTS -> failed
         (set @entity.status failed)
         (set @entity.error @payload.error)
@@ -604,7 +608,7 @@ orbital BuildFixOrbital {
       FIX_APPLIED -> validating
         (set @entity.status validating)
         (agent/invoke validate-schema { target: "@entity.target" })
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"], "/", ["str/concat", "@entity.maxAttempts"]] }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check"}, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner"}, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: "@entity.maxAttempts" }] }] }] })
       FAILED -> failed
         (set @entity.error @payload.error)
         (set @entity.status failed)
@@ -699,7 +703,7 @@ orbital BuildFixOrbital {
     state browsing {
       INIT -> browsing
         (ref BuildFix)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildFix", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] }] })
     }
     emits: [BuildFixLoaded, BuildFixLoadFailed]
     listens {
@@ -732,7 +736,7 @@ orbital BuildFixOrbital {
       SAVE internal
       INVOKED internal
     }
-    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { message : string }
       SAVE { data : string }
@@ -764,7 +768,7 @@ orbital BuildFixOrbital {
       SAVE internal
       INVOKED internal
     }
-    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { message : string }
       SAVE { data : string }
@@ -796,7 +800,7 @@ orbital BuildFixOrbital {
       SAVE internal
       GENERATED internal
     }
-    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { message : string }
       SAVE { data : string }
@@ -816,11 +820,13 @@ orbital BuildSessionOrbital {
 
   type BuildSessionLoaded     = Event BuildSession                  "Fired when BuildSession finishes loading"
   type BuildSessionLoadFailed = Event { message : string } "Fired when BuildSession fails to load"
+  type BuildSessionUpdateFailed = Event { error : string, code : string }
+  type BuildSessionUpdated = Event { id : string }
   trait BuildSessionManager -> BuildSession [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref BuildSession)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "BuildSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildSession", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "BuildSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
     }
     listens {
       BuildSessionAgent FORKED -> INIT
@@ -853,7 +859,7 @@ orbital BuildSessionOrbital {
     emits {
       LABELED
     }
-    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
+    emits: [BuildSessionLoadFailed, BuildSessionLoaded, BuildSessionUpdateFailed, BuildSessionUpdated]
     listens {
       BuildSessionLoadFailed { message : string }
       SAVE { data : string }

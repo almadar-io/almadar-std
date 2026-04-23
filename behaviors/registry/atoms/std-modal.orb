@@ -42,6 +42,32 @@
           "name": "ModalRecordModal",
           "category": "interaction",
           "linkedEntity": "ModalRecord",
+          "emits": [
+            {
+              "event": "ModalRecordLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModalRecordLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[ModalRecord]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -95,6 +121,16 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "ModalRecordLoaded",
+                "name": "ModalRecord loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[ModalRecord]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -108,8 +144,8 @@
                     "ModalRecord",
                     {
                       "emit": {
-                        "success": "ModalRecordLoaded",
-                        "failure": "ModalRecordLoadFailed"
+                        "failure": "ModalRecordLoadFailed",
+                        "success": "ModalRecordLoaded"
                       }
                     }
                   ]
@@ -129,15 +165,17 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
                               "variant": "h3",
@@ -145,21 +183,19 @@
                               "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "@config.mode",
+                          "cancelEvent": "CLOSE",
                           "type": "form-section",
                           "fields": "@config.fields",
+                          "entity": "ModalRecord",
                           "submitEvent": "SAVE",
                           "entityId": "@entity.id",
-                          "cancelEvent": "CLOSE",
-                          "entity": "ModalRecord"
+                          "mode": "@config.mode"
                         }
                       ]
                     }

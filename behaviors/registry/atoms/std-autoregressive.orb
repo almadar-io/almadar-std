@@ -105,24 +105,24 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "message-square",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "message-square"
                             },
                             {
                               "variant": "h2",
-                              "content": "Autoregressive Generator",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Autoregressive Generator"
                             }
                           ],
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -133,9 +133,9 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "body",
+                          "color": "muted",
                           "content": "Vocab: undefined | Max length: undefined",
-                          "color": "muted"
+                          "variant": "body"
                         },
                         {
                           "content": "@entity.generatedTokens",
@@ -143,16 +143,16 @@
                           "variant": "body"
                         },
                         {
+                          "type": "button",
                           "variant": "primary",
-                          "label": "Generate",
-                          "action": "GENERATE",
                           "icon": "play",
-                          "type": "button"
+                          "action": "GENERATE",
+                          "label": "Generate"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -181,50 +181,50 @@
                     "forward",
                     "primary",
                     {
-                      "on-complete": "TOKEN_READY",
                       "input": "@entity.generatedTokens",
                       "output-contract": {
                         "shape": [
                           null
                         ],
-                        "dtype": "float32",
+                        "activation": "softmax",
                         "type": "tensor",
-                        "activation": "softmax"
-                      }
+                        "dtype": "float32"
+                      },
+                      "on-complete": "TOKEN_READY"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
+                          "type": "typography",
                           "content": "Generating",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "type": "progress-bar",
                           "value": "@entity.tokenCount"
                         },
                         {
-                          "variant": "body",
+                          "content": "@entity.generatedTokens",
                           "type": "typography",
-                          "content": "@entity.generatedTokens"
+                          "variant": "body"
                         },
                         {
+                          "variant": "caption",
                           "content": "Tokens: @entity.tokenCount",
-                          "type": "typography",
-                          "variant": "caption"
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -278,6 +278,7 @@
                     "primary",
                     {
                       "on-complete": "TOKEN_READY",
+                      "input": "@entity.generatedTokens",
                       "output-contract": {
                         "activation": "softmax",
                         "dtype": "float32",
@@ -285,8 +286,7 @@
                         "shape": [
                           null
                         ]
-                      },
-                      "input": "@entity.generatedTokens"
+                      }
                     }
                   ],
                   [
@@ -294,33 +294,33 @@
                     "main",
                     {
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "Generating",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "value": "@entity.tokenCount",
                           "type": "progress-bar"
                         },
                         {
-                          "variant": "body",
                           "type": "typography",
-                          "content": "@entity.generatedTokens"
+                          "content": "@entity.generatedTokens",
+                          "variant": "body"
                         },
                         {
-                          "content": "Tokens: @entity.tokenCount",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Tokens: @entity.tokenCount"
                         },
                         {
                           "type": "spinner"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -361,15 +361,16 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
+                          "type": "typography",
                           "content": "Generation Complete",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "content": "@entity.generatedTokens",
@@ -377,22 +378,21 @@
                           "type": "typography"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Total tokens: @entity.tokenCount"
                         },
                         {
-                          "action": "GENERATE",
                           "icon": "refresh-cw",
-                          "variant": "ghost",
                           "label": "Generate Again",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "GENERATE"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]

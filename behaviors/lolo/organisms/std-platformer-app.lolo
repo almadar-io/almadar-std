@@ -140,11 +140,17 @@ orbital CollectibleOrbital {
 
   type CollectibleLoaded     = Event Collectible                  "Fired when Collectible finishes loading"
   type CollectibleLoadFailed = Event { message : string } "Fired when Collectible fails to load"
+  type CollectibleDeleteFailed = Event { error : string, code : string }
+  type CollectibleDeleted = Event { id : string }
+  type CollectibleSaveFailed = Event { error : string, code : string }
+  type CollectibleSaved = Event { id : string }
+  type CollectibleUpdateFailed = Event { error : string, code : string }
+  type CollectibleUpdated = Event { id : string }
   trait CollectibleBrowse -> Collectible [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Collectible)
-        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Collectible", fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
     }
     listens {
       CollectibleAdd ITEM_ADDED -> INIT
@@ -177,7 +183,7 @@ orbital CollectibleOrbital {
     emits {
       ITEM_ADDED
     }
-    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleSaveFailed, CollectibleSaved]
     listens {
       CollectibleLoadFailed { message : string }
       SAVE { data : string }
@@ -206,7 +212,7 @@ orbital CollectibleOrbital {
     emits {
       ITEM_USED
     }
-    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleUpdateFailed, CollectibleUpdated]
     listens {
       CollectibleLoadFailed { message : string }
       USE_ITEM { id : string }
@@ -241,7 +247,7 @@ orbital CollectibleOrbital {
     emits {
       CONFIRM_DROP
     }
-    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    emits: [CollectibleDeleteFailed, CollectibleDeleted, CollectibleLoadFailed, CollectibleLoaded]
     listens {
       CollectibleLoadFailed { message : string }
       DROP { id : string }

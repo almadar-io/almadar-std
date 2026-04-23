@@ -461,108 +461,123 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "href": "/tickets",
+                          "icon": "inbox",
+                          "label": "Tickets"
+                        },
+                        {
+                          "href": "/responses",
+                          "label": "Responses",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "href": "/metrics",
+                          "label": "Metrics",
+                          "icon": "layout-list"
+                        }
+                      ],
                       "type": "dashboard-layout",
+                      "appName": "Helpdesk",
                       "children": [
                         {
                           "className": "max-w-5xl mx-auto w-full",
-                          "gap": "lg",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "sm",
                                   "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "inbox"
+                                      "name": "inbox",
+                                      "type": "icon"
                                     },
                                     {
-                                      "type": "typography",
+                                      "content": "Tickets",
                                       "variant": "h2",
-                                      "content": "Tickets"
+                                      "type": "typography"
                                     }
                                   ]
                                 },
                                 {
-                                  "direction": "horizontal",
-                                  "gap": "sm",
                                   "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "action": "CREATE",
-                                      "icon": "plus",
+                                      "type": "button",
                                       "label": "New Ticket",
+                                      "action": "CREATE",
                                       "variant": "primary",
-                                      "type": "button"
+                                      "icon": "plus"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
+                              "justify": "between",
                               "align": "center",
-                              "justify": "between"
+                              "gap": "md",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "cols": 1.0,
                               "children": [
                                 {
                                   "label": "Open Tickets",
                                   "icon": "inbox",
-                                  "type": "stat-display",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ]
+                                  "value": "@entity",
+                                  "type": "stat-display"
                                 }
                               ],
-                              "type": "simple-grid"
+                              "type": "simple-grid",
+                              "cols": 1.0
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "fields": [],
-                              "gap": "sm",
-                              "entity": "Ticket",
-                              "type": "data-list",
                               "itemActions": [
                                 {
-                                  "variant": "ghost",
                                   "label": "View",
+                                  "variant": "ghost",
                                   "event": "VIEW"
                                 },
                                 {
-                                  "label": "Edit",
+                                  "variant": "ghost",
                                   "event": "EDIT",
-                                  "variant": "ghost"
+                                  "label": "Edit"
                                 },
                                 {
-                                  "event": "DELETE",
+                                  "variant": "danger",
                                   "label": "Delete",
-                                  "variant": "danger"
+                                  "event": "DELETE"
                                 }
                               ],
+                              "type": "data-list",
+                              "entity": "@entity",
+                              "fields": [],
                               "columns": [
                                 {
-                                  "icon": "inbox",
                                   "name": "subject",
-                                  "variant": "h3"
+                                  "variant": "h3",
+                                  "icon": "inbox"
                                 },
                                 {
-                                  "variant": "badge",
-                                  "name": "priority"
+                                  "name": "priority",
+                                  "variant": "badge"
                                 },
                                 {
-                                  "variant": "badge",
-                                  "name": "status"
+                                  "name": "status",
+                                  "variant": "badge"
                                 },
                                 {
                                   "name": "assignee",
@@ -573,29 +588,11 @@
                                   "variant": "caption"
                                 }
                               ],
-                              "variant": "card"
+                              "variant": "card",
+                              "gap": "sm"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical"
-                        }
-                      ],
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "icon": "inbox",
-                          "label": "Tickets",
-                          "href": "/tickets"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "href": "/metrics",
-                          "label": "Metrics",
-                          "icon": "layout-list"
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -617,6 +614,17 @@
               "payload": [
                 {
                   "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketLoadFailed",
+              "description": "Fired when Ticket fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
                   "type": "string"
                 }
               ]
@@ -658,12 +666,25 @@
               ]
             },
             {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
+              "event": "TicketSaveFailed",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
                   "type": "string"
                 }
               ]
@@ -708,6 +729,16 @@
                 "name": "Ticket Created"
               },
               {
+                "key": "TicketLoadFailed",
+                "name": "Ticket load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "TicketLoaded",
                 "name": "Ticket loaded",
                 "payload": [
@@ -743,11 +774,25 @@
                 ]
               },
               {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
+                "key": "TicketSaveFailed",
+                "name": "Ticket save failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TicketSaved",
+                "name": "Ticket saved",
+                "payload": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -775,8 +820,8 @@
                     "Ticket",
                     {
                       "emit": {
-                        "failure": "TicketLoadFailed",
-                        "success": "TicketLoaded"
+                        "success": "TicketLoaded",
+                        "failure": "TicketLoadFailed"
                       }
                     }
                   ],
@@ -784,13 +829,11 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "plus-circle",
@@ -808,8 +851,8 @@
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
                           "entity": "Ticket",
+                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "subject",
@@ -818,10 +861,12 @@
                             "status",
                             "assignee"
                           ],
-                          "type": "form-section",
-                          "submitEvent": "SAVE"
+                          "mode": "create",
+                          "type": "form-section"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -905,6 +950,17 @@
               ]
             },
             {
+              "event": "TicketLoadFailed",
+              "description": "Fired when Ticket fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            },
+            {
               "event": "TicketLoaded",
               "description": "Fired when Ticket finishes loading",
               "scope": "internal",
@@ -941,12 +997,25 @@
               ]
             },
             {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
+              "event": "TicketUpdateFailed",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketUpdated",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
                   "type": "string"
                 }
               ]
@@ -998,6 +1067,16 @@
                 "name": "Ticket Updated"
               },
               {
+                "key": "TicketLoadFailed",
+                "name": "Ticket load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "TicketLoaded",
                 "name": "Ticket loaded",
                 "payload": [
@@ -1033,11 +1112,25 @@
                 ]
               },
               {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
+                "key": "TicketUpdateFailed",
+                "name": "Ticket update failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TicketUpdated",
+                "name": "Ticket updated",
+                "payload": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -1064,34 +1157,33 @@
                     "fetch",
                     "Ticket",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "TicketLoaded",
                         "failure": "TicketLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "edit",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Edit Ticket",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1099,11 +1191,6 @@
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CLOSE",
-                          "entityId": "@entity.id",
-                          "entity": "Ticket",
-                          "submitEvent": "SAVE",
-                          "mode": "edit",
                           "fields": [
                             "subject",
                             "description",
@@ -1111,9 +1198,15 @@
                             "status",
                             "assignee"
                           ],
-                          "type": "form-section"
+                          "entityId": "@entity.id",
+                          "submitEvent": "SAVE",
+                          "entity": "Ticket",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "mode": "edit"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1154,8 +1247,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "TicketUpdateFailed",
-                        "success": "TicketUpdated"
+                        "success": "TicketUpdated",
+                        "failure": "TicketUpdateFailed"
                       }
                     }
                   ],
@@ -1344,8 +1437,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
+                        "failure": "TicketLoadFailed",
+                        "success": "TicketLoaded"
                       }
                     }
                   ],
@@ -1353,80 +1446,82 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.subject"
+                              "content": "@entity.subject",
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "children": [
                             {
+                              "content": "Subject",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Subject"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.subject",
-                              "variant": "body"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Description",
                               "variant": "caption"
                             },
                             {
                               "variant": "body",
-                              "content": "@entity.description",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@entity.subject"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "content": "Description",
                               "type": "typography",
-                              "content": "Priority",
                               "variant": "caption"
                             },
                             {
-                              "content": "@entity.priority",
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@entity.description"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Priority"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.priority"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "typography",
@@ -1439,54 +1534,52 @@
                               "variant": "body"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Assignee"
+                              "content": "Assignee",
+                              "type": "typography"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "type": "typography",
                               "content": "@entity.assignee"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Edit",
+                              "action": "EDIT",
                               "variant": "primary",
-                              "icon": "edit",
-                              "action": "EDIT"
+                              "label": "Edit",
+                              "type": "button",
+                              "icon": "edit"
                             },
                             {
-                              "type": "button",
                               "variant": "ghost",
                               "label": "Close",
+                              "type": "button",
                               "action": "CLOSE"
                             }
                           ],
                           "justify": "end",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "direction": "horizontal"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1554,6 +1647,41 @@
               ]
             },
             {
+              "event": "TicketDeleteFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketDeleted",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketLoadFailed",
+              "description": "Fired when Ticket fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            },
+            {
               "event": "TicketLoaded",
               "description": "Fired when Ticket finishes loading",
               "scope": "internal",
@@ -1585,17 +1713,6 @@
                 },
                 {
                   "name": "pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "message",
                   "type": "string"
                 }
               ]
@@ -1644,6 +1761,40 @@
                 "name": "Ticket Deleted"
               },
               {
+                "key": "TicketDeleteFailed",
+                "name": "Ticket delete failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TicketDeleted",
+                "name": "Ticket deleted",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TicketLoadFailed",
+                "name": "Ticket load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "TicketLoaded",
                 "name": "Ticket loaded",
                 "payload": [
@@ -1677,16 +1828,6 @@
                     "type": "string"
                   }
                 ]
-              },
-              {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payload": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -1715,23 +1856,24 @@
                     "fetch",
                     "Ticket",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "failure": "TicketLoadFailed",
-                        "success": "TicketLoaded"
-                      },
-                      "id": "@payload.id"
+                        "success": "TicketLoaded",
+                        "failure": "TicketLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -1739,8 +1881,8 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Delete Ticket"
+                              "content": "Delete Ticket",
+                              "variant": "h3"
                             }
                           ]
                         },
@@ -1748,35 +1890,34 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "error",
+                          "type": "alert",
                           "message": "This action cannot be undone.",
-                          "type": "alert"
+                          "variant": "error"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
                               "variant": "ghost",
+                              "label": "Cancel",
                               "action": "CANCEL",
-                              "label": "Cancel"
+                              "type": "button"
                             },
                             {
                               "type": "button",
-                              "variant": "danger",
-                              "icon": "check",
                               "label": "Delete",
-                              "action": "CONFIRM_DELETE"
+                              "action": "CONFIRM_DELETE",
+                              "icon": "check",
+                              "variant": "danger"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1793,8 +1934,8 @@
                     "@entity.pendingId",
                     {
                       "emit": {
-                        "success": "TicketDeleted",
-                        "failure": "TicketDeleteFailed"
+                        "failure": "TicketDeleteFailed",
+                        "success": "TicketDeleted"
                       }
                     }
                   ],
@@ -2065,20 +2206,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "children": [
                         {
                           "children": [
                             {
-                              "justify": "between",
-                              "align": "center",
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
+                                  "gap": "sm",
+                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "message-circle"
+                                      "name": "message-circle",
+                                      "type": "icon"
                                     },
                                     {
                                       "type": "typography",
@@ -2086,32 +2229,33 @@
                                       "variant": "h2"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "direction": "horizontal"
                                 },
                                 {
                                   "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
+                                      "label": "Compose",
                                       "variant": "primary",
                                       "type": "button",
-                                      "icon": "edit",
-                                      "label": "Compose",
-                                      "action": "COMPOSE"
+                                      "action": "COMPOSE",
+                                      "icon": "edit"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "horizontal"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack"
+                              "type": "stack",
+                              "justify": "between",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "gap": "sm",
+                              "type": "data-list",
                               "columns": [
                                 {
                                   "variant": "h4",
@@ -2119,8 +2263,8 @@
                                   "icon": "message-circle"
                                 },
                                 {
-                                  "variant": "body",
-                                  "name": "body"
+                                  "name": "body",
+                                  "variant": "body"
                                 },
                                 {
                                   "name": "createdAt",
@@ -2128,45 +2272,42 @@
                                   "format": "date"
                                 }
                               ],
-                              "type": "data-list",
-                              "entity": "Response",
                               "itemActions": [
                                 {
+                                  "variant": "ghost",
                                   "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost"
+                                  "event": "VIEW"
                                 }
                               ],
                               "variant": "card",
-                              "gap": "sm",
+                              "entity": "@entity",
                               "fields": []
                             }
                           ],
-                          "type": "stack",
-                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
                           "direction": "vertical",
-                          "className": "max-w-5xl mx-auto w-full"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Metrics",
-                          "href": "/metrics"
+                          "gap": "lg",
+                          "type": "stack"
                         }
                       ],
                       "appName": "Helpdesk",
-                      "type": "dashboard-layout"
+                      "navItems": [
+                        {
+                          "href": "/tickets",
+                          "icon": "inbox",
+                          "label": "Tickets"
+                        },
+                        {
+                          "href": "/responses",
+                          "icon": "message-circle",
+                          "label": "Responses"
+                        },
+                        {
+                          "label": "Metrics",
+                          "href": "/metrics",
+                          "icon": "layout-list"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -2182,6 +2323,17 @@
           "emits": [
             {
               "event": "SEND"
+            },
+            {
+              "event": "ResponseLoadFailed",
+              "description": "Fired when Response fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             },
             {
               "event": "ResponseLoaded",
@@ -2212,12 +2364,25 @@
               ]
             },
             {
-              "event": "ResponseLoadFailed",
-              "description": "Fired when Response fails to load",
+              "event": "ResponseSaveFailed",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ResponseSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
                   "type": "string"
                 }
               ]
@@ -2257,6 +2422,16 @@
                 ]
               },
               {
+                "key": "ResponseLoadFailed",
+                "name": "Response load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "ResponseLoaded",
                 "name": "Response loaded",
                 "payload": [
@@ -2284,11 +2459,25 @@
                 ]
               },
               {
-                "key": "ResponseLoadFailed",
-                "name": "Response load failed",
+                "key": "ResponseSaveFailed",
+                "name": "Response save failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ResponseSaved",
+                "name": "Response saved",
+                "payload": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -2315,42 +2504,42 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
                               "content": "New Response",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "Response",
                           "mode": "create",
-                          "submitEvent": "SEND",
-                          "type": "form-section",
                           "cancelEvent": "CLOSE",
+                          "submitEvent": "SEND",
                           "fields": [
                             "ticketId",
                             "body",
                             "author"
-                          ]
+                          ],
+                          "entity": "Response",
+                          "type": "form-section"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2551,100 +2740,99 @@
                     "fetch",
                     "Response",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
-                      }
+                        "failure": "ResponseLoadFailed",
+                        "success": "ResponseLoaded"
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "eye"
                             },
                             {
+                              "variant": "h3",
                               "content": "@entity.ticketId",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "md",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Ticket ID"
+                              "content": "Ticket ID",
+                              "variant": "caption"
                             },
                             {
+                              "content": "@entity.ticketId",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.ticketId"
+                              "variant": "body"
                             }
                           ]
                         },
                         {
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Body"
+                              "content": "Body",
+                              "type": "typography"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.body",
                               "variant": "body",
-                              "content": "@entity.body"
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
+                              "variant": "caption",
                               "content": "Author",
-                              "type": "typography",
-                              "variant": "caption"
+                              "type": "typography"
                             },
                             {
                               "type": "typography",
                               "variant": "body",
                               "content": "@entity.author"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "caption",
+                              "type": "typography",
                               "content": "Created At",
-                              "type": "typography"
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.createdAt",
@@ -2657,21 +2845,22 @@
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE",
+                              "label": "Close",
                               "type": "button",
-                              "label": "Close"
+                              "variant": "ghost",
+                              "action": "CLOSE"
                             }
-                          ]
+                          ],
+                          "justify": "end",
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2917,8 +3106,8 @@
                     "SupportMetrics",
                     {
                       "emit": {
-                        "failure": "SupportMetricsLoadFailed",
-                        "success": "SupportMetricsLoaded"
+                        "success": "SupportMetricsLoaded",
+                        "failure": "SupportMetricsLoadFailed"
                       }
                     }
                   ],
@@ -2926,33 +3115,30 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "direction": "vertical",
                               "type": "stack",
+                              "direction": "vertical",
+                              "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Support Metrics"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
                                   "gap": "md",
-                                  "direction": "horizontal",
-                                  "justify": "between",
                                   "type": "stack",
+                                  "justify": "between",
                                   "children": [
                                     {
                                       "type": "stack",
@@ -2960,115 +3146,81 @@
                                       "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "activity"
+                                          "name": "activity",
+                                          "type": "icon"
                                         },
                                         {
-                                          "variant": "h2",
+                                          "content": "Support Metrics",
                                           "type": "typography",
-                                          "content": "Support Metrics"
+                                          "variant": "h2"
                                         }
                                       ]
                                     },
                                     {
                                       "icon": "refresh-cw",
-                                      "label": "Refresh",
                                       "action": "REFRESH",
-                                      "variant": "secondary",
-                                      "type": "button"
+                                      "label": "Refresh",
+                                      "type": "button",
+                                      "variant": "secondary"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
                                   "children": [
                                     {
-                                      "cols": 3.0,
+                                      "type": "simple-grid",
                                       "children": [
                                         {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "openTickets"
-                                          ],
                                           "label": "OpenTickets",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "value": "@entity.openTickets"
                                         },
                                         {
                                           "type": "stat-display",
                                           "label": "ResolvedTickets",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "resolvedTickets"
-                                          ]
+                                          "value": "@entity.resolvedTickets"
                                         },
                                         {
                                           "children": [
                                             {
+                                              "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "type": "typography",
+                                                  "variant": "caption",
                                                   "content": "AvgResponseTime"
                                                 },
                                                 {
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "avgResponseTime"
-                                                  ],
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  "content": "@entity.avgResponseTime",
+                                                  "variant": "h3",
+                                                  "type": "typography"
                                                 }
                                               ],
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "gap": "sm"
+                                              "type": "stack"
                                             }
                                           ],
                                           "type": "card"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "value": "@entity.satisfactionScore",
                                           "label": "SatisfactionScore",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "satisfactionScore"
-                                          ]
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "activeAgents"
-                                          ],
                                           "type": "stat-display",
-                                          "label": "ActiveAgents"
+                                          "label": "ActiveAgents",
+                                          "value": "@entity.activeAgents"
                                         }
                                       ],
-                                      "type": "simple-grid"
+                                      "cols": 3.0
                                     }
                                   ],
+                                  "padding": "md",
                                   "type": "box"
                                 },
                                 {
@@ -3077,7 +3229,6 @@
                                 {
                                   "type": "grid",
                                   "cols": 2.0,
-                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
@@ -3090,16 +3241,17 @@
                                       ]
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
+                                          "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
@@ -3113,8 +3265,8 @@
                                       "date": "Feb"
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
@@ -3131,59 +3283,54 @@
                                   ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "height": 200.0,
                                   "edges": [
                                     {
-                                      "to": "b",
-                                      "from": "a"
+                                      "source": "a",
+                                      "target": "b"
                                     },
                                     {
-                                      "to": "c",
-                                      "from": "b"
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ],
                                   "nodes": [
                                     {
-                                      "x": 50.0,
-                                      "y": 100.0,
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
-                                      "id": "b",
-                                      "x": 200.0,
                                       "label": "Process",
-                                      "y": 50.0
+                                      "id": "b"
                                     },
                                     {
-                                      "x": 350.0,
-                                      "label": "End",
-                                      "y": 100.0,
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
                                   "width": 400.0,
-                                  "height": 200.0,
                                   "type": "graph-view"
                                 }
-                              ],
-                              "gap": "lg"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "icon": "inbox",
@@ -3191,16 +3338,17 @@
                           "label": "Tickets"
                         },
                         {
+                          "label": "Responses",
                           "href": "/responses",
-                          "icon": "message-circle",
-                          "label": "Responses"
+                          "icon": "message-circle"
                         },
                         {
                           "href": "/metrics",
-                          "icon": "layout-list",
-                          "label": "Metrics"
+                          "label": "Metrics",
+                          "icon": "layout-list"
                         }
-                      ]
+                      ],
+                      "appName": "Helpdesk"
                     }
                   ]
                 ]
@@ -3215,8 +3363,8 @@
                     "SupportMetrics",
                     {
                       "emit": {
-                        "success": "SupportMetricsLoaded",
-                        "failure": "SupportMetricsLoadFailed"
+                        "failure": "SupportMetricsLoadFailed",
+                        "success": "SupportMetricsLoaded"
                       }
                     }
                   ],
@@ -3224,13 +3372,29 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "appName": "Helpdesk",
+                      "navItems": [
+                        {
+                          "label": "Tickets",
+                          "href": "/tickets",
+                          "icon": "inbox"
+                        },
+                        {
+                          "label": "Responses",
+                          "href": "/responses",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "label": "Metrics",
+                          "href": "/metrics"
+                        }
+                      ],
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "gap": "lg",
                               "direction": "vertical",
                               "children": [
                                 {
@@ -3246,7 +3410,10 @@
                                   ]
                                 },
                                 {
+                                  "gap": "md",
                                   "direction": "horizontal",
+                                  "justify": "between",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "children": [
@@ -3255,9 +3422,9 @@
                                           "name": "activity"
                                         },
                                         {
-                                          "type": "typography",
+                                          "content": "Support Metrics",
                                           "variant": "h2",
-                                          "content": "Support Metrics"
+                                          "type": "typography"
                                         }
                                       ],
                                       "type": "stack",
@@ -3265,106 +3432,11 @@
                                       "gap": "md"
                                     },
                                     {
-                                      "action": "REFRESH",
                                       "label": "Refresh",
-                                      "variant": "secondary",
                                       "type": "button",
+                                      "action": "REFRESH",
+                                      "variant": "secondary",
                                       "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "label": "OpenTickets",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "openTickets"
-                                          ],
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "label": "ResolvedTickets",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "resolvedTickets"
-                                          ],
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "gap": "sm",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "content": "AvgResponseTime",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "avgResponseTime"
-                                                  ],
-                                                  "variant": "h3",
-                                                  "type": "typography"
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "satisfactionScore"
-                                          ],
-                                          "type": "stat-display",
-                                          "label": "SatisfactionScore"
-                                        },
-                                        {
-                                          "label": "ActiveAgents",
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "activeAgents"
-                                          ]
-                                        }
-                                      ]
                                     }
                                   ]
                                 },
@@ -3372,7 +3444,64 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
+                                  "padding": "md",
+                                  "children": [
+                                    {
+                                      "cols": 3.0,
+                                      "type": "simple-grid",
+                                      "children": [
+                                        {
+                                          "label": "OpenTickets",
+                                          "value": "@entity.openTickets",
+                                          "type": "stat-display"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "ResolvedTickets",
+                                          "value": "@entity.resolvedTickets"
+                                        },
+                                        {
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "gap": "sm",
+                                              "children": [
+                                                {
+                                                  "content": "AvgResponseTime",
+                                                  "type": "typography",
+                                                  "variant": "caption"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "h3",
+                                                  "content": "@entity.avgResponseTime"
+                                                }
+                                              ],
+                                              "direction": "vertical"
+                                            }
+                                          ],
+                                          "type": "card"
+                                        },
+                                        {
+                                          "label": "SatisfactionScore",
+                                          "type": "stat-display",
+                                          "value": "@entity.satisfactionScore"
+                                        },
+                                        {
+                                          "value": "@entity.activeAgents",
+                                          "label": "ActiveAgents",
+                                          "type": "stat-display"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "type": "box"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "type": "card",
@@ -3395,108 +3524,86 @@
                                       "type": "card"
                                     }
                                   ],
-                                  "cols": 2.0,
-                                  "type": "grid"
+                                  "gap": "md",
+                                  "cols": 2.0
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
                                       "value": 12.0
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "value": 15.0,
                                       "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "nodes": [
                                     {
-                                      "x": 50.0,
-                                      "label": "Start",
                                       "id": "a",
-                                      "y": 100.0
+                                      "label": "Start"
                                     },
                                     {
                                       "id": "b",
-                                      "label": "Process",
-                                      "y": 50.0,
-                                      "x": 200.0
+                                      "label": "Process"
                                     },
                                     {
                                       "id": "c",
-                                      "x": 350.0,
-                                      "y": 100.0,
                                       "label": "End"
                                     }
                                   ],
-                                  "edges": [
-                                    {
-                                      "from": "a",
-                                      "to": "b"
-                                    },
-                                    {
-                                      "to": "c",
-                                      "from": "b"
-                                    }
-                                  ],
+                                  "type": "graph-view",
                                   "width": 400.0,
                                   "height": 200.0,
-                                  "type": "graph-view"
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ]
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "lg"
                             }
-                          ]
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "icon": "message-circle",
-                          "label": "Responses",
-                          "href": "/responses"
-                        },
-                        {
-                          "href": "/metrics",
-                          "label": "Metrics",
-                          "icon": "layout-list"
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -3522,11 +3629,31 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "icon": "inbox",
+                          "label": "Tickets",
+                          "href": "/tickets"
+                        },
+                        {
+                          "label": "Responses",
+                          "href": "/responses",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "label": "Metrics",
+                          "href": "/metrics"
+                        }
+                      ],
+                      "appName": "Helpdesk",
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
@@ -3543,132 +3670,99 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "gap": "md",
                                   "justify": "between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "activity"
+                                          "name": "activity",
+                                          "type": "icon"
                                         },
                                         {
-                                          "content": "Support Metrics",
                                           "variant": "h2",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Support Metrics"
                                         }
                                       ],
+                                      "type": "stack",
+                                      "gap": "md",
                                       "direction": "horizontal"
                                     },
                                     {
-                                      "variant": "secondary",
-                                      "label": "Refresh",
-                                      "action": "REFRESH",
                                       "icon": "refresh-cw",
-                                      "type": "button"
+                                      "action": "REFRESH",
+                                      "label": "Refresh",
+                                      "type": "button",
+                                      "variant": "secondary"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
                                       "cols": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "openTickets"
-                                          ],
-                                          "label": "OpenTickets"
+                                          "value": "@entity.openTickets",
+                                          "label": "OpenTickets",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "label": "ResolvedTickets",
+                                          "value": "@entity.resolvedTickets",
                                           "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "resolvedTickets"
-                                          ]
+                                          "label": "ResolvedTickets"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
                                               "direction": "vertical",
+                                              "gap": "sm",
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
+                                                  "content": "AvgResponseTime",
                                                   "variant": "caption",
-                                                  "content": "AvgResponseTime"
+                                                  "type": "typography"
                                                 },
                                                 {
+                                                  "variant": "h3",
                                                   "type": "typography",
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "avgResponseTime"
-                                                  ],
-                                                  "variant": "h3"
+                                                  "content": "@entity.avgResponseTime"
                                                 }
-                                              ],
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              ]
                                             }
-                                          ]
-                                        },
-                                        {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "satisfactionScore"
                                           ],
-                                          "type": "stat-display",
-                                          "label": "SatisfactionScore"
+                                          "type": "card"
                                         },
                                         {
                                           "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "activeAgents"
-                                          ],
+                                          "label": "SatisfactionScore",
+                                          "value": "@entity.satisfactionScore"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "value": "@entity.activeAgents",
                                           "label": "ActiveAgents"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "gap": "md",
+                                  "cols": 2.0,
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "type": "card",
@@ -3683,27 +3777,24 @@
                                     {
                                       "children": [
                                         {
+                                          "variant": "caption",
                                           "content": "Graph View",
-                                          "type": "typography",
-                                          "variant": "caption"
+                                          "type": "typography"
                                         }
                                       ],
                                       "type": "card"
                                     }
-                                  ],
-                                  "type": "grid",
-                                  "cols": 2.0
+                                  ]
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "value": 15.0,
@@ -3721,7 +3812,8 @@
                                       "date": "Jun",
                                       "value": 30.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
                                   "items": [
@@ -3730,8 +3822,8 @@
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ],
                                   "type": "chart-legend"
@@ -3740,63 +3832,37 @@
                                   "type": "graph-view",
                                   "width": 400.0,
                                   "height": 200.0,
-                                  "edges": [
-                                    {
-                                      "to": "b",
-                                      "from": "a"
-                                    },
-                                    {
-                                      "from": "b",
-                                      "to": "c"
-                                    }
-                                  ],
                                   "nodes": [
                                     {
                                       "label": "Start",
-                                      "y": 100.0,
-                                      "x": 50.0,
                                       "id": "a"
                                     },
                                     {
                                       "id": "b",
-                                      "label": "Process",
-                                      "y": 50.0,
-                                      "x": 200.0
+                                      "label": "Process"
                                     },
                                     {
                                       "label": "End",
-                                      "y": 100.0,
-                                      "id": "c",
-                                      "x": 350.0
+                                      "id": "c"
+                                    }
+                                  ],
+                                  "edges": [
+                                    {
+                                      "target": "b",
+                                      "source": "a"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ]
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "href": "/responses",
-                          "icon": "message-circle",
-                          "label": "Responses"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk"
+                      ]
                     }
                   ]
                 ]
@@ -3820,31 +3886,14 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "href": "/tickets",
-                          "label": "Tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "href": "/responses",
-                          "icon": "message-circle",
-                          "label": "Responses"
-                        },
-                        {
-                          "label": "Metrics",
-                          "icon": "layout-list",
-                          "href": "/metrics"
-                        }
-                      ],
+                      "appName": "Helpdesk",
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
                               "gap": "lg",
                               "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -3859,157 +3908,122 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "justify": "between",
                                   "children": [
                                     {
-                                      "gap": "md",
-                                      "direction": "horizontal",
                                       "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "activity"
+                                          "name": "activity",
+                                          "type": "icon"
                                         },
                                         {
                                           "variant": "h2",
-                                          "content": "Support Metrics",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Support Metrics"
                                         }
                                       ]
                                     },
                                     {
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
                                       "type": "button",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh",
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "justify": "between"
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
+                                      "type": "simple-grid",
+                                      "cols": 3.0,
                                       "children": [
                                         {
+                                          "value": "@entity.openTickets",
                                           "label": "OpenTickets",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "openTickets"
-                                          ],
                                           "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "value": "@entity.resolvedTickets",
                                           "label": "ResolvedTickets",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "resolvedTickets"
-                                          ]
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
-                                              "gap": "sm",
-                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "AvgResponseTime",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "avgResponseTime"
-                                                  ],
+                                                  "variant": "h3",
                                                   "type": "typography",
-                                                  "variant": "h3"
+                                                  "content": "@entity.avgResponseTime"
                                                 }
-                                              ]
+                                              ],
+                                              "gap": "sm",
+                                              "type": "stack",
+                                              "direction": "vertical"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "SatisfactionScore",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "satisfactionScore"
-                                          ]
+                                          "value": "@entity.satisfactionScore",
+                                          "label": "SatisfactionScore"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "value": "@entity.activeAgents",
                                           "label": "ActiveAgents",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "activeAgents"
-                                          ]
+                                          "type": "stat-display"
                                         }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
+                                      ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "grid",
                                   "gap": "md",
-                                  "cols": 2.0,
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "content": "Chart View"
                                         }
                                       ]
                                     },
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "content": "Graph View",
+                                          "type": "typography",
                                           "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     }
                                   ],
-                                  "type": "grid"
+                                  "cols": 2.0
                                 },
                                 {
                                   "data": [
@@ -4034,8 +4048,8 @@
                                       "date": "May"
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
                                   "type": "line-chart"
@@ -4044,57 +4058,68 @@
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "to": "b",
-                                      "from": "a"
-                                    },
-                                    {
-                                      "to": "c",
-                                      "from": "b"
-                                    }
-                                  ],
-                                  "height": 200.0,
                                   "width": 400.0,
+                                  "height": 200.0,
                                   "nodes": [
                                     {
                                       "label": "Start",
-                                      "id": "a",
-                                      "y": 100.0,
-                                      "x": 50.0
+                                      "id": "a"
                                     },
                                     {
-                                      "y": 50.0,
-                                      "label": "Process",
                                       "id": "b",
-                                      "x": 200.0
+                                      "label": "Process"
                                     },
                                     {
-                                      "id": "c",
-                                      "x": 350.0,
                                       "label": "End",
-                                      "y": 100.0
+                                      "id": "c"
+                                    }
+                                  ],
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk"
+                      "navItems": [
+                        {
+                          "href": "/tickets",
+                          "label": "Tickets",
+                          "icon": "inbox"
+                        },
+                        {
+                          "icon": "message-circle",
+                          "label": "Responses",
+                          "href": "/responses"
+                        },
+                        {
+                          "href": "/metrics",
+                          "icon": "layout-list",
+                          "label": "Metrics"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -4118,12 +4143,27 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/tickets",
+                          "label": "Tickets",
+                          "icon": "inbox"
+                        },
+                        {
+                          "icon": "message-circle",
+                          "label": "Responses",
+                          "href": "/responses"
+                        },
+                        {
+                          "label": "Metrics",
+                          "href": "/metrics",
+                          "icon": "layout-list"
+                        }
+                      ],
                       "children": [
                         {
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -4138,126 +4178,91 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "between",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
+                                      "gap": "md",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "activity"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Support Metrics",
-                                          "variant": "h2"
+                                          "content": "Support Metrics"
                                         }
                                       ],
-                                      "type": "stack",
-                                      "gap": "md"
+                                      "direction": "horizontal"
                                     },
                                     {
+                                      "type": "button",
                                       "variant": "secondary",
                                       "icon": "refresh-cw",
-                                      "action": "REFRESH",
                                       "label": "Refresh",
-                                      "type": "button"
+                                      "action": "REFRESH"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
                                       "cols": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "openTickets"
-                                          ],
-                                          "label": "OpenTickets"
+                                          "value": "@entity.openTickets",
+                                          "label": "OpenTickets",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "resolvedTickets"
-                                          ],
                                           "type": "stat-display",
-                                          "label": "ResolvedTickets"
+                                          "label": "ResolvedTickets",
+                                          "value": "@entity.resolvedTickets"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
                                               "gap": "sm",
-                                              "type": "stack",
                                               "direction": "vertical",
+                                              "type": "stack",
                                               "children": [
                                                 {
+                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "AvgResponseTime",
-                                                  "type": "typography"
+                                                  "content": "AvgResponseTime"
                                                 },
                                                 {
-                                                  "type": "typography",
+                                                  "content": "@entity.avgResponseTime",
                                                   "variant": "h3",
-                                                  "content": [
-                                                    "object/get",
-                                                    [
-                                                      "array/first",
-                                                      "@entity"
-                                                    ],
-                                                    "avgResponseTime"
-                                                  ]
+                                                  "type": "typography"
                                                 }
                                               ]
                                             }
-                                          ]
-                                        },
-                                        {
-                                          "label": "SatisfactionScore",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "satisfactionScore"
                                           ],
-                                          "type": "stat-display"
+                                          "type": "card"
                                         },
                                         {
+                                          "type": "stat-display",
+                                          "value": "@entity.satisfactionScore",
+                                          "label": "SatisfactionScore"
+                                        },
+                                        {
+                                          "type": "stat-display",
                                           "label": "ActiveAgents",
-                                          "value": [
-                                            "object/get",
-                                            [
-                                              "array/first",
-                                              "@entity"
-                                            ],
-                                            "activeAgents"
-                                          ],
-                                          "type": "stat-display"
+                                          "value": "@entity.activeAgents"
                                         }
                                       ]
                                     }
                                   ],
+                                  "padding": "md",
                                   "type": "box"
                                 },
                                 {
@@ -4265,110 +4270,105 @@
                                 },
                                 {
                                   "gap": "md",
+                                  "type": "grid",
                                   "cols": 2.0,
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Chart View",
                                           "variant": "caption",
                                           "type": "typography"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
-                                        }
                                       ],
                                       "type": "card"
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "Graph View",
+                                          "variant": "caption"
+                                        }
+                                      ]
                                     }
-                                  ],
-                                  "type": "grid"
+                                  ]
                                 },
                                 {
+                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
                                       "value": 19.0
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
-                                  ],
-                                  "type": "line-chart"
+                                  ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
+                                    }
+                                  ],
                                   "type": "graph-view",
+                                  "width": 400.0,
                                   "nodes": [
                                     {
                                       "label": "Start",
-                                      "id": "a",
-                                      "x": 50.0,
-                                      "y": 100.0
+                                      "id": "a"
                                     },
                                     {
-                                      "x": 200.0,
-                                      "label": "Process",
-                                      "y": 50.0,
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process"
                                     },
                                     {
-                                      "x": 350.0,
-                                      "label": "End",
-                                      "y": 100.0,
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
-                                  "height": 200.0,
-                                  "width": 400.0,
-                                  "edges": [
-                                    {
-                                      "from": "a",
-                                      "to": "b"
-                                    },
-                                    {
-                                      "from": "b",
-                                      "to": "c"
-                                    }
-                                  ]
+                                  "height": 200.0
                                 }
                               ],
                               "gap": "lg",
+                              "direction": "vertical",
                               "type": "stack"
                             }
                           ],
@@ -4376,23 +4376,7 @@
                         }
                       ],
                       "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "href": "/tickets",
-                          "label": "Tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "href": "/metrics",
-                          "label": "Metrics"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]

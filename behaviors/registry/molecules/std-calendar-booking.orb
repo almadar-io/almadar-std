@@ -81,6 +81,32 @@
           "name": "BookingLayout",
           "category": "interaction",
           "linkedEntity": "Booking",
+          "emits": [
+            {
+              "event": "BookingLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "BookingLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[Booking]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -92,6 +118,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "BookingLoadFailed",
+                "name": "Booking load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "BookingLoaded",
+                "name": "Booking loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[Booking]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,8 +155,8 @@
                     "Booking",
                     {
                       "emit": {
-                        "success": "BookingLoaded",
-                        "failure": "BookingLoadFailed"
+                        "failure": "BookingLoadFailed",
+                        "success": "BookingLoaded"
                       }
                     }
                   ],
@@ -114,12 +164,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         "@trait.BookingCalendar"
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]

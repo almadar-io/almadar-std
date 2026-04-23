@@ -37,7 +37,7 @@ orbital ProductOrbital {
     state browsing {
       INIT -> browsing
         (ref Product)
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Product", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "package" }, { name: "category", variant: "badge" }, { name: "price", variant: "h4", format: "currency" }, { name: "sku", variant: "caption" }, { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }], cols: 3, gap: "md" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "package" }, { name: "category", variant: "badge" }, { name: "price", variant: "h4", format: "currency" }, { name: "sku", variant: "caption" }, { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }], cols: 3, gap: "md" }] }] })
     }
     emits {
       ADD_TO_CART external { id: string }
@@ -90,7 +90,7 @@ orbital ProductOrbital {
       SAVE { data : object! }
           ProductLoadFailed { message : string }
     }
-    emits: [ProductLoaded, ProductLoadFailed]
+    emits: [ProductLoadFailed, ProductLoaded, ProductSaveFailed, ProductSaved]
   }
   trait ProductEdit -> Product [interaction, collection] {
     initial: closed
@@ -120,7 +120,7 @@ orbital ProductOrbital {
       SAVE { data : object! }
           ProductLoadFailed { message : string }
     }
-    emits: [ProductLoaded, ProductLoadFailed]
+    emits: [ProductLoadFailed, ProductLoaded, ProductUpdateFailed, ProductUpdated]
   }
   trait ProductView -> Product [interaction, collection] {
     initial: closed
@@ -180,7 +180,7 @@ orbital ProductOrbital {
       DELETE { id : string! }
           ProductLoadFailed { message : string }
     }
-    emits: [ProductLoaded, ProductLoadFailed]
+    emits: [ProductDeleteFailed, ProductDeleted, ProductLoadFailed, ProductLoaded]
   }
   page "/products" as ProductsPage -> ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
 }
@@ -196,15 +196,19 @@ orbital CartItemOrbital {
 
   type CartItemLoaded     = Event CartItem                  "Fired when CartItem finishes loading"
   type CartItemLoadFailed = Event { message : string } "Fired when CartItem fails to load"
+  type CartItemDeleteFailed = Event { error : string, code : string }
+  type CartItemDeleted = Event { id : string }
+  type CartItemSaveFailed = Event { error : string, code : string }
+  type CartItemSaved = Event { id : string }
   trait CartItemCartBrowse -> CartItem [interaction, collection] {
     initial: browsing
     state browsing {
       INIT -> browsing
         (ref CartItem)
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "shopping-cart" }, { type: "typography", content: "Shopping Cart", variant: "h2" }] }, { type: "button", label: "Add Item", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Items", value: ["array/len", "@entity"], icon: "package" }, { type: "stat-display", label: "Subtotal", value: ["array/len", "@entity"], icon: "dollar-sign" }, { type: "stat-display", label: "Total", value: ["array/len", "@entity"], icon: "receipt" }] }, { type: "divider" }, { type: "data-grid", entity: "CartItem", fields: [], itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "shopping-cart" }, { name: "quantity", label: "Quantity", variant: "caption", format: "currency" }, { name: "unitPrice", label: "Unit Price", variant: "badge" }] }, { type: "button", label: "Proceed to Checkout", action: "PROCEED_CHECKOUT", variant: "primary", icon: "arrow-right" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "shopping-cart" }, { type: "typography", content: "Shopping Cart", variant: "h2" }] }, { type: "button", label: "Add Item", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Items", value: "@entity", icon: "package" }, { type: "stat-display", label: "Subtotal", value: "@entity", icon: "dollar-sign" }, { type: "stat-display", label: "Total", value: "@entity", icon: "receipt" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "shopping-cart" }, { name: "quantity", label: "Quantity", variant: "caption", format: "currency" }, { name: "unitPrice", label: "Unit Price", variant: "badge" }] }, { type: "button", label: "Proceed to Checkout", action: "PROCEED_CHECKOUT", variant: "primary", icon: "arrow-right" }] }] })
       PROCEED_CHECKOUT -> checkout
         (ref CartItem)
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "divider" }, { type: "data-grid", entity: "CartItem", fields: [], itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "shopping-cart" }, { name: "quantity", label: "Quantity", variant: "caption", format: "currency" }, { name: "unitPrice", label: "Unit Price", variant: "badge" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Cart", action: "BACK_TO_CART", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Confirm Order", action: "CONFIRM_ORDER", variant: "primary", icon: "check" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "shopping-cart" }, { name: "quantity", label: "Quantity", variant: "caption", format: "currency" }, { name: "unitPrice", label: "Unit Price", variant: "badge" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Cart", action: "BACK_TO_CART", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Confirm Order", action: "CONFIRM_ORDER", variant: "primary", icon: "check" }] }] }] })
     }
     state checkout {
       BACK_TO_CART -> browsing
@@ -241,7 +245,7 @@ orbital CartItemOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [CartItemLoaded, CartItemLoadFailed]
+    emits: [CartItemLoadFailed, CartItemLoaded, CartItemSaveFailed, CartItemSaved]
     listens {
       CartItemLoadFailed { message : string }
       SAVE { data : string }
@@ -272,7 +276,7 @@ orbital CartItemOrbital {
         (render-ui main { type: "box" })
         (ref CartItem)
     }
-    emits: [CartItemLoaded, CartItemLoadFailed]
+    emits: [CartItemDeleteFailed, CartItemDeleted, CartItemLoadFailed, CartItemLoaded]
     listens {
       CartItemLoadFailed { message : string }
       REQUEST_REMOVE { id : string }
@@ -293,6 +297,8 @@ orbital CheckoutOrbital {
 
   type CheckoutLoaded     = Event Checkout                  "Fired when Checkout finishes loading"
   type CheckoutLoadFailed = Event { message : string } "Fired when Checkout fails to load"
+  type CheckoutSaveFailed = Event { error : string, code : string }
+  type CheckoutSaved = Event { id : string }
   trait CheckoutWizard -> Checkout [interaction, collection] {
     initial: step1
     state step1 {
@@ -344,7 +350,7 @@ orbital CheckoutOrbital {
           CheckoutLoadFailed { message : string }
           COMPLETE { data : string }
     }
-    emits: [CheckoutLoaded, CheckoutLoadFailed]
+    emits: [CheckoutLoadFailed, CheckoutLoaded, CheckoutSaveFailed, CheckoutSaved]
   }
   page "/checkout" -> CheckoutWizard
 }
@@ -362,11 +368,17 @@ orbital OrderRecordOrbital {
 
   type OrderRecordLoaded     = Event OrderRecord                  "Fired when OrderRecord finishes loading"
   type OrderRecordLoadFailed = Event { message : string } "Fired when OrderRecord fails to load"
+  type OrderRecordDeleteFailed = Event { error : string, code : string }
+  type OrderRecordDeleted = Event { id : string }
+  type OrderRecordSaveFailed = Event { error : string, code : string }
+  type OrderRecordSaved = Event { id : string }
+  type OrderRecordUpdateFailed = Event { error : string, code : string }
+  type OrderRecordUpdated = Event { id : string }
   trait OrderRecordBrowse -> OrderRecord [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref OrderRecord)
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "Order History", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create OrderRecord", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "OrderRecord", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "customerName", label: "Customer", variant: "h3", icon: "clipboard-list" }, { name: "status", variant: "badge" }, { name: "orderTotal", label: "Total", variant: "h4", format: "currency" }, { name: "email", variant: "caption" }, { name: "shippingAddress", label: "Address", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "Order History", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create OrderRecord", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "customerName", label: "Customer", variant: "h3", icon: "clipboard-list" }, { name: "status", variant: "badge" }, { name: "orderTotal", label: "Total", variant: "h4", format: "currency" }, { name: "email", variant: "caption" }, { name: "shippingAddress", label: "Address", variant: "caption" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
       OrderRecordCreate ORDER_RECORD_CREATED -> INIT
@@ -400,7 +412,7 @@ orbital OrderRecordOrbital {
     emits {
       ORDER_RECORD_CREATED
     }
-    emits: [OrderRecordLoaded, OrderRecordLoadFailed]
+    emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordSaveFailed, OrderRecordSaved]
     listens {
       OrderRecordLoadFailed { message : string }
       SAVE { data : string }
@@ -429,7 +441,7 @@ orbital OrderRecordOrbital {
     emits {
       ORDER_RECORD_UPDATED
     }
-    emits: [OrderRecordLoaded, OrderRecordLoadFailed]
+    emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordUpdateFailed, OrderRecordUpdated]
     listens {
       OrderRecordLoadFailed { message : string }
       EDIT { id : string }
@@ -489,7 +501,7 @@ orbital OrderRecordOrbital {
     emits {
       ORDER_RECORD_DELETED
     }
-    emits: [OrderRecordLoaded, OrderRecordLoadFailed]
+    emits: [OrderRecordDeleteFailed, OrderRecordDeleted, OrderRecordLoadFailed, OrderRecordLoaded]
     listens {
       OrderRecordLoadFailed { message : string }
       DELETE { id : string }

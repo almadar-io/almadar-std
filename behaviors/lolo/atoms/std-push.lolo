@@ -20,6 +20,7 @@ orbital PushSubscriberOrbital {
   type PushDisconnected = Event { reason : string }  "Fired when the push connection drops"
   type PushSubscriberLoaded = Event { data : [PushSubscriber] }
   type PushSubscriberLoadFailed = Event { error : string, code : string }
+  type PUSH_DISCONNECTED = Event { data : object }
 
   trait PushSubscriberIndicator -> PushSubscriber [interaction, instance] {
     initial: idle
@@ -62,7 +63,7 @@ orbital PushSubscriberOrbital {
       PUSH_RECEIVED external { message : string }
       PUSH_DISCONNECTED external { reason : string }
     }
-    emits: [PushReceived, PushDisconnected, PushSubscriberLoaded, PushSubscriberLoadFailed]
+    emits: [PUSH_DISCONNECTED, PushDisconnected, PushReceived, PushSubscriberLoadFailed, PushSubscriberLoaded]
     listens {
       PUSH_RECEIVED { message : string }
       PUSH_DISCONNECTED { reason : string }

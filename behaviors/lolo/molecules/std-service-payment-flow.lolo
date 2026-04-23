@@ -105,6 +105,8 @@ orbital ServicePaymentFlowOrbital {
         (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
         (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServicePaymentFlowEmailCompleted", failure: "ServicePaymentFlowEmailFailed" } })
     }
+
+    emits: [ServicePaymentFlowEmailCompleted, ServicePaymentFlowEmailFailed]
     listens {
       ServicePaymentFlowPayment SEND_RECEIPT -> SEND_RECEIPT
       FAILED { error : string! }

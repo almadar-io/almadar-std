@@ -72,6 +72,32 @@
           "name": "PushActivityLayout",
           "category": "interaction",
           "linkedEntity": "PushActivityItem",
+          "emits": [
+            {
+              "event": "PushActivityItemLoadFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PushActivityItemLoaded",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "[PushActivityItem]"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -83,6 +109,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "PushActivityItemLoadFailed",
+                "name": "PushActivityItem load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PushActivityItemLoaded",
+                "name": "PushActivityItem loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[PushActivityItem]"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,13 +155,13 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         "@trait.PushActivityPush",
                         "@trait.PushActivityLog"
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
