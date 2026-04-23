@@ -224,8 +224,8 @@
                     "Combatant",
                     {
                       "emit": {
-                        "success": "CombatantLoaded",
-                        "failure": "CombatantLoadFailed"
+                        "failure": "CombatantLoadFailed",
+                        "success": "CombatantLoaded"
                       }
                     }
                   ],
@@ -233,13 +233,11 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "position": "top",
                           "type": "game-hud",
+                          "position": "top",
                           "stats": [
                             {
                               "label": "HP",
@@ -250,19 +248,21 @@
                               "label": "Attack"
                             },
                             {
-                              "label": "Defense",
-                              "value": "@entity.defense"
+                              "value": "@entity.defense",
+                              "label": "Defense"
                             }
                           ]
                         },
                         {
-                          "icon": "swords",
-                          "type": "button",
+                          "variant": "primary",
                           "label": "Attack",
                           "event": "ATTACK",
-                          "variant": "primary"
+                          "type": "button",
+                          "icon": "swords"
                         }
                       ],
+                      "align": "center",
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -278,8 +278,53 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "HP",
+                              "value": "@entity.hp"
+                            },
+                            {
+                              "label": "Attack",
+                              "value": "@entity.attack"
+                            },
+                            {
+                              "value": "@entity.defense",
+                              "label": "Defense"
+                            }
+                          ],
+                          "type": "game-hud",
+                          "position": "top"
+                        },
+                        {
+                          "variant": "secondary",
+                          "label": "Cooldown End",
+                          "type": "button",
+                          "icon": "clock",
+                          "event": "HIT"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "attacking",
+                "to": "cooldown",
+                "event": "HIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "game-hud",
@@ -300,11 +345,38 @@
                           ]
                         },
                         {
+                          "type": "badge",
+                          "label": "Cooling down..."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "attacking",
+                "to": "defeated",
+                "event": "DEFEAT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "game-over-screen",
+                          "variant": "defeat",
+                          "title": "Defeated"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "variant": "ghost",
+                          "label": "Reset",
                           "type": "button",
-                          "icon": "clock",
-                          "event": "HIT",
-                          "variant": "secondary",
-                          "label": "Cooldown End"
+                          "event": "RESET"
                         }
                       ],
                       "type": "stack"
@@ -313,22 +385,22 @@
                 ]
               },
               {
-                "from": "attacking",
-                "to": "cooldown",
-                "event": "HIT",
+                "from": "cooldown",
+                "to": "ready",
+                "event": "COOLDOWN_END",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "gap": "lg",
+                      "align": "center",
                       "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "position": "top",
                           "type": "game-hud",
+                          "position": "top",
                           "stats": [
                             {
                               "label": "HP",
@@ -345,8 +417,11 @@
                           ]
                         },
                         {
-                          "label": "Cooling down...",
-                          "type": "badge"
+                          "label": "Attack",
+                          "icon": "swords",
+                          "type": "button",
+                          "variant": "primary",
+                          "event": "ATTACK"
                         }
                       ]
                     }
@@ -354,7 +429,7 @@
                 ]
               },
               {
-                "from": "attacking",
+                "from": "cooldown",
                 "to": "defeated",
                 "event": "DEFEAT",
                 "effects": [
@@ -367,94 +442,19 @@
                       "align": "center",
                       "children": [
                         {
-                          "title": "Defeated",
                           "variant": "defeat",
-                          "type": "game-over-screen"
+                          "type": "game-over-screen",
+                          "title": "Defeated"
                         },
                         {
-                          "type": "button",
                           "icon": "rotate-ccw",
-                          "variant": "ghost",
                           "label": "Reset",
+                          "variant": "ghost",
+                          "type": "button",
                           "event": "RESET"
                         }
                       ],
                       "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "cooldown",
-                "to": "ready",
-                "event": "COOLDOWN_END",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "position": "top",
-                          "type": "game-hud",
-                          "stats": [
-                            {
-                              "label": "HP",
-                              "value": "@entity.hp"
-                            },
-                            {
-                              "value": "@entity.attack",
-                              "label": "Attack"
-                            },
-                            {
-                              "label": "Defense",
-                              "value": "@entity.defense"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "event": "ATTACK",
-                          "icon": "swords",
-                          "label": "Attack",
-                          "variant": "primary"
-                        }
-                      ],
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "cooldown",
-                "to": "defeated",
-                "event": "DEFEAT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "game-over-screen",
-                          "title": "Defeated",
-                          "variant": "defeat"
-                        },
-                        {
-                          "label": "Reset",
-                          "icon": "rotate-ccw",
-                          "variant": "ghost",
-                          "type": "button",
-                          "event": "RESET"
-                        }
-                      ]
                     }
                   ]
                 ]
@@ -468,37 +468,37 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "type": "game-hud",
-                          "position": "top",
                           "stats": [
                             {
                               "label": "HP",
                               "value": "@entity.hp"
                             },
                             {
-                              "value": "@entity.attack",
-                              "label": "Attack"
+                              "label": "Attack",
+                              "value": "@entity.attack"
                             },
                             {
-                              "label": "Defense",
-                              "value": "@entity.defense"
+                              "value": "@entity.defense",
+                              "label": "Defense"
                             }
-                          ]
+                          ],
+                          "type": "game-hud",
+                          "position": "top"
                         },
                         {
-                          "variant": "primary",
-                          "icon": "swords",
                           "type": "button",
+                          "icon": "swords",
                           "label": "Attack",
-                          "event": "ATTACK"
+                          "event": "ATTACK",
+                          "variant": "primary"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
