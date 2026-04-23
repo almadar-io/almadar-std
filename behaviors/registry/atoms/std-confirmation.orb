@@ -88,6 +88,20 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "ConfirmActionLoadFailed",
+                "name": "ConfirmAction load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -98,7 +112,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "ConfirmAction"
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -123,69 +143,69 @@
                     {
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "name": "@config.icon",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "message": "@config.alertMessage",
                           "variant": "error",
-                          "type": "alert",
-                          "message": "@config.alertMessage"
+                          "type": "alert"
                         },
                         {
+                          "content": "@entity.name",
                           "type": "typography",
-                          "variant": "h4",
-                          "content": "@entity.name"
+                          "variant": "h4"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "@entity.pendingId",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
                           "gap": "sm",
-                          "type": "stack",
-                          "justify": "end",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "CANCEL",
+                              "variant": "ghost",
                               "label": "Cancel",
-                              "variant": "ghost"
+                              "action": "CANCEL",
+                              "type": "button"
                             },
                             {
+                              "type": "button",
+                              "action": "CONFIRM",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
                               "variant": "danger",
                               "icon": "check",
-                              "action": "CONFIRM",
-                              "type": "button",
                               "label": "@config.confirmLabel"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "end"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]

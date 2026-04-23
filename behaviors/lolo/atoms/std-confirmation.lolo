@@ -16,6 +16,8 @@ orbital ConfirmActionOrbital {
     createdAt : string
     pendingId : string = ""
   }
+  type ConfirmActionLoaded = Event { data : [ConfirmAction] }
+  type ConfirmActionLoadFailed = Event { error : string, code : string }
 
   trait ConfirmActionConfirmation -> ConfirmAction [interaction, instance] {
     config {
@@ -27,7 +29,7 @@ orbital ConfirmActionOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ConfirmAction)
+        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
       REQUEST -> confirming
         (set @entity.pendingId @payload.id)
         (set @entity.name @payload.row.name)
@@ -43,6 +45,8 @@ orbital ConfirmActionOrbital {
     }
     listens {
       REQUEST { id : string!, row : object }
+    
+      ConfirmActionLoadFailed { error : string, code : string }
     }
   }
   page "/confirmactions/confirm" as ConfirmActionConfirmPage -> ConfirmActionConfirmation

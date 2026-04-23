@@ -16,6 +16,8 @@ orbital ModalRecordOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
+  type ModalRecordLoaded = Event { data : [ModalRecord] }
+  type ModalRecordLoadFailed = Event { error : string, code : string }
 
   trait ModalRecordModal -> ModalRecord [interaction, instance] {
     config {
@@ -27,7 +29,7 @@ orbital ModalRecordOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (fetch ModalRecord)
+        (fetch ModalRecord { emit: { success: "ModalRecordLoaded", failure: "ModalRecordLoadFailed" } })
       OPEN -> open
         (set @entity.id @payload.id)
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "@config.icon" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ModalRecord", entityId: "@entity.id", mode: "@config.mode", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: "@config.fields" }] })
@@ -46,6 +48,8 @@ orbital ModalRecordOrbital {
     listens {
       OPEN { id : string }
       SAVE { data : object! }
+    
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
   page "/modalrecords/modal" as ModalRecordModalPage -> ModalRecordModal

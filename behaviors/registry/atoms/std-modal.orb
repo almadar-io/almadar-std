@@ -81,6 +81,20 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "ModalRecordLoadFailed",
+                "name": "ModalRecord load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -91,7 +105,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "ModalRecord"
+                    "ModalRecord",
+                    {
+                      "emit": {
+                        "success": "ModalRecordLoaded",
+                        "failure": "ModalRecordLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -110,36 +130,36 @@
                     "modal",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "@config.icon"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entityId": "@entity.id",
+                          "entity": "ModalRecord",
                           "mode": "@config.mode",
                           "fields": "@config.fields",
                           "submitEvent": "SAVE",
                           "type": "form-section",
-                          "cancelEvent": "CLOSE",
-                          "entity": "ModalRecord",
-                          "entityId": "@entity.id"
+                          "cancelEvent": "CLOSE"
                         }
                       ]
                     }

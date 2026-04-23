@@ -302,8 +302,8 @@
                     "ServiceCustomApiTester",
                     {
                       "emit": {
-                        "success": "ServiceCustomApiTesterLoaded",
-                        "failure": "ServiceCustomApiTesterLoadFailed"
+                        "failure": "ServiceCustomApiTesterLoadFailed",
+                        "success": "ServiceCustomApiTesterLoaded"
                       }
                     }
                   ],
@@ -311,9 +311,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -321,12 +319,12 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Unified API Tester"
+                          "content": "Unified API Tester",
+                          "variant": "h2"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "/users"
+                          "placeholder": "/users",
+                          "type": "input"
                         },
                         {
                           "options": [
@@ -350,8 +348,8 @@
                           "type": "select"
                         },
                         {
-                          "placeholder": "Request body (JSON)",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Request body (JSON)"
                         },
                         {
                           "type": "divider"
@@ -362,43 +360,45 @@
                           "content": "Select Auth Type"
                         },
                         {
-                          "justify": "center",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "variant": "primary",
-                              "label": "Header API Key",
                               "icon": "key",
+                              "action": "CALL_HEADER_API",
                               "type": "button",
-                              "action": "CALL_HEADER_API"
+                              "label": "Header API Key"
                             },
                             {
-                              "icon": "shield",
                               "type": "button",
-                              "label": "Bearer Token",
+                              "variant": "primary",
+                              "icon": "shield",
                               "action": "CALL_BEARER_API",
-                              "variant": "primary"
+                              "label": "Bearer Token"
                             },
                             {
                               "label": "Query Param",
+                              "variant": "primary",
                               "action": "CALL_QUERY_API",
                               "type": "button",
-                              "variant": "primary",
                               "icon": "search"
                             },
                             {
-                              "icon": "unlock",
                               "type": "button",
+                              "variant": "primary",
                               "action": "CALL_NOAUTH_API",
-                              "label": "No Auth",
-                              "variant": "primary"
+                              "icon": "unlock",
+                              "label": "No Auth"
                             }
-                          ]
+                          ],
+                          "justify": "center",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -417,9 +417,9 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Calling API...",
                       "message": "Sending request to servicecustomapitester endpoint...",
-                      "type": "loading-state",
-                      "title": "Calling API..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -427,9 +427,9 @@
                     "custom-header-api",
                     "execute",
                     {
-                      "body": "@entity.requestBody",
+                      "endpoint": "@entity.endpoint",
                       "method": "@entity.method",
-                      "endpoint": "@entity.endpoint"
+                      "body": "@entity.requestBody"
                     }
                   ]
                 ]
@@ -448,9 +448,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Sending request to servicecustomapitester endpoint...",
                       "title": "Calling API...",
-                      "type": "loading-state",
-                      "message": "Sending request to servicecustomapitester endpoint..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -458,9 +458,9 @@
                     "custom-bearer-api",
                     "execute",
                     {
-                      "endpoint": "@entity.endpoint",
                       "method": "@entity.method",
-                      "body": "@entity.requestBody"
+                      "body": "@entity.requestBody",
+                      "endpoint": "@entity.endpoint"
                     }
                   ]
                 ]
@@ -510,9 +510,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Sending request to servicecustomapitester endpoint...",
                       "type": "loading-state",
-                      "title": "Calling API...",
-                      "message": "Sending request to servicecustomapitester endpoint..."
+                      "title": "Calling API..."
                     }
                   ],
                   [
@@ -521,8 +521,8 @@
                     "execute",
                     {
                       "method": "@entity.method",
-                      "body": "@entity.requestBody",
-                      "endpoint": "@entity.endpoint"
+                      "endpoint": "@entity.endpoint",
+                      "body": "@entity.requestBody"
                     }
                   ]
                 ]
@@ -546,23 +546,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "Response"
+                          "content": "Response",
+                          "variant": "h2"
                         },
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "@entity.authType",
                               "variant": "info",
+                              "label": "@entity.authType",
                               "type": "badge"
                             },
                             {
@@ -571,26 +570,27 @@
                               "variant": "info"
                             }
                           ],
-                          "direction": "horizontal",
                           "justify": "center",
                           "gap": "sm",
                           "type": "stack"
                         },
                         {
-                          "type": "code",
                           "content": "@entity.responseData",
-                          "language": "json"
+                          "language": "json",
+                          "type": "code"
                         },
                         {
-                          "variant": "ghost",
                           "label": "New Request",
-                          "action": "RESET",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "variant": "ghost",
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
                       ],
+                      "align": "center",
+                      "gap": "lg",
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -609,10 +609,10 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Request Failed",
-                      "onRetry": "RETRY",
                       "type": "error-state",
-                      "message": "@entity.error"
+                      "title": "Request Failed",
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -626,94 +626,94 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "icon",
                           "name": "globe"
                         },
                         {
+                          "type": "typography",
                           "content": "Unified API Tester",
-                          "variant": "h2",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
                           "type": "input",
                           "placeholder": "/users"
                         },
                         {
-                          "type": "select",
                           "options": [
                             {
-                              "label": "GET",
-                              "value": "GET"
+                              "value": "GET",
+                              "label": "GET"
                             },
                             {
-                              "label": "POST",
-                              "value": "POST"
+                              "value": "POST",
+                              "label": "POST"
                             },
                             {
-                              "value": "PUT",
-                              "label": "PUT"
+                              "label": "PUT",
+                              "value": "PUT"
                             },
                             {
                               "label": "DELETE",
                               "value": "DELETE"
                             }
-                          ]
+                          ],
+                          "type": "select"
                         },
                         {
-                          "placeholder": "Request body (JSON)",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Request body (JSON)"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Select Auth Type",
-                          "variant": "h4"
+                          "variant": "h4",
+                          "type": "typography"
                         },
                         {
-                          "children": [
-                            {
-                              "icon": "key",
-                              "action": "CALL_HEADER_API",
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Header API Key"
-                            },
-                            {
-                              "action": "CALL_BEARER_API",
-                              "variant": "primary",
-                              "label": "Bearer Token",
-                              "type": "button",
-                              "icon": "shield"
-                            },
-                            {
-                              "action": "CALL_QUERY_API",
-                              "type": "button",
-                              "variant": "primary",
-                              "icon": "search",
-                              "label": "Query Param"
-                            },
-                            {
-                              "icon": "unlock",
-                              "label": "No Auth",
-                              "type": "button",
-                              "action": "CALL_NOAUTH_API",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Header API Key",
+                              "action": "CALL_HEADER_API",
+                              "variant": "primary",
+                              "icon": "key"
+                            },
+                            {
+                              "variant": "primary",
+                              "action": "CALL_BEARER_API",
+                              "icon": "shield",
+                              "label": "Bearer Token",
+                              "type": "button"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "Query Param",
+                              "icon": "search",
+                              "action": "CALL_QUERY_API",
+                              "type": "button"
+                            },
+                            {
+                              "label": "No Auth",
+                              "action": "CALL_NOAUTH_API",
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "unlock"
+                            }
+                          ],
                           "justify": "center"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -728,8 +728,7 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "name": "globe",
@@ -737,15 +736,14 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Unified API Tester"
+                          "content": "Unified API Tester",
+                          "variant": "h2"
                         },
                         {
                           "type": "input",
                           "placeholder": "/users"
                         },
                         {
-                          "type": "select",
                           "options": [
                             {
                               "value": "GET",
@@ -756,14 +754,15 @@
                               "value": "POST"
                             },
                             {
-                              "label": "PUT",
-                              "value": "PUT"
+                              "value": "PUT",
+                              "label": "PUT"
                             },
                             {
                               "label": "DELETE",
                               "value": "DELETE"
                             }
-                          ]
+                          ],
+                          "type": "select"
                         },
                         {
                           "type": "textarea",
@@ -773,48 +772,49 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "h4",
+                          "type": "typography",
                           "content": "Select Auth Type",
-                          "type": "typography"
+                          "variant": "h4"
                         },
                         {
+                          "type": "stack",
                           "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "key",
+                              "label": "Header API Key",
                               "action": "CALL_HEADER_API",
-                              "type": "button",
-                              "label": "Header API Key"
+                              "icon": "key"
                             },
                             {
-                              "type": "button",
-                              "label": "Bearer Token",
-                              "icon": "shield",
                               "action": "CALL_BEARER_API",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "shield",
+                              "label": "Bearer Token"
                             },
                             {
-                              "type": "button",
+                              "action": "CALL_QUERY_API",
+                              "variant": "primary",
                               "icon": "search",
-                              "variant": "primary",
                               "label": "Query Param",
-                              "action": "CALL_QUERY_API"
+                              "type": "button"
                             },
                             {
-                              "variant": "primary",
-                              "action": "CALL_NOAUTH_API",
-                              "type": "button",
                               "label": "No Auth",
-                              "icon": "unlock"
+                              "type": "button",
+                              "icon": "unlock",
+                              "action": "CALL_NOAUTH_API",
+                              "variant": "primary"
                             }
                           ],
-                          "justify": "center",
-                          "type": "stack",
                           "gap": "sm"
                         }
                       ],
-                      "align": "center"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -830,12 +830,11 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "globe"
+                          "name": "globe",
+                          "type": "icon"
                         },
                         {
                           "content": "Unified API Tester",
@@ -847,7 +846,6 @@
                           "placeholder": "/users"
                         },
                         {
-                          "type": "select",
                           "options": [
                             {
                               "value": "GET",
@@ -865,7 +863,8 @@
                               "value": "DELETE",
                               "label": "DELETE"
                             }
-                          ]
+                          ],
+                          "type": "select"
                         },
                         {
                           "placeholder": "Request body (JSON)",
@@ -875,47 +874,48 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Select Auth Type",
-                          "variant": "h4"
+                          "variant": "h4",
+                          "type": "typography"
                         },
                         {
-                          "gap": "sm",
                           "justify": "center",
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "key",
-                              "action": "CALL_HEADER_API",
                               "type": "button",
+                              "icon": "key",
+                              "variant": "primary",
                               "label": "Header API Key",
-                              "variant": "primary"
+                              "action": "CALL_HEADER_API"
                             },
                             {
-                              "action": "CALL_BEARER_API",
-                              "type": "button",
-                              "label": "Bearer Token",
                               "variant": "primary",
+                              "type": "button",
+                              "action": "CALL_BEARER_API",
+                              "label": "Bearer Token",
                               "icon": "shield"
                             },
                             {
-                              "action": "CALL_QUERY_API",
+                              "variant": "primary",
                               "type": "button",
                               "icon": "search",
-                              "label": "Query Param",
-                              "variant": "primary"
+                              "action": "CALL_QUERY_API",
+                              "label": "Query Param"
                             },
                             {
+                              "icon": "unlock",
+                              "variant": "primary",
                               "label": "No Auth",
                               "type": "button",
-                              "action": "CALL_NOAUTH_API",
-                              "variant": "primary",
-                              "icon": "unlock"
+                              "action": "CALL_NOAUTH_API"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]

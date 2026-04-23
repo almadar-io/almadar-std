@@ -105,24 +105,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "message-square"
                             },
                             {
+                              "type": "typography",
                               "content": "Autoregressive Generator",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
                           "align": "center"
                         },
@@ -134,24 +133,25 @@
                           "type": "badge"
                         },
                         {
-                          "variant": "body",
                           "type": "typography",
                           "content": "Vocab: undefined | Max length: undefined",
+                          "variant": "body",
                           "color": "muted"
                         },
                         {
-                          "content": "@entity.generatedTokens",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "@entity.generatedTokens"
                         },
                         {
-                          "variant": "primary",
-                          "label": "Generate",
                           "icon": "play",
+                          "label": "Generate",
                           "action": "GENERATE",
+                          "variant": "primary",
                           "type": "button"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -182,6 +182,7 @@
                     "primary",
                     {
                       "on-complete": "TOKEN_READY",
+                      "input": "@entity.generatedTokens",
                       "output-contract": {
                         "type": "tensor",
                         "shape": [
@@ -189,30 +190,30 @@
                         ],
                         "activation": "softmax",
                         "dtype": "float32"
-                      },
-                      "input": "@entity.generatedTokens"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "variant": "h3",
+                          "content": "Generating",
                           "type": "typography",
-                          "content": "Generating"
+                          "variant": "h3"
                         },
                         {
                           "type": "progress-bar",
                           "value": "@entity.tokenCount"
                         },
                         {
+                          "variant": "body",
                           "content": "@entity.generatedTokens",
-                          "type": "typography",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
@@ -223,7 +224,6 @@
                           "type": "spinner"
                         }
                       ],
-                      "align": "center",
                       "gap": "md"
                     }
                   ]
@@ -277,6 +277,8 @@
                     "forward",
                     "primary",
                     {
+                      "on-complete": "TOKEN_READY",
+                      "input": "@entity.generatedTokens",
                       "output-contract": {
                         "dtype": "float32",
                         "activation": "softmax",
@@ -284,43 +286,41 @@
                         "shape": [
                           null
                         ]
-                      },
-                      "on-complete": "TOKEN_READY",
-                      "input": "@entity.generatedTokens"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "Generating",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "value": "@entity.tokenCount",
-                          "type": "progress-bar"
+                          "type": "progress-bar",
+                          "value": "@entity.tokenCount"
                         },
                         {
-                          "type": "typography",
+                          "content": "@entity.generatedTokens",
                           "variant": "body",
-                          "content": "@entity.generatedTokens"
+                          "type": "typography"
                         },
                         {
                           "content": "Tokens: @entity.tokenCount",
-                          "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -364,8 +364,8 @@
                       "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
                           "type": "typography",
@@ -374,25 +374,25 @@
                         },
                         {
                           "variant": "body",
-                          "content": "@entity.generatedTokens",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "Total tokens: @entity.tokenCount",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "@entity.generatedTokens"
                         },
                         {
-                          "action": "GENERATE",
-                          "variant": "ghost",
-                          "icon": "refresh-cw",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Total tokens: @entity.tokenCount"
+                        },
+                        {
+                          "label": "Generate Again",
                           "type": "button",
-                          "label": "Generate Again"
+                          "icon": "refresh-cw",
+                          "action": "GENERATE",
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
