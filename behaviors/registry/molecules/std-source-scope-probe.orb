@@ -1,0 +1,469 @@
+{
+  "name": "std-source-scope-probe",
+  "version": "1.0.0",
+  "description": "Diagnostic: proves source-scoped listens disambiguate duplicate event names end-to-end.",
+  "orbitals": [
+    {
+      "name": "SourceProbeOrbital",
+      "entity": {
+        "name": "Probe",
+        "collection": "probes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ProbeCreate",
+          "category": "interaction",
+          "linkedEntity": "Probe",
+          "emits": [
+            {
+              "event": "SAVED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "kind",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SAVED",
+                "name": "Saved"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Probe"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "SAVE",
+                      "type": "button",
+                      "label": "Fire Create SAVE",
+                      "variant": "primary"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "emit",
+                    "SAVED",
+                    {
+                      "kind": "create"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "Fire Create SAVE",
+                      "variant": "primary",
+                      "action": "SAVE",
+                      "type": "button"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "name": "ProbeEdit",
+          "category": "interaction",
+          "linkedEntity": "Probe",
+          "emits": [
+            {
+              "event": "SAVED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "kind",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SAVED",
+                "name": "Saved"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Probe"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "secondary",
+                      "label": "Fire Edit SAVE",
+                      "action": "SAVE",
+                      "type": "button"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "emit",
+                    "SAVED",
+                    {
+                      "kind": "edit"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "secondary",
+                      "type": "button",
+                      "label": "Fire Edit SAVE",
+                      "action": "SAVE"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "name": "ProbePersistor",
+          "category": "interaction",
+          "linkedEntity": "Probe",
+          "emits": [
+            {
+              "event": "ProbeSaved",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ProbeSaveFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ProbeUpdated",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ProbeUpdateFailed",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVED",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbeCreate"
+              }
+            },
+            {
+              "event": "SAVED",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProbeEdit"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create"
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update"
+              },
+              {
+                "key": "ProbeSaved",
+                "name": "Probe saved",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ProbeSaveFailed",
+                "name": "Probe save failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ProbeUpdated",
+                "name": "Probe updated",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ProbeUpdateFailed",
+                "name": "Probe update failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Probe"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "Persistor idle",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Probe",
+                    {
+                      "name": "probe-created",
+                      "kind": "create"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ProbeSaveFailed",
+                        "success": "ProbeSaved"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "caption",
+                      "content": "DO_CREATE fired",
+                      "type": "typography"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Probe",
+                    {
+                      "kind": "edit",
+                      "name": "probe-updated"
+                    },
+                    {
+                      "emit": {
+                        "success": "ProbeUpdated",
+                        "failure": "ProbeUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "typography",
+                      "variant": "caption",
+                      "content": "DO_UPDATE fired"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProbePage",
+          "path": "/probes",
+          "traits": [
+            {
+              "ref": "ProbeCreate"
+            },
+            {
+              "ref": "ProbeEdit"
+            },
+            {
+              "ref": "ProbePersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
