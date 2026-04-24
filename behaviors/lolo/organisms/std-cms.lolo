@@ -98,7 +98,7 @@ orbital ArticleOrbital {
         (ref Article)
       EDIT -> open
         (fetch Article {id: "@payload.id" , emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" }, emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Article", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"] }] })
     }
     state open {
       CLOSE -> closed
@@ -115,7 +115,7 @@ orbital ArticleOrbital {
       ARTICLE_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           ArticleLoadFailed { error : string, code : string }
     }
@@ -339,7 +339,7 @@ orbital CategoryOrbital {
         (ref Category)
       EDIT -> open
         (fetch Category {id: "@payload.id" , emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" }, emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Category", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"] }] })
     }
     state open {
       CLOSE -> closed
@@ -358,7 +358,7 @@ orbital CategoryOrbital {
     emits: [CategoryLoadFailed, CategoryLoaded, CategoryUpdateFailed, CategoryUpdated]
     listens {
       CategoryLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

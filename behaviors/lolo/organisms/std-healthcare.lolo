@@ -98,7 +98,7 @@ orbital PatientOrbital {
         (ref Patient)
       EDIT -> open
         (fetch Patient {id: "@payload.id" , emit: { success: "PatientLoaded", failure: "PatientLoadFailed" }, emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Patient", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Patient", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["firstName", "lastName", "dateOfBirth", "phone", "insuranceId", "status"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Patient", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["firstName", "lastName", "dateOfBirth", "phone", "insuranceId", "status"] }] })
     }
     state open {
       CLOSE -> closed
@@ -115,7 +115,7 @@ orbital PatientOrbital {
       PATIENT_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           PatientLoadFailed { error : string, code : string }
     }
@@ -260,7 +260,7 @@ orbital AppointmentOrbital {
         (ref Appointment)
       EDIT -> open
         (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Appointment", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["patientName", "doctorName", "date", "time", "reason", "status"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["patientName", "doctorName", "date", "time", "reason", "status"] }] })
     }
     state open {
       CLOSE -> closed
@@ -279,7 +279,7 @@ orbital AppointmentOrbital {
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentUpdateFailed, AppointmentUpdated]
     listens {
       AppointmentLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

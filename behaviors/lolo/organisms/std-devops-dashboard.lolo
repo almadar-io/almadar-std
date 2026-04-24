@@ -170,7 +170,7 @@ orbital LogEntryOrbital {
         (ref LogEntry)
       EDIT -> open
         (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "LogEntry", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"] }] })
     }
     state open {
       CLOSE -> closed
@@ -189,7 +189,7 @@ orbital LogEntryOrbital {
     emits: [LogEntryLoadFailed, LogEntryLoaded, LogEntryUpdateFailed, LogEntryUpdated]
     listens {
       LogEntryLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

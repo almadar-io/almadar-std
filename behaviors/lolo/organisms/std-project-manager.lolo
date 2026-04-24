@@ -93,7 +93,7 @@ orbital TaskOrbital {
         (ref Task)
       EDIT -> open
         (fetch Task {id: "@payload.id" , emit: { success: "TaskLoaded", failure: "TaskLoadFailed" }, emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Task", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"] }] })
     }
     state open {
       CLOSE -> closed
@@ -110,7 +110,7 @@ orbital TaskOrbital {
       TASK_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
     }
@@ -256,7 +256,7 @@ orbital SprintOrbital {
         (ref Sprint)
       EDIT -> open
         (fetch Sprint {id: "@payload.id" , emit: { success: "SprintLoaded", failure: "SprintLoadFailed" }, emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Sprint", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"] }] })
     }
     state open {
       CLOSE -> closed
@@ -275,7 +275,7 @@ orbital SprintOrbital {
     emits: [SprintLoadFailed, SprintLoaded, SprintUpdateFailed, SprintUpdated]
     listens {
       SprintLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

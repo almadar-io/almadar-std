@@ -127,7 +127,7 @@ orbital TradeOrderOrbital {
         (ref TradeOrder)
       EDIT -> open
         (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TradeOrder", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"] }] })
     }
     state open {
       CLOSE -> closed
@@ -146,7 +146,7 @@ orbital TradeOrderOrbital {
     emits: [TradeOrderLoadFailed, TradeOrderLoaded, TradeOrderUpdateFailed, TradeOrderUpdated]
     listens {
       TradeOrderLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

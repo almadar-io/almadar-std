@@ -96,7 +96,7 @@ orbital ContactOrbital {
         (ref Contact)
       EDIT -> open
         (fetch Contact {id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" }, emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"] }] })
     }
     state open {
       CLOSE -> closed
@@ -113,7 +113,7 @@ orbital ContactOrbital {
       CONTACT_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           ContactLoadFailed { error : string, code : string }
     }
@@ -258,7 +258,7 @@ orbital DealOrbital {
         (ref Deal)
       EDIT -> open
         (fetch Deal {id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" }, emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"] }] })
     }
     state open {
       CLOSE -> closed
@@ -277,7 +277,7 @@ orbital DealOrbital {
     emits: [DealLoadFailed, DealLoaded, DealUpdateFailed, DealUpdated]
     listens {
       DealLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

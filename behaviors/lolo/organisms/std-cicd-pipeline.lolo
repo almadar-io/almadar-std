@@ -83,7 +83,7 @@ orbital BuildOrbital {
         (ref Build)
       EDIT -> open
         (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Build", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
     }
     state open {
       CLOSE -> closed
@@ -100,7 +100,7 @@ orbital BuildOrbital {
       BUILD_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           BuildLoadFailed { error : string, code : string }
     }

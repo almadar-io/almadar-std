@@ -80,7 +80,7 @@ orbital RouteOrbital {
         (ref Route)
       EDIT -> open
         (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Route", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"] }] })
     }
     state open {
       CLOSE -> closed
@@ -97,7 +97,7 @@ orbital RouteOrbital {
       ROUTE_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
     }

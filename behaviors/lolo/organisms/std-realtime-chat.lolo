@@ -169,7 +169,7 @@ orbital ChannelOrbital {
         (ref Channel)
       EDIT -> open
         (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Channel", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
     }
     state open {
       CLOSE -> closed
@@ -188,7 +188,7 @@ orbital ChannelOrbital {
     emits: [ChannelLoadFailed, ChannelLoaded, ChannelUpdateFailed, ChannelUpdated]
     listens {
       ChannelLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

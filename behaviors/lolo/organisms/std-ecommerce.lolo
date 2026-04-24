@@ -103,7 +103,7 @@ orbital ProductOrbital {
         (ref Product)
       EDIT -> open
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Product", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Product", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "price", "category", "sku", "inStock"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Product", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "price", "category", "sku", "inStock"] }] })
     }
     state open {
       CLOSE -> closed
@@ -120,7 +120,7 @@ orbital ProductOrbital {
       PRODUCT_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
     }
@@ -439,7 +439,7 @@ orbital OrderRecordOrbital {
         (ref OrderRecord)
       EDIT -> open
         (fetch OrderRecord {id: "@payload.id" , emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" }, emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit OrderRecord", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "OrderRecord", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["customerName", "email", "shippingAddress", "paymentMethod", "orderTotal", "status"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit OrderRecord", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["customerName", "email", "shippingAddress", "paymentMethod", "orderTotal", "status"] }] })
     }
     state open {
       CLOSE -> closed
@@ -458,7 +458,7 @@ orbital OrderRecordOrbital {
     emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordUpdateFailed, OrderRecordUpdated]
     listens {
       OrderRecordLoadFailed { error : string, code : string }
-      EDIT { id : string }
+      EDIT { id : string, row : object }
       SAVE { data : string }
     }
   }

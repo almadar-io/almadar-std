@@ -87,7 +87,7 @@ orbital TicketOrbital {
         (ref Ticket)
       EDIT -> open
         (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Ticket", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
     }
     state open {
       CLOSE -> closed
@@ -104,7 +104,7 @@ orbital TicketOrbital {
       TICKET_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           TicketLoadFailed { error : string, code : string }
     }

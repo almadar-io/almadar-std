@@ -87,7 +87,7 @@ orbital CourseOrbital {
         (ref Course)
       EDIT -> open
         (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Course", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"], entityId: "@entity.id" }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"] }] })
     }
     state open {
       CLOSE -> closed
@@ -104,7 +104,7 @@ orbital CourseOrbital {
       COURSE_UPDATED external { id: string }
     }
     listens {
-      EDIT { id : string! }
+      EDIT { id : string!, row : object }
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
     }
