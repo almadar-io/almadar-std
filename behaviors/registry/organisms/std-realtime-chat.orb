@@ -333,8 +333,8 @@
                     "ChatMessage",
                     {
                       "emit": {
-                        "failure": "ChatMessageLoadFailed",
-                        "success": "ChatMessageLoaded"
+                        "success": "ChatMessageLoaded",
+                        "failure": "ChatMessageLoadFailed"
                       }
                     }
                   ],
@@ -342,22 +342,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading…",
-                          "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -372,21 +372,36 @@
                     "main",
                     {
                       "type": "dashboard-layout",
-                      "appName": "Realtime Chat",
+                      "navItems": [
+                        {
+                          "icon": "layout-list",
+                          "label": "Chat",
+                          "href": "/chat"
+                        },
+                        {
+                          "href": "/channels",
+                          "label": "Channels",
+                          "icon": "hash"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "label": "Online",
+                          "href": "/online"
+                        }
+                      ],
                       "children": [
                         {
                           "children": [
                             {
-                              "justify": "between",
-                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
                                   "gap": "sm",
-                                  "align": "center",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "message-circle",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "message-circle"
                                     },
                                     {
                                       "type": "typography",
@@ -394,43 +409,51 @@
                                       "content": "Chat"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "align": "center"
                                 },
                                 {
-                                  "children": [
-                                    {
-                                      "action": "COMPOSE",
-                                      "variant": "primary",
-                                      "label": "Compose",
-                                      "type": "button",
-                                      "icon": "edit"
-                                    }
-                                  ],
                                   "direction": "horizontal",
                                   "gap": "sm",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "variant": "primary",
+                                      "label": "Compose",
+                                      "icon": "edit",
+                                      "action": "COMPOSE"
+                                    }
+                                  ]
                                 }
                               ],
                               "direction": "horizontal",
                               "type": "stack",
-                              "align": "center"
+                              "justify": "between",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "message",
-                              "type": "data-list",
                               "entity": "@payload.data",
+                              "fields": [],
+                              "itemActions": [
+                                {
+                                  "event": "VIEW",
+                                  "label": "View",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "type": "data-list",
                               "columns": [
                                 {
-                                  "variant": "h4",
-                                  "name": "sender"
+                                  "name": "sender",
+                                  "variant": "h4"
                                 },
                                 {
-                                  "variant": "body",
-                                  "name": "content"
+                                  "name": "content",
+                                  "variant": "body"
                                 },
                                 {
                                   "name": "timestamp",
@@ -438,14 +461,7 @@
                                   "format": "date"
                                 }
                               ],
-                              "fields": [],
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "variant": "ghost",
-                                  "event": "VIEW"
-                                }
-                              ],
+                              "variant": "message",
                               "gap": "sm",
                               "senderField": "sender"
                             }
@@ -456,23 +472,7 @@
                           "gap": "lg"
                         }
                       ],
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "href": "/chat",
-                          "label": "Chat"
-                        },
-                        {
-                          "href": "/channels",
-                          "icon": "hash",
-                          "label": "Channels"
-                        },
-                        {
-                          "label": "Online",
-                          "href": "/online",
-                          "icon": "layout-list"
-                        }
-                      ]
+                      "appName": "Realtime Chat"
                     }
                   ]
                 ]
@@ -486,6 +486,7 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -494,27 +495,26 @@
                           "color": "destructive"
                         },
                         {
-                          "content": "Failed to load chatmessage",
                           "type": "typography",
+                          "content": "Failed to load chatmessage",
                           "variant": "h3"
                         },
                         {
-                          "variant": "body",
                           "type": "typography",
+                          "variant": "body",
                           "color": "muted",
                           "content": "@payload.error"
                         },
                         {
                           "type": "button",
-                          "action": "INIT",
                           "label": "Retry",
                           "variant": "primary",
+                          "action": "INIT",
                           "icon": "rotate-ccw"
                         }
                       ],
                       "direction": "vertical",
                       "className": "py-12",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -690,36 +690,35 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "edit"
                             },
                             {
-                              "type": "typography",
                               "content": "New ChatMessage",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "SEND",
+                          "mode": "create",
                           "cancelEvent": "CLOSE",
+                          "type": "form-section",
                           "fields": [
                             "sender",
                             "content",
                             "channel",
                             "timestamp"
-                          ],
-                          "entity": "ChatMessage",
-                          "type": "form-section",
-                          "mode": "create",
-                          "submitEvent": "SEND"
+                          ]
                         }
                       ],
                       "type": "stack",
@@ -764,8 +763,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ChatMessageSaved",
-                        "failure": "ChatMessageSaveFailed"
+                        "failure": "ChatMessageSaveFailed",
+                        "success": "ChatMessageSaved"
                       }
                     }
                   ],
@@ -906,90 +905,89 @@
                     "fetch",
                     "ChatMessage",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "ChatMessageLoaded",
                         "failure": "ChatMessageLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "eye"
+                              "name": "eye",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.sender",
                               "variant": "h3",
+                              "content": "@entity.sender",
                               "type": "typography"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Sender"
                             },
                             {
                               "variant": "body",
-                              "content": "@entity.sender",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@entity.sender"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Content",
                               "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Content"
                             },
                             {
+                              "content": "@entity.content",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.content"
+                              "variant": "body"
                             }
                           ],
                           "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "caption",
                               "content": "Channel",
+                              "variant": "caption",
                               "type": "typography"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.channel"
+                              "content": "@entity.channel",
+                              "type": "typography"
                             }
                           ],
                           "gap": "md",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
@@ -1013,20 +1011,21 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "justify": "end",
                           "type": "stack",
                           "children": [
                             {
-                              "label": "Close",
+                              "variant": "ghost",
                               "type": "button",
                               "action": "CLOSE",
-                              "variant": "ghost"
+                              "label": "Close"
                             }
                           ],
-                          "direction": "horizontal",
-                          "justify": "end",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1249,20 +1248,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading…"
+                          "content": "Loading…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -1279,16 +1278,14 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "Realtime Chat",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
                               "align": "center",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
                                   "direction": "horizontal",
@@ -1304,99 +1301,101 @@
                                     }
                                   ],
                                   "gap": "sm",
-                                  "type": "stack",
-                                  "align": "center"
+                                  "align": "center",
+                                  "type": "stack"
                                 },
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "icon": "plus",
-                                      "label": "Create Channel",
                                       "action": "CREATE",
-                                      "variant": "primary"
+                                      "label": "Create Channel",
+                                      "type": "button",
+                                      "variant": "primary",
+                                      "icon": "plus"
                                     }
                                   ],
+                                  "gap": "sm",
+                                  "type": "stack",
                                   "direction": "horizontal"
                                 }
                               ],
-                              "justify": "between"
+                              "gap": "md",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "gap": "sm",
+                              "fields": [],
+                              "type": "data-list",
+                              "variant": "card",
                               "columns": [
                                 {
-                                  "variant": "h3",
                                   "icon": "hash",
-                                  "name": "name"
+                                  "name": "name",
+                                  "variant": "h3"
                                 },
                                 {
                                   "variant": "badge",
+                                  "format": "number",
                                   "label": "Members",
-                                  "name": "memberCount",
-                                  "format": "number"
+                                  "name": "memberCount"
                                 },
                                 {
                                   "name": "description",
                                   "variant": "body"
                                 },
                                 {
-                                  "format": "boolean",
-                                  "variant": "body",
+                                  "name": "isPrivate",
                                   "label": "Private",
-                                  "name": "isPrivate"
+                                  "format": "boolean",
+                                  "variant": "body"
                                 }
                               ],
                               "entity": "@payload.data",
-                              "variant": "card",
-                              "type": "data-list",
                               "itemActions": [
                                 {
-                                  "label": "View",
                                   "event": "VIEW",
+                                  "label": "View",
                                   "variant": "ghost"
                                 },
                                 {
-                                  "variant": "ghost",
                                   "event": "EDIT",
+                                  "variant": "ghost",
                                   "label": "Edit"
                                 },
                                 {
-                                  "event": "DELETE",
+                                  "variant": "danger",
                                   "label": "Delete",
-                                  "variant": "danger"
+                                  "event": "DELETE"
                                 }
-                              ],
-                              "gap": "sm",
-                              "fields": []
+                              ]
                             }
                           ],
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
                           "type": "stack",
                           "gap": "lg"
                         }
                       ],
                       "navItems": [
                         {
-                          "href": "/chat",
+                          "label": "Chat",
                           "icon": "layout-list",
-                          "label": "Chat"
+                          "href": "/chat"
                         },
                         {
+                          "icon": "hash",
                           "label": "Channels",
-                          "href": "/channels",
-                          "icon": "hash"
+                          "href": "/channels"
                         },
                         {
                           "label": "Online",
                           "icon": "layout-list",
                           "href": "/online"
                         }
-                      ],
-                      "appName": "Realtime Chat"
+                      ]
                     }
                   ]
                 ]
@@ -1410,36 +1409,36 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "content": "Failed to load channel",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "content": "@payload.error",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
-                          "action": "INIT",
-                          "label": "Retry",
-                          "type": "button",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Retry",
+                          "action": "INIT"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1624,23 +1623,22 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "Create Channel",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ]
                         },
@@ -1648,19 +1646,19 @@
                           "type": "divider"
                         },
                         {
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
                             "description",
                             "memberCount",
                             "isPrivate"
                           ],
-                          "mode": "create",
-                          "entity": "Channel",
                           "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
+                          "mode": "create",
                           "type": "form-section"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1701,8 +1699,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ChannelSaved",
-                        "failure": "ChannelSaveFailed"
+                        "failure": "ChannelSaveFailed",
+                        "success": "ChannelSaved"
                       }
                     }
                   ],
@@ -1900,11 +1898,11 @@
                     "fetch",
                     "Channel",
                     {
+                      "id": "@payload.id",
                       "emit": {
                         "success": "ChannelLoaded",
                         "failure": "ChannelLoadFailed"
-                      },
-                      "id": "@payload.id"
+                      }
                     }
                   ],
                   [
@@ -1913,26 +1911,25 @@
                     {
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
+                              "content": "Edit Channel",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Edit Channel"
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "edit",
                           "fields": [
                             "name",
                             "description",
@@ -1940,10 +1937,11 @@
                             "isPrivate"
                           ],
                           "entityId": "@entity.id",
+                          "mode": "edit",
                           "submitEvent": "SAVE",
                           "entity": "Channel",
-                          "cancelEvent": "CLOSE",
-                          "type": "form-section"
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE"
                         }
                       ],
                       "direction": "vertical",
@@ -1989,8 +1987,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ChannelUpdateFailed",
-                        "success": "ChannelUpdated"
+                        "success": "ChannelUpdated",
+                        "failure": "ChannelUpdateFailed"
                       }
                     }
                   ],
@@ -2127,61 +2125,56 @@
                     "fetch",
                     "Channel",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "success": "ChannelLoaded",
-                        "failure": "ChannelLoadFailed"
-                      },
-                      "id": "@payload.id"
+                        "failure": "ChannelLoadFailed",
+                        "success": "ChannelLoaded"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
-                              "content": "@entity.name",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@entity.name"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Name"
+                              "content": "Name",
+                              "variant": "caption"
                             },
                             {
-                              "content": "@entity.name",
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@entity.name"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
@@ -2193,32 +2186,36 @@
                               "variant": "body",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
+                          "gap": "md",
                           "children": [
                             {
+                              "type": "typography",
                               "content": "Member Count",
-                              "variant": "caption",
-                              "type": "typography"
+                              "variant": "caption"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "type": "typography",
                               "content": "@entity.memberCount"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "content": "Is Private",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Is Private"
+                              "variant": "caption"
                             },
                             {
                               "type": "typography",
@@ -2226,35 +2223,36 @@
                               "variant": "body"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "justify": "end",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "action": "EDIT",
                               "variant": "primary",
+                              "label": "Edit",
                               "icon": "edit",
-                              "type": "button",
-                              "label": "Edit"
+                              "action": "EDIT",
+                              "type": "button"
                             },
                             {
-                              "action": "CLOSE",
-                              "variant": "ghost",
                               "type": "button",
-                              "label": "Close"
+                              "label": "Close",
+                              "action": "CLOSE",
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "justify": "end"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2481,68 +2479,68 @@
                     "fetch",
                     "Channel",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "failure": "ChannelLoadFailed",
-                        "success": "ChannelLoaded"
-                      },
-                      "id": "@payload.id"
+                        "success": "ChannelLoaded",
+                        "failure": "ChannelLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Delete Channel",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "This action cannot be undone.",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "This action cannot be undone."
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
                           "children": [
                             {
+                              "action": "CANCEL",
                               "type": "button",
                               "label": "Cancel",
-                              "variant": "ghost",
-                              "action": "CANCEL"
+                              "variant": "ghost"
                             },
                             {
                               "variant": "danger",
+                              "action": "CONFIRM_DELETE",
                               "label": "Delete",
-                              "type": "button",
                               "icon": "check",
-                              "action": "CONFIRM_DELETE"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "end",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2790,8 +2788,8 @@
                     "OnlineUser",
                     {
                       "emit": {
-                        "success": "OnlineUserLoaded",
-                        "failure": "OnlineUserLoadFailed"
+                        "failure": "OnlineUserLoadFailed",
+                        "success": "OnlineUserLoaded"
                       }
                     }
                   ],
@@ -2799,16 +2797,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "Realtime Chat",
                       "children": [
                         {
                           "children": [
                             {
-                              "direction": "vertical",
-                              "type": "stack",
+                              "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -2817,100 +2814,102 @@
                                     {
                                       "label": "Online Users"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
                                   "children": [
                                     {
                                       "direction": "horizontal",
+                                      "type": "stack",
+                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "users"
                                         },
                                         {
-                                          "variant": "h2",
                                           "type": "typography",
+                                          "variant": "h2",
                                           "content": "Online Users"
                                         }
-                                      ],
-                                      "type": "stack",
-                                      "gap": "md"
+                                      ]
                                     },
                                     {
-                                      "icon": "refresh-cw",
                                       "type": "button",
-                                      "label": "Refresh",
                                       "action": "REFRESH",
-                                      "variant": "secondary"
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "padding": "md",
                                   "children": [
                                     {
+                                      "type": "simple-grid",
                                       "children": [
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
                                               "type": "stack",
+                                              "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "content": "Username",
                                                   "type": "typography",
+                                                  "content": "Username",
                                                   "variant": "caption"
                                                 },
                                                 {
-                                                  "content": "@entity.username",
+                                                  "variant": "h3",
+                                                  "type": "typography",
+                                                  "content": "@entity.username"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "gap": "sm",
+                                              "direction": "vertical",
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "caption",
+                                                  "content": "Status"
+                                                },
+                                                {
+                                                  "content": "@entity.status",
                                                   "type": "typography",
                                                   "variant": "h3"
                                                 }
                                               ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
+                                              "type": "stack"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "gap": "sm",
-                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
-                                                  "content": "Status",
-                                                  "type": "typography"
-                                                },
-                                                {
+                                                  "content": "LastActive",
                                                   "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.status"
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "LastActive"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
@@ -2918,71 +2917,68 @@
                                                   "content": "@entity.lastActive"
                                                 }
                                               ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
+                                              "direction": "vertical",
+                                              "type": "stack"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Avatar"
+                                                  "content": "Avatar",
+                                                  "type": "typography"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
+                                                  "type": "typography",
                                                   "content": "@entity.avatar"
                                                 }
                                               ],
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "direction": "vertical"
+                                              "direction": "vertical",
+                                              "gap": "sm"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         }
                                       ],
-                                      "type": "simple-grid",
                                       "cols": 3.0
                                     }
                                   ],
-                                  "type": "box",
-                                  "padding": "md"
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "cols": 2.0,
-                                  "type": "grid",
-                                  "gap": "md",
                                   "children": [
                                     {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "content": "Chart View"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
                                           "type": "typography",
-                                          "content": "Chart View"
+                                          "content": "Graph View"
                                         }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "content": "Graph View",
-                                          "variant": "caption"
-                                        }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
@@ -3000,33 +2996,48 @@
                                       "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "value": 22.0,
                                       "date": "May"
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "id": "b",
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "width": 400.0,
                                   "height": 200.0,
                                   "type": "graph-view",
                                   "edges": [
@@ -3038,44 +3049,31 @@
                                       "source": "b",
                                       "target": "c"
                                     }
-                                  ],
-                                  "width": 400.0,
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
                                   ]
                                 }
                               ],
-                              "gap": "lg"
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ],
                           "type": "scaled-diagram"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "icon": "layout-list",
-                          "href": "/chat",
-                          "label": "Chat"
+                          "label": "Chat",
+                          "href": "/chat"
                         },
                         {
-                          "icon": "hash",
                           "label": "Channels",
+                          "icon": "hash",
                           "href": "/channels"
                         },
                         {
-                          "label": "Online",
                           "href": "/online",
+                          "label": "Online",
                           "icon": "layout-list"
                         }
                       ]
@@ -3102,103 +3100,122 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Realtime Chat",
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "label": "Chat",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "icon": "hash",
+                          "label": "Channels",
+                          "href": "/channels"
+                        },
+                        {
+                          "href": "/online",
+                          "label": "Online",
+                          "icon": "layout-list"
+                        }
+                      ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Online Users"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
-                                  "direction": "horizontal",
-                                  "type": "stack",
+                                  "justify": "between",
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "gap": "md",
                                       "direction": "horizontal",
+                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "users"
+                                          "name": "users",
+                                          "type": "icon"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "Online Users",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "content": "Online Users"
                                         }
                                       ]
                                     },
                                     {
-                                      "variant": "secondary",
+                                      "action": "REFRESH",
                                       "type": "button",
                                       "icon": "refresh-cw",
-                                      "action": "REFRESH",
-                                      "label": "Refresh"
+                                      "label": "Refresh",
+                                      "variant": "secondary"
                                     }
                                   ],
-                                  "gap": "md",
-                                  "justify": "between"
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
                                       "children": [
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "type": "stack",
                                               "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "content": "Username",
                                                   "variant": "caption",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "Username"
                                                 },
                                                 {
+                                                  "variant": "h3",
                                                   "type": "typography",
-                                                  "content": "@entity.username",
-                                                  "variant": "h3"
+                                                  "content": "@entity.username"
                                                 }
-                                              ]
+                                              ],
+                                              "type": "stack",
+                                              "gap": "sm"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
                                           "children": [
                                             {
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "content": "Status",
                                                   "type": "typography",
-                                                  "variant": "caption"
+                                                  "variant": "caption",
+                                                  "content": "Status"
                                                 },
                                                 {
-                                                  "content": "@entity.status",
+                                                  "variant": "h3",
                                                   "type": "typography",
-                                                  "variant": "h3"
+                                                  "content": "@entity.status"
                                                 }
                                               ],
-                                              "type": "stack",
                                               "direction": "vertical",
                                               "gap": "sm"
                                             }
@@ -3209,7 +3226,6 @@
                                           "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
                                               "children": [
                                                 {
                                                   "content": "LastActive",
@@ -3217,27 +3233,27 @@
                                                   "type": "typography"
                                                 },
                                                 {
-                                                  "variant": "h3",
                                                   "content": "@entity.lastActive",
+                                                  "variant": "h3",
                                                   "type": "typography"
                                                 }
                                               ],
+                                              "direction": "vertical",
                                               "type": "stack",
-                                              "direction": "vertical"
+                                              "gap": "sm"
                                             }
                                           ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
+                                                  "content": "Avatar",
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Avatar"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "variant": "h3",
@@ -3247,42 +3263,45 @@
                                               ],
                                               "type": "stack"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
                                       ],
                                       "type": "simple-grid",
                                       "cols": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md",
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "gap": "md",
                                   "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
-                                          "content": "Chart View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "children": [
                                         {
+                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
+                                          "content": "Graph View"
                                         }
                                       ],
                                       "type": "card"
                                     }
                                   ],
-                                  "gap": "md",
                                   "cols": 2.0
                                 },
                                 {
@@ -3301,49 +3320,34 @@
                                       "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22.0
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30.0
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "height": 200.0,
+                                  "width": 400.0,
                                   "edges": [
                                     {
                                       "source": "a",
@@ -3354,34 +3358,28 @@
                                       "target": "c"
                                     }
                                   ],
-                                  "width": 400.0
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "label": "Process",
+                                      "id": "b"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "type": "graph-view"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical"
+                              ]
                             }
                           ]
                         }
-                      ],
-                      "appName": "Realtime Chat",
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "href": "/chat",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/channels",
-                          "label": "Channels",
-                          "icon": "hash"
-                        },
-                        {
-                          "href": "/online",
-                          "label": "Online",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -3405,29 +3403,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Realtime Chat",
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "label": "Chat",
-                          "href": "/chat"
-                        },
-                        {
-                          "label": "Channels",
-                          "href": "/channels",
-                          "icon": "hash"
-                        },
-                        {
-                          "href": "/online",
-                          "icon": "layout-list",
-                          "label": "Online"
-                        }
-                      ],
                       "children": [
                         {
                           "children": [
                             {
+                              "direction": "vertical",
+                              "gap": "lg",
                               "type": "stack",
                               "children": [
                                 {
@@ -3443,113 +3424,112 @@
                                   "type": "breadcrumb"
                                 },
                                 {
-                                  "gap": "md",
                                   "direction": "horizontal",
+                                  "justify": "between",
                                   "children": [
                                     {
+                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "users"
+                                          "name": "users",
+                                          "type": "icon"
                                         },
                                         {
-                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Online Users"
+                                          "content": "Online Users",
+                                          "variant": "h2"
                                         }
                                       ],
                                       "type": "stack",
-                                      "gap": "md",
                                       "direction": "horizontal"
                                     },
                                     {
                                       "action": "REFRESH",
-                                      "icon": "refresh-cw",
                                       "type": "button",
                                       "label": "Refresh",
+                                      "icon": "refresh-cw",
                                       "variant": "secondary"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
+                                      "cols": 3.0,
                                       "children": [
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Username"
+                                                  "content": "Username",
+                                                  "type": "typography"
                                                 },
                                                 {
                                                   "variant": "h3",
                                                   "content": "@entity.username",
                                                   "type": "typography"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical",
+                                              "gap": "sm",
+                                              "type": "stack"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "children": [
                                             {
+                                              "direction": "vertical",
                                               "gap": "sm",
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "content": "Status",
-                                                  "variant": "caption"
+                                                  "variant": "caption",
+                                                  "type": "typography"
                                                 },
                                                 {
                                                   "variant": "h3",
                                                   "content": "@entity.status",
                                                   "type": "typography"
                                                 }
-                                              ],
-                                              "direction": "vertical",
-                                              "type": "stack"
+                                              ]
                                             }
                                           ],
                                           "type": "card"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "direction": "vertical",
                                               "type": "stack",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "LastActive",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
+                                                  "type": "typography",
                                                   "content": "@entity.lastActive",
-                                                  "variant": "h3",
-                                                  "type": "typography"
+                                                  "variant": "h3"
                                                 }
-                                              ]
+                                              ],
+                                              "gap": "sm",
+                                              "direction": "vertical"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
                                               "type": "stack",
@@ -3560,36 +3540,40 @@
                                                   "content": "Avatar"
                                                 },
                                                 {
+                                                  "variant": "h3",
                                                   "content": "@entity.avatar",
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  "type": "typography"
                                                 }
                                               ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
+                                              "direction": "vertical",
+                                              "gap": "sm"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
-                                      ],
-                                      "cols": 3.0
+                                      ]
                                     }
                                   ],
-                                  "type": "box"
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "grid",
+                                  "cols": 2.0,
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
-                                          "content": "Chart View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
@@ -3601,10 +3585,7 @@
                                         }
                                       ]
                                     }
-                                  ],
-                                  "cols": 2.0,
-                                  "gap": "md",
-                                  "type": "grid"
+                                  ]
                                 },
                                 {
                                   "data": [
@@ -3613,8 +3594,8 @@
                                       "value": 12.0
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19.0
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
@@ -3649,10 +3630,11 @@
                                   ]
                                 },
                                 {
+                                  "height": 200.0,
                                   "edges": [
                                     {
-                                      "source": "a",
-                                      "target": "b"
+                                      "target": "b",
+                                      "source": "a"
                                     },
                                     {
                                       "target": "c",
@@ -3665,26 +3647,42 @@
                                       "label": "Start"
                                     },
                                     {
-                                      "id": "b",
-                                      "label": "Process"
+                                      "label": "Process",
+                                      "id": "b"
                                     },
                                     {
                                       "id": "c",
                                       "label": "End"
                                     }
                                   ],
-                                  "width": 400.0,
                                   "type": "graph-view",
-                                  "height": 200.0
+                                  "width": 400.0
                                 }
-                              ],
-                              "gap": "lg",
-                              "direction": "vertical"
+                              ]
                             }
                           ],
                           "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "label": "Chat",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Channels",
+                          "href": "/channels",
+                          "icon": "hash"
+                        },
+                        {
+                          "label": "Online",
+                          "href": "/online",
+                          "icon": "layout-list"
+                        }
+                      ],
+                      "appName": "Realtime Chat",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3708,12 +3706,31 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Channels",
+                          "href": "/channels",
+                          "icon": "hash"
+                        },
+                        {
+                          "href": "/online",
+                          "icon": "layout-list",
+                          "label": "Online"
+                        }
+                      ],
+                      "appName": "Realtime Chat",
                       "children": [
                         {
+                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "lg",
                               "children": [
                                 {
@@ -3731,7 +3748,6 @@
                                 {
                                   "children": [
                                     {
-                                      "direction": "horizontal",
                                       "type": "stack",
                                       "children": [
                                         {
@@ -3739,118 +3755,120 @@
                                           "name": "users"
                                         },
                                         {
-                                          "variant": "h2",
+                                          "type": "typography",
                                           "content": "Online Users",
-                                          "type": "typography"
+                                          "variant": "h2"
                                         }
                                       ],
+                                      "direction": "horizontal",
                                       "gap": "md"
                                     },
                                     {
-                                      "label": "Refresh",
-                                      "type": "button",
+                                      "variant": "secondary",
                                       "action": "REFRESH",
                                       "icon": "refresh-cw",
-                                      "variant": "secondary"
+                                      "type": "button",
+                                      "label": "Refresh"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "gap": "md",
                                   "direction": "horizontal",
-                                  "type": "stack"
+                                  "gap": "md",
+                                  "type": "stack",
+                                  "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "cols": 3.0,
                                       "type": "simple-grid",
+                                      "cols": 3.0,
                                       "children": [
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "content": "Username",
                                                   "type": "typography",
+                                                  "content": "Username",
                                                   "variant": "caption"
                                                 },
                                                 {
+                                                  "variant": "h3",
                                                   "content": "@entity.username",
-                                                  "type": "typography",
-                                                  "variant": "h3"
+                                                  "type": "typography"
                                                 }
                                               ],
+                                              "gap": "sm",
                                               "direction": "vertical",
                                               "type": "stack"
                                             }
                                           ]
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "content": "Status",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.status"
-                                                }
-                                              ],
-                                              "type": "stack"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
                                               "type": "stack",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "type": "typography",
-                                                  "content": "LastActive"
+                                                  "variant": "caption",
+                                                  "content": "Status"
                                                 },
                                                 {
+                                                  "content": "@entity.status",
                                                   "variant": "h3",
-                                                  "type": "typography",
-                                                  "content": "@entity.lastActive"
+                                                  "type": "typography"
                                                 }
                                               ],
+                                              "direction": "vertical",
                                               "gap": "sm"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
+                                              "type": "stack",
                                               "direction": "vertical",
+                                              "gap": "sm",
+                                              "children": [
+                                                {
+                                                  "content": "LastActive",
+                                                  "variant": "caption",
+                                                  "type": "typography"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "content": "@entity.lastActive",
+                                                  "variant": "h3"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
                                               "children": [
                                                 {
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Avatar"
+                                                  "content": "Avatar",
+                                                  "variant": "caption"
                                                 },
                                                 {
+                                                  "type": "typography",
                                                   "variant": "h3",
-                                                  "content": "@entity.avatar",
-                                                  "type": "typography"
+                                                  "content": "@entity.avatar"
                                                 }
                                               ],
+                                              "direction": "vertical",
                                               "gap": "sm",
                                               "type": "stack"
                                             }
@@ -3859,70 +3877,68 @@
                                       ]
                                     }
                                   ],
-                                  "type": "box",
                                   "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
-                                  "type": "grid",
                                   "children": [
                                     {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Chart View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
+                                      "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
                                           "type": "typography",
-                                          "content": "Graph View"
+                                          "content": "Chart View"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "variant": "caption",
+                                          "content": "Graph View",
+                                          "type": "typography"
+                                        }
+                                      ]
                                     }
                                   ],
+                                  "gap": "md",
+                                  "type": "grid",
                                   "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
                                       "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22.0
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -3932,26 +3948,14 @@
                                       "color": "muted",
                                       "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0,
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
                                       "id": "b",
@@ -3961,33 +3965,27 @@
                                       "id": "c",
                                       "label": "End"
                                     }
-                                  ]
+                                  ],
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ],
+                                  "width": 400.0,
+                                  "type": "graph-view",
+                                  "height": 200.0
                                 }
                               ]
                             }
-                          ],
-                          "type": "scaled-diagram"
+                          ]
                         }
                       ],
-                      "appName": "Realtime Chat",
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "href": "/chat",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Channels",
-                          "href": "/channels",
-                          "icon": "hash"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "href": "/online",
-                          "label": "Online"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -4011,16 +4009,12 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Realtime Chat",
                       "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
                               "direction": "vertical",
-                              "type": "stack",
-                              "gap": "lg",
                               "children": [
                                 {
                                   "items": [
@@ -4035,12 +4029,8 @@
                                   "type": "breadcrumb"
                                 },
                                 {
-                                  "gap": "md",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
@@ -4049,141 +4039,146 @@
                                         },
                                         {
                                           "variant": "h2",
-                                          "type": "typography",
-                                          "content": "Online Users"
+                                          "content": "Online Users",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack"
                                     },
                                     {
                                       "type": "button",
-                                      "variant": "secondary",
                                       "label": "Refresh",
-                                      "action": "REFRESH",
-                                      "icon": "refresh-cw"
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw",
+                                      "action": "REFRESH"
                                     }
                                   ],
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "justify": "between",
-                                  "direction": "horizontal"
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
+                                  "padding": "md",
                                   "children": [
                                     {
+                                      "cols": 3.0,
                                       "children": [
                                         {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "type": "typography",
-                                                  "content": "Username"
-                                                },
-                                                {
-                                                  "content": "@entity.username",
-                                                  "type": "typography",
-                                                  "variant": "h3"
-                                                }
-                                              ],
-                                              "gap": "sm"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "card",
                                           "children": [
                                             {
                                               "children": [
                                                 {
-                                                  "content": "Status",
+                                                  "content": "Username",
                                                   "type": "typography",
                                                   "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
                                                   "variant": "h3",
-                                                  "content": "@entity.status"
+                                                  "content": "@entity.username"
                                                 }
                                               ],
-                                              "type": "stack",
                                               "direction": "vertical",
+                                              "type": "stack",
                                               "gap": "sm"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
+                                        },
+                                        {
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "direction": "vertical",
+                                              "gap": "sm",
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "content": "Status",
+                                                  "variant": "caption"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "content": "@entity.status",
+                                                  "variant": "h3"
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "type": "card"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
+                                              "type": "stack",
                                               "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "LastActive",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
                                                   "content": "@entity.lastActive",
                                                   "variant": "h3"
                                                 }
-                                              ],
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              ]
                                             }
                                           ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "type": "stack",
+                                              "direction": "vertical",
                                               "gap": "sm",
                                               "children": [
                                                 {
+                                                  "content": "Avatar",
                                                   "variant": "caption",
-                                                  "type": "typography",
-                                                  "content": "Avatar"
+                                                  "type": "typography"
                                                 },
                                                 {
-                                                  "variant": "h3",
                                                   "type": "typography",
+                                                  "variant": "h3",
                                                   "content": "@entity.avatar"
                                                 }
                                               ]
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
                                       ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
+                                      "type": "simple-grid"
                                     }
                                   ],
-                                  "padding": "md"
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
                                   "type": "grid",
+                                  "gap": "md",
+                                  "cols": 2.0,
                                   "children": [
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
+                                          "content": "Chart View"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     },
                                     {
                                       "children": [
@@ -4195,40 +4190,38 @@
                                       ],
                                       "type": "card"
                                     }
-                                  ],
-                                  "cols": 2.0
+                                  ]
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "value": 12.0,
-                                      "date": "Jan"
+                                      "date": "Jan",
+                                      "value": 12.0
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19.0
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
                                       "value": 22.0
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "color": "primary",
@@ -4238,57 +4231,62 @@
                                       "color": "muted",
                                       "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "type": "graph-view",
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ],
+                                  "width": 400.0,
                                   "nodes": [
                                     {
                                       "id": "a",
                                       "label": "Start"
                                     },
                                     {
-                                      "id": "b",
-                                      "label": "Process"
+                                      "label": "Process",
+                                      "id": "b"
                                     },
                                     {
-                                      "label": "End",
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
-                                  "height": 200.0,
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "type": "graph-view"
+                                  "height": 200.0
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ],
+                      "appName": "Realtime Chat",
                       "navItems": [
                         {
-                          "href": "/chat",
                           "label": "Chat",
+                          "href": "/chat",
                           "icon": "layout-list"
                         },
                         {
+                          "href": "/channels",
                           "icon": "hash",
-                          "label": "Channels",
-                          "href": "/channels"
+                          "label": "Channels"
                         },
                         {
                           "icon": "layout-list",
-                          "label": "Online",
-                          "href": "/online"
+                          "href": "/online",
+                          "label": "Online"
                         }
                       ]
                     }

@@ -152,10 +152,6 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -167,7 +163,11 @@
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical"
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -182,74 +182,74 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Messages",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
                               "direction": "horizontal"
                             },
                             {
                               "type": "button",
-                              "variant": "primary",
+                              "icon": "edit",
                               "label": "Compose",
                               "action": "COMPOSE",
-                              "icon": "edit"
+                              "variant": "primary"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md",
+                          "justify": "between",
                           "direction": "horizontal",
-                          "justify": "between"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "variant": "ghost",
+                              "label": "View",
                               "event": "VIEW",
-                              "label": "View"
+                              "variant": "ghost"
                             }
                           ],
-                          "type": "data-grid",
                           "entity": "@payload.data",
                           "fields": [
                             {
                               "label": "Name",
                               "variant": "h4",
-                              "name": "name",
-                              "icon": "message-circle"
+                              "icon": "message-circle",
+                              "name": "name"
                             },
                             {
-                              "name": "description",
                               "variant": "caption",
+                              "name": "description",
                               "label": "Description"
                             },
                             {
+                              "variant": "badge",
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Status"
                             }
                           ]
                         }
                       ],
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -263,36 +263,36 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
+                          "color": "destructive",
                           "type": "icon",
-                          "name": "alert-triangle",
-                          "color": "destructive"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Failed to load messages",
-                          "type": "typography"
+                          "name": "alert-triangle"
                         },
                         {
                           "type": "typography",
-                          "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
+                          "variant": "h3",
+                          "content": "Failed to load messages"
                         },
                         {
+                          "content": "@payload.error",
+                          "color": "muted",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "primary",
                           "action": "INIT",
                           "label": "Retry",
                           "type": "button",
-                          "icon": "rotate-ccw",
-                          "variant": "primary"
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -355,17 +355,17 @@
           "linkedEntity": "ChatMessage",
           "config": {
             "mode": "create",
-            "icon": "edit",
-            "title": "New Message",
             "fields": [
               "name",
               "description",
               "status"
-            ]
+            ],
+            "icon": "edit",
+            "title": "New Message"
           },
           "events": {
-            "SAVE": "CHAT_MESSAGE_SENT",
-            "OPEN": "COMPOSE"
+            "OPEN": "COMPOSE",
+            "SAVE": "CHAT_MESSAGE_SENT"
           }
         },
         {
@@ -463,8 +463,8 @@
                     "ChatMessage",
                     {
                       "emit": {
-                        "success": "ChatMessageLoaded",
-                        "failure": "ChatMessageLoadFailed"
+                        "failure": "ChatMessageLoadFailed",
+                        "success": "ChatMessageLoaded"
                       }
                     }
                   ]
@@ -484,24 +484,21 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "eye"
                             },
                             {
-                              "content": "@entity.name",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@entity.name"
                             }
                           ]
                         },
@@ -510,27 +507,29 @@
                         },
                         {
                           "gap": "md",
+                          "children": [
+                            {
+                              "content": "Name",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.name",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "Name",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.name"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "children": [
-                            {
                               "content": "Description",
-                              "type": "typography",
-                              "variant": "caption"
+                              "type": "typography"
                             },
                             {
                               "content": "@entity.description",
@@ -538,45 +537,46 @@
                               "variant": "body"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Status"
+                              "content": "Status",
+                              "type": "typography"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.status",
-                              "type": "typography"
+                              "content": "@entity.status"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
+                          "justify": "end",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
                               "label": "Close",
-                              "action": "CLOSE"
+                              "action": "CLOSE",
+                              "variant": "ghost"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "justify": "end"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
