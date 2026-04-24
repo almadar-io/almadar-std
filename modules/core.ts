@@ -595,8 +595,9 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'core',
     category: 'effect',
     minArity: 2,
-    maxArity: 3,
-    description: 'Invoke an external service action',
+    maxArity: 4,
+    description:
+      'Invoke an external service action. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing (V2 frame contract).',
     hasSideEffects: true,
     returnType: 'void',
     params: [
@@ -608,8 +609,15 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
         description: 'Service-specific params',
         optional: true,
       },
+      {
+        name: 'options',
+        type: { kind: 'object', fields: {}, open: true },
+        description:
+          'Optional trailing options object. Set `{ emit: { success: "...", failure: "..." } }` to wire closed-circuit result routing (V2 frame).',
+        optional: true,
+      },
     ],
-    example: '["call-service", "llm", "generate", { "userPrompt": "@entity.inputText" }]',
+    example: '["call-service", "llm", "generate", { "userPrompt": "@entity.inputText" }, { "emit": { "success": "LlmCompleted", "failure": "LlmFailed" } }]',
     effect: {
       kind: 'call-service',
       // TODO(entity-v2): narrow to the declared service return type once

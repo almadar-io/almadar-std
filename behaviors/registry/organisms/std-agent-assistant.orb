@@ -394,8 +394,8 @@
                     "Assistant",
                     {
                       "emit": {
-                        "success": "AssistantLoaded",
-                        "failure": "AssistantLoadFailed"
+                        "failure": "AssistantLoadFailed",
+                        "success": "AssistantLoaded"
                       }
                     }
                   ],
@@ -403,22 +403,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading assistant…",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -432,40 +432,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/chat",
-                          "label": "Chat",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "label": "Memory",
-                          "href": "/memory",
-                          "icon": "brain"
-                        },
-                        {
-                          "label": "Settings",
-                          "href": "/settings",
-                          "icon": "settings"
-                        }
-                      ],
-                      "appName": "Agent Assistant",
                       "children": [
                         {
                           "children": [
                             {
                               "justify": "between",
                               "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -476,21 +450,29 @@
                                       "variant": "h2",
                                       "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
+                                  "action": "COMPOSE",
                                   "label": "New Message",
+                                  "variant": "primary",
                                   "icon": "plus",
-                                  "action": "COMPOSE"
+                                  "type": "button"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "data-list",
                               "renderItem": [
                                 "fn",
                                 "item",
@@ -498,15 +480,19 @@
                                   "type": "stack",
                                   "children": [
                                     {
+                                      "align": "center",
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
                                       "children": [
                                         {
-                                          "label": "@item.role",
-                                          "type": "badge"
+                                          "type": "badge",
+                                          "label": "@item.role"
                                         },
                                         {
+                                          "label": "@item.status",
                                           "type": "badge",
-                                          "variant": "secondary",
-                                          "label": "@item.status"
+                                          "variant": "secondary"
                                         },
                                         {
                                           "variant": "caption",
@@ -514,30 +500,44 @@
                                           "type": "typography",
                                           "content": "@item.timestamp"
                                         }
-                                      ],
-                                      "gap": "sm",
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "align": "center"
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "@item.content",
+                                      "type": "typography",
                                       "variant": "body"
                                     }
                                   ],
-                                  "gap": "xs",
-                                  "direction": "vertical"
+                                  "direction": "vertical",
+                                  "gap": "xs"
                                 }
                               ],
-                              "entity": "@payload.data",
-                              "type": "data-list",
-                              "fields": []
+                              "fields": [],
+                              "entity": "@payload.data"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "lg",
-                          "direction": "vertical"
+                          "type": "stack"
+                        }
+                      ],
+                      "appName": "Agent Assistant",
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "icon": "message-circle",
+                          "label": "Chat",
+                          "href": "/chat"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "icon": "settings",
+                          "href": "/settings",
+                          "label": "Settings"
                         }
                       ]
                     }
@@ -553,11 +553,10 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
@@ -570,19 +569,20 @@
                           "type": "typography"
                         },
                         {
+                          "variant": "body",
                           "color": "muted",
-                          "type": "typography",
                           "content": "@payload.error",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "variant": "primary",
                           "type": "button",
-                          "action": "INIT"
+                          "label": "Retry",
+                          "action": "INIT",
+                          "icon": "rotate-ccw",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -597,6 +597,7 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
@@ -610,9 +611,9 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Assistant Thread",
                               "variant": "h2",
-                              "content": "Assistant Thread"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -620,16 +621,15 @@
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
+                          "submitEvent": "SEND",
+                          "cancelEvent": "CANCEL_COMPOSE",
                           "fields": [
                             "content"
                           ],
                           "type": "form-section",
-                          "submitEvent": "SEND",
-                          "cancelEvent": "CANCEL_COMPOSE"
+                          "mode": "create"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -655,8 +655,8 @@
                     "Assistant",
                     {
                       "emit": {
-                        "success": "AssistantLoaded",
-                        "failure": "AssistantLoadFailed"
+                        "failure": "AssistantLoadFailed",
+                        "success": "AssistantLoaded"
                       }
                     }
                   ],
@@ -679,10 +679,10 @@
                     "create",
                     "Assistant",
                     {
-                      "status": "sent",
+                      "timestamp": "@now",
                       "role": "user",
                       "content": "@payload.content",
-                      "timestamp": "@now"
+                      "status": "sent"
                     }
                   ],
                   [
@@ -753,8 +753,8 @@
                     "Assistant",
                     {
                       "emit": {
-                        "failure": "AssistantLoadFailed",
-                        "success": "AssistantLoaded"
+                        "success": "AssistantLoaded",
+                        "failure": "AssistantLoadFailed"
                       }
                     }
                   ],
@@ -905,22 +905,23 @@
                     {
                       "children": [
                         {
+                          "title": "Conversation",
                           "description": "Conversation is ready",
                           "icon": "message-circle",
-                          "title": "Conversation",
                           "type": "empty-state"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/chat",
                           "label": "Chat",
-                          "icon": "message-circle"
+                          "icon": "message-circle",
+                          "href": "/chat"
                         },
                         {
-                          "href": "/memory",
                           "icon": "brain",
-                          "label": "Memory"
+                          "label": "Memory",
+                          "href": "/memory"
                         },
                         {
                           "icon": "settings",
@@ -928,8 +929,7 @@
                           "href": "/settings"
                         }
                       ],
-                      "appName": "Agent Assistant",
-                      "type": "dashboard-layout"
+                      "appName": "Agent Assistant"
                     }
                   ]
                 ]
@@ -1239,8 +1239,8 @@
                     "Memory",
                     {
                       "emit": {
-                        "failure": "MemoryLoadFailed",
-                        "success": "MemoryLoaded"
+                        "success": "MemoryLoaded",
+                        "failure": "MemoryLoadFailed"
                       }
                     }
                   ],
@@ -1248,22 +1248,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading…"
+                          "variant": "caption",
+                          "content": "Loading…",
+                          "type": "typography"
                         }
-                      ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1277,15 +1277,16 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Agent Assistant",
                       "navItems": [
                         {
-                          "icon": "message-circle",
+                          "href": "/chat",
                           "label": "Chat",
-                          "href": "/chat"
+                          "icon": "message-circle"
                         },
                         {
-                          "href": "/memory",
                           "label": "Memory",
+                          "href": "/memory",
                           "icon": "brain"
                         },
                         {
@@ -1294,128 +1295,127 @@
                           "href": "/settings"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
                           "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
                           "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
                               "children": [
                                 {
                                   "type": "stack",
-                                  "align": "center",
                                   "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "brain",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "brain"
                                     },
                                     {
                                       "content": "Memory Manager",
-                                      "type": "typography",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "type": "typography"
                                     }
                                   ],
+                                  "align": "center",
                                   "gap": "sm"
                                 },
                                 {
+                                  "type": "stack",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "label": "Memorize",
-                                      "variant": "primary",
-                                      "type": "button",
                                       "action": "MEMORIZE",
-                                      "icon": "plus"
+                                      "variant": "primary",
+                                      "icon": "plus",
+                                      "type": "button"
                                     },
                                     {
                                       "type": "button",
-                                      "icon": "search",
-                                      "label": "Recall",
                                       "action": "RECALL",
-                                      "variant": "secondary"
+                                      "label": "Recall",
+                                      "variant": "secondary",
+                                      "icon": "search"
                                     },
                                     {
-                                      "label": "Decay All",
-                                      "variant": "ghost",
                                       "action": "DECAY",
+                                      "icon": "clock",
                                       "type": "button",
-                                      "icon": "clock"
+                                      "label": "Decay All",
+                                      "variant": "ghost"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  "direction": "horizontal"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "justify": "between",
                               "align": "center",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between"
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "entity": "@payload.data",
                               "fields": [
                                 {
-                                  "icon": "brain",
-                                  "name": "content",
                                   "variant": "h4",
-                                  "label": "Content"
+                                  "name": "content",
+                                  "label": "Content",
+                                  "icon": "brain"
                                 },
                                 {
                                   "variant": "badge",
+                                  "label": "Category",
+                                  "name": "category",
                                   "colorMap": {
-                                    "pending": "warning",
-                                    "active": "success",
-                                    "inactive": "neutral",
-                                    "completed": "success",
                                     "cancelled": "destructive",
+                                    "pending": "warning",
                                     "scheduled": "warning",
                                     "archived": "neutral",
-                                    "disabled": "neutral",
-                                    "error": "destructive",
                                     "failed": "destructive",
                                     "draft": "warning",
-                                    "done": "success"
-                                  },
-                                  "label": "Category",
-                                  "name": "category"
+                                    "done": "success",
+                                    "completed": "success",
+                                    "error": "destructive",
+                                    "inactive": "neutral",
+                                    "active": "success",
+                                    "disabled": "neutral"
+                                  }
                                 },
                                 {
                                   "variant": "caption",
-                                  "name": "strength",
-                                  "label": "Strength"
+                                  "label": "Strength",
+                                  "name": "strength"
                                 }
                               ],
                               "itemActions": [
                                 {
-                                  "variant": "ghost",
                                   "event": "PIN",
+                                  "variant": "ghost",
                                   "label": "Pin"
                                 },
                                 {
-                                  "label": "Reinforce",
                                   "variant": "ghost",
-                                  "event": "REINFORCE"
+                                  "event": "REINFORCE",
+                                  "label": "Reinforce"
                                 },
                                 {
+                                  "label": "Forget",
                                   "event": "FORGET",
-                                  "variant": "danger",
-                                  "label": "Forget"
+                                  "variant": "danger"
                                 }
                               ],
+                              "entity": "@payload.data",
                               "type": "data-grid"
                             }
                           ],
-                          "direction": "vertical"
+                          "className": "max-w-5xl mx-auto w-full"
                         }
-                      ],
-                      "appName": "Agent Assistant",
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -1429,34 +1429,34 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "type": "stack",
                       "gap": "md",
-                      "className": "py-12",
                       "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle"
                         },
                         {
-                          "content": "Failed to load memory",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load memory"
                         },
                         {
-                          "color": "muted",
+                          "variant": "body",
                           "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "body"
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
-                          "variant": "primary",
                           "label": "Retry",
                           "icon": "rotate-ccw",
-                          "type": "button",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ]
                     }
@@ -1633,41 +1633,41 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
-                              "content": "Memorize",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Memorize"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "submitEvent": "SAVE",
-                          "type": "form-section",
-                          "mode": "create",
-                          "cancelEvent": "CLOSE",
                           "fields": [
                             "content",
                             "category",
                             "scope"
-                          ]
+                          ],
+                          "cancelEvent": "CLOSE",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "type": "form-section"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1708,8 +1708,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "MemorySaved",
-                        "failure": "MemorySaveFailed"
+                        "failure": "MemorySaveFailed",
+                        "success": "MemorySaved"
                       }
                     }
                   ],
@@ -1998,21 +1998,11 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "icon": "brain",
-                          "title": "Memory",
-                          "description": "Memory is ready",
-                          "type": "empty-state"
-                        }
-                      ],
-                      "appName": "Agent Assistant",
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "href": "/chat",
-                          "label": "Chat",
-                          "icon": "message-circle"
+                          "icon": "message-circle",
+                          "label": "Chat"
                         },
                         {
                           "href": "/memory",
@@ -2020,9 +2010,19 @@
                           "icon": "brain"
                         },
                         {
-                          "icon": "settings",
                           "label": "Settings",
-                          "href": "/settings"
+                          "href": "/settings",
+                          "icon": "settings"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "children": [
+                        {
+                          "type": "empty-state",
+                          "icon": "brain",
+                          "title": "Memory",
+                          "description": "Memory is ready"
                         }
                       ]
                     }
@@ -2344,8 +2344,8 @@
                     "AssistantContext",
                     {
                       "emit": {
-                        "success": "AssistantContextLoaded",
-                        "failure": "AssistantContextLoadFailed"
+                        "failure": "AssistantContextLoadFailed",
+                        "success": "AssistantContextLoaded"
                       }
                     }
                   ],
@@ -2354,42 +2354,37 @@
                     "main",
                     {
                       "appName": "Agent Assistant",
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Chat",
                           "href": "/chat",
-                          "icon": "message-circle"
+                          "icon": "message-circle",
+                          "label": "Chat"
                         },
                         {
-                          "label": "Memory",
                           "icon": "brain",
-                          "href": "/memory"
+                          "href": "/memory",
+                          "label": "Memory"
                         },
                         {
                           "label": "Settings",
-                          "icon": "settings",
-                          "href": "/settings"
+                          "href": "/settings",
+                          "icon": "settings"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "gauge"
+                                  "name": "gauge",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "Token Usage",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Token Usage"
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "badge",
@@ -2397,8 +2392,10 @@
                                   "variant": "default"
                                 }
                               ],
-                              "type": "stack",
-                              "align": "center"
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -2409,30 +2406,33 @@
                               "max": "@entity.max"
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
                                   "type": "stat-display",
-                                  "label": "Tokens Used",
-                                  "value": "@entity.current"
+                                  "value": "@entity.current",
+                                  "label": "Tokens Used"
                                 },
                                 {
-                                  "type": "stat-display",
                                   "label": "Max Tokens",
-                                  "value": "@entity.max"
+                                  "value": "@entity.max",
+                                  "type": "stat-display"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
                               "type": "button",
-                              "variant": "ghost",
-                              "action": "RESET",
+                              "icon": "rotate-ccw",
                               "label": "Reset",
-                              "icon": "rotate-ccw"
+                              "action": "RESET",
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical"
                         }
                       ]
                     }
@@ -2462,13 +2462,76 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
                       "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "gauge"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Token Usage"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Normal",
+                                  "variant": "default"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "progress-bar",
+                              "max": "@entity.max",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "value": "@entity.current",
+                                  "type": "stat-display",
+                                  "label": "Tokens Used"
+                                },
+                                {
+                                  "label": "Max Tokens",
+                                  "type": "stat-display",
+                                  "value": "@entity.max"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "Reset",
+                              "type": "button",
+                              "action": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ],
                       "navItems": [
                         {
-                          "icon": "message-circle",
+                          "label": "Chat",
                           "href": "/chat",
-                          "label": "Chat"
+                          "icon": "message-circle"
                         },
                         {
                           "href": "/memory",
@@ -2479,69 +2542,6 @@
                           "href": "/settings",
                           "label": "Settings",
                           "icon": "settings"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "gauge",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Token Usage",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "default",
-                                  "type": "badge",
-                                  "label": "Normal"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "progress-bar",
-                              "value": "@entity.current",
-                              "max": "@entity.max"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "value": "@entity.current",
-                                  "type": "stat-display",
-                                  "label": "Tokens Used"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "Max Tokens",
-                                  "value": "@entity.max"
-                                }
-                              ]
-                            },
-                            {
-                              "icon": "rotate-ccw",
-                              "action": "RESET",
-                              "label": "Reset",
-                              "variant": "ghost",
-                              "type": "button"
-                            }
-                          ]
                         }
                       ]
                     }
@@ -2583,106 +2583,106 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Agent Assistant",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "alert-triangle"
                                 },
                                 {
-                                  "content": "Token Usage",
                                   "type": "typography",
+                                  "content": "Token Usage",
                                   "variant": "h2"
                                 },
                                 {
-                                  "type": "badge",
                                   "variant": "warning",
+                                  "type": "badge",
                                   "label": "Warning"
                                 }
                               ],
-                              "gap": "sm"
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
+                              "message": "Token usage approaching limit. Consider compacting.",
                               "variant": "warning",
-                              "message": "Token usage approaching limit. Consider compacting."
+                              "type": "alert"
                             },
                             {
+                              "type": "progress-bar",
                               "value": "@entity.current",
-                              "max": "@entity.max",
-                              "type": "progress-bar"
+                              "max": "@entity.max"
                             },
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "value": "@entity.current",
-                                  "label": "Tokens Used",
-                                  "type": "stat-display"
+                                  "type": "stat-display",
+                                  "label": "Tokens Used"
                                 },
                                 {
-                                  "type": "stat-display",
                                   "label": "Max Tokens",
+                                  "type": "stat-display",
                                   "value": "@entity.max"
                                 }
                               ],
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "action": "COMPACT",
-                                  "icon": "minimize-2",
-                                  "type": "button",
                                   "label": "Compact",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "icon": "minimize-2",
+                                  "action": "COMPACT",
+                                  "type": "button"
                                 },
                                 {
-                                  "action": "RESET",
-                                  "variant": "ghost",
-                                  "type": "button",
                                   "icon": "rotate-ccw",
-                                  "label": "Reset"
+                                  "label": "Reset",
+                                  "action": "RESET",
+                                  "type": "button",
+                                  "variant": "ghost"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
                           "direction": "vertical",
                           "gap": "lg"
                         }
                       ],
                       "navItems": [
                         {
-                          "href": "/chat",
                           "label": "Chat",
+                          "href": "/chat",
                           "icon": "message-circle"
                         },
                         {
+                          "icon": "brain",
                           "href": "/memory",
-                          "label": "Memory",
-                          "icon": "brain"
+                          "label": "Memory"
                         },
                         {
+                          "label": "Settings",
                           "href": "/settings",
-                          "icon": "settings",
-                          "label": "Settings"
+                          "icon": "settings"
                         }
                       ],
-                      "appName": "Agent Assistant",
                       "type": "dashboard-layout"
                     }
                   ]
@@ -2711,17 +2711,11 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -2729,23 +2723,27 @@
                                 },
                                 {
                                   "content": "Token Usage",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 },
                                 {
+                                  "type": "badge",
                                   "variant": "danger",
-                                  "label": "Critical",
-                                  "type": "badge"
+                                  "label": "Critical"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "message": "Token usage critical. Compact immediately to avoid truncation.",
                               "type": "alert",
-                              "variant": "error",
-                              "message": "Token usage critical. Compact immediately to avoid truncation."
+                              "variant": "error"
                             },
                             {
                               "value": "@entity.current",
@@ -2753,46 +2751,46 @@
                               "max": "@entity.max"
                             },
                             {
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stat-display",
                                   "label": "Tokens Used",
-                                  "value": "@entity.current"
+                                  "value": "@entity.current",
+                                  "type": "stat-display"
                                 },
                                 {
                                   "type": "stat-display",
-                                  "label": "Max Tokens",
-                                  "value": "@entity.max"
+                                  "value": "@entity.max",
+                                  "label": "Max Tokens"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "action": "COMPACT",
-                                  "label": "Compact Now",
-                                  "icon": "minimize-2",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "label": "Compact Now",
+                                  "variant": "primary",
+                                  "icon": "minimize-2"
                                 },
                                 {
-                                  "type": "button",
-                                  "variant": "ghost",
-                                  "icon": "rotate-ccw",
                                   "label": "Reset",
+                                  "icon": "rotate-ccw",
+                                  "variant": "ghost",
+                                  "type": "button",
                                   "action": "RESET"
                                 }
                               ],
                               "type": "stack"
                             }
                           ],
-                          "gap": "lg",
-                          "type": "stack"
+                          "direction": "vertical",
+                          "gap": "lg"
                         }
                       ],
                       "navItems": [
@@ -2802,16 +2800,18 @@
                           "label": "Chat"
                         },
                         {
-                          "label": "Memory",
                           "icon": "brain",
-                          "href": "/memory"
+                          "href": "/memory",
+                          "label": "Memory"
                         },
                         {
                           "label": "Settings",
-                          "icon": "settings",
-                          "href": "/settings"
+                          "href": "/settings",
+                          "icon": "settings"
                         }
-                      ]
+                      ],
+                      "appName": "Agent Assistant",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2836,27 +2836,27 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Chat",
                           "href": "/chat",
+                          "label": "Chat",
                           "icon": "message-circle"
                         },
                         {
+                          "href": "/memory",
                           "label": "Memory",
-                          "icon": "brain",
-                          "href": "/memory"
+                          "icon": "brain"
                         },
                         {
-                          "label": "Settings",
                           "href": "/settings",
+                          "label": "Settings",
                           "icon": "settings"
                         }
                       ],
                       "appName": "Agent Assistant",
                       "children": [
                         {
+                          "gap": "lg",
                           "type": "stack",
                           "children": [
                             {
@@ -2864,17 +2864,17 @@
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "gauge",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "gauge"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Token Usage",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "badge",
                                   "label": "Normal",
+                                  "type": "badge",
                                   "variant": "default"
                                 }
                               ],
@@ -2886,38 +2886,38 @@
                             },
                             {
                               "type": "progress-bar",
-                              "value": "@entity.current",
-                              "max": "@entity.max"
+                              "max": "@entity.max",
+                              "value": "@entity.current"
                             },
                             {
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "label": "Tokens Used",
+                                  "type": "stat-display",
                                   "value": "@entity.current",
-                                  "type": "stat-display"
+                                  "label": "Tokens Used"
                                 },
                                 {
-                                  "value": "@entity.max",
                                   "label": "Max Tokens",
-                                  "type": "stat-display"
+                                  "type": "stat-display",
+                                  "value": "@entity.max"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "variant": "ghost",
-                              "label": "Reset",
                               "type": "button",
                               "icon": "rotate-ccw",
-                              "action": "RESET"
+                              "variant": "ghost",
+                              "action": "RESET",
+                              "label": "Reset"
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "lg"
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2937,6 +2937,69 @@
                     "main",
                     {
                       "appName": "Agent Assistant",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "gauge"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Token Usage"
+                                },
+                                {
+                                  "label": "Normal",
+                                  "variant": "default",
+                                  "type": "badge"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "value": "@entity.current",
+                              "max": "@entity.max",
+                              "type": "progress-bar"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "value": "@entity.current",
+                                  "type": "stat-display",
+                                  "label": "Tokens Used"
+                                },
+                                {
+                                  "value": "@entity.max",
+                                  "type": "stat-display",
+                                  "label": "Max Tokens"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "button",
+                              "icon": "rotate-ccw",
+                              "label": "Reset",
+                              "action": "RESET",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg"
+                        }
+                      ],
                       "type": "dashboard-layout",
                       "navItems": [
                         {
@@ -2945,77 +3008,14 @@
                           "icon": "message-circle"
                         },
                         {
-                          "icon": "brain",
                           "href": "/memory",
+                          "icon": "brain",
                           "label": "Memory"
                         },
                         {
-                          "label": "Settings",
                           "href": "/settings",
-                          "icon": "settings"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "name": "gauge",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Token Usage",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "default",
-                                  "label": "Normal",
-                                  "type": "badge"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "max": "@entity.max",
-                              "type": "progress-bar",
-                              "value": "@entity.current"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Tokens Used",
-                                  "value": "@entity.current"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.max",
-                                  "label": "Max Tokens"
-                                }
-                              ]
-                            },
-                            {
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "type": "button",
-                              "action": "RESET",
-                              "label": "Reset"
-                            }
-                          ],
-                          "direction": "vertical"
+                          "icon": "settings",
+                          "label": "Settings"
                         }
                       ]
                     }
@@ -3057,8 +3057,90 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "name": "alert-triangle",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Token Usage",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "variant": "warning",
+                                  "type": "badge",
+                                  "label": "Warning"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "warning",
+                              "message": "Token usage approaching limit. Consider compacting."
+                            },
+                            {
+                              "max": "@entity.max",
+                              "value": "@entity.current",
+                              "type": "progress-bar"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "value": "@entity.current",
+                                  "type": "stat-display",
+                                  "label": "Tokens Used"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Max Tokens",
+                                  "value": "@entity.max"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "COMPACT",
+                                  "variant": "primary",
+                                  "icon": "minimize-2",
+                                  "label": "Compact"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "action": "RESET",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "lg"
+                        }
+                      ],
                       "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "navItems": [
                         {
                           "href": "/chat",
@@ -3072,42 +3154,90 @@
                         },
                         {
                           "href": "/settings",
-                          "icon": "settings",
-                          "label": "Settings"
+                          "label": "Settings",
+                          "icon": "settings"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "warning",
+                "to": "critical",
+                "event": "UPDATE",
+                "guard": [
+                  ">=",
+                  [
+                    "/",
+                    "@payload.current",
+                    "@entity.max"
+                  ],
+                  0.95
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "label": "Chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Settings",
+                          "href": "/settings",
+                          "icon": "settings"
                         }
                       ],
+                      "appName": "Agent Assistant",
                       "children": [
                         {
+                          "gap": "lg",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "alert-triangle"
+                                  "name": "alert-octagon"
                                 },
                                 {
                                   "variant": "h2",
-                                  "content": "Token Usage",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Token Usage"
                                 },
                                 {
-                                  "type": "badge",
-                                  "label": "Warning",
-                                  "variant": "warning"
+                                  "variant": "danger",
+                                  "label": "Critical",
+                                  "type": "badge"
                                 }
                               ],
-                              "align": "center"
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "type": "alert",
-                              "message": "Token usage approaching limit. Consider compacting.",
-                              "variant": "warning"
+                              "variant": "error",
+                              "message": "Token usage critical. Compact immediately to avoid truncation."
                             },
                             {
                               "value": "@entity.current",
@@ -3115,6 +3245,9 @@
                               "type": "progress-bar"
                             },
                             {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -3126,22 +3259,19 @@
                                   "type": "stat-display",
                                   "label": "Max Tokens"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
                               "direction": "horizontal",
-                              "type": "stack",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "action": "COMPACT",
-                                  "label": "Compact",
+                                  "label": "Compact Now",
+                                  "variant": "primary",
                                   "icon": "minimize-2",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "type": "button"
                                 },
                                 {
                                   "label": "Reset",
@@ -3153,139 +3283,9 @@
                               ]
                             }
                           ],
-                          "type": "stack",
-                          "gap": "lg",
                           "direction": "vertical"
                         }
                       ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "critical",
-                "event": "UPDATE",
-                "guard": [
-                  ">=",
-                  [
-                    "/",
-                    "@payload.current",
-                    "@entity.max"
-                  ],
-                  0.95
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "alert-octagon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Token Usage",
-                                  "variant": "h2"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "Critical",
-                                  "variant": "danger"
-                                }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "error",
-                              "message": "Token usage critical. Compact immediately to avoid truncation."
-                            },
-                            {
-                              "type": "progress-bar",
-                              "value": "@entity.current",
-                              "max": "@entity.max"
-                            },
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Tokens Used",
-                                  "value": "@entity.current"
-                                },
-                                {
-                                  "label": "Max Tokens",
-                                  "type": "stat-display",
-                                  "value": "@entity.max"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "action": "COMPACT",
-                                  "variant": "primary",
-                                  "icon": "minimize-2",
-                                  "label": "Compact Now"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Reset",
-                                  "action": "RESET",
-                                  "variant": "ghost",
-                                  "icon": "rotate-ccw"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "href": "/chat",
-                          "icon": "message-circle",
-                          "label": "Chat"
-                        },
-                        {
-                          "href": "/memory",
-                          "icon": "brain",
-                          "label": "Memory"
-                        },
-                        {
-                          "label": "Settings",
-                          "href": "/settings",
-                          "icon": "settings"
-                        }
-                      ],
-                      "appName": "Agent Assistant",
-                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3313,86 +3313,86 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "href": "/chat",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "href": "/memory",
-                          "icon": "brain",
-                          "label": "Memory"
-                        },
-                        {
-                          "label": "Settings",
-                          "icon": "settings",
-                          "href": "/settings"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "appName": "Agent Assistant",
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
                           "type": "stack",
                           "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "gauge",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "gauge"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Token Usage",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 },
                                 {
-                                  "type": "badge",
                                   "label": "Normal",
+                                  "type": "badge",
                                   "variant": "default"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "progress-bar",
                               "max": "@entity.max",
+                              "type": "progress-bar",
                               "value": "@entity.current"
                             },
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "stat-display",
-                                  "value": "@entity.current",
-                                  "label": "Tokens Used"
+                                  "label": "Tokens Used",
+                                  "value": "@entity.current"
                                 },
                                 {
-                                  "type": "stat-display",
                                   "label": "Max Tokens",
+                                  "type": "stat-display",
                                   "value": "@entity.max"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "type": "button",
                               "action": "RESET",
+                              "icon": "rotate-ccw",
                               "label": "Reset",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "type": "button"
                             }
-                          ],
-                          "gap": "lg"
+                          ]
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "message-circle",
+                          "label": "Chat",
+                          "href": "/chat"
+                        },
+                        {
+                          "label": "Memory",
+                          "icon": "brain",
+                          "href": "/memory"
+                        },
+                        {
+                          "label": "Settings",
+                          "icon": "settings",
+                          "href": "/settings"
                         }
                       ]
                     }
@@ -3419,66 +3419,68 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "navItems": [
                         {
-                          "icon": "message-circle",
+                          "href": "/chat",
                           "label": "Chat",
-                          "href": "/chat"
+                          "icon": "message-circle"
                         },
                         {
                           "icon": "brain",
-                          "label": "Memory",
-                          "href": "/memory"
+                          "href": "/memory",
+                          "label": "Memory"
                         },
                         {
                           "label": "Settings",
-                          "icon": "settings",
-                          "href": "/settings"
+                          "href": "/settings",
+                          "icon": "settings"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "gap": "lg",
                           "type": "stack",
+                          "gap": "lg",
+                          "direction": "vertical",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "name": "gauge",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "gauge"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Token Usage",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "badge",
-                                  "variant": "default",
-                                  "label": "Normal"
+                                  "label": "Normal",
+                                  "variant": "default"
                                 }
                               ],
+                              "gap": "sm",
                               "type": "stack",
-                              "align": "center",
                               "direction": "horizontal",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "value": "@entity.current",
                               "max": "@entity.max",
-                              "type": "progress-bar"
+                              "type": "progress-bar",
+                              "value": "@entity.current"
                             },
                             {
-                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "type": "stat-display",
                                   "label": "Tokens Used",
-                                  "value": "@entity.current",
-                                  "type": "stat-display"
+                                  "value": "@entity.current"
                                 },
                                 {
                                   "value": "@entity.max",
@@ -3486,21 +3488,19 @@
                                   "label": "Max Tokens"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
                               "action": "RESET",
+                              "label": "Reset",
                               "variant": "ghost",
+                              "icon": "rotate-ccw",
                               "type": "button"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
-                      ],
-                      "appName": "Agent Assistant"
+                      ]
                     }
                   ]
                 ]
@@ -3519,14 +3519,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "lg",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "sm",
                               "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "gauge",
@@ -3534,30 +3537,28 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Token Usage"
+                                  "content": "Token Usage",
+                                  "variant": "h2"
                                 },
                                 {
                                   "type": "badge",
-                                  "label": "Normal",
-                                  "variant": "default"
+                                  "variant": "default",
+                                  "label": "Normal"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "value": "@entity.current",
                               "max": "@entity.max",
-                              "type": "progress-bar"
+                              "type": "progress-bar",
+                              "value": "@entity.current"
                             },
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "label": "Tokens Used",
@@ -3565,38 +3566,37 @@
                                   "value": "@entity.current"
                                 },
                                 {
-                                  "type": "stat-display",
+                                  "value": "@entity.max",
                                   "label": "Max Tokens",
-                                  "value": "@entity.max"
+                                  "type": "stat-display"
                                 }
                               ]
                             },
                             {
-                              "label": "Reset",
+                              "action": "RESET",
                               "variant": "ghost",
-                              "icon": "rotate-ccw",
                               "type": "button",
-                              "action": "RESET"
+                              "icon": "rotate-ccw",
+                              "label": "Reset"
                             }
                           ],
-                          "direction": "vertical"
+                          "type": "stack"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Chat",
+                          "icon": "message-circle",
                           "href": "/chat",
-                          "icon": "message-circle"
+                          "label": "Chat"
                         },
                         {
-                          "label": "Memory",
                           "href": "/memory",
-                          "icon": "brain"
+                          "icon": "brain",
+                          "label": "Memory"
                         },
                         {
-                          "icon": "settings",
                           "href": "/settings",
+                          "icon": "settings",
                           "label": "Settings"
                         }
                       ],
@@ -3628,19 +3628,37 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "label": "Chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Settings",
+                          "icon": "settings",
+                          "href": "/settings"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "vertical",
                           "children": [
                             {
-                              "align": "center",
                               "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "alert-octagon",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "alert-octagon"
                                 },
                                 {
                                   "content": "Token Usage",
@@ -3648,87 +3666,69 @@
                                   "type": "typography"
                                 },
                                 {
-                                  "type": "badge",
                                   "label": "Critical",
+                                  "type": "badge",
                                   "variant": "danger"
                                 }
                               ],
-                              "type": "stack"
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "type": "alert",
-                              "variant": "error",
-                              "message": "Token usage critical. Compact immediately to avoid truncation."
+                              "message": "Token usage critical. Compact immediately to avoid truncation.",
+                              "variant": "error"
                             },
                             {
-                              "type": "progress-bar",
                               "max": "@entity.max",
-                              "value": "@entity.current"
+                              "value": "@entity.current",
+                              "type": "progress-bar"
                             },
                             {
-                              "gap": "md",
+                              "direction": "horizontal",
                               "type": "stack",
                               "children": [
                                 {
                                   "label": "Tokens Used",
-                                  "value": "@entity.current",
-                                  "type": "stat-display"
+                                  "type": "stat-display",
+                                  "value": "@entity.current"
                                 },
                                 {
+                                  "value": "@entity.max",
                                   "type": "stat-display",
-                                  "label": "Max Tokens",
-                                  "value": "@entity.max"
+                                  "label": "Max Tokens"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
-                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "button",
                                   "action": "COMPACT",
+                                  "label": "Compact Now",
                                   "variant": "primary",
-                                  "icon": "minimize-2",
-                                  "label": "Compact Now"
+                                  "icon": "minimize-2"
                                 },
                                 {
-                                  "label": "Reset",
                                   "action": "RESET",
-                                  "variant": "ghost",
+                                  "icon": "rotate-ccw",
                                   "type": "button",
-                                  "icon": "rotate-ccw"
+                                  "variant": "ghost",
+                                  "label": "Reset"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "gap": "lg"
+                          "gap": "lg",
+                          "type": "stack"
                         }
-                      ],
-                      "navItems": [
-                        {
-                          "icon": "message-circle",
-                          "href": "/chat",
-                          "label": "Chat"
-                        },
-                        {
-                          "label": "Memory",
-                          "icon": "brain",
-                          "href": "/memory"
-                        },
-                        {
-                          "label": "Settings",
-                          "href": "/settings",
-                          "icon": "settings"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Agent Assistant"
+                      ]
                     }
                   ]
                 ]
@@ -3768,14 +3768,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "children": [
                         {
                           "direction": "vertical",
-                          "gap": "lg",
                           "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
                               "align": "center",
@@ -3785,90 +3785,90 @@
                                   "name": "alert-triangle"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "Token Usage"
                                 },
                                 {
-                                  "variant": "warning",
                                   "type": "badge",
-                                  "label": "Warning"
+                                  "label": "Warning",
+                                  "variant": "warning"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
                               "message": "Token usage approaching limit. Consider compacting.",
+                              "type": "alert",
                               "variant": "warning"
                             },
                             {
+                              "value": "@entity.current",
                               "max": "@entity.max",
-                              "type": "progress-bar",
-                              "value": "@entity.current"
+                              "type": "progress-bar"
                             },
                             {
-                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "Tokens Used",
+                                  "value": "@entity.current",
                                   "type": "stat-display",
-                                  "value": "@entity.current"
+                                  "label": "Tokens Used"
                                 },
                                 {
-                                  "type": "stat-display",
                                   "label": "Max Tokens",
+                                  "type": "stat-display",
                                   "value": "@entity.max"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
                               "children": [
                                 {
                                   "variant": "primary",
-                                  "action": "COMPACT",
-                                  "icon": "minimize-2",
                                   "type": "button",
+                                  "icon": "minimize-2",
+                                  "action": "COMPACT",
                                   "label": "Compact"
                                 },
                                 {
-                                  "variant": "ghost",
-                                  "type": "button",
                                   "icon": "rotate-ccw",
-                                  "label": "Reset",
-                                  "action": "RESET"
+                                  "type": "button",
+                                  "action": "RESET",
+                                  "variant": "ghost",
+                                  "label": "Reset"
                                 }
                               ],
-                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
                       ],
-                      "appName": "Agent Assistant",
                       "navItems": [
                         {
-                          "icon": "message-circle",
                           "label": "Chat",
-                          "href": "/chat"
+                          "href": "/chat",
+                          "icon": "message-circle"
                         },
                         {
-                          "icon": "brain",
                           "label": "Memory",
-                          "href": "/memory"
+                          "href": "/memory",
+                          "icon": "brain"
                         },
                         {
                           "label": "Settings",
                           "href": "/settings",
                           "icon": "settings"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3896,10 +3896,75 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "gauge"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Token Usage",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Normal",
+                                  "variant": "default"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "max": "@entity.max",
+                              "value": "@entity.current",
+                              "type": "progress-bar"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "label": "Tokens Used",
+                                  "type": "stat-display",
+                                  "value": "@entity.current"
+                                },
+                                {
+                                  "label": "Max Tokens",
+                                  "value": "@entity.max",
+                                  "type": "stat-display"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "icon": "rotate-ccw",
+                              "type": "button",
+                              "action": "RESET",
+                              "label": "Reset",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack"
+                        }
+                      ],
                       "navItems": [
                         {
-                          "href": "/chat",
                           "label": "Chat",
+                          "href": "/chat",
                           "icon": "message-circle"
                         },
                         {
@@ -3908,76 +3973,11 @@
                           "label": "Memory"
                         },
                         {
+                          "icon": "settings",
                           "label": "Settings",
-                          "href": "/settings",
-                          "icon": "settings"
+                          "href": "/settings"
                         }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "gauge",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Token Usage",
-                                  "variant": "h2"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "Normal",
-                                  "variant": "default"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "progress-bar",
-                              "max": "@entity.max",
-                              "value": "@entity.current"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "label": "Tokens Used",
-                                  "value": "@entity.current",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "value": "@entity.max",
-                                  "label": "Max Tokens",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "action": "RESET",
-                              "label": "Reset"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Agent Assistant"
+                      ]
                     }
                   ]
                 ]
@@ -4002,41 +4002,25 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
                       "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "href": "/chat",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "icon": "brain",
-                          "label": "Memory",
-                          "href": "/memory"
-                        },
-                        {
-                          "icon": "settings",
-                          "href": "/settings",
-                          "label": "Settings"
-                        }
-                      ],
                       "children": [
                         {
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
                               "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "gauge"
+                                  "name": "gauge",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Token Usage",
                                   "variant": "h2",
-                                  "content": "Token Usage"
+                                  "type": "typography"
                                 },
                                 {
                                   "label": "Normal",
@@ -4044,44 +4028,60 @@
                                   "type": "badge"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "max": "@entity.max",
+                              "type": "progress-bar",
                               "value": "@entity.current",
-                              "type": "progress-bar"
+                              "max": "@entity.max"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
+                                  "label": "Tokens Used",
                                   "type": "stat-display",
-                                  "value": "@entity.current",
-                                  "label": "Tokens Used"
+                                  "value": "@entity.current"
                                 },
                                 {
                                   "label": "Max Tokens",
-                                  "type": "stat-display",
-                                  "value": "@entity.max"
+                                  "value": "@entity.max",
+                                  "type": "stat-display"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
-                              "icon": "rotate-ccw",
+                              "variant": "ghost",
                               "label": "Reset",
+                              "icon": "rotate-ccw",
                               "action": "RESET",
-                              "type": "button",
-                              "variant": "ghost"
+                              "type": "button"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
+                          ]
+                        }
+                      ],
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "icon": "message-circle",
+                          "label": "Chat"
+                        },
+                        {
+                          "icon": "brain",
+                          "label": "Memory",
+                          "href": "/memory"
+                        },
+                        {
+                          "label": "Settings",
+                          "icon": "settings",
+                          "href": "/settings"
                         }
                       ]
                     }
@@ -4102,17 +4102,17 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "icon": "message-circle",
                           "href": "/chat",
+                          "icon": "message-circle",
                           "label": "Chat"
                         },
                         {
-                          "href": "/memory",
+                          "icon": "brain",
                           "label": "Memory",
-                          "icon": "brain"
+                          "href": "/memory"
                         },
                         {
                           "icon": "settings",
@@ -4122,17 +4122,18 @@
                       ],
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "lg",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "gauge",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "gauge"
                                 },
                                 {
                                   "variant": "h2",
@@ -4140,9 +4141,9 @@
                                   "content": "Token Usage"
                                 },
                                 {
+                                  "variant": "default",
                                   "type": "badge",
-                                  "label": "Normal",
-                                  "variant": "default"
+                                  "label": "Normal"
                                 }
                               ]
                             },
@@ -4150,40 +4151,39 @@
                               "type": "divider"
                             },
                             {
-                              "value": "@entity.current",
+                              "type": "progress-bar",
                               "max": "@entity.max",
-                              "type": "progress-bar"
+                              "value": "@entity.current"
                             },
                             {
                               "children": [
                                 {
-                                  "label": "Tokens Used",
                                   "value": "@entity.current",
-                                  "type": "stat-display"
+                                  "type": "stat-display",
+                                  "label": "Tokens Used"
                                 },
                                 {
+                                  "value": "@entity.max",
                                   "label": "Max Tokens",
-                                  "type": "stat-display",
-                                  "value": "@entity.max"
+                                  "type": "stat-display"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "action": "RESET",
+                              "label": "Reset",
                               "variant": "ghost",
                               "type": "button",
-                              "label": "Reset",
+                              "action": "RESET",
                               "icon": "rotate-ccw"
                             }
                           ],
-                          "gap": "lg",
-                          "direction": "vertical"
+                          "type": "stack"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "appName": "Agent Assistant"
                     }
                   ]
                 ]
@@ -4320,51 +4320,53 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
-                              "justify": "between",
                               "align": "center",
                               "children": [
                                 {
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "md",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "name": "layers",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "layers"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Context Window Alert"
+                                      "content": "Context Window Alert",
+                                      "variant": "h2"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "action": "HIDE",
-                                  "type": "button",
+                                  "label": "Dismiss",
                                   "variant": "ghost",
-                                  "icon": "x",
-                                  "label": "Dismiss"
+                                  "type": "button",
+                                  "action": "HIDE",
+                                  "icon": "x"
                                 }
                               ],
-                              "gap": "md"
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "variant": "@entity.notificationType",
                               "type": "alert",
-                              "message": "@entity.message",
-                              "variant": "@entity.notificationType"
+                              "message": "@entity.message"
                             },
                             {
                               "type": "toast-slot"
@@ -4374,11 +4376,9 @@
                               "type": "alert",
                               "variant": "warning"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
                       ],
-                      "appName": "Agent Assistant",
                       "navItems": [
                         {
                           "href": "/chat",
@@ -4386,14 +4386,14 @@
                           "icon": "message-circle"
                         },
                         {
-                          "icon": "brain",
                           "label": "Memory",
-                          "href": "/memory"
+                          "href": "/memory",
+                          "icon": "brain"
                         },
                         {
-                          "icon": "settings",
+                          "href": "/settings",
                           "label": "Settings",
-                          "href": "/settings"
+                          "icon": "settings"
                         }
                       ]
                     }
@@ -4419,66 +4419,6 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "justify": "between",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "name": "layers",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Context Window Alert",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "gap": "md",
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "button",
-                                  "variant": "ghost",
-                                  "icon": "x",
-                                  "label": "Dismiss",
-                                  "action": "HIDE"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "@entity.notificationType",
-                              "type": "alert",
-                              "message": "@entity.message"
-                            },
-                            {
-                              "type": "toast-slot"
-                            },
-                            {
-                              "message": "@entity.message",
-                              "type": "alert",
-                              "variant": "warning"
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "label": "Chat",
@@ -4486,16 +4426,76 @@
                           "icon": "message-circle"
                         },
                         {
+                          "icon": "brain",
                           "label": "Memory",
-                          "href": "/memory",
-                          "icon": "brain"
+                          "href": "/memory"
                         },
                         {
+                          "label": "Settings",
                           "href": "/settings",
-                          "icon": "settings",
-                          "label": "Settings"
+                          "icon": "settings"
                         }
-                      ]
+                      ],
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "align": "center",
+                              "justify": "between",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "name": "layers",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "variant": "h2",
+                                      "type": "typography",
+                                      "content": "Context Window Alert"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "action": "HIDE",
+                                  "variant": "ghost",
+                                  "type": "button",
+                                  "icon": "x",
+                                  "label": "Dismiss"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "message": "@entity.message",
+                              "variant": "@entity.notificationType"
+                            },
+                            {
+                              "type": "toast-slot"
+                            },
+                            {
+                              "variant": "warning",
+                              "message": "@entity.message",
+                              "type": "alert"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant"
                     }
                   ]
                 ]
@@ -4661,33 +4661,33 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
-                      "navItems": [
-                        {
-                          "icon": "message-circle",
-                          "label": "Chat",
-                          "href": "/chat"
-                        },
-                        {
-                          "label": "Memory",
-                          "href": "/memory",
-                          "icon": "brain"
-                        },
-                        {
-                          "href": "/settings",
-                          "label": "Settings",
-                          "icon": "settings"
-                        }
-                      ],
                       "children": [
                         {
+                          "description": "Context Window is ready",
                           "icon": "layers",
                           "type": "empty-state",
-                          "description": "Context Window is ready",
                           "title": "Context Window"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "href": "/memory",
+                          "icon": "brain",
+                          "label": "Memory"
+                        },
+                        {
+                          "href": "/settings",
+                          "icon": "settings",
+                          "label": "Settings"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -5219,51 +5219,51 @@
                       "appName": "Agent Assistant",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "children": [
                                     {
-                                      "name": "repeat",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "repeat"
                                     },
                                     {
-                                      "variant": "h2",
+                                      "content": "Switch Provider",
                                       "type": "typography",
-                                      "content": "Switch Provider"
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "gap": "md"
                                 },
                                 {
+                                  "variant": "primary",
+                                  "label": "Open",
                                   "action": "SWITCH",
                                   "type": "button",
-                                  "label": "Open",
-                                  "variant": "primary",
                                   "icon": "repeat"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "justify": "between",
-                              "direction": "horizontal"
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "description": "Click Open to view details in a modal overlay.",
-                              "title": "Nothing open",
                               "type": "empty-state",
-                              "icon": "repeat"
+                              "icon": "repeat",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
                             }
-                          ],
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
+                          ]
                         }
                       ],
                       "navItems": [
@@ -5273,14 +5273,14 @@
                           "icon": "message-circle"
                         },
                         {
-                          "icon": "brain",
+                          "href": "/memory",
                           "label": "Memory",
-                          "href": "/memory"
+                          "icon": "brain"
                         },
                         {
+                          "label": "Settings",
                           "href": "/settings",
-                          "icon": "settings",
-                          "label": "Settings"
+                          "icon": "settings"
                         }
                       ],
                       "type": "dashboard-layout"
@@ -5298,8 +5298,8 @@
                     "ProviderConfig",
                     {
                       "emit": {
-                        "failure": "ProviderConfigLoadFailed",
-                        "success": "ProviderConfigLoaded"
+                        "success": "ProviderConfigLoaded",
+                        "failure": "ProviderConfigLoadFailed"
                       }
                     }
                   ],
@@ -5307,12 +5307,13 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "repeat"
                             },
                             {
                               "variant": "h3",
@@ -5328,12 +5329,13 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "caption",
                               "content": "Current:",
-                              "type": "typography",
-                              "variant": "caption"
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
@@ -5344,23 +5346,21 @@
                               "type": "badge"
                             }
                           ],
-                          "gap": "md",
                           "type": "stack"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "entity": "@entity",
                           "fields": [
                             "currentProvider",
                             "currentModel"
                           ],
-                          "entity": "@entity"
+                          "submitEvent": "SAVE",
+                          "mode": "edit"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -5391,14 +5391,14 @@
                     {
                       "navItems": [
                         {
-                          "label": "Chat",
                           "href": "/chat",
+                          "label": "Chat",
                           "icon": "message-circle"
                         },
                         {
-                          "label": "Memory",
+                          "icon": "brain",
                           "href": "/memory",
-                          "icon": "brain"
+                          "label": "Memory"
                         },
                         {
                           "label": "Settings",
@@ -5406,20 +5406,18 @@
                           "href": "/settings"
                         }
                       ],
+                      "appName": "Agent Assistant",
                       "children": [
                         {
                           "gap": "lg",
-                          "type": "stack",
                           "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "gap": "md",
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "children": [
                                     {
@@ -5427,18 +5425,20 @@
                                       "type": "icon"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "h2",
-                                      "content": "Switch Provider"
+                                      "content": "Switch Provider",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
+                                  "type": "button",
+                                  "action": "SWITCH",
                                   "label": "Open",
                                   "variant": "primary",
-                                  "type": "button",
-                                  "icon": "repeat",
-                                  "action": "SWITCH"
+                                  "icon": "repeat"
                                 }
                               ],
                               "justify": "between"
@@ -5447,16 +5447,16 @@
                               "type": "divider"
                             },
                             {
-                              "type": "empty-state",
-                              "title": "Nothing open",
                               "description": "Click Open to view details in a modal overlay.",
-                              "icon": "repeat"
+                              "type": "empty-state",
+                              "icon": "repeat",
+                              "title": "Nothing open"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "Agent Assistant"
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -5495,72 +5495,72 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
                       "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "icon": "message-circle",
-                          "href": "/chat"
-                        },
-                        {
-                          "label": "Memory",
-                          "href": "/memory",
-                          "icon": "brain"
-                        },
-                        {
-                          "href": "/settings",
-                          "icon": "settings",
-                          "label": "Settings"
-                        }
-                      ],
+                      "appName": "Agent Assistant",
                       "children": [
                         {
+                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "repeat",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "repeat"
                                     },
                                     {
+                                      "content": "Switch Provider",
                                       "variant": "h2",
-                                      "type": "typography",
-                                      "content": "Switch Provider"
+                                      "type": "typography"
                                     }
                                   ],
+                                  "type": "stack",
                                   "gap": "md",
-                                  "type": "stack"
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
-                                  "label": "Open",
                                   "action": "SWITCH",
-                                  "icon": "repeat"
+                                  "type": "button",
+                                  "label": "Open",
+                                  "icon": "repeat",
+                                  "variant": "primary"
                                 }
                               ],
                               "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "justify": "between"
+                              "justify": "between",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "description": "Click Open to view details in a modal overlay.",
                               "title": "Nothing open",
-                              "icon": "repeat",
-                              "type": "empty-state"
+                              "description": "Click Open to view details in a modal overlay.",
+                              "type": "empty-state",
+                              "icon": "repeat"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg"
+                          "gap": "lg",
+                          "type": "stack"
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "href": "/chat",
+                          "label": "Chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "icon": "brain",
+                          "label": "Memory",
+                          "href": "/memory"
+                        },
+                        {
+                          "icon": "settings",
+                          "label": "Settings",
+                          "href": "/settings"
                         }
                       ]
                     }
@@ -5698,20 +5698,19 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Agent Assistant",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "justify": "between",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "align": "center",
                                   "gap": "md",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "name": "server",
@@ -5723,58 +5722,59 @@
                                       "type": "typography"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "align": "center"
                                 },
                                 {
-                                  "label": "Dismiss",
-                                  "icon": "x",
+                                  "action": "HIDE",
                                   "type": "button",
+                                  "label": "Dismiss",
                                   "variant": "ghost",
-                                  "action": "HIDE"
+                                  "icon": "x"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "message": "@entity.message",
-                              "variant": "@entity.notificationType",
-                              "type": "alert"
+                              "type": "alert",
+                              "variant": "@entity.notificationType"
                             },
                             {
                               "type": "toast-slot"
                             },
                             {
-                              "variant": "warning",
                               "message": "@entity.message",
-                              "type": "alert"
+                              "type": "alert",
+                              "variant": "warning"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical"
+                          ]
                         }
                       ],
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
                       "navItems": [
                         {
-                          "label": "Chat",
                           "href": "/chat",
+                          "label": "Chat",
                           "icon": "message-circle"
                         },
                         {
-                          "icon": "brain",
+                          "label": "Memory",
                           "href": "/memory",
-                          "label": "Memory"
+                          "icon": "brain"
                         },
                         {
                           "label": "Settings",
                           "href": "/settings",
                           "icon": "settings"
                         }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -5798,31 +5798,52 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "icon": "message-circle",
+                          "href": "/chat"
+                        },
+                        {
+                          "href": "/memory",
+                          "label": "Memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "icon": "settings",
+                          "label": "Settings",
+                          "href": "/settings"
+                        }
+                      ],
+                      "appName": "Agent Assistant",
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "justify": "between",
                               "align": "center",
                               "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "gap": "md",
-                                  "direction": "horizontal",
                                   "align": "center",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "server"
+                                      "name": "server",
+                                      "type": "icon"
                                     },
                                     {
                                       "type": "typography",
-                                      "content": "Provider Status",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "content": "Provider Status"
                                     }
-                                  ],
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
                                   "type": "button",
@@ -5831,15 +5852,14 @@
                                   "variant": "ghost",
                                   "action": "HIDE"
                                 }
-                              ],
-                              "justify": "between"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
                               "message": "@entity.message",
+                              "type": "alert",
                               "variant": "@entity.notificationType"
                             },
                             {
@@ -5851,30 +5871,10 @@
                               "message": "@entity.message"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
+                          "gap": "lg",
+                          "direction": "vertical"
                         }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "href": "/chat",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "href": "/memory",
-                          "icon": "brain",
-                          "label": "Memory"
-                        },
-                        {
-                          "icon": "settings",
-                          "label": "Settings",
-                          "href": "/settings"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Agent Assistant"
+                      ]
                     }
                   ]
                 ]
@@ -6027,8 +6027,8 @@
                     "ProviderConfig",
                     {
                       "emit": {
-                        "failure": "ProviderConfigLoadFailed",
-                        "success": "ProviderConfigLoaded"
+                        "success": "ProviderConfigLoaded",
+                        "failure": "ProviderConfigLoadFailed"
                       }
                     }
                   ],
@@ -6042,6 +6042,14 @@
                     "render-ui",
                     "main",
                     {
+                      "children": [
+                        {
+                          "title": "Provider",
+                          "description": "Provider is ready",
+                          "type": "empty-state",
+                          "icon": "repeat"
+                        }
+                      ],
                       "navItems": [
                         {
                           "label": "Chat",
@@ -6049,26 +6057,18 @@
                           "href": "/chat"
                         },
                         {
+                          "icon": "brain",
                           "href": "/memory",
-                          "label": "Memory",
-                          "icon": "brain"
+                          "label": "Memory"
                         },
                         {
+                          "label": "Settings",
                           "icon": "settings",
-                          "href": "/settings",
-                          "label": "Settings"
+                          "href": "/settings"
                         }
                       ],
                       "type": "dashboard-layout",
-                      "appName": "Agent Assistant",
-                      "children": [
-                        {
-                          "type": "empty-state",
-                          "icon": "repeat",
-                          "description": "Provider is ready",
-                          "title": "Provider"
-                        }
-                      ]
+                      "appName": "Agent Assistant"
                     }
                   ]
                 ]
@@ -6337,8 +6337,8 @@
                     "AssistantNav",
                     {
                       "emit": {
-                        "success": "AssistantNavLoaded",
-                        "failure": "AssistantNavLoadFailed"
+                        "failure": "AssistantNavLoadFailed",
+                        "success": "AssistantNavLoaded"
                       }
                     }
                   ],
@@ -6346,22 +6346,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "gap": "md",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
+                          "content": "Loading…",
                           "variant": "caption",
-                          "type": "typography",
-                          "content": "Loading…"
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -6376,20 +6376,34 @@
                     "main",
                     {
                       "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "icon": "message-circle",
+                          "label": "Chat",
+                          "href": "/chat"
+                        },
+                        {
+                          "href": "/memory",
+                          "icon": "brain",
+                          "label": "Memory"
+                        },
+                        {
+                          "icon": "settings",
+                          "label": "Settings",
+                          "href": "/settings"
+                        }
+                      ],
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "lg",
                           "direction": "vertical",
                           "children": [
                             {
-                              "align": "center",
+                              "gap": "sm",
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "message-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "message-circle"
                                 },
                                 {
                                   "content": "Assistant",
@@ -6397,82 +6411,68 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "gap": "sm"
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "defaultActiveTab": "chat",
+                              "onTabChange": "SELECT_TAB",
+                              "type": "tabs",
                               "tabs": [
                                 {
                                   "label": "Chat",
                                   "value": "chat"
                                 },
                                 {
-                                  "value": "memory",
-                                  "label": "Memory"
+                                  "label": "Memory",
+                                  "value": "memory"
                                 },
                                 {
-                                  "label": "Settings",
-                                  "value": "settings"
+                                  "value": "settings",
+                                  "label": "Settings"
                                 }
-                              ],
-                              "defaultActiveTab": "chat",
-                              "onTabChange": "SELECT_TAB",
-                              "type": "tabs"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "fields": [],
-                              "className": "transition-shadow hover:shadow-md cursor-pointer",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
                                   "direction": "vertical",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "content": "@item.messages",
                                       "type": "typography",
-                                      "variant": "h4"
+                                      "variant": "h4",
+                                      "content": "@item.messages"
                                     },
                                     {
+                                      "content": "@item.currentMessage",
                                       "type": "typography",
                                       "variant": "caption",
-                                      "color": "muted",
-                                      "content": "@item.currentMessage"
+                                      "color": "muted"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  "type": "stack"
                                 }
                               ],
+                              "entity": "@payload.data",
                               "type": "data-grid",
-                              "entity": "@payload.data"
+                              "fields": [],
+                              "className": "transition-shadow hover:shadow-md cursor-pointer"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "lg"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Chat",
-                          "icon": "message-circle",
-                          "href": "/chat"
-                        },
-                        {
-                          "icon": "brain",
-                          "label": "Memory",
-                          "href": "/memory"
-                        },
-                        {
-                          "label": "Settings",
-                          "icon": "settings",
-                          "href": "/settings"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -6487,35 +6487,35 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "alert-triangle"
                         },
                         {
-                          "content": "Failed to load",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "body",
-                          "content": "@payload.error"
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
                           "label": "Retry",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "variant": "primary",
+                          "action": "INIT"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -6530,8 +6530,8 @@
                     "AssistantNav",
                     {
                       "emit": {
-                        "success": "AssistantNavLoaded",
-                        "failure": "AssistantNavLoadFailed"
+                        "failure": "AssistantNavLoadFailed",
+                        "success": "AssistantNavLoaded"
                       }
                     }
                   ],
@@ -6705,34 +6705,37 @@
                     "render-ui",
                     "drawer",
                     {
+                      "gap": "none",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "drawer",
-                          "title": "Memory Recall",
-                          "isOpen": true,
                           "children": [
                             {
                               "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
-                                      "content": "Content"
+                                      "content": "Content",
+                                      "type": "typography"
                                     },
                                     {
-                                      "content": "@entity.content",
                                       "type": "typography",
+                                      "content": "@entity.content",
                                       "variant": "body"
                                     }
                                   ],
+                                  "justify": "between",
                                   "gap": "md",
-                                  "justify": "between"
+                                  "type": "stack"
                                 },
                                 {
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "content": "Query",
@@ -6745,68 +6748,61 @@
                                       "variant": "body"
                                     }
                                   ],
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "justify": "between",
-                                  "gap": "md"
+                                  "type": "stack"
                                 },
                                 {
-                                  "justify": "between",
-                                  "gap": "md",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "variant": "caption",
                                       "type": "typography",
-                                      "content": "Strength"
+                                      "content": "Strength",
+                                      "variant": "caption"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
-                                      "content": "@entity.strength"
+                                      "content": "@entity.strength",
+                                      "type": "typography"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "gap": "md",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "type": "stack",
                                   "justify": "end",
                                   "children": [
                                     {
-                                      "action": "CLOSE",
+                                      "variant": "ghost",
                                       "type": "button",
-                                      "label": "Close",
-                                      "variant": "ghost"
+                                      "action": "CLOSE",
+                                      "label": "Close"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
+                              ]
                             }
-                          ]
+                          ],
+                          "title": "Memory Recall",
+                          "isOpen": true,
+                          "type": "drawer"
                         },
                         {
                           "type": "side-panel",
-                          "onClose": "CLOSE",
-                          "title": "Memory Recall",
-                          "isOpen": true,
                           "position": "right",
+                          "isOpen": true,
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "justify": "between",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "type": "stack",
                                   "children": [
                                     {
@@ -6815,39 +6811,42 @@
                                       "variant": "caption"
                                     },
                                     {
-                                      "variant": "body",
+                                      "content": "@entity.content",
                                       "type": "typography",
-                                      "content": "@entity.content"
+                                      "variant": "body"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "justify": "between",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "gap": "md",
                                   "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
                                   "children": [
                                     {
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Query"
+                                      "content": "Query",
+                                      "variant": "caption"
                                     },
                                     {
                                       "type": "typography",
                                       "variant": "body",
                                       "content": "@entity.query"
                                     }
-                                  ]
-                                },
-                                {
-                                  "gap": "md",
+                                  ],
                                   "type": "stack",
                                   "justify": "between",
+                                  "gap": "md"
+                                },
+                                {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "content": "Strength",
                                       "type": "typography",
-                                      "variant": "caption"
+                                      "variant": "caption",
+                                      "content": "Strength"
                                     },
                                     {
                                       "content": "@entity.strength",
@@ -6855,16 +6854,17 @@
                                       "variant": "body"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "justify": "between"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "onClose": "CLOSE",
+                          "title": "Memory Recall"
                         }
-                      ],
-                      "gap": "none",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]

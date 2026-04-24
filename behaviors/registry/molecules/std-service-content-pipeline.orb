@@ -295,33 +295,36 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "search",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "search"
                             },
                             {
-                              "type": "typography",
                               "content": "Content Research",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
                               "type": "stack",
+                              "gap": "md",
                               "direction": "vertical",
                               "children": [
                                 {
@@ -330,22 +333,19 @@
                                   "variant": "body"
                                 },
                                 {
-                                  "fields": [
-                                    "query"
-                                  ],
+                                  "type": "form-section",
                                   "mode": "edit",
                                   "entity": "@entity",
                                   "submitEvent": "SEARCH",
-                                  "type": "form-section"
+                                  "fields": [
+                                    "query"
+                                  ]
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -375,15 +375,18 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "search"
                         },
                         {
+                          "type": "typography",
                           "content": "Searching YouTube...",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "type": "spinner"
@@ -394,10 +397,7 @@
                           "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -411,19 +411,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "justify": "between",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "video",
@@ -431,52 +432,51 @@
                                 },
                                 {
                                   "content": "Search Results",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "type": "button",
-                              "variant": "ghost",
-                              "action": "RESET",
                               "icon": "rotate-ccw",
-                              "label": "New Search"
+                              "variant": "ghost",
+                              "label": "New Search",
+                              "type": "button",
+                              "action": "RESET"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [],
                           "entity": "@payload.results",
                           "itemActions": [
                             {
-                              "variant": "primary",
+                              "label": "Summarize",
                               "event": "SELECT_AND_SUMMARIZE",
-                              "label": "Summarize"
+                              "variant": "primary"
                             }
                           ],
+                          "type": "data-grid",
                           "columns": [
                             {
-                              "variant": "h4",
                               "label": "Title",
-                              "name": "videoTitle",
-                              "icon": "video"
+                              "icon": "video",
+                              "variant": "h4",
+                              "name": "videoTitle"
                             },
                             {
                               "variant": "caption",
-                              "name": "videoDescription",
-                              "label": "Description"
+                              "label": "Description",
+                              "name": "videoDescription"
                             }
                           ],
-                          "type": "data-grid"
+                          "fields": []
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -490,10 +490,8 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -506,17 +504,19 @@
                         },
                         {
                           "variant": "error",
-                          "type": "alert",
-                          "message": "@payload.error"
+                          "message": "@payload.error",
+                          "type": "alert"
                         },
                         {
-                          "type": "button",
                           "icon": "rotate-ccw",
-                          "action": "RESET",
+                          "type": "button",
+                          "variant": "primary",
                           "label": "Try Again",
-                          "variant": "primary"
+                          "action": "RESET"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -535,8 +535,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ServiceContentPipelineYoutubeFailed",
-                        "success": "ServiceContentPipelineYoutubeCompleted"
+                        "success": "ServiceContentPipelineYoutubeCompleted",
+                        "failure": "ServiceContentPipelineYoutubeFailed"
                       }
                     }
                   ],
@@ -545,14 +545,15 @@
                     "main",
                     {
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "cpu"
+                          "name": "cpu",
+                          "type": "icon"
                         },
                         {
-                          "content": "Fetching & summarizing...",
                           "type": "typography",
+                          "content": "Fetching & summarizing...",
                           "variant": "h3"
                         },
                         {
@@ -560,8 +561,7 @@
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -575,24 +575,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "search"
+                              "name": "search",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Content Research",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -603,25 +603,25 @@
                           "type": "card",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "vertical",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "content": "Search YouTube for content to summarize",
                                   "variant": "body",
-                                  "content": "Search YouTube for content to summarize"
+                                  "type": "typography"
                                 },
                                 {
-                                  "mode": "edit",
-                                  "submitEvent": "SEARCH",
-                                  "type": "form-section",
                                   "entity": "@entity",
+                                  "mode": "edit",
+                                  "type": "form-section",
+                                  "submitEvent": "SEARCH",
                                   "fields": [
                                     "query"
                                   ]
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
                           ]
                         }
@@ -644,8 +644,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceContentPipelineLlmCompleted",
-                        "failure": "ServiceContentPipelineLlmFailed"
+                        "failure": "ServiceContentPipelineLlmFailed",
+                        "success": "ServiceContentPipelineLlmCompleted"
                       }
                     }
                   ]
@@ -665,24 +665,27 @@
                       "children": [
                         {
                           "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "sm",
+                          "align": "center",
                           "type": "stack",
                           "children": [
                             {
                               "type": "stack",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "check-circle"
+                                  "name": "check-circle",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Research Complete"
+                                  "content": "Research Complete",
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
                               "icon": "rotate-ccw",
@@ -691,35 +694,32 @@
                               "label": "New Search",
                               "action": "RESET"
                             }
-                          ],
-                          "justify": "between",
-                          "align": "center",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Summary",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Summary"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@payload.content",
+                                  "variant": "body",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
                       "direction": "vertical"
@@ -736,15 +736,18 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
-                          "content": "Summarization failed",
+                          "variant": "h2",
                           "type": "typography",
-                          "variant": "h2"
+                          "content": "Summarization failed"
                         },
                         {
                           "variant": "error",
@@ -752,16 +755,13 @@
                           "type": "alert"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
                           "label": "Try Again",
-                          "action": "RESET",
-                          "variant": "primary"
+                          "action": "RESET"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -776,24 +776,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "search"
+                              "name": "search",
+                              "type": "icon"
                             },
                             {
-                              "content": "Content Research",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Content Research"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -802,31 +803,30 @@
                           "children": [
                             {
                               "direction": "vertical",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "content": "Search YouTube for content to summarize",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Search YouTube for content to summarize"
                                 },
                                 {
+                                  "submitEvent": "SEARCH",
+                                  "type": "form-section",
                                   "mode": "edit",
                                   "fields": [
                                     "query"
                                   ],
-                                  "submitEvent": "SEARCH",
-                                  "entity": "@entity",
-                                  "type": "form-section"
+                                  "entity": "@entity"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             }
                           ],
                           "type": "card"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -840,26 +840,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "search"
+                              "name": "search",
+                              "type": "icon"
                             },
                             {
-                              "content": "Content Research",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "Content Research"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -867,30 +864,33 @@
                         {
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "Search YouTube for content to summarize"
                                 },
                                 {
-                                  "entity": "@entity",
-                                  "submitEvent": "SEARCH",
-                                  "type": "form-section",
-                                  "mode": "edit",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "type": "form-section",
+                                  "mode": "edit",
+                                  "submitEvent": "SEARCH",
+                                  "entity": "@entity"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "md"
                             }
                           ],
                           "type": "card"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
