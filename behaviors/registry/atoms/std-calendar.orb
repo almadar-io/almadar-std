@@ -11,11 +11,13 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "description",
@@ -60,40 +62,12 @@
           "emits": [
             {
               "event": "CalendarEventLoaded",
-              "description": "Fired when CalendarEvent finishes loading",
+              "description": "Fired when CalendarEvent finishes loading; payload.data holds the events",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "date",
-                  "type": "string"
-                },
-                {
-                  "name": "time",
-                  "type": "string"
-                },
-                {
-                  "name": "duration",
-                  "type": "number"
+                  "name": "data",
+                  "type": "[CalendarEvent]"
                 }
               ]
             },
@@ -103,7 +77,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -112,20 +90,44 @@
           "stateMachine": {
             "states": [
               {
-                "name": "month-view",
+                "name": "loading",
                 "isInitial": true
               },
               {
-                "name": "day-view"
+                "name": "month-view"
               },
               {
-                "name": "slot-selected"
+                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "CalendarEventLoaded",
+                "name": "CalendarEvent loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[CalendarEvent]"
+                  }
+                ]
+              },
+              {
+                "key": "CalendarEventLoadFailed",
+                "name": "CalendarEvent load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SELECT_DAY",
@@ -148,64 +150,12 @@
                     "required": true
                   }
                 ]
-              },
-              {
-                "key": "BACK",
-                "name": "Back"
-              },
-              {
-                "key": "CalendarEventLoaded",
-                "name": "CalendarEvent loaded",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "date",
-                    "type": "string"
-                  },
-                  {
-                    "name": "time",
-                    "type": "string"
-                  },
-                  {
-                    "name": "duration",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "CalendarEventLoadFailed",
-                "name": "CalendarEvent load failed",
-                "payload": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "month-view",
-                "to": "month-view",
+                "from": "loading",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
@@ -222,19 +172,50 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading calendar…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "month-view",
+                "event": "CalendarEventLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
                           "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -242,18 +223,17 @@
                                 },
                                 {
                                   "content": "CalendarEvents Calendar",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "onSelect": "SELECT_DAY",
-                              "type": "date-range-selector"
+                              "type": "date-range-selector",
+                              "onSelect": "SELECT_DAY"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -265,448 +245,42 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "h4",
-                          "content": "Upcoming Events",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "data-list",
-                          "entity": "@entity",
-                          "fields": [
-                            {
-                              "icon": "calendar",
-                              "variant": "h4",
-                              "name": "name",
-                              "label": "Event"
-                            },
-                            {
-                              "name": "time",
-                              "variant": "badge",
-                              "label": "Time"
-                            },
-                            {
-                              "format": "date",
-                              "label": "Date",
-                              "name": "date",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "icon": "eye",
-                              "label": "View",
-                              "event": "SELECT_DAY"
-                            }
-                          ]
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "month-view",
-                "to": "day-view",
-                "event": "SELECT_DAY",
-                "effects": [
-                  [
-                    "fetch",
-                    "CalendarEvent",
-                    {
-                      "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "justify": "between",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "clock"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Day View"
-                                }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center"
-                            },
-                            {
-                              "variant": "ghost",
-                              "icon": "arrow-left",
-                              "type": "button",
-                              "label": "Back to Month",
-                              "action": "BACK"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "content": "Events for Selected Day",
-                          "type": "typography",
-                          "variant": "h4"
-                        },
-                        {
-                          "entity": "@entity",
-                          "itemActions": [
-                            {
-                              "event": "SELECT_SLOT",
-                              "icon": "check",
-                              "label": "Select"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "fields": [
-                            {
-                              "name": "name",
-                              "icon": "clock",
-                              "label": "Event",
-                              "variant": "h4"
-                            },
-                            {
-                              "label": "Time",
-                              "name": "time",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "day-view",
-                "to": "slot-selected",
-                "event": "SELECT_SLOT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.time",
-                    "@payload.time"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "clock"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Day View",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "action": "BACK",
-                              "icon": "arrow-left",
-                              "type": "button",
-                              "label": "Back to Month",
-                              "variant": "ghost"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
                           "type": "typography",
                           "variant": "h4",
-                          "content": "Events for Selected Day"
+                          "content": "Upcoming Events"
                         },
                         {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "SELECT_SLOT",
-                              "label": "Select",
-                              "icon": "check"
-                            }
-                          ],
-                          "entity": "@entity",
-                          "fields": [
-                            {
-                              "label": "Event",
-                              "name": "name",
-                              "variant": "h4",
-                              "icon": "clock"
-                            },
-                            {
-                              "name": "time",
-                              "variant": "badge",
-                              "label": "Time"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ]
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "day-view",
-                "to": "month-view",
-                "event": "BACK",
-                "effects": [
-                  [
-                    "fetch",
-                    "CalendarEvent",
-                    {
-                      "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "calendar",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "CalendarEvents Calendar"
-                                }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "onSelect": "SELECT_DAY",
-                              "type": "date-range-selector"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "calendar-grid"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "content": "Upcoming Events",
-                          "variant": "h4",
-                          "type": "typography"
-                        },
-                        {
-                          "fields": [
-                            {
-                              "icon": "calendar",
-                              "variant": "h4",
-                              "name": "name",
-                              "label": "Event"
-                            },
-                            {
-                              "label": "Time",
-                              "variant": "badge",
-                              "name": "time"
-                            },
-                            {
-                              "format": "date",
-                              "name": "date",
-                              "label": "Date",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
+                          "entity": "@payload.data",
                           "type": "data-list",
                           "itemActions": [
                             {
                               "event": "SELECT_DAY",
-                              "label": "View",
-                              "icon": "eye"
-                            }
-                          ],
-                          "entity": "@entity"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "slot-selected",
-                "to": "month-view",
-                "event": "BACK",
-                "effects": [
-                  [
-                    "fetch",
-                    "CalendarEvent",
-                    {
-                      "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "calendar"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "CalendarEvents Calendar",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "onSelect": "SELECT_DAY",
-                              "type": "date-range-selector"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "calendar-grid"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "h4",
-                          "content": "Upcoming Events",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "data-list",
-                          "itemActions": [
-                            {
-                              "label": "View",
                               "icon": "eye",
-                              "event": "SELECT_DAY"
+                              "label": "View"
                             }
                           ],
-                          "entity": "@entity",
                           "fields": [
                             {
+                              "label": "Event",
                               "icon": "calendar",
-                              "variant": "h4",
                               "name": "name",
-                              "label": "Event"
+                              "variant": "h4"
+                            },
+                            {
+                              "name": "time",
+                              "variant": "badge",
+                              "label": "Time"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "date",
+                              "label": "Date",
+                              "format": "date"
                             },
                             {
                               "variant": "badge",
-                              "label": "Time",
-                              "name": "time"
-                            },
-                            {
-                              "format": "date",
-                              "name": "date",
-                              "variant": "caption",
-                              "label": "Date"
-                            },
-                            {
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Status"
                             }
                           ]
                         }
@@ -716,9 +290,81 @@
                 ]
               },
               {
-                "from": "slot-selected",
-                "to": "day-view",
+                "from": "loading",
+                "to": "error",
+                "event": "CalendarEventLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "name": "alert-triangle",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Failed to load"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "variant": "body"
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "type": "button",
+                          "label": "Retry"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "month-view",
+                "to": "loading",
                 "event": "SELECT_DAY",
+                "effects": [
+                  [
+                    "fetch",
+                    "CalendarEvent",
+                    {
+                      "emit": {
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
+                      },
+                      "filter": [
+                        "=",
+                        "@entity.date",
+                        "@payload.date"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -734,81 +380,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "align": "center",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "clock",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Day View"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "label": "Back to Month",
-                              "action": "BACK",
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "arrow-left"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h4",
-                          "content": "Events for Selected Day"
-                        },
-                        {
-                          "fields": [
-                            {
-                              "variant": "h4",
-                              "name": "name",
-                              "label": "Event",
-                              "icon": "clock"
-                            },
-                            {
-                              "label": "Time",
-                              "variant": "badge",
-                              "name": "time"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            }
-                          ],
-                          "entity": "@entity",
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "SELECT_SLOT",
-                              "icon": "check",
-                              "label": "Select"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "type": "spinner"
                     }
                   ]
                 ]

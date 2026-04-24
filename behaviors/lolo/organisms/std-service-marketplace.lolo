@@ -12,8 +12,8 @@ orbital ProductOrbital {
     pendingId : string = ""
   }
 
-  type ProductLoaded     = Event Product                  "Fired when Product finishes loading"
-  type ProductLoadFailed = Event { message : string } "Fired when Product fails to load"
+  type ProductLoaded     = Event { data : [Product] }                  "Fired when Product finishes loading"
+  type ProductLoadFailed = Event { error : string, code : string } "Fired when Product fails to load"
   type ProductSaved = Event { id : string }
   type ProductSaveFailed = Event { error : string, code : string }
   type ProductUpdated = Event { id : string }
@@ -35,8 +35,12 @@ orbital ProductOrbital {
   trait ProductBrowse -> Product [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Product)
-        (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-bag" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "shopping-bag" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "price", label: "Price", variant: "caption" }] }] }] })
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ProductLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-bag" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "shopping-bag" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "price", label: "Price", variant: "caption" }] }] }] })
+      ProductLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load product" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       CHECKOUT external { id: string }
@@ -48,7 +52,7 @@ orbital ProductOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          ProductLoadFailed { message : string }
+          ProductLoadFailed { error : string, code : string }
     
       ProductSaveFailed { error : string, code : string }
       ProductUpdateFailed { error : string, code : string }
@@ -87,7 +91,7 @@ orbital ProductOrbital {
     }
     listens {
       SAVE { data : object! }
-          ProductLoadFailed { message : string }
+          ProductLoadFailed { error : string, code : string }
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductSaveFailed, ProductSaved]
   }
@@ -117,7 +121,7 @@ orbital ProductOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          ProductLoadFailed { message : string }
+          ProductLoadFailed { error : string, code : string }
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductUpdateFailed, ProductUpdated]
   }
@@ -142,7 +146,7 @@ orbital ProductOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          ProductLoadFailed { message : string }
+          ProductLoadFailed { error : string, code : string }
     }
     emits: [ProductLoaded, ProductLoadFailed]
   }
@@ -177,7 +181,7 @@ orbital ProductOrbital {
     }
     listens {
       DELETE { id : string! }
-          ProductLoadFailed { message : string }
+          ProductLoadFailed { error : string, code : string }
     }
     emits: [ProductDeleteFailed, ProductDeleted, ProductLoadFailed, ProductLoaded]
   }
@@ -194,8 +198,8 @@ orbital AuthSessionOrbital {
     error : string
   }
 
-  type AuthSessionLoaded     = Event AuthSession                  "Fired when AuthSession finishes loading"
-  type AuthSessionLoadFailed = Event { message : string } "Fired when AuthSession fails to load"
+  type AuthSessionLoaded     = Event { data : [AuthSession] }                  "Fired when AuthSession finishes loading"
+  type AuthSessionLoadFailed = Event { error : string, code : string } "Fired when AuthSession fails to load"
   type ProductOauthCompleted = Event { data : object }
   type ProductOauthFailed = Event { error : string, code : string }
   trait AuthSessionOauth -> AuthSession [interaction, collection] {
@@ -246,7 +250,7 @@ orbital AuthSessionOrbital {
     }
     emits: [AuthSessionLoadFailed, AuthSessionLoaded, ProductOauthCompleted, ProductOauthFailed]
     listens {
-      AuthSessionLoadFailed { message : string }
+      AuthSessionLoadFailed { error : string, code : string }
       AUTH_URL_RECEIVED { authUrl : string }
       CALLBACK { code : string }
       FAILED { error : string }
@@ -271,8 +275,8 @@ orbital OrderPaymentOrbital {
     error : string
   }
 
-  type OrderPaymentLoaded     = Event OrderPayment                  "Fired when OrderPayment finishes loading"
-  type OrderPaymentLoadFailed = Event { message : string } "Fired when OrderPayment fails to load"
+  type OrderPaymentLoaded     = Event { data : [OrderPayment] }                  "Fired when OrderPayment finishes loading"
+  type OrderPaymentLoadFailed = Event { error : string, code : string } "Fired when OrderPayment fails to load"
   type ProductEmailCompleted = Event { data : object }
   type ProductEmailFailed = Event { error : string, code : string }
   type ProductStripeCompleted = Event { data : object }
@@ -321,7 +325,7 @@ orbital OrderPaymentOrbital {
     }
     listens {
       * CHECKOUT -> INIT
-          OrderPaymentLoadFailed { message : string }
+          OrderPaymentLoadFailed { error : string, code : string }
           PAYMENT_CREATED { id : string, clientSecret : string }
           FAILED { error : string }
     }
@@ -372,8 +376,8 @@ orbital OrderOrbital {
     pendingId : string = ""
   }
 
-  type OrderLoaded     = Event Order                  "Fired when Order finishes loading"
-  type OrderLoadFailed = Event { message : string } "Fired when Order fails to load"
+  type OrderLoaded     = Event { data : [Order] }                  "Fired when Order finishes loading"
+  type OrderLoadFailed = Event { error : string, code : string } "Fired when Order fails to load"
   type OrderDeleteFailed = Event { error : string, code : string }
   type OrderDeleted = Event { id : string }
   type OrderSaveFailed = Event { error : string, code : string }
@@ -383,14 +387,18 @@ orbital OrderOrbital {
   trait OrderBrowse -> Order [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Order)
-        (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Order", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "list" }, { name: "amount", label: "Amount", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "paymentStatus", label: "Payment Status", variant: "caption" }] }] }] })
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      OrderLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Order", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "productName", label: "Product Name", variant: "h4", icon: "list" }, { name: "amount", label: "Amount", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "paymentStatus", label: "Payment Status", variant: "caption" }] }] }] })
+      OrderLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load order" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       OrderCreate ORDER_CREATED -> INIT
       OrderEdit ORDER_UPDATED -> INIT
       OrderDelete ORDER_DELETED -> INIT
-          OrderLoadFailed { message : string }
+          OrderLoadFailed { error : string, code : string }
     }
     emits: [OrderLoaded, OrderLoadFailed]
   }
@@ -419,7 +427,7 @@ orbital OrderOrbital {
     }
     emits: [OrderLoadFailed, OrderLoaded, OrderSaveFailed, OrderSaved]
     listens {
-      OrderLoadFailed { message : string }
+      OrderLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -448,7 +456,7 @@ orbital OrderOrbital {
     }
     emits: [OrderLoadFailed, OrderLoaded, OrderUpdateFailed, OrderUpdated]
     listens {
-      OrderLoadFailed { message : string }
+      OrderLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -473,7 +481,7 @@ orbital OrderOrbital {
     }
     emits: [OrderLoaded, OrderLoadFailed]
     listens {
-      OrderLoadFailed { message : string }
+      OrderLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -508,7 +516,7 @@ orbital OrderOrbital {
     }
     emits: [OrderDeleteFailed, OrderDeleted, OrderLoadFailed, OrderLoaded]
     listens {
-      OrderLoadFailed { message : string }
+      OrderLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }

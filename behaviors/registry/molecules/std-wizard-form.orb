@@ -200,8 +200,8 @@
                     "WizardFormEntry",
                     {
                       "emit": {
-                        "failure": "WizardFormEntryLoadFailed",
-                        "success": "WizardFormEntryLoaded"
+                        "success": "WizardFormEntryLoaded",
+                        "failure": "WizardFormEntryLoadFailed"
                       }
                     }
                   ],
@@ -209,11 +209,245 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full",
                       "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "content": "Sign-up",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "currentStep": 0.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Personal Info",
+                          "variant": "h3"
+                        },
+                        {
+                          "submitEvent": "NEXT",
+                          "entity": "WizardFormEntry",
+                          "mode": "create",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "email"
+                          ],
+                          "type": "form-section"
+                        },
+                        {
+                          "showNext": true,
+                          "onNext": "NEXT",
+                          "showBack": false,
+                          "currentStep": 0.0,
+                          "totalSteps": 3.0,
+                          "showComplete": false,
+                          "type": "wizard-navigation"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "personal",
+                "to": "preferences",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
                           "variant": "h2",
                           "type": "typography",
+                          "content": "Sign-up"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Preferences"
+                        },
+                        {
+                          "entity": "WizardFormEntry",
+                          "type": "form-section",
+                          "cancelEvent": "PREV",
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "fields": [
+                            "theme"
+                          ]
+                        },
+                        {
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "showBack": true,
+                          "totalSteps": 3.0,
+                          "onNext": "NEXT",
+                          "onBack": "PREV",
+                          "currentStep": 1.0,
+                          "showNext": true
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "preferences",
+                "to": "review",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "content": "Sign-up",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 2.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Review",
+                          "variant": "h3"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Name",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.name"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Email",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.email"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "justify": "between"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Theme"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.theme",
+                                  "type": "typography"
+                                }
+                              ],
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            }
+                          ],
+                          "direction": "vertical"
+                        },
+                        {
+                          "currentStep": 2.0,
+                          "showBack": true,
+                          "type": "wizard-navigation",
+                          "showNext": false,
+                          "onBack": "PREV",
+                          "showComplete": true,
+                          "onComplete": "COMPLETE",
+                          "totalSteps": 3.0
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "preferences",
+                "to": "personal",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
                           "content": "Sign-up"
                         },
                         {
@@ -229,12 +463,11 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Personal Info",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Personal Info"
                         },
                         {
-                          "mode": "create",
                           "entity": "WizardFormEntry",
                           "type": "form-section",
                           "cancelEvent": "INIT",
@@ -242,255 +475,22 @@
                           "fields": [
                             "name",
                             "email"
-                          ]
-                        },
-                        {
-                          "showComplete": false,
-                          "type": "wizard-navigation",
-                          "onNext": "NEXT",
-                          "totalSteps": 3.0,
-                          "showNext": true,
-                          "currentStep": 0.0,
-                          "showBack": false
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "personal",
-                "to": "preferences",
-                "event": "NEXT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "content": "Sign-up",
-                          "type": "typography",
-                          "variant": "h2"
-                        },
-                        {
-                          "currentStep": 1.0,
-                          "steps": [
-                            "Personal",
-                            "Preferences",
-                            "Review"
                           ],
-                          "type": "wizard-progress"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Preferences",
-                          "type": "typography"
-                        },
-                        {
-                          "entity": "WizardFormEntry",
-                          "mode": "edit",
-                          "fields": [
-                            "theme"
-                          ],
-                          "cancelEvent": "PREV",
-                          "type": "form-section",
-                          "submitEvent": "NEXT"
-                        },
-                        {
-                          "type": "wizard-navigation",
-                          "currentStep": 1.0,
-                          "showComplete": false,
-                          "showNext": true,
-                          "onNext": "NEXT",
-                          "onBack": "PREV",
-                          "totalSteps": 3.0,
-                          "showBack": true
-                        }
-                      ],
-                      "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "preferences",
-                "to": "review",
-                "event": "NEXT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "variant": "h2",
-                          "content": "Sign-up",
-                          "type": "typography"
-                        },
-                        {
-                          "steps": [
-                            "Personal",
-                            "Preferences",
-                            "Review"
-                          ],
-                          "currentStep": 2.0,
-                          "type": "wizard-progress"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "content": "Review",
-                          "variant": "h3",
-                          "type": "typography"
-                        },
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Name"
-                                },
-                                {
-                                  "content": "@entity.name",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "justify": "between",
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Email"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.email"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Theme",
-                                  "type": "typography"
-                                },
-                                {
-                                  "content": "@entity.theme",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "justify": "between",
-                              "direction": "horizontal"
-                            }
-                          ],
-                          "gap": "sm"
-                        },
-                        {
-                          "onComplete": "COMPLETE",
-                          "showNext": false,
-                          "showComplete": true,
-                          "currentStep": 2.0,
-                          "type": "wizard-navigation",
-                          "totalSteps": 3.0,
-                          "onBack": "PREV",
-                          "showBack": true
-                        }
-                      ],
-                      "className": "max-w-xl mx-auto w-full",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "preferences",
-                "to": "personal",
-                "event": "PREV",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "content": "Sign-up",
-                          "variant": "h2",
-                          "type": "typography"
+                          "mode": "edit"
                         },
                         {
                           "currentStep": 0.0,
-                          "steps": [
-                            "Personal",
-                            "Preferences",
-                            "Review"
-                          ],
-                          "type": "wizard-progress"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "content": "Personal Info",
-                          "type": "typography",
-                          "variant": "h3"
-                        },
-                        {
-                          "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "NEXT",
-                          "cancelEvent": "INIT",
-                          "fields": [
-                            "name",
-                            "email"
-                          ],
-                          "entity": "WizardFormEntry"
-                        },
-                        {
                           "showComplete": false,
-                          "totalSteps": 3.0,
+                          "onNext": "NEXT",
+                          "showNext": true,
                           "showBack": false,
                           "type": "wizard-navigation",
-                          "currentStep": 0.0,
-                          "onNext": "NEXT",
-                          "showNext": true
+                          "totalSteps": 3.0
                         }
-                      ]
+                      ],
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -507,8 +507,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "WizardFormSaved",
-                        "failure": "WizardFormSaveFailed"
+                        "failure": "WizardFormSaveFailed",
+                        "success": "WizardFormSaved"
                       }
                     }
                   ],
@@ -516,22 +516,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "content": "Completing sign-up…",
                           "type": "typography",
-                          "content": "Completing sign-up…"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "type": "stack",
-                      "className": "max-w-xl mx-auto w-full py-12"
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -547,21 +547,19 @@
                     {
                       "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
+                          "variant": "h2",
                           "type": "typography",
-                          "content": "Sign-up",
-                          "variant": "h2"
+                          "content": "Sign-up"
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
                           ],
+                          "type": "wizard-progress",
                           "currentStep": 1.0
                         },
                         {
@@ -569,30 +567,32 @@
                         },
                         {
                           "variant": "h3",
-                          "content": "Preferences",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Preferences"
                         },
                         {
-                          "type": "form-section",
-                          "cancelEvent": "PREV",
                           "entity": "WizardFormEntry",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
                           "fields": [
                             "theme"
                           ],
                           "mode": "edit",
-                          "submitEvent": "NEXT"
+                          "type": "form-section"
                         },
                         {
-                          "onBack": "PREV",
                           "showComplete": false,
-                          "type": "wizard-navigation",
+                          "onBack": "PREV",
                           "totalSteps": 3.0,
-                          "currentStep": 1.0,
-                          "showNext": true,
                           "onNext": "NEXT",
-                          "showBack": true
+                          "type": "wizard-navigation",
+                          "showBack": true,
+                          "currentStep": 1.0,
+                          "showNext": true
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -606,35 +606,35 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
+                          "content": "Welcome!",
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Welcome!"
-                        },
-                        {
-                          "content": "Your account has been created.",
-                          "variant": "body",
-                          "color": "muted",
                           "type": "typography"
                         },
                         {
-                          "label": "Start Over",
+                          "color": "muted",
+                          "content": "Your account has been created.",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
                           "type": "button",
-                          "icon": "rotate-ccw",
                           "action": "RESTART",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "label": "Start Over",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "className": "max-w-xl mx-auto w-full py-12",
+                      "direction": "vertical",
                       "align": "center",
-                      "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical"
+                      "className": "max-w-xl mx-auto w-full py-12"
                     }
                   ]
                 ]
@@ -648,17 +648,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "max-w-xl mx-auto w-full py-12",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
                           "content": "Sign-up Failed",
-                          "type": "typography",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "type": "typography"
                         },
                         {
                           "variant": "error",
@@ -666,17 +670,13 @@
                           "type": "alert"
                         },
                         {
-                          "icon": "refresh-cw",
                           "action": "COMPLETE",
                           "label": "Retry",
-                          "type": "button",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "icon": "refresh-cw",
+                          "type": "button"
                         }
-                      ],
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full py-12",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -690,54 +690,54 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Sign-up"
+                          "content": "Sign-up",
+                          "type": "typography"
                         },
                         {
+                          "currentStep": 0.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
-                          ],
-                          "currentStep": 0.0,
-                          "type": "wizard-progress"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Personal Info",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
+                          "entity": "WizardFormEntry",
+                          "mode": "create",
+                          "type": "form-section",
+                          "cancelEvent": "INIT",
                           "submitEvent": "NEXT",
                           "fields": [
                             "name",
                             "email"
-                          ],
-                          "cancelEvent": "INIT",
-                          "mode": "create",
-                          "type": "form-section",
-                          "entity": "WizardFormEntry"
+                          ]
                         },
                         {
-                          "currentStep": 0.0,
-                          "type": "wizard-navigation",
                           "showNext": true,
                           "showComplete": false,
+                          "type": "wizard-navigation",
+                          "currentStep": 0.0,
                           "onNext": "NEXT",
                           "showBack": false,
                           "totalSteps": 3.0
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]

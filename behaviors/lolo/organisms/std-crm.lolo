@@ -12,8 +12,8 @@ orbital ContactOrbital {
     pendingId : string = ""
   }
 
-  type ContactLoaded     = Event Contact                  "Fired when Contact finishes loading"
-  type ContactLoadFailed = Event { message : string } "Fired when Contact fails to load"
+  type ContactLoaded     = Event { data : [Contact] }                  "Fired when Contact finishes loading"
+  type ContactLoadFailed = Event { error : string, code : string } "Fired when Contact fails to load"
   type ContactSaved = Event { id : string }
   type ContactSaveFailed = Event { error : string, code : string }
   type ContactUpdated = Event { id : string }
@@ -31,8 +31,12 @@ orbital ContactOrbital {
   trait ContactBrowse -> Contact [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Contact)
-        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Contacts", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Contact", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Contacts", value: "@entity", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "status", variant: "badge" }, { name: "company", variant: "body" }, { name: "email", variant: "caption" }, { name: "phone", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ContactLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Contacts", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Contact", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Contacts", value: "@entity", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "status", variant: "badge" }, { name: "company", variant: "body" }, { name: "email", variant: "caption" }, { name: "phone", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      ContactLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load contact" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       CONVERT_LEAD external { id: string }
@@ -44,7 +48,7 @@ orbital ContactOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          ContactLoadFailed { message : string }
+          ContactLoadFailed { error : string, code : string }
     
       ContactSaveFailed { error : string, code : string }
       ContactUpdateFailed { error : string, code : string }
@@ -81,7 +85,7 @@ orbital ContactOrbital {
     }
     listens {
       SAVE { data : object! }
-          ContactLoadFailed { message : string }
+          ContactLoadFailed { error : string, code : string }
     }
     emits: [ContactLoadFailed, ContactLoaded, ContactSaveFailed, ContactSaved]
   }
@@ -111,7 +115,7 @@ orbital ContactOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          ContactLoadFailed { message : string }
+          ContactLoadFailed { error : string, code : string }
     }
     emits: [ContactLoadFailed, ContactLoaded, ContactUpdateFailed, ContactUpdated]
   }
@@ -136,7 +140,7 @@ orbital ContactOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          ContactLoadFailed { message : string }
+          ContactLoadFailed { error : string, code : string }
     }
     emits: [ContactLoaded, ContactLoadFailed]
   }
@@ -171,7 +175,7 @@ orbital ContactOrbital {
     }
     listens {
       DELETE { id : string! }
-          ContactLoadFailed { message : string }
+          ContactLoadFailed { error : string, code : string }
     }
     emits: [ContactDeleteFailed, ContactDeleted, ContactLoadFailed, ContactLoaded]
   }
@@ -188,8 +192,8 @@ orbital DealOrbital {
     pendingId : string = ""
   }
 
-  type DealLoaded     = Event Deal                  "Fired when Deal finishes loading"
-  type DealLoadFailed = Event { message : string } "Fired when Deal fails to load"
+  type DealLoaded     = Event { data : [Deal] }                  "Fired when Deal finishes loading"
+  type DealLoadFailed = Event { error : string, code : string } "Fired when Deal fails to load"
   type DealDeleteFailed = Event { error : string, code : string }
   type DealDeleted = Event { id : string }
   type DealSaveFailed = Event { error : string, code : string }
@@ -199,8 +203,12 @@ orbital DealOrbital {
   trait DealBrowse -> Deal [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Deal)
-        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Deals", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Deal", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "briefcase" }, { name: "stage", variant: "badge" }, { name: "value", variant: "h4", format: "currency" }, { name: "contactId", label: "Contact", variant: "caption" }], cols: 2, gap: "md" }] }] })
+        (fetch Deal { emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      DealLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Deals", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Deal", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "briefcase" }, { name: "stage", variant: "badge" }, { name: "value", variant: "h4", format: "currency" }, { name: "contactId", label: "Contact", variant: "caption" }], cols: 2, gap: "md" }] }] })
+      DealLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load deal" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       CLOSE_DEAL external { id: string }
@@ -210,7 +218,7 @@ orbital DealOrbital {
       DealEdit DEAL_UPDATED -> INIT
       DealDelete DEAL_DELETED -> INIT
       * CONVERT_LEAD -> INIT
-          DealLoadFailed { message : string }
+          DealLoadFailed { error : string, code : string }
     }
     emits: [DealLoaded, DealLoadFailed]
   }
@@ -239,7 +247,7 @@ orbital DealOrbital {
     }
     emits: [DealLoadFailed, DealLoaded, DealSaveFailed, DealSaved]
     listens {
-      DealLoadFailed { message : string }
+      DealLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -268,7 +276,7 @@ orbital DealOrbital {
     }
     emits: [DealLoadFailed, DealLoaded, DealUpdateFailed, DealUpdated]
     listens {
-      DealLoadFailed { message : string }
+      DealLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -293,7 +301,7 @@ orbital DealOrbital {
     }
     emits: [DealLoaded, DealLoadFailed]
     listens {
-      DealLoadFailed { message : string }
+      DealLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -328,7 +336,7 @@ orbital DealOrbital {
     }
     emits: [DealDeleteFailed, DealDeleted, DealLoadFailed, DealLoaded]
     listens {
-      DealLoadFailed { message : string }
+      DealLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -344,8 +352,8 @@ orbital PipelineOrbital {
     conversionRate : number
   }
 
-  type PipelineLoaded     = Event Pipeline                  "Fired when Pipeline finishes loading"
-  type PipelineLoadFailed = Event { message : string } "Fired when Pipeline fails to load"
+  type PipelineLoaded     = Event { data : [Pipeline] }                  "Fired when Pipeline finishes loading"
+  type PipelineLoadFailed = Event { error : string, code : string } "Fired when Pipeline fails to load"
   trait PipelineDisplay -> Pipeline [interaction, collection] {
     initial: loading
     state loading {
@@ -371,7 +379,7 @@ orbital PipelineOrbital {
     }
     listens {
       * CLOSE_DEAL -> INIT
-          PipelineLoadFailed { message : string }
+          PipelineLoadFailed { error : string, code : string }
     }
     emits: [PipelineLoaded, PipelineLoadFailed]
   }
@@ -386,19 +394,23 @@ orbital NoteOrbital {
     createdAt : datetime
   }
 
-  type NoteLoaded     = Event Note                  "Fired when Note finishes loading"
-  type NoteLoadFailed = Event { message : string } "Fired when Note fails to load"
+  type NoteLoaded     = Event { data : [Note] }                  "Fired when Note finishes loading"
+  type NoteLoadFailed = Event { error : string, code : string } "Fired when Note fails to load"
   type NoteSaveFailed = Event { error : string, code : string }
   type NoteSaved = Event { id : string }
   trait NoteBrowse -> Note [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Note)
-        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Notes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "subject", variant: "h4", icon: "file-text" }, { name: "author", variant: "caption" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Note { emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      NoteLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Notes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "subject", variant: "h4", icon: "file-text" }, { name: "author", variant: "caption" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      NoteLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load note" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       NoteCompose SEND -> INIT
-          NoteLoadFailed { message : string }
+          NoteLoadFailed { error : string, code : string }
     }
     emits: [NoteLoaded, NoteLoadFailed]
   }
@@ -425,7 +437,7 @@ orbital NoteOrbital {
     }
     emits: [NoteLoadFailed, NoteLoaded, NoteSaveFailed, NoteSaved]
     listens {
-      NoteLoadFailed { message : string }
+      NoteLoadFailed { error : string, code : string }
       SEND { data : string }
     }
   }
@@ -449,7 +461,7 @@ orbital NoteOrbital {
     }
     emits: [NoteLoaded, NoteLoadFailed]
     listens {
-      NoteLoadFailed { message : string }
+      NoteLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }

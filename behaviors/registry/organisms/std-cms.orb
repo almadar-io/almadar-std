@@ -87,39 +87,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "author",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "publishedAt",
-                  "type": "datetime"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Article]"
                 }
               ]
             },
@@ -129,7 +98,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -342,51 +315,12 @@
                 "name": "Initialize"
               },
               {
-                "key": "PUBLISH",
-                "name": "Publish"
-              },
-              {
-                "key": "CATEGORIZE",
-                "name": "Categorize"
-              },
-              {
                 "key": "ArticleLoaded",
                 "name": "Article loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "author",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "publishedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Article]"
                   }
                 ]
               },
@@ -395,10 +329,22 @@
                 "name": "Article load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "PUBLISH",
+                "name": "Publish"
+              },
+              {
+                "key": "CATEGORIZE",
+                "name": "Categorize"
               },
               {
                 "key": "ArticleSaved",
@@ -621,9 +567,44 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "Article"
+                    "fetch",
+                    "Article",
+                    {
+                      "emit": {
+                        "success": "ArticleLoaded",
+                        "failure": "ArticleLoadFailed"
+                      }
+                    }
                   ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ArticleLoaded",
+                "effects": [
                   [
                     "render-ui",
                     "main",
@@ -632,53 +613,55 @@
                       "appName": "CmsApp",
                       "children": [
                         {
-                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "justify": "between",
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "file-text"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Articles"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "variant": "primary",
-                                      "icon": "plus",
-                                      "action": "CREATE",
-                                      "type": "button",
-                                      "label": "Create Article"
+                                      "content": "Articles",
+                                      "variant": "h2"
                                     }
                                   ],
                                   "direction": "horizontal",
+                                  "align": "center"
+                                },
+                                {
+                                  "direction": "horizontal",
                                   "gap": "sm",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "label": "Create Article",
+                                      "type": "button",
+                                      "action": "CREATE",
+                                      "icon": "plus",
+                                      "variant": "primary"
+                                    }
+                                  ]
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "justify": "between",
-                              "align": "center"
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "entity": "@entity",
+                              "gap": "sm",
                               "columns": [
                                 {
                                   "name": "title",
@@ -704,15 +687,14 @@
                                   "format": "date"
                                 }
                               ],
-                              "variant": "card",
-                              "gap": "sm",
-                              "type": "data-list",
+                              "entity": "@payload.data",
                               "fields": [],
+                              "type": "data-list",
                               "itemActions": [
                                 {
+                                  "label": "View",
                                   "variant": "ghost",
-                                  "event": "VIEW",
-                                  "label": "View"
+                                  "event": "VIEW"
                                 },
                                 {
                                   "variant": "ghost",
@@ -720,35 +702,77 @@
                                   "event": "EDIT"
                                 },
                                 {
-                                  "variant": "danger",
                                   "label": "Delete",
+                                  "variant": "danger",
                                   "event": "DELETE"
                                 }
-                              ]
+                              ],
+                              "variant": "card"
                             }
                           ],
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "gap": "lg"
+                          "direction": "vertical"
                         }
                       ],
                       "navItems": [
                         {
-                          "label": "Articles",
                           "href": "/articles",
+                          "label": "Articles",
                           "icon": "file-text"
                         },
                         {
-                          "href": "/media",
                           "label": "Media",
-                          "icon": "image"
+                          "icon": "image",
+                          "href": "/media"
                         },
                         {
-                          "icon": "folder",
                           "label": "Categories",
+                          "icon": "folder",
                           "href": "/categories"
                         }
                       ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ArticleLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "name": "alert-triangle",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Failed to load article",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "variant": "body"
+                        },
+                        {
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "label": "Retry"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -778,7 +802,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -789,39 +817,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "author",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "publishedAt",
-                  "type": "datetime"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Article]"
                 }
               ]
             },
@@ -893,7 +890,11 @@
                 "name": "Article load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -903,39 +904,8 @@
                 "name": "Article loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "author",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "publishedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Article]"
                   }
                 ]
               },
@@ -995,28 +965,35 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
                               "content": "Create Article",
                               "variant": "h3",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "SAVE",
+                          "type": "form-section",
+                          "entity": "Article",
+                          "cancelEvent": "CLOSE",
+                          "mode": "create",
                           "fields": [
                             "title",
                             "slug",
@@ -1024,16 +1001,9 @@
                             "author",
                             "status",
                             "publishedAt"
-                          ],
-                          "submitEvent": "SAVE",
-                          "entity": "Article",
-                          "type": "form-section",
-                          "mode": "create",
-                          "cancelEvent": "CLOSE"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1074,8 +1044,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ArticleSaved",
-                        "failure": "ArticleSaveFailed"
+                        "failure": "ArticleSaveFailed",
+                        "success": "ArticleSaved"
                       }
                     }
                   ],
@@ -1122,7 +1092,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -1133,39 +1107,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "author",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "publishedAt",
-                  "type": "datetime"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Article]"
                 }
               ]
             },
@@ -1244,7 +1187,11 @@
                 "name": "Article load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -1254,39 +1201,8 @@
                 "name": "Article loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "author",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "publishedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Article]"
                   }
                 ]
               },
@@ -1349,19 +1265,20 @@
                     {
                       "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "edit"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Edit Article"
                             }
                           ]
@@ -1370,11 +1287,12 @@
                           "type": "divider"
                         },
                         {
-                          "mode": "edit",
                           "type": "form-section",
-                          "submitEvent": "SAVE",
+                          "mode": "edit",
                           "cancelEvent": "CLOSE",
+                          "entityId": "@entity.id",
                           "entity": "Article",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "title",
                             "slug",
@@ -1382,11 +1300,9 @@
                             "author",
                             "status",
                             "publishedAt"
-                          ],
-                          "entityId": "@entity.id"
+                          ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1427,8 +1343,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ArticleUpdateFailed",
-                        "success": "ArticleUpdated"
+                        "success": "ArticleUpdated",
+                        "failure": "ArticleUpdateFailed"
                       }
                     }
                   ],
@@ -1465,39 +1381,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "author",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "publishedAt",
-                  "type": "datetime"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Article]"
                 }
               ]
             },
@@ -1507,7 +1392,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -1559,39 +1448,8 @@
                 "name": "Article loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "author",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "publishedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Article]"
                   }
                 ]
               },
@@ -1600,7 +1458,11 @@
                 "name": "Article load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -1627,40 +1489,41 @@
                     "fetch",
                     "Article",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "failure": "ArticleLoadFailed",
                         "success": "ArticleLoaded"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@entity.title"
+                              "content": "@entity.title",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "typography",
@@ -1668,31 +1531,30 @@
                               "variant": "caption"
                             },
                             {
+                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.title",
-                              "variant": "body"
+                              "content": "@entity.title"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "md"
                         },
                         {
                           "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "content": "Slug",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "type": "typography"
                             },
                             {
                               "variant": "body",
                               "content": "@entity.slug",
                               "type": "typography"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "direction": "horizontal",
@@ -1704,32 +1566,31 @@
                               "content": "Content"
                             },
                             {
+                              "content": "@entity.content",
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.content"
+                              "type": "typography"
                             }
                           ],
                           "type": "stack"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "content": "Author",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Author"
+                              "variant": "caption"
                             },
                             {
+                              "variant": "body",
                               "content": "@entity.author",
-                              "type": "typography",
-                              "variant": "body"
+                              "type": "typography"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "caption",
@@ -1743,52 +1604,53 @@
                             }
                           ],
                           "type": "stack",
-                          "gap": "md"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
+                              "variant": "caption",
                               "type": "typography",
-                              "content": "Published At",
-                              "variant": "caption"
+                              "content": "Published At"
                             },
                             {
                               "variant": "body",
                               "type": "typography",
                               "content": "@entity.publishedAt"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Edit",
-                              "action": "EDIT",
                               "variant": "primary",
-                              "icon": "edit"
+                              "type": "button",
+                              "icon": "edit",
+                              "action": "EDIT"
                             },
                             {
+                              "action": "CLOSE",
                               "label": "Close",
-                              "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE"
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm"
+                          "justify": "end",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1885,7 +1747,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -1896,39 +1762,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "author",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "publishedAt",
-                  "type": "datetime"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Article]"
                 }
               ]
             }
@@ -2004,7 +1839,11 @@
                 "name": "Article load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -2014,39 +1853,8 @@
                 "name": "Article loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "author",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "publishedAt",
-                    "type": "datetime"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Article]"
                   }
                 ]
               }
@@ -2088,38 +1896,40 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
+                              "content": "Delete Article",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Delete Article"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "message": "This action cannot be undone.",
-                          "variant": "error",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "error"
                         },
                         {
-                          "type": "stack",
-                          "justify": "end",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "justify": "end",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
@@ -2128,17 +1938,15 @@
                               "label": "Cancel"
                             },
                             {
+                              "variant": "danger",
+                              "label": "Delete",
                               "icon": "check",
                               "type": "button",
-                              "label": "Delete",
-                              "action": "CONFIRM_DELETE",
-                              "variant": "danger"
+                              "action": "CONFIRM_DELETE"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -2309,35 +2117,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileName",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileSize",
-                  "type": "number"
-                },
-                {
-                  "name": "url",
-                  "type": "string"
-                },
-                {
-                  "name": "altText",
-                  "type": "string"
-                },
-                {
-                  "name": "uploadedAt",
-                  "type": "datetime"
+                  "name": "data",
+                  "type": "[MediaAsset]"
                 }
               ]
             },
@@ -2347,7 +2128,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -2379,35 +2164,8 @@
                 "name": "MediaAsset loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileName",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileType",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileSize",
-                    "type": "number"
-                  },
-                  {
-                    "name": "url",
-                    "type": "string"
-                  },
-                  {
-                    "name": "altText",
-                    "type": "string"
-                  },
-                  {
-                    "name": "uploadedAt",
-                    "type": "datetime"
+                    "name": "data",
+                    "type": "[MediaAsset]"
                   }
                 ]
               },
@@ -2416,7 +2174,11 @@
                 "name": "MediaAsset load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -2429,123 +2191,201 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "MediaAsset"
+                    "fetch",
+                    "MediaAsset",
+                    {
+                      "emit": {
+                        "failure": "MediaAssetLoadFailed",
+                        "success": "MediaAssetLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MediaAssetLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "navItems": [
+                        {
+                          "icon": "file-text",
+                          "label": "Articles",
+                          "href": "/articles"
+                        },
+                        {
+                          "label": "Media",
+                          "icon": "image",
+                          "href": "/media"
+                        },
+                        {
+                          "href": "/categories",
+                          "label": "Categories",
+                          "icon": "folder"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
                               "justify": "between",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "image"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Media Library"
+                                      "content": "Media Library",
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "type": "stack",
+                                  "align": "center",
                                   "direction": "horizontal"
                                 },
                                 {
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "action": "CREATE",
                                       "type": "button",
+                                      "label": "Create MediaAsset",
                                       "icon": "plus",
                                       "variant": "primary",
-                                      "label": "Create MediaAsset"
+                                      "action": "CREATE"
                                     }
                                   ],
-                                  "direction": "horizontal",
                                   "type": "stack",
-                                  "gap": "sm"
+                                  "direction": "horizontal"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "gap": "md",
-                              "type": "data-grid",
-                              "fields": [],
                               "itemActions": [
                                 {
                                   "label": "View",
-                                  "variant": "ghost",
-                                  "event": "VIEW"
+                                  "event": "VIEW",
+                                  "variant": "ghost"
                                 }
                               ],
-                              "entity": "@entity",
                               "cols": 3.0,
+                              "gap": "md",
                               "columns": [
                                 {
-                                  "label": "File",
                                   "icon": "image",
                                   "name": "fileName",
-                                  "variant": "h3"
+                                  "variant": "h3",
+                                  "label": "File"
                                 },
                                 {
                                   "name": "fileType",
-                                  "label": "Type",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "label": "Type"
                                 },
                                 {
-                                  "format": "number",
                                   "label": "Size",
+                                  "variant": "body",
                                   "name": "fileSize",
-                                  "variant": "body"
+                                  "format": "number"
                                 },
                                 {
-                                  "label": "Alt Text",
                                   "variant": "caption",
+                                  "label": "Alt Text",
                                   "name": "altText"
                                 }
-                              ]
+                              ],
+                              "type": "data-grid",
+                              "entity": "@payload.data",
+                              "fields": []
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full"
+                          "gap": "lg"
                         }
                       ],
                       "appName": "CmsApp",
-                      "navItems": [
+                      "type": "dashboard-layout"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MediaAssetLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
                         {
-                          "href": "/articles",
-                          "label": "Articles",
-                          "icon": "file-text"
+                          "type": "icon",
+                          "name": "alert-triangle",
+                          "color": "destructive"
                         },
                         {
-                          "href": "/media",
-                          "icon": "image",
-                          "label": "Media"
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Failed to load mediaasset"
                         },
                         {
-                          "href": "/categories",
-                          "icon": "folder",
-                          "label": "Categories"
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "variant": "primary",
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "INIT"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2565,7 +2405,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -2576,35 +2420,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileName",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileSize",
-                  "type": "number"
-                },
-                {
-                  "name": "url",
-                  "type": "string"
-                },
-                {
-                  "name": "altText",
-                  "type": "string"
-                },
-                {
-                  "name": "uploadedAt",
-                  "type": "datetime"
+                  "name": "data",
+                  "type": "[MediaAsset]"
                 }
               ]
             },
@@ -2671,7 +2488,11 @@
                 "name": "MediaAsset load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -2681,35 +2502,8 @@
                 "name": "MediaAsset loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileName",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileType",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileSize",
-                    "type": "number"
-                  },
-                  {
-                    "name": "url",
-                    "type": "string"
-                  },
-                  {
-                    "name": "altText",
-                    "type": "string"
-                  },
-                  {
-                    "name": "uploadedAt",
-                    "type": "datetime"
+                    "name": "data",
+                    "type": "[MediaAsset]"
                   }
                 ]
               },
@@ -2769,22 +2563,19 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "New MediaAsset"
                             }
                           ]
@@ -2793,6 +2584,9 @@
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
                           "fields": [
                             "fileName",
                             "fileType",
@@ -2802,12 +2596,12 @@
                             "uploadedAt"
                           ],
                           "mode": "create",
-                          "cancelEvent": "CLOSE",
-                          "type": "form-section",
-                          "entity": "MediaAsset",
-                          "submitEvent": "SAVE"
+                          "entity": "MediaAsset"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2848,8 +2642,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "MediaAssetSaved",
-                        "failure": "MediaAssetSaveFailed"
+                        "failure": "MediaAssetSaveFailed",
+                        "success": "MediaAssetSaved"
                       }
                     }
                   ],
@@ -2882,35 +2676,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileName",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "fileSize",
-                  "type": "number"
-                },
-                {
-                  "name": "url",
-                  "type": "string"
-                },
-                {
-                  "name": "altText",
-                  "type": "string"
-                },
-                {
-                  "name": "uploadedAt",
-                  "type": "datetime"
+                  "name": "data",
+                  "type": "[MediaAsset]"
                 }
               ]
             },
@@ -2920,7 +2687,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -2964,35 +2735,8 @@
                 "name": "MediaAsset loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileName",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileType",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "fileSize",
-                    "type": "number"
-                  },
-                  {
-                    "name": "url",
-                    "type": "string"
-                  },
-                  {
-                    "name": "altText",
-                    "type": "string"
-                  },
-                  {
-                    "name": "uploadedAt",
-                    "type": "datetime"
+                    "name": "data",
+                    "type": "[MediaAsset]"
                   }
                 ]
               },
@@ -3001,7 +2745,11 @@
                 "name": "MediaAsset load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -3028,120 +2776,88 @@
                     "fetch",
                     "MediaAsset",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "failure": "MediaAssetLoadFailed",
-                        "success": "MediaAssetLoaded"
-                      },
-                      "id": "@payload.id"
+                        "success": "MediaAssetLoaded",
+                        "failure": "MediaAssetLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "eye"
+                              "name": "eye",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "variant": "h3",
                               "content": "@entity.fileName"
                             }
-                          ],
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "variant": "caption",
                               "content": "File Name",
-                              "type": "typography",
-                              "variant": "caption"
+                              "type": "typography"
                             },
                             {
                               "type": "typography",
                               "content": "@entity.fileName",
                               "variant": "body"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "direction": "horizontal",
                           "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "File Type"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.fileType"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "File Size",
+                              "content": "File Type",
                               "type": "typography"
                             },
                             {
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.fileSize"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Url"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.url",
+                              "content": "@entity.fileType",
                               "variant": "body"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "caption",
                               "type": "typography",
-                              "content": "Alt Text"
+                              "content": "File Size",
+                              "variant": "caption"
                             },
                             {
                               "variant": "body",
                               "type": "typography",
-                              "content": "@entity.altText"
+                              "content": "@entity.fileSize"
                             }
                           ]
                         },
@@ -3151,37 +2867,69 @@
                           "type": "stack",
                           "children": [
                             {
-                              "content": "Uploaded At",
                               "variant": "caption",
+                              "content": "Url",
                               "type": "typography"
                             },
                             {
-                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.uploadedAt"
+                              "variant": "body",
+                              "content": "@entity.url"
                             }
                           ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Alt Text"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.altText",
+                              "variant": "body"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Uploaded At"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.uploadedAt"
+                            }
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "action": "CLOSE",
                               "variant": "ghost",
                               "label": "Close",
-                              "type": "button"
+                              "type": "button",
+                              "action": "CLOSE"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end",
-                          "gap": "sm"
+                          "justify": "end"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -3306,35 +3054,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "parentCategory",
-                  "type": "string"
-                },
-                {
-                  "name": "articleCount",
-                  "type": "number"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Category]"
                 }
               ]
             },
@@ -3344,7 +3065,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -3400,35 +3125,8 @@
                 "name": "Category loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "parentCategory",
-                    "type": "string"
-                  },
-                  {
-                    "name": "articleCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Category]"
                   }
                 ]
               },
@@ -3437,7 +3135,11 @@
                 "name": "Category load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -3450,81 +3152,135 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "Category"
+                    "fetch",
+                    "Category",
+                    {
+                      "emit": {
+                        "success": "CategoryLoaded",
+                        "failure": "CategoryLoadFailed"
+                      }
+                    }
                   ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CategoryLoaded",
+                "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "navItems": [
                         {
-                          "icon": "file-text",
                           "label": "Articles",
+                          "icon": "file-text",
                           "href": "/articles"
                         },
                         {
-                          "icon": "image",
                           "label": "Media",
+                          "icon": "image",
                           "href": "/media"
                         },
                         {
+                          "label": "Categories",
                           "href": "/categories",
-                          "icon": "folder",
-                          "label": "Categories"
+                          "icon": "folder"
                         }
                       ],
                       "children": [
                         {
                           "direction": "vertical",
-                          "gap": "lg",
                           "className": "max-w-5xl mx-auto w-full",
                           "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
-                              "align": "center",
+                              "type": "stack",
                               "direction": "horizontal",
+                              "justify": "between",
                               "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "align": "center",
                                   "children": [
                                     {
-                                      "name": "folder",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "folder"
                                     },
                                     {
+                                      "content": "Categories",
                                       "variant": "h2",
-                                      "type": "typography",
-                                      "content": "Categories"
+                                      "type": "typography"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "type": "stack"
-                                },
-                                {
+                                  "align": "center",
                                   "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Category",
-                                      "action": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ],
                                   "direction": "horizontal",
                                   "gap": "sm"
+                                },
+                                {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "action": "CREATE",
+                                      "label": "Create Category",
+                                      "variant": "primary",
+                                      "type": "button",
+                                      "icon": "plus"
+                                    }
+                                  ]
                                 }
-                              ],
-                              "type": "stack",
-                              "justify": "between"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "gap": "sm",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "variant": "ghost",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "event": "EDIT",
+                                  "label": "Edit"
+                                },
+                                {
+                                  "variant": "danger",
+                                  "event": "DELETE",
+                                  "label": "Delete"
+                                }
+                              ],
+                              "entity": "@payload.data",
                               "columns": [
                                 {
                                   "icon": "folder",
@@ -3533,47 +3289,71 @@
                                 },
                                 {
                                   "label": "Articles",
-                                  "variant": "badge",
                                   "name": "articleCount",
-                                  "format": "number"
+                                  "format": "number",
+                                  "variant": "badge"
                                 },
                                 {
                                   "name": "description",
                                   "variant": "body"
                                 },
                                 {
-                                  "name": "slug",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "name": "slug"
                                 }
                               ],
                               "type": "data-list",
                               "fields": [],
-                              "entity": "@entity",
-                              "gap": "sm",
-                              "itemActions": [
-                                {
-                                  "variant": "ghost",
-                                  "event": "VIEW",
-                                  "label": "View"
-                                },
-                                {
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "label": "Edit"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger"
-                                }
-                              ],
                               "variant": "card"
                             }
                           ]
                         }
                       ],
-                      "appName": "CmsApp",
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "appName": "CmsApp"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CategoryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "type": "icon",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Failed to load category",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "color": "muted"
+                        },
+                        {
+                          "variant": "primary",
+                          "type": "button",
+                          "action": "INIT",
+                          "label": "Retry",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3596,7 +3376,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -3607,35 +3391,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "parentCategory",
-                  "type": "string"
-                },
-                {
-                  "name": "articleCount",
-                  "type": "number"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Category]"
                 }
               ]
             },
@@ -3706,7 +3463,11 @@
                 "name": "Category load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -3716,35 +3477,8 @@
                 "name": "Category loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "parentCategory",
-                    "type": "string"
-                  },
-                  {
-                    "name": "articleCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Category]"
                   }
                 ]
               },
@@ -3795,8 +3529,8 @@
                     "Category",
                     {
                       "emit": {
-                        "success": "CategoryLoaded",
-                        "failure": "CategoryLoadFailed"
+                        "failure": "CategoryLoadFailed",
+                        "success": "CategoryLoaded"
                       }
                     }
                   ],
@@ -3804,9 +3538,11 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -3814,33 +3550,31 @@
                             },
                             {
                               "content": "Create Category",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "entity": "Category",
                           "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
                             "slug",
                             "description",
                             "parentCategory",
                             "articleCount"
-                          ],
-                          "entity": "Category",
-                          "type": "form-section",
-                          "submitEvent": "SAVE"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -3882,8 +3616,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "CategorySaved",
-                        "failure": "CategorySaveFailed"
+                        "failure": "CategorySaveFailed",
+                        "success": "CategorySaved"
                       }
                     }
                   ],
@@ -3923,7 +3657,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -3934,35 +3672,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "parentCategory",
-                  "type": "string"
-                },
-                {
-                  "name": "articleCount",
-                  "type": "number"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Category]"
                 }
               ]
             },
@@ -4039,7 +3750,11 @@
                 "name": "Category load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -4049,35 +3764,8 @@
                 "name": "Category loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "parentCategory",
-                    "type": "string"
-                  },
-                  {
-                    "name": "articleCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Category]"
                   }
                 ]
               },
@@ -4138,10 +3826,10 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
@@ -4150,17 +3838,20 @@
                             },
                             {
                               "type": "typography",
-                              "content": "Edit Category",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "Edit Category"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "mode": "edit",
+                          "entity": "Category",
+                          "type": "form-section",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
                             "slug",
@@ -4168,14 +3859,11 @@
                             "parentCategory",
                             "articleCount"
                           ],
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
-                          "entityId": "@entity.id",
-                          "entity": "Category",
-                          "mode": "edit",
-                          "submitEvent": "SAVE"
+                          "entityId": "@entity.id"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -4217,8 +3905,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "CategoryUpdateFailed",
-                        "success": "CategoryUpdated"
+                        "success": "CategoryUpdated",
+                        "failure": "CategoryUpdateFailed"
                       }
                     }
                   ],
@@ -4255,35 +3943,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "parentCategory",
-                  "type": "string"
-                },
-                {
-                  "name": "articleCount",
-                  "type": "number"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Category]"
                 }
               ]
             },
@@ -4293,7 +3954,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -4337,35 +4002,8 @@
                 "name": "Category loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "parentCategory",
-                    "type": "string"
-                  },
-                  {
-                    "name": "articleCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Category]"
                   }
                 ]
               },
@@ -4374,7 +4012,11 @@
                 "name": "Category load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -4401,26 +4043,21 @@
                     "fetch",
                     "Category",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "CategoryLoaded",
                         "failure": "CategoryLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -4431,17 +4068,21 @@
                               "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
-                              "content": "Name",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Name"
                             },
                             {
                               "content": "@entity.name",
@@ -4450,44 +4091,45 @@
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "content": "Slug",
-                              "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "content": "@entity.slug",
                               "variant": "body",
+                              "content": "@entity.slug",
                               "type": "typography"
                             }
                           ],
-                          "gap": "md"
-                        },
-                        {
                           "gap": "md",
                           "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
                           "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Description",
+                              "type": "typography",
                               "variant": "caption",
-                              "type": "typography"
+                              "content": "Description"
                             },
                             {
                               "content": "@entity.description",
-                              "variant": "body",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
@@ -4496,56 +4138,56 @@
                               "content": "Parent Category"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.parentCategory",
-                              "variant": "body",
-                              "type": "typography"
+                              "variant": "body"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Article Count"
                             },
                             {
-                              "content": "@entity.articleCount",
                               "variant": "body",
+                              "content": "@entity.articleCount",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "justify": "end",
                           "children": [
                             {
-                              "icon": "edit",
-                              "variant": "primary",
-                              "label": "Edit",
                               "type": "button",
-                              "action": "EDIT"
+                              "label": "Edit",
+                              "icon": "edit",
+                              "action": "EDIT",
+                              "variant": "primary"
                             },
                             {
-                              "action": "CLOSE",
-                              "label": "Close",
                               "type": "button",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "action": "CLOSE",
+                              "label": "Close"
                             }
                           ],
+                          "justify": "end",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -4635,7 +4277,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -4646,35 +4292,8 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "slug",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "parentCategory",
-                  "type": "string"
-                },
-                {
-                  "name": "articleCount",
-                  "type": "number"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[Category]"
                 }
               ]
             }
@@ -4749,7 +4368,11 @@
                 "name": "Category load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -4759,35 +4382,8 @@
                 "name": "Category loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "slug",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "parentCategory",
-                    "type": "string"
-                  },
-                  {
-                    "name": "articleCount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pendingId",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[Category]"
                   }
                 ]
               }
@@ -4829,12 +4425,8 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -4842,43 +4434,47 @@
                             },
                             {
                               "variant": "h3",
-                              "content": "Delete Category",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Delete Category"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "error",
                           "type": "alert",
+                          "variant": "error",
                           "message": "This action cannot be undone."
                         },
                         {
-                          "justify": "end",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "label": "Cancel",
                               "type": "button",
-                              "action": "CANCEL",
                               "variant": "ghost",
-                              "label": "Cancel"
+                              "action": "CANCEL"
                             },
                             {
-                              "label": "Delete",
                               "variant": "danger",
+                              "icon": "check",
+                              "label": "Delete",
                               "action": "CONFIRM_DELETE",
-                              "type": "button",
-                              "icon": "check"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "end"
                         }
                       ],
                       "gap": "md",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]

@@ -14,8 +14,8 @@ orbital TaskOrbital {
     pendingId : string = ""
   }
 
-  type TaskLoaded     = Event Task                  "Fired when Task finishes loading"
-  type TaskLoadFailed = Event { message : string } "Fired when Task fails to load"
+  type TaskLoaded     = Event { data : [Task] }                  "Fired when Task finishes loading"
+  type TaskLoadFailed = Event { error : string, code : string } "Fired when Task fails to load"
   type TaskSaved = Event { id : string }
   type TaskSaveFailed = Event { error : string, code : string }
   type TaskUpdated = Event { id : string }
@@ -31,8 +31,12 @@ orbital TaskOrbital {
   trait TaskBrowse -> Task [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Task)
-        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-square" }, { type: "typography", content: "Tasks", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Task", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Tasks", value: "@entity", icon: "check-square" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "check-square" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "storyPoints", label: "Points", variant: "body", format: "number" }, { name: "dueDate", label: "Due", variant: "caption", format: "date" }], cols: 2, gap: "md" }] }] })
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TaskLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-square" }, { type: "typography", content: "Tasks", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Task", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Tasks", value: "@entity", icon: "check-square" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "check-square" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "storyPoints", label: "Points", variant: "body", format: "number" }, { name: "dueDate", label: "Due", variant: "caption", format: "date" }], cols: 2, gap: "md" }] }] })
+      TaskLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load task" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       TaskCreate TASK_CREATED -> INIT
@@ -42,7 +46,7 @@ orbital TaskOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          TaskLoadFailed { message : string }
+          TaskLoadFailed { error : string, code : string }
     
       TaskSaveFailed { error : string, code : string }
       TaskUpdateFailed { error : string, code : string }
@@ -78,7 +82,7 @@ orbital TaskOrbital {
     }
     listens {
       SAVE { data : object! }
-          TaskLoadFailed { message : string }
+          TaskLoadFailed { error : string, code : string }
     }
     emits: [TaskLoadFailed, TaskLoaded, TaskSaveFailed, TaskSaved]
   }
@@ -108,7 +112,7 @@ orbital TaskOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          TaskLoadFailed { message : string }
+          TaskLoadFailed { error : string, code : string }
     }
     emits: [TaskLoadFailed, TaskLoaded, TaskUpdateFailed, TaskUpdated]
   }
@@ -133,7 +137,7 @@ orbital TaskOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          TaskLoadFailed { message : string }
+          TaskLoadFailed { error : string, code : string }
     }
     emits: [TaskLoaded, TaskLoadFailed]
   }
@@ -168,7 +172,7 @@ orbital TaskOrbital {
     }
     listens {
       DELETE { id : string! }
-          TaskLoadFailed { message : string }
+          TaskLoadFailed { error : string, code : string }
     }
     emits: [TaskDeleteFailed, TaskDeleted, TaskLoadFailed, TaskLoaded]
   }
@@ -186,8 +190,8 @@ orbital SprintOrbital {
     pendingId : string = ""
   }
 
-  type SprintLoaded     = Event Sprint                  "Fired when Sprint finishes loading"
-  type SprintLoadFailed = Event { message : string } "Fired when Sprint fails to load"
+  type SprintLoaded     = Event { data : [Sprint] }                  "Fired when Sprint finishes loading"
+  type SprintLoadFailed = Event { error : string, code : string } "Fired when Sprint fails to load"
   type SprintDeleteFailed = Event { error : string, code : string }
   type SprintDeleted = Event { id : string }
   type SprintSaveFailed = Event { error : string, code : string }
@@ -197,8 +201,12 @@ orbital SprintOrbital {
   trait SprintBrowse -> Sprint [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Sprint)
-        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap" }, { type: "typography", content: "Sprints", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Sprint", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "zap" }, { name: "status", variant: "badge" }, { name: "goal", variant: "body" }, { name: "startDate", label: "Start", variant: "caption", format: "date" }, { name: "endDate", label: "End", variant: "caption", format: "date" }, { name: "taskCount", label: "Tasks", variant: "body", format: "number" }], cols: 2, gap: "md" }] }] })
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      SprintLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap" }, { type: "typography", content: "Sprints", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Sprint", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "zap" }, { name: "status", variant: "badge" }, { name: "goal", variant: "body" }, { name: "startDate", label: "Start", variant: "caption", format: "date" }, { name: "endDate", label: "End", variant: "caption", format: "date" }, { name: "taskCount", label: "Tasks", variant: "body", format: "number" }], cols: 2, gap: "md" }] }] })
+      SprintLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load sprint" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       ASSIGN_TASK external { id: string }
@@ -208,7 +216,7 @@ orbital SprintOrbital {
       SprintCreate SPRINT_CREATED -> INIT
       SprintEdit SPRINT_UPDATED -> INIT
       SprintDelete SPRINT_DELETED -> INIT
-          SprintLoadFailed { message : string }
+          SprintLoadFailed { error : string, code : string }
     }
     emits: [SprintLoaded, SprintLoadFailed]
   }
@@ -237,7 +245,7 @@ orbital SprintOrbital {
     }
     emits: [SprintLoadFailed, SprintLoaded, SprintSaveFailed, SprintSaved]
     listens {
-      SprintLoadFailed { message : string }
+      SprintLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -266,7 +274,7 @@ orbital SprintOrbital {
     }
     emits: [SprintLoadFailed, SprintLoaded, SprintUpdateFailed, SprintUpdated]
     listens {
-      SprintLoadFailed { message : string }
+      SprintLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -291,7 +299,7 @@ orbital SprintOrbital {
     }
     emits: [SprintLoaded, SprintLoadFailed]
     listens {
-      SprintLoadFailed { message : string }
+      SprintLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -326,7 +334,7 @@ orbital SprintOrbital {
     }
     emits: [SprintDeleteFailed, SprintDeleted, SprintLoadFailed, SprintLoaded]
     listens {
-      SprintLoadFailed { message : string }
+      SprintLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -342,8 +350,8 @@ orbital BurndownOrbital {
     daysRemaining : number
   }
 
-  type BurndownLoaded     = Event Burndown                  "Fired when Burndown finishes loading"
-  type BurndownLoadFailed = Event { message : string } "Fired when Burndown fails to load"
+  type BurndownLoaded     = Event { data : [Burndown] }                  "Fired when Burndown finishes loading"
+  type BurndownLoadFailed = Event { error : string, code : string } "Fired when Burndown fails to load"
   trait BurndownDisplay -> Burndown [interaction, collection] {
     initial: loading
     state loading {
@@ -369,7 +377,7 @@ orbital BurndownOrbital {
     }
     listens {
       * COMPLETE_SPRINT -> INIT
-          BurndownLoadFailed { message : string }
+          BurndownLoadFailed { error : string, code : string }
     }
     emits: [BurndownLoaded, BurndownLoadFailed]
   }

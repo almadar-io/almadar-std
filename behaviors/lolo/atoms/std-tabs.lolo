@@ -3,27 +3,40 @@ app std-tabs "1.0.0"
 
 orbital TabContentOrbital {
   entity TabContent [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type TabContentLoaded     = Event TabContent                  "Fired when TabContent finishes loading"
-  type TabContentLoadFailed = Event { message : string } "Fired when TabContent fails to load"
+  type TabContentLoaded     = Event { data : [TabContent] }        "Fired when TabContent finishes loading; payload.data holds the list"
+  type TabContentLoadFailed = Event { error : string, code : string } "Fired when TabContent fails to load"
+
   trait TabContentTabs -> TabContent [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TabContentLoaded -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid" }, { type: "typography", content: "TabContents", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Name", value: "name" }, { label: "Description", value: "description" }, { label: "Status", value: "status" }, { label: "CreatedAt", value: "createdAt" }], defaultActiveTab: "name", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.description" }] }] }] })
+      TabContentLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state idle {
-      INIT -> idle
+      SELECT_TAB -> loading
         (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid"}, { type: "typography", content: "TabContents", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Name", value: "name" }, { label: "Description", value: "description" }, { label: "Status", value: "status" }, { label: "CreatedAt", value: "createdAt" }], defaultActiveTab: "name", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.name" }] }] }] })
-      SELECT_TAB -> idle
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
         (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid"}, { type: "typography", content: "TabContents", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Name", value: "name" }, { label: "Description", value: "description" }, { label: "Status", value: "status" }, { label: "CreatedAt", value: "createdAt" }], defaultActiveTab: "name", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.name" }] }] }] })
+        (render-ui main { type: "spinner" })
     }
     listens {
       SELECT_TAB { tab : string! }
-          TabContentLoadFailed { message : string }
+      TabContentLoadFailed { error : string, code : string }
     }
     emits: [TabContentLoaded, TabContentLoadFailed]
   }

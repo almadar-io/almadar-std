@@ -34,7 +34,7 @@ orbital ResearchOrbital {
     state searching {
       SEARCH_COMPLETE -> results
         (set @entity.pipelineStatus results)
-        (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Summarize", event: "SELECT_AND_SUMMARIZE", variant: "primary" }], columns: [{ name: "videoTitle", label: "Title", variant: "h4", icon: "video" }, { name: "videoDescription", label: "Description", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.results, fields: [], itemActions: [{ label: "Summarize", event: "SELECT_AND_SUMMARIZE", variant: "primary" }], columns: [{ name: "videoTitle", label: "Title", variant: "h4", icon: "video" }, { name: "videoDescription", label: "Description", variant: "caption" }] }] }] })
       FAILED -> error
         (set @entity.error @payload.error)
         (set @entity.pipelineStatus error)
@@ -79,7 +79,7 @@ orbital ResearchOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "Research", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] }] })
     }
     listens {
-      SEARCH_COMPLETE { results : array! }
+      SEARCH_COMPLETE { results : [Research] }
       SELECT_AND_SUMMARIZE { videoId : string! }
       VIDEO_FETCHED { title : string!, description : string! }
       SUMMARY_COMPLETE { content : string! }
@@ -106,8 +106,8 @@ orbital CacheEntryOrbital {
     error : string = ""
   }
 
-  type CacheEntryLoaded     = Event CacheEntry                  "Fired when CacheEntry finishes loading"
-  type CacheEntryLoadFailed = Event { message : string } "Fired when CacheEntry fails to load"
+  type CacheEntryLoaded     = Event { data : [CacheEntry] }                  "Fired when CacheEntry finishes loading"
+  type CacheEntryLoadFailed = Event { error : string, code : string } "Fired when CacheEntry fails to load"
   type ResearchRedisCompleted = Event { data : object }
   type ResearchRedisFailed = Event { error : string, code : string }
   trait CacheEntryRedis -> CacheEntry [interaction, collection] {
@@ -144,7 +144,7 @@ orbital CacheEntryOrbital {
     }
     emits: [CacheEntryLoadFailed, CacheEntryLoaded, ResearchRedisCompleted, ResearchRedisFailed]
     listens {
-      CacheEntryLoadFailed { message : string }
+      CacheEntryLoadFailed { error : string, code : string }
       EXECUTED { data : string }
       FAILED { error : string }
     }
@@ -163,8 +163,8 @@ orbital ReportOrbital {
     error : string = ""
   }
 
-  type ReportLoaded     = Event Report                  "Fired when Report finishes loading"
-  type ReportLoadFailed = Event { message : string } "Fired when Report fails to load"
+  type ReportLoaded     = Event { data : [Report] }                  "Fired when Report finishes loading"
+  type ReportLoadFailed = Event { error : string, code : string } "Fired when Report fails to load"
   type ResearchStorageCompleted = Event { data : object }
   type ResearchStorageFailed = Event { error : string, code : string }
   trait ReportStorage -> Report [interaction, collection] {
@@ -208,7 +208,7 @@ orbital ReportOrbital {
     }
     emits: [ReportLoadFailed, ReportLoaded, ResearchStorageCompleted, ResearchStorageFailed]
     listens {
-      ReportLoadFailed { message : string }
+      ReportLoadFailed { error : string, code : string }
       EXECUTED { data : string }
       FAILED { error : string }
     }
@@ -227,8 +227,8 @@ orbital KnowledgeQueryOrbital {
     error : string = ""
   }
 
-  type KnowledgeQueryLoaded     = Event KnowledgeQuery                  "Fired when KnowledgeQuery finishes loading"
-  type KnowledgeQueryLoadFailed = Event { message : string } "Fired when KnowledgeQuery fails to load"
+  type KnowledgeQueryLoaded     = Event { data : [KnowledgeQuery] }                  "Fired when KnowledgeQuery finishes loading"
+  type KnowledgeQueryLoadFailed = Event { error : string, code : string } "Fired when KnowledgeQuery fails to load"
   type ResearchCustomBearerApiCompleted = Event { data : object }
   type ResearchCustomBearerApiFailed = Event { error : string, code : string }
   trait KnowledgeQueryCustomBearer -> KnowledgeQuery [interaction, collection] {
@@ -262,7 +262,7 @@ orbital KnowledgeQueryOrbital {
     }
     emits: [KnowledgeQueryLoadFailed, KnowledgeQueryLoaded, ResearchCustomBearerApiCompleted, ResearchCustomBearerApiFailed]
     listens {
-      KnowledgeQueryLoadFailed { message : string }
+      KnowledgeQueryLoadFailed { error : string, code : string }
       API_RESPONSE { data : string, statusCode : string }
       FAILED { error : string }
     }

@@ -11,8 +11,8 @@ orbital PostOrbital {
     likes : number = 0
   }
 
-  type PostLoaded     = Event Post                  "Fired when Post finishes loading"
-  type PostLoadFailed = Event { message : string } "Fired when Post fails to load"
+  type PostLoaded     = Event { data : [Post] }                  "Fired when Post finishes loading"
+  type PostLoadFailed = Event { error : string, code : string } "Fired when Post fails to load"
   type PostSaved = Event { id : string }
   type PostSaveFailed = Event { error : string, code : string }
   type CommentSaved = Event { id : string }
@@ -20,15 +20,19 @@ orbital PostOrbital {
   trait PostBrowse -> Post [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Post)
-        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PostLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      PostLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load post" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       COMMENT external { id: string }
     }
     listens {
       VIEW { id : string!, row : object }
-          PostLoadFailed { message : string }
+          PostLoadFailed { error : string, code : string }
     
       PostSaveFailed { error : string, code : string }
       CommentSaveFailed { error : string, code : string }
@@ -56,7 +60,7 @@ orbital PostOrbital {
     }
     listens {
       SAVE { data : object! }
-          PostLoadFailed { message : string }
+          PostLoadFailed { error : string, code : string }
     }
     emits: [PostLoadFailed, PostLoaded, PostSaveFailed, PostSaved]
   }
@@ -81,7 +85,7 @@ orbital PostOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          PostLoadFailed { message : string }
+          PostLoadFailed { error : string, code : string }
     }
     emits: [PostLoaded, PostLoadFailed]
   }
@@ -96,20 +100,24 @@ orbital CommentOrbital {
     createdAt : datetime = ""
   }
 
-  type CommentLoaded     = Event Comment                  "Fired when Comment finishes loading"
-  type CommentLoadFailed = Event { message : string } "Fired when Comment fails to load"
+  type CommentLoaded     = Event { data : [Comment] }                  "Fired when Comment finishes loading"
+  type CommentLoadFailed = Event { error : string, code : string } "Fired when Comment fails to load"
   type CommentSaveFailed = Event { error : string, code : string }
   type CommentSaved = Event { id : string }
   trait CommentBrowse -> Comment [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Comment)
-        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      CommentLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      CommentLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load comment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       CommentCompose SEND -> INIT
       * COMMENT -> INIT
-          CommentLoadFailed { message : string }
+          CommentLoadFailed { error : string, code : string }
     }
     emits: [CommentLoaded, CommentLoadFailed]
   }
@@ -136,7 +144,7 @@ orbital CommentOrbital {
     }
     emits: [CommentLoadFailed, CommentLoaded, CommentSaveFailed, CommentSaved]
     listens {
-      CommentLoadFailed { message : string }
+      CommentLoadFailed { error : string, code : string }
       SEND { data : string }
     }
   }
@@ -160,7 +168,7 @@ orbital CommentOrbital {
     }
     emits: [CommentLoaded, CommentLoadFailed]
     listens {
-      CommentLoadFailed { message : string }
+      CommentLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }

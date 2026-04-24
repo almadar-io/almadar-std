@@ -11,11 +11,13 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "description",
@@ -50,32 +52,12 @@
           "emits": [
             {
               "event": "GalleryItemLoaded",
-              "description": "Fired when GalleryItem finishes loading",
+              "description": "Fired when GalleryItem finishes loading; payload.data holds the gallery",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "imageUrl",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[GalleryItem]"
                 }
               ]
             },
@@ -85,7 +67,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -94,17 +80,47 @@
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "loading",
                 "isInitial": true
               },
               {
+                "name": "browsing"
+              },
+              {
                 "name": "viewing"
+              },
+              {
+                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "GalleryItemLoaded",
+                "name": "GalleryItem loaded",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "[GalleryItem]"
+                  }
+                ]
+              },
+              {
+                "key": "GalleryItemLoadFailed",
+                "name": "GalleryItem load failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "VIEW",
@@ -120,52 +136,227 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
-              },
-              {
-                "key": "GalleryItemLoaded",
-                "name": "GalleryItem loaded",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "imageUrl",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "GalleryItemLoadFailed",
-                "name": "GalleryItem load failed",
-                "payload": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GalleryItem",
+                    {
+                      "emit": {
+                        "success": "GalleryItemLoaded",
+                        "failure": "GalleryItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
                 "to": "browsing",
+                "event": "GalleryItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "image"
+                                },
+                                {
+                                  "content": "GalleryItems Gallery",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "sm"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "Click any image to view full size",
+                              "variant": "caption",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "icon": "maximize",
+                              "label": "View",
+                              "event": "VIEW"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "cols": 3.0,
+                          "gap": "md",
+                          "entity": "@payload.data",
+                          "imageField": "imageUrl",
+                          "fields": [
+                            {
+                              "name": "name",
+                              "label": "Title",
+                              "variant": "h4"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "GalleryItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "name": "alert-triangle",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Failed to load"
+                        },
+                        {
+                          "content": "@payload.error",
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "action": "INIT",
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "label": "Retry"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "closeAction": "CLOSE",
+                      "isOpen": true,
+                      "showCounter": true,
+                      "type": "lightbox",
+                      "images": [
+                        {
+                          "src": "https://picsum.photos/seed/gallery1/800/600",
+                          "alt": "Image",
+                          "caption": "Image"
+                        }
+                      ],
+                      "currentIndex": 0.0
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "GalleryItem",
+                    {
+                      "emit": {
+                        "success": "GalleryItemLoaded",
+                        "failure": "GalleryItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
@@ -182,191 +373,7 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "align": "center",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "name": "image",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "GalleryItems Gallery"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Click any image to view full size",
-                              "color": "muted"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "imageField": "imageUrl",
-                          "gap": "md",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "icon": "maximize",
-                              "event": "VIEW"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "variant": "h4",
-                              "label": "Title",
-                              "name": "name"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "cols": 3.0,
-                          "entity": "@entity"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "viewing",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "closeAction": "CLOSE",
-                      "isOpen": true,
-                      "type": "lightbox",
-                      "images": [
-                        {
-                          "alt": "Mountain landscape",
-                          "caption": "Mountain landscape",
-                          "src": "https://picsum.photos/seed/gallery1/800/600"
-                        },
-                        {
-                          "caption": "Ocean sunset",
-                          "alt": "Ocean sunset",
-                          "src": "https://picsum.photos/seed/gallery2/800/600"
-                        },
-                        {
-                          "src": "https://picsum.photos/seed/gallery3/800/600",
-                          "alt": "Forest trail",
-                          "caption": "Forest trail"
-                        }
-                      ],
-                      "currentIndex": 0.0,
-                      "showCounter": true
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
-                          "children": [
-                            {
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "image",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "GalleryItems Gallery"
-                                }
-                              ]
-                            },
-                            {
-                              "variant": "caption",
-                              "color": "muted",
-                              "type": "typography",
-                              "content": "Click any image to view full size"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "md",
-                          "cols": 3.0,
-                          "entity": "@entity",
-                          "imageField": "imageUrl",
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "icon": "maximize"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "variant": "h4",
-                              "label": "Title",
-                              "name": "name"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "spinner"
                     }
                   ]
                 ]

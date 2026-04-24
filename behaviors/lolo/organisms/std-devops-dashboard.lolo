@@ -13,8 +13,8 @@ orbital ServiceNodeOrbital {
     threshold : number = 5
   }
 
-  type ServiceNodeLoaded     = Event ServiceNode                  "Fired when ServiceNode finishes loading"
-  type ServiceNodeLoadFailed = Event { message : string } "Fired when ServiceNode fails to load"
+  type ServiceNodeLoaded     = Event { data : [ServiceNode] }                  "Fired when ServiceNode finishes loading"
+  type ServiceNodeLoadFailed = Event { error : string, code : string } "Fired when ServiceNode fails to load"
   type LogEntrySaved = Event { id : string }
   type LogEntrySaveFailed = Event { error : string, code : string }
   type LogEntryUpdated = Event { id : string }
@@ -48,7 +48,7 @@ orbital ServiceNodeOrbital {
     }
     emits: [ServiceNodeLoaded, ServiceNodeLoadFailed, LogEntrySaved, LogEntrySaveFailed, LogEntryUpdated, LogEntryUpdateFailed, LogEntryDeleted, LogEntryDeleteFailed]
     listens {
-      ServiceNodeLoadFailed { message : string }
+      ServiceNodeLoadFailed { error : string, code : string }
     
       LogEntrySaveFailed { error : string, code : string }
       LogEntryUpdateFailed { error : string, code : string }
@@ -66,8 +66,8 @@ orbital AlertMetricOrbital {
     source : string
   }
 
-  type AlertMetricLoaded     = Event AlertMetric                  "Fired when AlertMetric finishes loading"
-  type AlertMetricLoadFailed = Event { message : string } "Fired when AlertMetric fails to load"
+  type AlertMetricLoaded     = Event { data : [AlertMetric] }                  "Fired when AlertMetric finishes loading"
+  type AlertMetricLoadFailed = Event { error : string, code : string } "Fired when AlertMetric fails to load"
   trait AlertMetricDisplay -> AlertMetric [interaction, collection] {
     initial: loading
     state loading {
@@ -93,7 +93,7 @@ orbital AlertMetricOrbital {
     }
     emits: [AlertMetricLoaded, AlertMetricLoadFailed]
     listens {
-      AlertMetricLoadFailed { message : string }
+      AlertMetricLoadFailed { error : string, code : string }
     }
   }
   page "/alerts" -> AlertMetricDisplay
@@ -108,8 +108,8 @@ orbital LogEntryOrbital {
     pendingId : string = ""
   }
 
-  type LogEntryLoaded     = Event LogEntry                  "Fired when LogEntry finishes loading"
-  type LogEntryLoadFailed = Event { message : string } "Fired when LogEntry fails to load"
+  type LogEntryLoaded     = Event { data : [LogEntry] }                  "Fired when LogEntry finishes loading"
+  type LogEntryLoadFailed = Event { error : string, code : string } "Fired when LogEntry fails to load"
   type LogEntryDeleteFailed = Event { error : string, code : string }
   type LogEntryDeleted = Event { id : string }
   type LogEntrySaveFailed = Event { error : string, code : string }
@@ -119,14 +119,18 @@ orbital LogEntryOrbital {
   trait LogEntryBrowse -> LogEntry [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref LogEntry)
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Logs", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create LogEntry", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "message", variant: "h4", icon: "file-text" }, { name: "level", variant: "badge" }, { name: "service", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "compact", gap: "sm" }] }] })
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      LogEntryLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Logs", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create LogEntry", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "message", variant: "h4", icon: "file-text" }, { name: "level", variant: "badge" }, { name: "service", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "compact", gap: "sm" }] }] })
+      LogEntryLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load logentry" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       LogEntryCreate LOG_ENTRY_CREATED -> INIT
       LogEntryEdit LOG_ENTRY_UPDATED -> INIT
       LogEntryDelete LOG_ENTRY_DELETED -> INIT
-          LogEntryLoadFailed { message : string }
+          LogEntryLoadFailed { error : string, code : string }
     }
     emits: [LogEntryLoaded, LogEntryLoadFailed]
   }
@@ -155,7 +159,7 @@ orbital LogEntryOrbital {
     }
     emits: [LogEntryLoadFailed, LogEntryLoaded, LogEntrySaveFailed, LogEntrySaved]
     listens {
-      LogEntryLoadFailed { message : string }
+      LogEntryLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -184,7 +188,7 @@ orbital LogEntryOrbital {
     }
     emits: [LogEntryLoadFailed, LogEntryLoaded, LogEntryUpdateFailed, LogEntryUpdated]
     listens {
-      LogEntryLoadFailed { message : string }
+      LogEntryLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -210,7 +214,7 @@ orbital LogEntryOrbital {
 
     emits: [LogEntryLoaded, LogEntryLoadFailed]
     listens {
-      LogEntryLoadFailed { message : string }
+      LogEntryLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -245,7 +249,7 @@ orbital LogEntryOrbital {
     }
     emits: [LogEntryDeleteFailed, LogEntryDeleted, LogEntryLoadFailed, LogEntryLoaded]
     listens {
-      LogEntryLoadFailed { message : string }
+      LogEntryLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -260,8 +264,8 @@ orbital SystemMetricOrbital {
     trend : string
   }
 
-  type SystemMetricLoaded     = Event SystemMetric                  "Fired when SystemMetric finishes loading"
-  type SystemMetricLoadFailed = Event { message : string } "Fired when SystemMetric fails to load"
+  type SystemMetricLoaded     = Event { data : [SystemMetric] }                  "Fired when SystemMetric finishes loading"
+  type SystemMetricLoadFailed = Event { error : string, code : string } "Fired when SystemMetric fails to load"
   trait SystemMetricDisplay -> SystemMetric [interaction, collection] {
     initial: loading
     state loading {
@@ -287,7 +291,7 @@ orbital SystemMetricOrbital {
     }
     emits: [SystemMetricLoaded, SystemMetricLoadFailed]
     listens {
-      SystemMetricLoadFailed { message : string }
+      SystemMetricLoadFailed { error : string, code : string }
     }
   }
   page "/metrics" -> SystemMetricDisplay

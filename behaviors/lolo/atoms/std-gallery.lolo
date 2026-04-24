@@ -3,33 +3,46 @@ app std-gallery "1.0.0"
 
 orbital GalleryItemOrbital {
   entity GalleryItem [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
-    imageUrl : string = "https://picsum.photos/seed/gallery/800/600"
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    imageUrl    : string = "https://picsum.photos/seed/gallery/800/600"
   }
 
-  type GalleryItemLoaded     = Event GalleryItem                  "Fired when GalleryItem finishes loading"
-  type GalleryItemLoadFailed = Event { message : string } "Fired when GalleryItem fails to load"
+  type GalleryItemLoaded     = Event { data : [GalleryItem] }        "Fired when GalleryItem finishes loading; payload.data holds the gallery"
+  type GalleryItemLoadFailed = Event { error : string, code : string } "Fired when GalleryItem fails to load"
+
   trait GalleryItemGallery -> GalleryItem [interaction, collection] {
-    initial: browsing
-    state browsing {
-      INIT -> browsing
+    initial: loading
+    state loading {
+      INIT -> loading
         (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "GalleryItems Gallery", variant: "h2" }] }, { type: "typography", variant: "caption", color: "muted", content: "Click any image to view full size" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", cols: 3, gap: "md", imageField: "imageUrl", itemActions: [{ label: "View", event: "VIEW", icon: "maximize" }], fields: [{ name: "name", label: "Title", variant: "h4" }, { name: "status", label: "Status", variant: "badge" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      GalleryItemLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "GalleryItems Gallery", variant: "h2" }] }, { type: "typography", variant: "caption", color: "muted", content: "Click any image to view full size" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, cols: 3, gap: "md", imageField: "imageUrl", itemActions: [{ label: "View", event: "VIEW", icon: "maximize" }], fields: [{ name: "name", label: "Title", variant: "h4" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      GalleryItemLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state browsing {
       VIEW -> viewing
-        (render-ui modal { type: "lightbox", isOpen: true, closeAction: "CLOSE", images: [{ src: "https://picsum.photos/seed/gallery1/800/600", alt: "Mountain landscape", caption: "Mountain landscape" }, { src: "https://picsum.photos/seed/gallery2/800/600", alt: "Ocean sunset", caption: "Ocean sunset" }, { src: "https://picsum.photos/seed/gallery3/800/600", alt: "Forest trail", caption: "Forest trail" }], currentIndex: 0, showCounter: true })
+        (render-ui modal { type: "lightbox", isOpen: true, closeAction: "CLOSE", images: [{ src: "https://picsum.photos/seed/gallery1/800/600", alt: "Image", caption: "Image" }], currentIndex: 0, showCounter: true })
     }
     state viewing {
-      CLOSE -> browsing
+      CLOSE -> loading
         (render-ui modal null)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "GalleryItems Gallery", variant: "h2" }] }, { type: "typography", variant: "caption", color: "muted", content: "Click any image to view full size" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", cols: 3, gap: "md", imageField: "imageUrl", itemActions: [{ label: "View", event: "VIEW", icon: "maximize" }], fields: [{ name: "name", label: "Title", variant: "h4" }, { name: "status", label: "Status", variant: "badge" }] }] })
+        (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch GalleryItem { emit: { success: "GalleryItemLoaded", failure: "GalleryItemLoadFailed" } })
+        (render-ui main { type: "spinner" })
     }
     listens {
       VIEW { id : string! }
-          GalleryItemLoadFailed { message : string }
+      GalleryItemLoadFailed { error : string, code : string }
     }
     emits: [GalleryItemLoaded, GalleryItemLoadFailed]
   }

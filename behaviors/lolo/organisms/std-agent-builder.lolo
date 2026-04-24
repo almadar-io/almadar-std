@@ -31,16 +31,16 @@ orbital BuildPlanOrbital {
     icon : string = "circle"
   }
 
-  type BuildPlanLoaded     = Event BuildPlan                  "Fired when BuildPlan finishes loading"
-  type BuildPlanLoadFailed = Event { message : string } "Fired when BuildPlan fails to load"
+  type BuildPlanLoaded     = Event { data : [BuildPlan] }                  "Fired when BuildPlan finishes loading"
+  type BuildPlanLoadFailed = Event { error : string, code : string } "Fired when BuildPlan fails to load"
 
-  type BuildTaskLoadFailed = Event { message : string } "Emitted event BuildTaskLoadFailed"
+  type BuildTaskLoadFailed = Event { error : string, code : string } "Emitted event BuildTaskLoadFailed"
 
-  type BuildTaskLoaded = Event { message : string } "Emitted event BuildTaskLoaded"
+  type BuildTaskLoaded = Event { error : string, code : string } "Emitted event BuildTaskLoaded"
 
-  type BuildProgressLoaded = Event { message : string } "Emitted event BuildProgressLoaded"
+  type BuildProgressLoaded = Event { error : string, code : string } "Emitted event BuildProgressLoaded"
 
-  type BuildProgressLoadFailed = Event { message : string } "Emitted event BuildProgressLoadFailed"
+  type BuildProgressLoadFailed = Event { error : string, code : string } "Emitted event BuildProgressLoadFailed"
   type BuildPlanSaved = Event { id : string }
   type BuildPlanSaveFailed = Event { error : string, code : string }
   type BuildLoopSaved = Event { id : string }
@@ -144,7 +144,7 @@ orbital BuildPlanOrbital {
     }
     listens {
       PLAN { data : object! }
-          BuildPlanLoadFailed { message : string }
+          BuildPlanLoadFailed { error : string, code : string }
     }
     emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
@@ -176,7 +176,7 @@ orbital BuildPlanOrbital {
     }
     listens {
       SAVE { data : object! }
-          BuildPlanLoadFailed { message : string }
+          BuildPlanLoadFailed { error : string, code : string }
     }
     emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
@@ -208,21 +208,25 @@ orbital BuildPlanOrbital {
     }
     listens {
       SAVE { data : object! }
-          BuildPlanLoadFailed { message : string }
+          BuildPlanLoadFailed { error : string, code : string }
     }
     emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
   trait PlannerMemoryLifecycle -> BuildPlan [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref BuildPlan)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "BuildPlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      BuildPlanLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "BuildPlan Manager", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Pin", event: "PIN", variant: "ghost" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost" }, { label: "Forget", event: "FORGET", variant: "danger" }], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge" }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+      BuildPlanLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load buildplan" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       PIN { id : string!, row : object }
       REINFORCE { id : string!, row : object }
       FORGET { id : string!, row : object }
-          BuildPlanLoadFailed { message : string }
+          BuildPlanLoadFailed { error : string, code : string }
     }
     emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
@@ -262,8 +266,8 @@ orbital BuildLoopOrbital {
     duration : number = 0
   }
 
-  type BuildLoopLoaded     = Event BuildLoop                  "Fired when BuildLoop finishes loading"
-  type BuildLoopLoadFailed = Event { message : string } "Fired when BuildLoop fails to load"
+  type BuildLoopLoaded     = Event { data : [BuildLoop] }                  "Fired when BuildLoop finishes loading"
+  type BuildLoopLoadFailed = Event { error : string, code : string } "Fired when BuildLoop fails to load"
   type BuildLoopSaveFailed = Event { error : string, code : string }
   type BuildLoopSaved = Event { id : string }
   trait SchemaBuilder -> BuildLoop [interaction, collection] {
@@ -397,7 +401,7 @@ orbital BuildLoopOrbital {
     }
     emits: [BuildLoopLoaded, BuildLoopLoadFailed]
     listens {
-      BuildLoopLoadFailed { message : string }
+      BuildLoopLoadFailed { error : string, code : string }
     }
   }
   trait ToolLoopCompletionFlow -> BuildLoop [interaction, collection] {
@@ -428,7 +432,7 @@ orbital BuildLoopOrbital {
     }
     emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
-      BuildLoopLoadFailed { message : string }
+      BuildLoopLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -460,7 +464,7 @@ orbital BuildLoopOrbital {
     }
     emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
-      BuildLoopLoadFailed { message : string }
+      BuildLoopLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -528,7 +532,7 @@ orbital BuildLoopOrbital {
     }
     emits: [BuildLoopLoaded, BuildLoopLoadFailed]
     listens {
-      BuildLoopLoadFailed { message : string }
+      BuildLoopLoadFailed { error : string, code : string }
       UPDATE { current : string }
     }
   }
@@ -557,8 +561,8 @@ orbital BuildFixOrbital {
     model : string = "claude-sonnet-4-20250514"
   }
 
-  type BuildFixLoaded     = Event BuildFix                  "Fired when BuildFix finishes loading"
-  type BuildFixLoadFailed = Event { message : string } "Fired when BuildFix fails to load"
+  type BuildFixLoaded     = Event { data : [BuildFix] }                  "Fired when BuildFix finishes loading"
+  type BuildFixLoadFailed = Event { error : string, code : string } "Fired when BuildFix fails to load"
   type BuildFixSaveFailed = Event { error : string, code : string }
   type BuildFixSaved = Event { id : string }
   trait FixLoop -> BuildFix [interaction, collection] {
@@ -696,18 +700,22 @@ orbital BuildFixOrbital {
     }
     emits: [BuildFixLoaded, BuildFixLoadFailed]
     listens {
-      BuildFixLoadFailed { message : string }
+      BuildFixLoadFailed { error : string, code : string }
     }
   }
   trait FixLoopErrorsBrowse -> BuildFix [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref BuildFix)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] }] })
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      BuildFixLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle"}, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] }] })
+      BuildFixLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load buildfix" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits: [BuildFixLoaded, BuildFixLoadFailed]
     listens {
-      BuildFixLoadFailed { message : string }
+      BuildFixLoadFailed { error : string, code : string }
     }
   }
   trait FixLoopValidateCall -> BuildFix [interaction, collection] {
@@ -738,7 +746,7 @@ orbital BuildFixOrbital {
     }
     emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
-      BuildFixLoadFailed { message : string }
+      BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -770,7 +778,7 @@ orbital BuildFixOrbital {
     }
     emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
-      BuildFixLoadFailed { message : string }
+      BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -802,7 +810,7 @@ orbital BuildFixOrbital {
     }
     emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
-      BuildFixLoadFailed { message : string }
+      BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -818,21 +826,25 @@ orbital BuildSessionOrbital {
     createdAt : string
   }
 
-  type BuildSessionLoaded     = Event BuildSession                  "Fired when BuildSession finishes loading"
-  type BuildSessionLoadFailed = Event { message : string } "Fired when BuildSession fails to load"
+  type BuildSessionLoaded     = Event { data : [BuildSession] }                  "Fired when BuildSession finishes loading"
+  type BuildSessionLoadFailed = Event { error : string, code : string } "Fired when BuildSession fails to load"
   type BuildSessionUpdateFailed = Event { error : string, code : string }
   type BuildSessionUpdated = Event { id : string }
   trait BuildSessionManager -> BuildSession [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref BuildSession)
-        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "BuildSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      BuildSessionLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "BuildSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
+      BuildSessionLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load buildsession" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       BuildSessionAgent FORKED -> INIT
       BuildSessionLabel LABELED -> INIT
       BuildSessionAgent ENDED -> INIT
-          BuildSessionLoadFailed { message : string }
+          BuildSessionLoadFailed { error : string, code : string }
     }
     emits: [BuildSessionLoaded, BuildSessionLoadFailed]
   }
@@ -861,7 +873,7 @@ orbital BuildSessionOrbital {
     }
     emits: [BuildSessionLoadFailed, BuildSessionLoaded, BuildSessionUpdateFailed, BuildSessionUpdated]
     listens {
-      BuildSessionLoadFailed { message : string }
+      BuildSessionLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -921,7 +933,7 @@ orbital BuildSessionOrbital {
     listens {
       BuildSessionAgent ENDED -> INIT
       BuildSessionAgent FORKED -> INIT
-          BuildSessionLoadFailed { message : string }
+          BuildSessionLoadFailed { error : string, code : string }
           DO_LABEL { data : string }
     }
     emits: [BuildSessionLoaded, BuildSessionLoadFailed]
@@ -943,8 +955,8 @@ orbital BuildTaskOrbital {
     error : string = ""
   }
 
-  type BuildTaskLoaded     = Event BuildTask                  "Fired when BuildTask finishes loading"
-  type BuildTaskLoadFailed = Event { message : string } "Fired when BuildTask fails to load"
+  type BuildTaskLoaded     = Event { data : [BuildTask] }                  "Fired when BuildTask finishes loading"
+  type BuildTaskLoadFailed = Event { error : string, code : string } "Fired when BuildTask fails to load"
   trait BuilderTabs = Tabs.traits.TabContentTabs -> BuildTask {
   }
   page "/builder/nav" -> BuilderTabs
@@ -960,8 +972,8 @@ orbital BuildProgressOrbital {
     status : string = "idle"
   }
 
-  type BuildProgressLoaded     = Event BuildProgress                  "Fired when BuildProgress finishes loading"
-  type BuildProgressLoadFailed = Event { message : string } "Fired when BuildProgress fails to load"
+  type BuildProgressLoaded     = Event { data : [BuildProgress] }                  "Fired when BuildProgress finishes loading"
+  type BuildProgressLoadFailed = Event { error : string, code : string } "Fired when BuildProgress fails to load"
   trait BuildStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> BuildProgress {
   }
   page "/builder/progress" -> BuildStepProgress

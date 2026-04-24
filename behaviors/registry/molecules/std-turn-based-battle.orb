@@ -218,15 +218,15 @@
                     "render-ui",
                     "main",
                     {
-                      "subtitle": "Turn-Based Strategy",
-                      "title": "Battle Arena",
                       "menuItems": [
                         {
-                          "event": "START",
                           "variant": "primary",
-                          "label": "Start Battle"
+                          "label": "Start Battle",
+                          "event": "START"
                         }
                       ],
+                      "title": "Battle Arena",
+                      "subtitle": "Turn-Based Strategy",
                       "type": "game-menu"
                     }
                   ]
@@ -243,8 +243,8 @@
                     {
                       "stats": [
                         {
-                          "value": "@entity.turn",
-                          "label": "Turn"
+                          "label": "Turn",
+                          "value": "@entity.turn"
                         },
                         {
                           "value": "@entity.score",
@@ -279,17 +279,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-hud",
                       "stats": [
                         {
-                          "value": "@entity.turn",
-                          "label": "Turn"
+                          "label": "Turn",
+                          "value": "@entity.turn"
                         },
                         {
-                          "label": "Score",
-                          "value": "@entity.score"
+                          "value": "@entity.score",
+                          "label": "Score"
                         }
-                      ]
+                      ],
+                      "type": "game-hud"
                     }
                   ]
                 ]
@@ -303,20 +303,20 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "game-menu",
                       "title": "Paused",
                       "menuItems": [
                         {
-                          "event": "RESUME",
+                          "variant": "primary",
                           "label": "Resume",
-                          "variant": "primary"
+                          "event": "RESUME"
                         },
                         {
                           "event": "RESTART",
                           "label": "Quit",
                           "variant": "ghost"
                         }
-                      ],
-                      "type": "game-menu"
+                      ]
                     }
                   ]
                 ]
@@ -330,6 +330,18 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-over-screen",
+                      "stats": [
+                        {
+                          "value": "@entity.turn",
+                          "label": "Turns"
+                        },
+                        {
+                          "value": "@entity.score",
+                          "label": "Score"
+                        }
+                      ],
+                      "title": "Battle Over",
                       "menuItems": [
                         {
                           "label": "Play Again",
@@ -337,23 +349,11 @@
                           "variant": "primary"
                         },
                         {
-                          "label": "Main Menu",
                           "variant": "secondary",
+                          "label": "Main Menu",
                           "event": "RESTART"
                         }
-                      ],
-                      "title": "Battle Over",
-                      "stats": [
-                        {
-                          "label": "Turns",
-                          "value": "@entity.turn"
-                        },
-                        {
-                          "label": "Score",
-                          "value": "@entity.score"
-                        }
-                      ],
-                      "type": "game-over-screen"
+                      ]
                     }
                   ]
                 ]
@@ -377,17 +377,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-hud",
                       "stats": [
                         {
                           "label": "Turn",
                           "value": "@entity.turn"
                         },
                         {
-                          "label": "Score",
-                          "value": "@entity.score"
+                          "value": "@entity.score",
+                          "label": "Score"
                         }
-                      ],
-                      "type": "game-hud"
+                      ]
                     }
                   ]
                 ]
@@ -406,17 +406,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-hud",
                       "stats": [
                         {
                           "value": "@entity.turn",
                           "label": "Turn"
                         },
                         {
-                          "value": "@entity.score",
-                          "label": "Score"
+                          "label": "Score",
+                          "value": "@entity.score"
                         }
-                      ],
-                      "type": "game-hud"
+                      ]
                     }
                   ]
                 ]
@@ -435,6 +435,7 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Battle Arena",
                       "subtitle": "Turn-Based Strategy",
                       "type": "game-menu",
                       "menuItems": [
@@ -443,8 +444,7 @@
                           "label": "Start Battle",
                           "variant": "primary"
                         }
-                      ],
-                      "title": "Battle Arena"
+                      ]
                     }
                   ]
                 ]
@@ -458,16 +458,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
-                      "subtitle": "Turn-Based Strategy",
                       "title": "Battle Arena",
+                      "subtitle": "Turn-Based Strategy",
                       "menuItems": [
                         {
-                          "variant": "primary",
+                          "event": "START",
                           "label": "Start Battle",
-                          "event": "START"
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "game-menu"
                     }
                   ]
                 ]
@@ -611,8 +611,8 @@
                     "BattleUnit",
                     {
                       "emit": {
-                        "success": "BattleUnitLoaded",
-                        "failure": "BattleUnitLoadFailed"
+                        "failure": "BattleUnitLoadFailed",
+                        "success": "BattleUnitLoaded"
                       }
                     }
                   ]
@@ -627,12 +627,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
-                      "autoScroll": true,
-                      "title": "Combat Log",
-                      "events": "@BattleUnit",
                       "showTimestamps": true,
-                      "maxVisible": 10.0
+                      "events": "@BattleUnit",
+                      "maxVisible": 10.0,
+                      "title": "Combat Log",
+                      "type": "combat-log",
+                      "autoScroll": true
                     }
                   ]
                 ]
@@ -646,12 +646,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
+                      "maxVisible": 10.0,
                       "events": "@BattleUnit",
                       "autoScroll": true,
+                      "type": "combat-log",
                       "showTimestamps": true,
-                      "title": "Combat Log",
-                      "maxVisible": 10.0
+                      "title": "Combat Log"
                     }
                   ]
                 ]

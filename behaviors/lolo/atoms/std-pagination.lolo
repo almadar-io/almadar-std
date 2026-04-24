@@ -3,27 +3,40 @@ app std-pagination "1.0.0"
 
 orbital PagedItemOrbital {
   entity PagedItem [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type PagedItemLoaded     = Event PagedItem                  "Fired when PagedItem finishes loading"
-  type PagedItemLoadFailed = Event { message : string } "Fired when PagedItem fails to load"
+  type PagedItemLoaded     = Event { data : [PagedItem] }        "Fired when PagedItem finishes loading; payload.data holds the page"
+  type PagedItemLoadFailed = Event { error : string, code : string } "Fired when PagedItem fails to load"
+
   trait PagedItemPagination -> PagedItem [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PagedItemLoaded -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "PagedItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "pagination", currentPage: 1, totalPages: 10, onPageChange: "PAGE", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "PAGE" }] })
+      PagedItemLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state idle {
-      INIT -> idle
+      PAGE -> loading
         (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "PagedItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "pagination", currentPage: 1, totalPages: 10, onPageChange: "PAGE", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "PAGE" }] })
-      PAGE -> idle
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
         (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "PagedItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "pagination", currentPage: "@payload.page", totalPages: 10, onPageChange: "PAGE", showPageSize: false }] })
+        (render-ui main { type: "spinner" })
     }
     listens {
       PAGE { page : number!, pageSize : number! }
-          PagedItemLoadFailed { message : string }
+      PagedItemLoadFailed { error : string, code : string }
     }
     emits: [PagedItemLoaded, PagedItemLoadFailed]
   }

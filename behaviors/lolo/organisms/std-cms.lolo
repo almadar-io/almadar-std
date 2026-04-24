@@ -13,8 +13,8 @@ orbital ArticleOrbital {
     pendingId : string = ""
   }
 
-  type ArticleLoaded     = Event Article                  "Fired when Article finishes loading"
-  type ArticleLoadFailed = Event { message : string } "Fired when Article fails to load"
+  type ArticleLoaded     = Event { data : [Article] }                  "Fired when Article finishes loading"
+  type ArticleLoadFailed = Event { error : string, code : string } "Fired when Article fails to load"
   type ArticleSaved = Event { id : string }
   type ArticleSaveFailed = Event { error : string, code : string }
   type ArticleUpdated = Event { id : string }
@@ -32,8 +32,12 @@ orbital ArticleOrbital {
   trait ArticleBrowse -> Article [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Article)
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Articles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Article", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "status", variant: "badge" }, { name: "author", variant: "body" }, { name: "slug", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ArticleLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Articles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Article", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "status", variant: "badge" }, { name: "author", variant: "body" }, { name: "slug", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      ArticleLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load article" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       PUBLISH external { id: string }
@@ -46,7 +50,7 @@ orbital ArticleOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          ArticleLoadFailed { message : string }
+          ArticleLoadFailed { error : string, code : string }
     
       ArticleSaveFailed { error : string, code : string }
       ArticleUpdateFailed { error : string, code : string }
@@ -83,7 +87,7 @@ orbital ArticleOrbital {
     }
     listens {
       SAVE { data : object! }
-          ArticleLoadFailed { message : string }
+          ArticleLoadFailed { error : string, code : string }
     }
     emits: [ArticleLoadFailed, ArticleLoaded, ArticleSaveFailed, ArticleSaved]
   }
@@ -113,7 +117,7 @@ orbital ArticleOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          ArticleLoadFailed { message : string }
+          ArticleLoadFailed { error : string, code : string }
     }
     emits: [ArticleLoadFailed, ArticleLoaded, ArticleUpdateFailed, ArticleUpdated]
   }
@@ -138,7 +142,7 @@ orbital ArticleOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          ArticleLoadFailed { message : string }
+          ArticleLoadFailed { error : string, code : string }
     }
     emits: [ArticleLoaded, ArticleLoadFailed]
   }
@@ -173,7 +177,7 @@ orbital ArticleOrbital {
     }
     listens {
       DELETE { id : string! }
-          ArticleLoadFailed { message : string }
+          ArticleLoadFailed { error : string, code : string }
     }
     emits: [ArticleDeleteFailed, ArticleDeleted, ArticleLoadFailed, ArticleLoaded]
   }
@@ -190,19 +194,23 @@ orbital MediaAssetOrbital {
     uploadedAt : datetime
   }
 
-  type MediaAssetLoaded     = Event MediaAsset                  "Fired when MediaAsset finishes loading"
-  type MediaAssetLoadFailed = Event { message : string } "Fired when MediaAsset fails to load"
+  type MediaAssetLoaded     = Event { data : [MediaAsset] }                  "Fired when MediaAsset finishes loading"
+  type MediaAssetLoadFailed = Event { error : string, code : string } "Fired when MediaAsset fails to load"
   type MediaAssetSaveFailed = Event { error : string, code : string }
   type MediaAssetSaved = Event { id : string }
   trait MediaAssetBrowse -> MediaAsset [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref MediaAsset)
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
+        (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      MediaAssetLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
+      MediaAssetLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load mediaasset" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       * PUBLISH -> INIT
-          MediaAssetLoadFailed { message : string }
+          MediaAssetLoadFailed { error : string, code : string }
     }
     emits: [MediaAssetLoaded, MediaAssetLoadFailed]
   }
@@ -227,7 +235,7 @@ orbital MediaAssetOrbital {
     }
     emits: [MediaAssetLoadFailed, MediaAssetLoaded, MediaAssetSaveFailed, MediaAssetSaved]
     listens {
-      MediaAssetLoadFailed { message : string }
+      MediaAssetLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -251,7 +259,7 @@ orbital MediaAssetOrbital {
     }
     emits: [MediaAssetLoaded, MediaAssetLoadFailed]
     listens {
-      MediaAssetLoadFailed { message : string }
+      MediaAssetLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -268,8 +276,8 @@ orbital CategoryOrbital {
     pendingId : string = ""
   }
 
-  type CategoryLoaded     = Event Category                  "Fired when Category finishes loading"
-  type CategoryLoadFailed = Event { message : string } "Fired when Category fails to load"
+  type CategoryLoaded     = Event { data : [Category] }                  "Fired when Category finishes loading"
+  type CategoryLoadFailed = Event { error : string, code : string } "Fired when Category fails to load"
   type CategoryDeleteFailed = Event { error : string, code : string }
   type CategoryDeleted = Event { id : string }
   type CategorySaveFailed = Event { error : string, code : string }
@@ -279,15 +287,19 @@ orbital CategoryOrbital {
   trait CategoryBrowse -> Category [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Category)
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      CategoryLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      CategoryLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load category" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       CategoryCreate CATEGORY_CREATED -> INIT
       CategoryEdit CATEGORY_UPDATED -> INIT
       CategoryDelete CATEGORY_DELETED -> INIT
       * CATEGORIZE -> INIT
-          CategoryLoadFailed { message : string }
+          CategoryLoadFailed { error : string, code : string }
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
   }
@@ -316,7 +328,7 @@ orbital CategoryOrbital {
     }
     emits: [CategoryLoadFailed, CategoryLoaded, CategorySaveFailed, CategorySaved]
     listens {
-      CategoryLoadFailed { message : string }
+      CategoryLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -345,7 +357,7 @@ orbital CategoryOrbital {
     }
     emits: [CategoryLoadFailed, CategoryLoaded, CategoryUpdateFailed, CategoryUpdated]
     listens {
-      CategoryLoadFailed { message : string }
+      CategoryLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -370,7 +382,7 @@ orbital CategoryOrbital {
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
     listens {
-      CategoryLoadFailed { message : string }
+      CategoryLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -405,7 +417,7 @@ orbital CategoryOrbital {
     }
     emits: [CategoryDeleteFailed, CategoryDeleted, CategoryLoadFailed, CategoryLoaded]
     listens {
-      CategoryLoadFailed { message : string }
+      CategoryLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }

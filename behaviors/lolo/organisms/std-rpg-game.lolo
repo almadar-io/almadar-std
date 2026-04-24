@@ -10,8 +10,8 @@ orbital BattleStateOrbital {
     outcome : string
   }
 
-  type BattleStateLoaded     = Event BattleState                  "Fired when BattleState finishes loading"
-  type BattleStateLoadFailed = Event { message : string } "Fired when BattleState fails to load"
+  type BattleStateLoaded     = Event { data : [BattleState] }                  "Fired when BattleState finishes loading"
+  type BattleStateLoadFailed = Event { error : string, code : string } "Fired when BattleState fails to load"
   type RpgItemSaved = Event { id : string }
   type RpgItemSaveFailed = Event { error : string, code : string }
   type RpgItemUpdated = Event { id : string }
@@ -60,7 +60,7 @@ orbital BattleStateOrbital {
     }
     listens {
       * ENCOUNTER_STARTED -> START
-          BattleStateLoadFailed { message : string }
+          BattleStateLoadFailed { error : string, code : string }
     
       RpgItemSaveFailed { error : string, code : string }
       RpgItemUpdateFailed { error : string, code : string }
@@ -80,7 +80,7 @@ orbital BattleStateOrbital {
     }
     listens {
       LOG_EVENT { data : object! }
-          BattleStateLoadFailed { message : string }
+          BattleStateLoadFailed { error : string, code : string }
     }
     emits: [BattleStateLoaded, BattleStateLoadFailed]
   }
@@ -95,26 +95,27 @@ orbital WorldZoneOrbital {
     explored : boolean
   }
 
-  type WorldZoneLoaded     = Event WorldZone                  "Fired when WorldZone finishes loading"
-  type WorldZoneLoadFailed = Event { message : string } "Fired when WorldZone fails to load"
+  type WorldZoneLoaded     = Event { data : [WorldZone] }                  "Fired when WorldZone finishes loading"
+  type WorldZoneLoadFailed = Event { error : string, code : string } "Fired when WorldZone fails to load"
   trait WorldZoneNavigation -> WorldZone [interaction, collection] {
-    initial: exploring
-    state exploring {
-      INIT -> exploring
+    initial: loading
+    state loading {
+      INIT -> loading
         (fetch WorldZone { emit: { success: "WorldZoneLoaded", failure: "WorldZoneLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading map…" }] })
+      WorldZoneLoaded -> exploring
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }] }] })
+      WorldZoneLoadFailed -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load map" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state exploring {
       TRAVEL -> transitioning
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "loader" }, { type: "typography", content: "Traveling...", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Traveling to the destination worldzones map.", variant: "body" }] }] })
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "loader" }, { type: "typography", content: "Traveling...", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Traveling to the destination worldzone.", variant: "body" }] }] })
     }
     state transitioning {
-      ARRIVE -> entered
+      ARRIVE -> loading
         (fetch WorldZone { emit: { success: "WorldZoneLoaded", failure: "WorldZoneLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "WorldZones Map", variant: "h2" }] }, { type: "status-dot", status: "online", label: "Entered" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Map", action: "BACK", variant: "ghost", icon: "arrow-left" }] }] }] })
-    }
-    state entered {
-      BACK -> exploring
-        (fetch WorldZone { emit: { success: "WorldZoneLoaded", failure: "WorldZoneLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }] }] })
+        (render-ui main { type: "spinner" })
     }
     emits {
       ENCOUNTER_STARTED external { zoneId: string }
@@ -122,7 +123,7 @@ orbital WorldZoneOrbital {
     }
     emits: [WorldZoneLoaded, WorldZoneLoadFailed]
     listens {
-      WorldZoneLoadFailed { message : string }
+      WorldZoneLoadFailed { error : string, code : string }
     }
   }
   page "/world" -> WorldZoneNavigation
@@ -137,8 +138,8 @@ orbital RpgItemOrbital {
     pendingId : string
   }
 
-  type RpgItemLoaded     = Event RpgItem                  "Fired when RpgItem finishes loading"
-  type RpgItemLoadFailed = Event { message : string } "Fired when RpgItem fails to load"
+  type RpgItemLoaded     = Event { data : [RpgItem] }                  "Fired when RpgItem finishes loading"
+  type RpgItemLoadFailed = Event { error : string, code : string } "Fired when RpgItem fails to load"
   type RpgItemDeleteFailed = Event { error : string, code : string }
   type RpgItemDeleted = Event { id : string }
   type RpgItemSaveFailed = Event { error : string, code : string }
@@ -148,15 +149,19 @@ orbital RpgItemOrbital {
   trait RpgItemBrowse -> RpgItem [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref RpgItem)
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Inventory", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add RpgItem", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "briefcase" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+        (fetch RpgItem { emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      RpgItemLoaded -> browsing
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Inventory", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add RpgItem", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "briefcase" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+      RpgItemLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load rpgitem" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       RpgItemAdd ITEM_ADDED -> INIT
       RpgItemUse ITEM_USED -> INIT
       RpgItemDrop CONFIRM_DROP -> INIT
       * LOOT_DROPPED -> INIT
-          RpgItemLoadFailed { message : string }
+          RpgItemLoadFailed { error : string, code : string }
     }
     emits: [RpgItemLoaded, RpgItemLoadFailed]
   }
@@ -185,7 +190,7 @@ orbital RpgItemOrbital {
     }
     emits: [RpgItemLoadFailed, RpgItemLoaded, RpgItemSaveFailed, RpgItemSaved]
     listens {
-      RpgItemLoadFailed { message : string }
+      RpgItemLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -214,7 +219,7 @@ orbital RpgItemOrbital {
     }
     emits: [RpgItemLoadFailed, RpgItemLoaded, RpgItemUpdateFailed, RpgItemUpdated]
     listens {
-      RpgItemLoadFailed { message : string }
+      RpgItemLoadFailed { error : string, code : string }
       USE_ITEM { id : string }
       SAVE { data : string }
     }
@@ -249,7 +254,7 @@ orbital RpgItemOrbital {
     }
     emits: [RpgItemDeleteFailed, RpgItemDeleted, RpgItemLoadFailed, RpgItemLoaded]
     listens {
-      RpgItemLoadFailed { message : string }
+      RpgItemLoadFailed { error : string, code : string }
       DROP { id : string }
     }
   }
@@ -264,24 +269,26 @@ orbital MissionOrbital {
     reward : string
   }
 
-  type MissionLoaded     = Event Mission                  "Fired when Mission finishes loading"
-  type MissionLoadFailed = Event { message : string } "Fired when Mission fails to load"
+  type MissionLoaded     = Event { data : [Mission] }                  "Fired when Mission finishes loading"
+  type MissionLoadFailed = Event { error : string, code : string } "Fired when Mission fails to load"
   type MissionUpdateFailed = Event { error : string, code : string }
   type MissionUpdated = Event { id : string }
   trait MissionTracking -> Mission [interaction, collection] {
-    initial: available
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading missions…" }] })
+      MissionLoaded -> available
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], groupBy: "status", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+      MissionLoadFailed -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load missions" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state available {
-      INIT -> available
-        (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], groupBy: "status", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
       ACCEPT -> active
-        (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "typography", content: "Quest Active", variant: "h2" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Progress", action: "PROGRESS", variant: "primary" }, { type: "button", label: "Complete", action: "COMPLETE", variant: "success" }, { type: "button", label: "Fail", action: "FAIL", variant: "danger" }] }] }] })
     }
     state active {
-      INIT -> active
-        (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
       PROGRESS -> progressing
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Update Progress", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Mission", mode: "edit", submitEvent: "SAVE", cancelEvent: "CANCEL", fields: ["title", "description", "status", "reward"] }] })
       COMPLETE -> complete
@@ -290,34 +297,34 @@ orbital MissionOrbital {
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Quest Failed", variant: "h2" }, { type: "alert", variant: "error", message: "The quest was not completed. You can try again." }, { type: "button", label: "View Quests", action: "RESET", variant: "primary", icon: "arrow-left" }] }] })
     }
     state progressing {
-      SAVE -> active
+      SAVE -> loading
         (persist update Mission @payload.data { emit: { success: "MissionUpdated", failure: "MissionUpdateFailed" } })
         (render-ui modal null)
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
-      CANCEL -> active
+        (render-ui main { type: "spinner" })
+      CANCEL -> loading
         (render-ui modal null)
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
-      CLOSE -> active
+        (render-ui main { type: "spinner" })
+      CLOSE -> loading
         (render-ui modal null)
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+        (render-ui main { type: "spinner" })
     }
     state complete {
-      RESET -> available
+      RESET -> loading
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], groupBy: "status", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+        (render-ui main { type: "spinner" })
     }
     state failed {
-      RESET -> available
+      RESET -> loading
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], groupBy: "status", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+        (render-ui main { type: "spinner" })
     }
     listens {
       * QUEST_ACCEPTED -> INIT
-          MissionLoadFailed { message : string }
-          SAVE { data : string }
+      MissionLoadFailed { error : string, code : string }
+      SAVE { data : Mission }
     }
     emits: [MissionLoadFailed, MissionLoaded, MissionUpdateFailed, MissionUpdated]
   }

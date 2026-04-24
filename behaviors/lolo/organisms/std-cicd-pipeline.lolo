@@ -11,8 +11,8 @@ orbital BuildOrbital {
     pendingId : string = ""
   }
 
-  type BuildLoaded     = Event Build                  "Fired when Build finishes loading"
-  type BuildLoadFailed = Event { message : string } "Fired when Build fails to load"
+  type BuildLoaded     = Event { data : [Build] }                  "Fired when Build finishes loading"
+  type BuildLoadFailed = Event { error : string, code : string } "Fired when Build fails to load"
   type BuildSaved = Event { id : string }
   type BuildSaveFailed = Event { error : string, code : string }
   type BuildUpdated = Event { id : string }
@@ -24,8 +24,12 @@ orbital BuildOrbital {
   trait BuildBrowse -> Build [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Build)
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading builds…" }] })
+      BuildLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      BuildLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load builds" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       BuildCreate BUILD_CREATED -> INIT
@@ -34,7 +38,7 @@ orbital BuildOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          BuildLoadFailed { message : string }
+          BuildLoadFailed { error : string, code : string }
     
       BuildSaveFailed { error : string, code : string }
       BuildUpdateFailed { error : string, code : string }
@@ -68,7 +72,7 @@ orbital BuildOrbital {
     }
     listens {
       SAVE { data : object! }
-          BuildLoadFailed { message : string }
+          BuildLoadFailed { error : string, code : string }
     }
     emits: [BuildLoadFailed, BuildLoaded, BuildSaveFailed, BuildSaved]
   }
@@ -98,7 +102,7 @@ orbital BuildOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          BuildLoadFailed { message : string }
+          BuildLoadFailed { error : string, code : string }
     }
     emits: [BuildLoadFailed, BuildLoaded, BuildUpdateFailed, BuildUpdated]
   }
@@ -124,7 +128,7 @@ orbital BuildOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          BuildLoadFailed { message : string }
+          BuildLoadFailed { error : string, code : string }
     }
     emits: [BuildLoaded, BuildLoadFailed]
   }
@@ -159,7 +163,7 @@ orbital BuildOrbital {
     }
     listens {
       DELETE { id : string! }
-          BuildLoadFailed { message : string }
+          BuildLoadFailed { error : string, code : string }
     }
     emits: [BuildDeleteFailed, BuildDeleted, BuildLoadFailed, BuildLoaded]
   }
@@ -174,8 +178,8 @@ orbital StageOrbital {
     output : string
   }
 
-  type StageLoaded     = Event Stage                  "Fired when Stage finishes loading"
-  type StageLoadFailed = Event { message : string } "Fired when Stage fails to load"
+  type StageLoaded     = Event { data : [Stage] }                  "Fired when Stage finishes loading"
+  type StageLoadFailed = Event { error : string, code : string } "Fired when Stage fails to load"
   trait StageDisplay -> Stage [interaction, collection] {
     initial: loading
     state loading {
@@ -201,7 +205,7 @@ orbital StageOrbital {
     }
     emits: [StageLoaded, StageLoadFailed]
     listens {
-      StageLoadFailed { message : string }
+      StageLoadFailed { error : string, code : string }
     }
   }
   page "/stages" -> StageDisplay
@@ -215,8 +219,8 @@ orbital DeploymentOrbital {
     deployedAt : datetime
   }
 
-  type DeploymentLoaded     = Event Deployment                  "Fired when Deployment finishes loading"
-  type DeploymentLoadFailed = Event { message : string } "Fired when Deployment fails to load"
+  type DeploymentLoaded     = Event { data : [Deployment] }                  "Fired when Deployment finishes loading"
+  type DeploymentLoadFailed = Event { error : string, code : string } "Fired when Deployment fails to load"
   type DeploymentSaveFailed = Event { error : string, code : string }
   type DeploymentSaved = Event { id : string }
   trait DeploymentAsync -> Deployment [interaction, collection] {
@@ -247,7 +251,7 @@ orbital DeploymentOrbital {
     }
     emits: [DeploymentLoadFailed, DeploymentLoaded, DeploymentSaveFailed, DeploymentSaved]
     listens {
-      DeploymentLoadFailed { message : string }
+      DeploymentLoadFailed { error : string, code : string }
       LOADED { data : string }
     }
   }

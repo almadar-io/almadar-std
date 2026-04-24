@@ -10,8 +10,8 @@ orbital ArmyBattleOrbital {
     morale : number = 100
   }
 
-  type ArmyBattleLoaded     = Event ArmyBattle                  "Fired when ArmyBattle finishes loading"
-  type ArmyBattleLoadFailed = Event { message : string } "Fired when ArmyBattle fails to load"
+  type ArmyBattleLoaded     = Event { data : [ArmyBattle] }                  "Fired when ArmyBattle finishes loading"
+  type ArmyBattleLoadFailed = Event { error : string, code : string } "Fired when ArmyBattle fails to load"
   trait ArmyBattleBattleFlow -> ArmyBattle [interaction, collection] {
     initial: menu
     state menu {
@@ -49,7 +49,7 @@ orbital ArmyBattleOrbital {
     }
     emits: [ArmyBattleLoaded, ArmyBattleLoadFailed]
     listens {
-      ArmyBattleLoadFailed { message : string }
+      ArmyBattleLoadFailed { error : string, code : string }
     }
   }
   trait ArmyBattleCombatLog -> ArmyBattle [interaction, collection] {
@@ -63,7 +63,7 @@ orbital ArmyBattleOrbital {
     }
     listens {
       LOG_EVENT { data : object! }
-          ArmyBattleLoadFailed { message : string }
+          ArmyBattleLoadFailed { error : string, code : string }
     }
     emits: [ArmyBattleLoaded, ArmyBattleLoadFailed]
   }
@@ -78,30 +78,42 @@ orbital TerritoryOrbital {
     explored : boolean
   }
 
-  type TerritoryLoaded     = Event Territory                  "Fired when Territory finishes loading"
-  type TerritoryLoadFailed = Event { message : string } "Fired when Territory fails to load"
+  type TerritoryLoaded     = Event { data : [Territory] }                  "Fired when Territory finishes loading"
+  type TerritoryLoadFailed = Event { error : string, code : string } "Fired when Territory fails to load"
   trait TerritoryNavigation -> Territory [interaction, collection] {
     initial: exploring
     state exploring {
       INIT -> exploring
         (fetch Territory { emit: { success: "TerritoryLoaded", failure: "TerritoryLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TerritoryLoaded -> exploring
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+      TerritoryLoadFailed -> exploring
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load territory" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
       TRAVEL -> transitioning
         (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "loader" }, { type: "typography", content: "Traveling...", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Traveling to the destination territorys map.", variant: "body" }] }] })
     }
     state transitioning {
       ARRIVE -> entered
         (fetch Territory { emit: { success: "TerritoryLoaded", failure: "TerritoryLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territorys Map", variant: "h2" }] }, { type: "status-dot", status: "online", label: "Entered" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Map", action: "BACK", variant: "ghost", icon: "arrow-left" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TerritoryLoaded -> entered
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territorys Map", variant: "h2" }] }, { type: "status-dot", status: "online", label: "Entered" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Map", action: "BACK", variant: "ghost", icon: "arrow-left" }] }] }] })
+      TerritoryLoadFailed -> entered
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load territory" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     state entered {
       BACK -> exploring
         (fetch Territory { emit: { success: "TerritoryLoaded", failure: "TerritoryLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TerritoryLoaded -> exploring
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+      TerritoryLoadFailed -> exploring
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load territory" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits: [TerritoryLoaded, TerritoryLoadFailed]
     listens {
-      TerritoryLoadFailed { message : string }
+      TerritoryLoadFailed { error : string, code : string }
     }
   }
   page "/map" -> TerritoryNavigation
@@ -115,8 +127,8 @@ orbital ResourceOrbital {
     iron : number
   }
 
-  type ResourceLoaded     = Event Resource                  "Fired when Resource finishes loading"
-  type ResourceLoadFailed = Event { message : string } "Fired when Resource fails to load"
+  type ResourceLoaded     = Event { data : [Resource] }                  "Fired when Resource finishes loading"
+  type ResourceLoadFailed = Event { error : string, code : string } "Fired when Resource fails to load"
   trait ResourceDisplay -> Resource [interaction, collection] {
     initial: loading
     state loading {
@@ -142,7 +154,7 @@ orbital ResourceOrbital {
     }
     emits: [ResourceLoaded, ResourceLoadFailed]
     listens {
-      ResourceLoadFailed { message : string }
+      ResourceLoadFailed { error : string, code : string }
     }
   }
   page "/resources" -> ResourceDisplay

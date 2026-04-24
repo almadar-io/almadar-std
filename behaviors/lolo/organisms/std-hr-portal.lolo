@@ -12,8 +12,8 @@ orbital EmployeeOrbital {
     pendingId : string = ""
   }
 
-  type EmployeeLoaded     = Event Employee                  "Fired when Employee finishes loading"
-  type EmployeeLoadFailed = Event { message : string } "Fired when Employee fails to load"
+  type EmployeeLoaded     = Event { data : [Employee] }                  "Fired when Employee finishes loading"
+  type EmployeeLoadFailed = Event { error : string, code : string } "Fired when Employee fails to load"
   type EmployeeSaved = Event { id : string }
   type EmployeeSaveFailed = Event { error : string, code : string }
   type EmployeeUpdated = Event { id : string }
@@ -31,8 +31,12 @@ orbital EmployeeOrbital {
   trait EmployeeBrowse -> Employee [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Employee)
-        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Employees", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Employee", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "department", variant: "badge" }, { name: "role", variant: "body" }, { name: "email", variant: "caption" }, { name: "startDate", label: "Joined", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      EmployeeLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Employees", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Employee", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "department", variant: "badge" }, { name: "role", variant: "body" }, { name: "email", variant: "caption" }, { name: "startDate", label: "Joined", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      EmployeeLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load employee" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       ONBOARD external { id: string }
@@ -44,7 +48,7 @@ orbital EmployeeOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          EmployeeLoadFailed { message : string }
+          EmployeeLoadFailed { error : string, code : string }
     
       EmployeeSaveFailed { error : string, code : string }
       EmployeeUpdateFailed { error : string, code : string }
@@ -81,7 +85,7 @@ orbital EmployeeOrbital {
     }
     listens {
       SAVE { data : object! }
-          EmployeeLoadFailed { message : string }
+          EmployeeLoadFailed { error : string, code : string }
     }
     emits: [EmployeeLoadFailed, EmployeeLoaded, EmployeeSaveFailed, EmployeeSaved]
   }
@@ -111,7 +115,7 @@ orbital EmployeeOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          EmployeeLoadFailed { message : string }
+          EmployeeLoadFailed { error : string, code : string }
     }
     emits: [EmployeeLoadFailed, EmployeeLoaded, EmployeeUpdateFailed, EmployeeUpdated]
   }
@@ -136,7 +140,7 @@ orbital EmployeeOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          EmployeeLoadFailed { message : string }
+          EmployeeLoadFailed { error : string, code : string }
     }
     emits: [EmployeeLoaded, EmployeeLoadFailed]
   }
@@ -171,7 +175,7 @@ orbital EmployeeOrbital {
     }
     listens {
       DELETE { id : string! }
-          EmployeeLoadFailed { message : string }
+          EmployeeLoadFailed { error : string, code : string }
     }
     emits: [EmployeeDeleteFailed, EmployeeDeleted, EmployeeLoadFailed, EmployeeLoaded]
   }
@@ -187,8 +191,8 @@ orbital OnboardingOrbital {
     accessGranted : boolean
   }
 
-  type OnboardingLoaded     = Event Onboarding                  "Fired when Onboarding finishes loading"
-  type OnboardingLoadFailed = Event { message : string } "Fired when Onboarding fails to load"
+  type OnboardingLoaded     = Event { data : [Onboarding] }                  "Fired when Onboarding finishes loading"
+  type OnboardingLoadFailed = Event { error : string, code : string } "Fired when Onboarding fails to load"
   type OnboardingSaveFailed = Event { error : string, code : string }
   type OnboardingSaved = Event { id : string }
   trait OnboardingWizard -> Onboarding [interaction, collection] {
@@ -236,7 +240,7 @@ orbital OnboardingOrbital {
     }
     listens {
       * ONBOARD -> INIT
-          OnboardingLoadFailed { message : string }
+          OnboardingLoadFailed { error : string, code : string }
           COMPLETE { data : string }
     }
     emits: [OnboardingLoadFailed, OnboardingLoaded, OnboardingSaveFailed, OnboardingSaved]
@@ -254,8 +258,8 @@ orbital TimeOffOrbital {
     pendingId : string = ""
   }
 
-  type TimeOffLoaded     = Event TimeOff                  "Fired when TimeOff finishes loading"
-  type TimeOffLoadFailed = Event { message : string } "Fired when TimeOff fails to load"
+  type TimeOffLoaded     = Event { data : [TimeOff] }                  "Fired when TimeOff finishes loading"
+  type TimeOffLoadFailed = Event { error : string, code : string } "Fired when TimeOff fails to load"
   type TimeOffDeleteFailed = Event { error : string, code : string }
   type TimeOffDeleted = Event { id : string }
   type TimeOffSaveFailed = Event { error : string, code : string }
@@ -265,8 +269,12 @@ orbital TimeOffOrbital {
   trait TimeOffBrowse -> TimeOff [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref TimeOff)
-        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Time Off Requests", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Request Time Off", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "employeeName", label: "Employee", variant: "h3", icon: "calendar" }, { name: "leaveType", label: "Type", variant: "badge" }, { name: "status", variant: "badge" }, { name: "startDate", label: "From", variant: "body", format: "date" }, { name: "endDate", label: "To", variant: "body", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TimeOffLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Time Off Requests", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Request Time Off", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "employeeName", label: "Employee", variant: "h3", icon: "calendar" }, { name: "leaveType", label: "Type", variant: "badge" }, { name: "status", variant: "badge" }, { name: "startDate", label: "From", variant: "body", format: "date" }, { name: "endDate", label: "To", variant: "body", format: "date" }], variant: "card", gap: "sm" }] }] })
+      TimeOffLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load timeoff" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       APPROVE_LEAVE external { id: string }
@@ -275,7 +283,7 @@ orbital TimeOffOrbital {
       TimeOffCreate TIME_OFF_CREATED -> INIT
       TimeOffEdit TIME_OFF_UPDATED -> INIT
       TimeOffDelete TIME_OFF_DELETED -> INIT
-          TimeOffLoadFailed { message : string }
+          TimeOffLoadFailed { error : string, code : string }
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
   }
@@ -304,7 +312,7 @@ orbital TimeOffOrbital {
     }
     emits: [TimeOffLoadFailed, TimeOffLoaded, TimeOffSaveFailed, TimeOffSaved]
     listens {
-      TimeOffLoadFailed { message : string }
+      TimeOffLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -333,7 +341,7 @@ orbital TimeOffOrbital {
     }
     emits: [TimeOffLoadFailed, TimeOffLoaded, TimeOffUpdateFailed, TimeOffUpdated]
     listens {
-      TimeOffLoadFailed { message : string }
+      TimeOffLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -358,7 +366,7 @@ orbital TimeOffOrbital {
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
     listens {
-      TimeOffLoadFailed { message : string }
+      TimeOffLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -393,7 +401,7 @@ orbital TimeOffOrbital {
     }
     emits: [TimeOffDeleteFailed, TimeOffDeleted, TimeOffLoadFailed, TimeOffLoaded]
     listens {
-      TimeOffLoadFailed { message : string }
+      TimeOffLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -409,8 +417,8 @@ orbital OrgChartOrbital {
     headcount : number
   }
 
-  type OrgChartLoaded     = Event OrgChart                  "Fired when OrgChart finishes loading"
-  type OrgChartLoadFailed = Event { message : string } "Fired when OrgChart fails to load"
+  type OrgChartLoaded     = Event { data : [OrgChart] }                  "Fired when OrgChart finishes loading"
+  type OrgChartLoadFailed = Event { error : string, code : string } "Fired when OrgChart fails to load"
   trait OrgChartDisplay -> OrgChart [interaction, collection] {
     initial: loading
     state loading {
@@ -436,7 +444,7 @@ orbital OrgChartOrbital {
     }
     listens {
       * APPROVE_LEAVE -> INIT
-          OrgChartLoadFailed { message : string }
+          OrgChartLoadFailed { error : string, code : string }
     }
     emits: [OrgChartLoaded, OrgChartLoadFailed]
   }

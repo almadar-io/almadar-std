@@ -29,17 +29,12 @@
           "emits": [
             {
               "event": "RelatedItemLoaded",
-              "description": "Fired when RelatedItem finishes loading",
+              "description": "Fired when RelatedItem finishes loading; payload.data holds the list",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "name",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[RelatedItem]"
                 }
               ]
             },
@@ -49,7 +44,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -78,13 +77,8 @@
                 "name": "RelatedItem loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[RelatedItem]"
                   }
                 ]
               },
@@ -93,7 +87,11 @@
                 "name": "RelatedItem load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -119,11 +117,7 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "sm",
                       "align": "center",
-                      "className": "py-8",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -134,7 +128,11 @@
                           "color": "muted",
                           "content": "Loading related…"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "className": "py-8",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -148,52 +146,52 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "link",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "link"
                             },
                             {
                               "type": "typography",
                               "content": "Related",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-list",
-                          "entity": "@entity",
+                          "entity": "@payload.data",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "@item.name",
+                                  "type": "typography",
                                   "variant": "body"
                                 }
                               ],
+                              "direction": "vertical",
                               "type": "stack",
                               "gap": "xs"
                             }
                           ],
                           "fields": []
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -208,34 +206,34 @@
                     "main",
                     {
                       "className": "py-8",
-                      "gap": "sm",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
-                          "content": "Failed to load related",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "Failed to load related"
                         },
                         {
+                          "content": "@payload.error",
                           "variant": "caption",
-                          "content": "@payload.message",
                           "type": "typography",
                           "color": "muted"
                         },
                         {
-                          "action": "INIT",
-                          "type": "button",
                           "label": "Retry",
                           "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -275,8 +273,8 @@
                     "RelatedItem",
                     {
                       "emit": {
-                        "failure": "RelatedItemLoadFailed",
-                        "success": "RelatedItemLoaded"
+                        "success": "RelatedItemLoaded",
+                        "failure": "RelatedItemLoadFailed"
                       }
                     }
                   ],

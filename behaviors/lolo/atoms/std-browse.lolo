@@ -3,15 +3,15 @@ app std-browse "1.0.0"
 
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type BrowseItemLoaded     = Event BrowseItem "Fired when the BrowseItem collection finishes loading"
-  type BrowseItemLoadFailed = Event { message : string } "Fired when the BrowseItem collection fails to load"
+  type BrowseItemLoaded     = Event { data : [BrowseItem] }        "Fired when the BrowseItem collection finishes loading; payload.data holds the list"
+  type BrowseItemLoadFailed = Event { error : string, code : string } "Fired when the BrowseItem collection fails to load"
 
   trait BrowseItemBrowse -> BrowseItem [interaction, collection] {
     initial: loading
@@ -20,9 +20,9 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading BrowseItems…" }] })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "BrowseItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", content: "BrowseItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", action: "INIT" }] })
       BrowseItemLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load BrowseItems" }, { type: "typography", variant: "body", color: "muted", content: "@payload.message" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "max-w-5xl mx-auto w-full py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load BrowseItems" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     state browsing {
       INIT -> loading
@@ -36,7 +36,7 @@ orbital BrowseItemOrbital {
     }
     emits: [BrowseItemLoaded, BrowseItemLoadFailed]
     listens {
-      BrowseItemLoadFailed { message : string }
+      BrowseItemLoadFailed { error : string, code : string }
     }
   }
   page "/browseitems" as BrowseItemPage -> BrowseItemBrowse

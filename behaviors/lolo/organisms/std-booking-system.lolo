@@ -13,8 +13,8 @@ orbital ProviderOrbital {
     pendingId : string = ""
   }
 
-  type ProviderLoaded     = Event Provider                  "Fired when Provider finishes loading"
-  type ProviderLoadFailed = Event { message : string } "Fired when Provider fails to load"
+  type ProviderLoaded     = Event { data : [Provider] }                  "Fired when Provider finishes loading"
+  type ProviderLoadFailed = Event { error : string, code : string } "Fired when Provider fails to load"
   type ProviderSaved = Event { id : string }
   type ProviderSaveFailed = Event { error : string, code : string }
   type ProviderUpdated = Event { id : string }
@@ -32,8 +32,12 @@ orbital ProviderOrbital {
   trait ProviderBrowse -> Provider [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Provider)
-        (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Providers", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Provider", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "briefcase" }, { name: "specialty", variant: "badge" }, { name: "rating", variant: "body", format: "number" }, { name: "location", variant: "body" }, { name: "phone", variant: "caption" }], cols: 2, gap: "md" }] }] })
+        (fetch Provider { emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ProviderLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Providers", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Provider", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "briefcase" }, { name: "specialty", variant: "badge" }, { name: "rating", variant: "body", format: "number" }, { name: "location", variant: "body" }, { name: "phone", variant: "caption" }], cols: 2, gap: "md" }] }] })
+      ProviderLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load provider" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       BOOK external { id: string }
@@ -45,7 +49,7 @@ orbital ProviderOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          ProviderLoadFailed { message : string }
+          ProviderLoadFailed { error : string, code : string }
     
       ProviderSaveFailed { error : string, code : string }
       ProviderUpdateFailed { error : string, code : string }
@@ -82,7 +86,7 @@ orbital ProviderOrbital {
     }
     listens {
       SAVE { data : object! }
-          ProviderLoadFailed { message : string }
+          ProviderLoadFailed { error : string, code : string }
     }
     emits: [ProviderLoadFailed, ProviderLoaded, ProviderSaveFailed, ProviderSaved]
   }
@@ -112,7 +116,7 @@ orbital ProviderOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          ProviderLoadFailed { message : string }
+          ProviderLoadFailed { error : string, code : string }
     }
     emits: [ProviderLoadFailed, ProviderLoaded, ProviderUpdateFailed, ProviderUpdated]
   }
@@ -137,7 +141,7 @@ orbital ProviderOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          ProviderLoadFailed { message : string }
+          ProviderLoadFailed { error : string, code : string }
     }
     emits: [ProviderLoaded, ProviderLoadFailed]
   }
@@ -172,7 +176,7 @@ orbital ProviderOrbital {
     }
     listens {
       DELETE { id : string! }
-          ProviderLoadFailed { message : string }
+          ProviderLoadFailed { error : string, code : string }
     }
     emits: [ProviderDeleteFailed, ProviderDeleted, ProviderLoadFailed, ProviderLoaded]
   }
@@ -189,8 +193,8 @@ orbital BookingOrbital {
     notes : string
   }
 
-  type BookingLoaded     = Event Booking                  "Fired when Booking finishes loading"
-  type BookingLoadFailed = Event { message : string } "Fired when Booking fails to load"
+  type BookingLoaded     = Event { data : [Booking] }                  "Fired when Booking finishes loading"
+  type BookingLoadFailed = Event { error : string, code : string } "Fired when Booking fails to load"
   type BookingSaveFailed = Event { error : string, code : string }
   type BookingSaved = Event { id : string }
   trait BookingWizard -> Booking [interaction, collection] {
@@ -238,7 +242,7 @@ orbital BookingOrbital {
     }
     listens {
       * BOOK -> INIT
-          BookingLoadFailed { message : string }
+          BookingLoadFailed { error : string, code : string }
           COMPLETE { data : string }
     }
     emits: [BookingLoadFailed, BookingLoaded, BookingSaveFailed, BookingSaved]
@@ -257,8 +261,8 @@ orbital AppointmentOrbital {
     pendingId : string = ""
   }
 
-  type AppointmentLoaded     = Event Appointment                  "Fired when Appointment finishes loading"
-  type AppointmentLoadFailed = Event { message : string } "Fired when Appointment fails to load"
+  type AppointmentLoaded     = Event { data : [Appointment] }                  "Fired when Appointment finishes loading"
+  type AppointmentLoadFailed = Event { error : string, code : string } "Fired when Appointment fails to load"
   type AppointmentDeleteFailed = Event { error : string, code : string }
   type AppointmentDeleted = Event { id : string }
   type AppointmentSaveFailed = Event { error : string, code : string }
@@ -268,14 +272,18 @@ orbital AppointmentOrbital {
   trait AppointmentBrowse -> Appointment [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Appointment)
-        (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "Appointments", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Appointment", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "customerName", label: "Customer", variant: "h3", icon: "clock" }, { name: "status", variant: "badge" }, { name: "providerName", label: "Provider", variant: "body" }, { name: "date", variant: "body", format: "date" }, { name: "time", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Appointment { emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      AppointmentLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "Appointments", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Appointment", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "customerName", label: "Customer", variant: "h3", icon: "clock" }, { name: "status", variant: "badge" }, { name: "providerName", label: "Provider", variant: "body" }, { name: "date", variant: "body", format: "date" }, { name: "time", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      AppointmentLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load appointment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       AppointmentCreate APPOINTMENT_CREATED -> INIT
       AppointmentEdit APPOINTMENT_UPDATED -> INIT
       AppointmentDelete APPOINTMENT_DELETED -> INIT
-          AppointmentLoadFailed { message : string }
+          AppointmentLoadFailed { error : string, code : string }
     }
     emits: [AppointmentLoaded, AppointmentLoadFailed]
   }
@@ -304,7 +312,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentSaveFailed, AppointmentSaved]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -333,7 +341,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentUpdateFailed, AppointmentUpdated]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -358,7 +366,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoaded, AppointmentLoadFailed]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -393,7 +401,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentDeleteFailed, AppointmentDeleted, AppointmentLoadFailed, AppointmentLoaded]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -408,8 +416,8 @@ orbital ScheduleOrbital {
     availableSlots : number
   }
 
-  type ScheduleLoaded     = Event Schedule                  "Fired when Schedule finishes loading"
-  type ScheduleLoadFailed = Event { message : string } "Fired when Schedule fails to load"
+  type ScheduleLoaded     = Event { data : [Schedule] }                  "Fired when Schedule finishes loading"
+  type ScheduleLoadFailed = Event { error : string, code : string } "Fired when Schedule fails to load"
   trait ScheduleDisplay -> Schedule [interaction, collection] {
     initial: loading
     state loading {
@@ -435,7 +443,7 @@ orbital ScheduleOrbital {
     }
     emits: [ScheduleLoaded, ScheduleLoadFailed]
     listens {
-      ScheduleLoadFailed { message : string }
+      ScheduleLoadFailed { error : string, code : string }
     }
   }
   page "/schedule" -> ScheduleDisplay

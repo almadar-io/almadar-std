@@ -13,8 +13,8 @@ orbital PatientOrbital {
     pendingId : string = ""
   }
 
-  type PatientLoaded     = Event Patient                  "Fired when Patient finishes loading"
-  type PatientLoadFailed = Event { message : string } "Fired when Patient fails to load"
+  type PatientLoaded     = Event { data : [Patient] }                  "Fired when Patient finishes loading"
+  type PatientLoadFailed = Event { error : string, code : string } "Fired when Patient fails to load"
   type PatientSaved = Event { id : string }
   type PatientSaveFailed = Event { error : string, code : string }
   type PatientUpdated = Event { id : string }
@@ -34,8 +34,12 @@ orbital PatientOrbital {
   trait PatientBrowse -> Patient [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Patient)
-        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Patients", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Patient", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Patients", value: "@entity", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "firstName", variant: "h3", icon: "user" }, { name: "lastName", variant: "h3" }, { name: "status", variant: "badge" }, { name: "dateOfBirth", label: "Date of Birth", variant: "body", format: "date" }, { name: "phone", variant: "caption" }, { name: "insuranceId", label: "Insurance ID", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Patient { emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PatientLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Patients", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Patient", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Patients", value: "@entity", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "firstName", variant: "h3", icon: "user" }, { name: "lastName", variant: "h3" }, { name: "status", variant: "badge" }, { name: "dateOfBirth", label: "Date of Birth", variant: "body", format: "date" }, { name: "phone", variant: "caption" }, { name: "insuranceId", label: "Insurance ID", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      PatientLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load patient" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       PatientCreate PATIENT_CREATED -> INIT
@@ -45,7 +49,7 @@ orbital PatientOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          PatientLoadFailed { message : string }
+          PatientLoadFailed { error : string, code : string }
     
       PatientSaveFailed { error : string, code : string }
       PatientUpdateFailed { error : string, code : string }
@@ -83,7 +87,7 @@ orbital PatientOrbital {
     }
     listens {
       SAVE { data : object! }
-          PatientLoadFailed { message : string }
+          PatientLoadFailed { error : string, code : string }
     }
     emits: [PatientLoadFailed, PatientLoaded, PatientSaveFailed, PatientSaved]
   }
@@ -113,7 +117,7 @@ orbital PatientOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          PatientLoadFailed { message : string }
+          PatientLoadFailed { error : string, code : string }
     }
     emits: [PatientLoadFailed, PatientLoaded, PatientUpdateFailed, PatientUpdated]
   }
@@ -138,7 +142,7 @@ orbital PatientOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          PatientLoadFailed { message : string }
+          PatientLoadFailed { error : string, code : string }
     }
     emits: [PatientLoaded, PatientLoadFailed]
   }
@@ -173,7 +177,7 @@ orbital PatientOrbital {
     }
     listens {
       DELETE { id : string! }
-          PatientLoadFailed { message : string }
+          PatientLoadFailed { error : string, code : string }
     }
     emits: [PatientDeleteFailed, PatientDeleted, PatientLoadFailed, PatientLoaded]
   }
@@ -191,8 +195,8 @@ orbital AppointmentOrbital {
     pendingId : string = ""
   }
 
-  type AppointmentLoaded     = Event Appointment                  "Fired when Appointment finishes loading"
-  type AppointmentLoadFailed = Event { message : string } "Fired when Appointment fails to load"
+  type AppointmentLoaded     = Event { data : [Appointment] }                  "Fired when Appointment finishes loading"
+  type AppointmentLoadFailed = Event { error : string, code : string } "Fired when Appointment fails to load"
   type AppointmentDeleteFailed = Event { error : string, code : string }
   type AppointmentDeleted = Event { id : string }
   type AppointmentSaveFailed = Event { error : string, code : string }
@@ -202,8 +206,12 @@ orbital AppointmentOrbital {
   trait AppointmentBrowse -> Appointment [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Appointment)
-        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Appointments", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Appointment", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "patientName", label: "Patient", variant: "h3", icon: "calendar" }, { name: "status", variant: "badge" }, { name: "doctorName", label: "Doctor", variant: "body" }, { name: "date", variant: "body", format: "date" }, { name: "time", variant: "caption" }, { name: "reason", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Appointment { emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      AppointmentLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Appointments", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Appointment", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "patientName", label: "Patient", variant: "h3", icon: "calendar" }, { name: "status", variant: "badge" }, { name: "doctorName", label: "Doctor", variant: "body" }, { name: "date", variant: "body", format: "date" }, { name: "time", variant: "caption" }, { name: "reason", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      AppointmentLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load appointment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       PRESCRIBE external { id: string }
@@ -212,7 +220,7 @@ orbital AppointmentOrbital {
       AppointmentCreate APPOINTMENT_CREATED -> INIT
       AppointmentEdit APPOINTMENT_UPDATED -> INIT
       AppointmentDelete APPOINTMENT_DELETED -> INIT
-          AppointmentLoadFailed { message : string }
+          AppointmentLoadFailed { error : string, code : string }
     }
     emits: [AppointmentLoaded, AppointmentLoadFailed]
   }
@@ -241,7 +249,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentSaveFailed, AppointmentSaved]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -270,7 +278,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentUpdateFailed, AppointmentUpdated]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -295,7 +303,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoaded, AppointmentLoadFailed]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -330,7 +338,7 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentDeleteFailed, AppointmentDeleted, AppointmentLoadFailed, AppointmentLoaded]
     listens {
-      AppointmentLoadFailed { message : string }
+      AppointmentLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -349,8 +357,8 @@ orbital IntakeFormOrbital {
     insuranceId : string
   }
 
-  type IntakeFormLoaded     = Event IntakeForm                  "Fired when IntakeForm finishes loading"
-  type IntakeFormLoadFailed = Event { message : string } "Fired when IntakeForm fails to load"
+  type IntakeFormLoaded     = Event { data : [IntakeForm] }                  "Fired when IntakeForm finishes loading"
+  type IntakeFormLoadFailed = Event { error : string, code : string } "Fired when IntakeForm fails to load"
   type IntakeFormSaveFailed = Event { error : string, code : string }
   type IntakeFormSaved = Event { id : string }
   trait IntakeFormWizard -> IntakeForm [interaction, collection] {
@@ -401,7 +409,7 @@ orbital IntakeFormOrbital {
     }
     emits: [IntakeFormLoadFailed, IntakeFormLoaded, IntakeFormSaveFailed, IntakeFormSaved]
     listens {
-      IntakeFormLoadFailed { message : string }
+      IntakeFormLoadFailed { error : string, code : string }
       COMPLETE { data : string }
     }
   }
@@ -419,19 +427,23 @@ orbital PrescriptionOrbital {
     endDate : datetime
   }
 
-  type PrescriptionLoaded     = Event Prescription                  "Fired when Prescription finishes loading"
-  type PrescriptionLoadFailed = Event { message : string } "Fired when Prescription fails to load"
+  type PrescriptionLoaded     = Event { data : [Prescription] }                  "Fired when Prescription finishes loading"
+  type PrescriptionLoadFailed = Event { error : string, code : string } "Fired when Prescription fails to load"
   type PrescriptionSaveFailed = Event { error : string, code : string }
   type PrescriptionSaved = Event { id : string }
   trait PrescriptionBrowse -> Prescription [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Prescription)
-        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Prescriptions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Prescription", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "medication", variant: "h3", icon: "pill" }, { name: "dosage", variant: "badge" }, { name: "frequency", variant: "body" }, { name: "patientName", label: "Patient", variant: "body" }, { name: "prescribedBy", label: "Prescribed By", variant: "caption" }, { name: "startDate", label: "Start Date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Prescription { emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PrescriptionLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Prescriptions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Prescription", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "medication", variant: "h3", icon: "pill" }, { name: "dosage", variant: "badge" }, { name: "frequency", variant: "body" }, { name: "patientName", label: "Patient", variant: "body" }, { name: "prescribedBy", label: "Prescribed By", variant: "caption" }, { name: "startDate", label: "Start Date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      PrescriptionLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load prescription" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       * PRESCRIBE -> INIT
-          PrescriptionLoadFailed { message : string }
+          PrescriptionLoadFailed { error : string, code : string }
     }
     emits: [PrescriptionLoaded, PrescriptionLoadFailed]
   }
@@ -456,7 +468,7 @@ orbital PrescriptionOrbital {
     }
     emits: [PrescriptionLoadFailed, PrescriptionLoaded, PrescriptionSaveFailed, PrescriptionSaved]
     listens {
-      PrescriptionLoadFailed { message : string }
+      PrescriptionLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -480,7 +492,7 @@ orbital PrescriptionOrbital {
     }
     emits: [PrescriptionLoaded, PrescriptionLoadFailed]
     listens {
-      PrescriptionLoadFailed { message : string }
+      PrescriptionLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -495,8 +507,8 @@ orbital DashboardOrbital {
     activePrescriptions : number
   }
 
-  type DashboardLoaded     = Event Dashboard                  "Fired when Dashboard finishes loading"
-  type DashboardLoadFailed = Event { message : string } "Fired when Dashboard fails to load"
+  type DashboardLoaded     = Event { data : [Dashboard] }                  "Fired when Dashboard finishes loading"
+  type DashboardLoadFailed = Event { error : string, code : string } "Fired when Dashboard fails to load"
   trait DashboardDisplay -> Dashboard [interaction, collection] {
     initial: loading
     state loading {
@@ -522,7 +534,7 @@ orbital DashboardOrbital {
     }
     emits: [DashboardLoaded, DashboardLoadFailed]
     listens {
-      DashboardLoadFailed { message : string }
+      DashboardLoadFailed { error : string, code : string }
     }
   }
   page "/dashboard" -> DashboardDisplay

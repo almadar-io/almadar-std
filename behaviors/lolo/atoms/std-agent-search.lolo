@@ -3,32 +3,49 @@ app std-agent-search "1.0.0"
 
 orbital AgentSearchOrbital {
   entity AgentSearch [persistent: agentsearchs] {
-    id : string
-    name : string
+    id          : string!
+    name        : string
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
-    query : string = ""
-    results : [string] = []
-    language : string = ""
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    query       : string = ""
+    results     : [string] = []
+    language    : string = ""
     resultCount : number = 0
   }
 
-  type AgentSearchLoaded     = Event AgentSearch                  "Fired when AgentSearch finishes loading"
-  type AgentSearchLoadFailed = Event { message : string } "Fired when AgentSearch fails to load"
+  type AgentSearchLoaded     = Event { data : [AgentSearch] }        "Fired when AgentSearch finishes loading; payload.data holds the list"
+  type AgentSearchLoadFailed = Event { error : string, code : string } "Fired when AgentSearch fails to load"
+
   trait AgentSearchBrowse -> AgentSearch [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading searches…" }] })
+      AgentSearchLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "AgentSearch", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", action: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] })
+      AgentSearchLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load searches" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state browsing {
-      INIT -> browsing
-        (ref AgentSearch)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search"}, { type: "typography", content: "AgentSearch", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", action: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", action: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] })
+      INIT -> loading
+        (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
+        (render-ui main { type: "spinner" })
     }
     listens {
       AgentSearchAgent SEARCHED -> INIT
-      VIEW { id : string!, row : object }
-          AgentSearchLoadFailed { message : string }
+      VIEW { id : string!, row : AgentSearch }
+      AgentSearchLoadFailed { error : string, code : string }
     }
     emits: [AgentSearchLoaded, AgentSearchLoadFailed]
   }
+
   trait AgentSearchAgent -> AgentSearch [interaction, collection] {
     initial: idle
     state idle {
@@ -36,35 +53,27 @@ orbital AgentSearchOrbital {
         (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
         (render-ui main { type: "empty-state", icon: "search", title: "Code Search", description: "Code Search is ready" })
       SEARCH -> searching
-        (set @entity.query @payload.query)
-        (set @entity.language @payload.language)
         (agent/search-code @payload.query @payload.language)
     }
     state searching {
       SEARCH -> results
         (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
-        (emit SEARCHED)
+        (emit SEARCHED { query: "@payload.query", resultCount: 0 })
     }
     state results {
       SEARCH -> searching
-        (set @entity.query @payload.query)
-        (set @entity.language @payload.language)
         (agent/search-code @payload.query @payload.language)
       CLEAR -> idle
-        (set @entity.query "")
-        (set @entity.results [])
-        (set @entity.language "")
-        (set @entity.resultCount 0)
     }
     emits {
-      SEARCHED external { query: string, resultCount: number }
-    }
-    listens {
-      AgentSearchAgent SEARCHED -> INIT
-      SEARCH { query : string!, language : string }
-          AgentSearchLoadFailed { message : string }
+      SEARCHED external { query : string!, resultCount : number }
     }
     emits: [AgentSearchLoaded, AgentSearchLoadFailed]
+    listens {
+      SEARCH { query : string!, language : string }
+      AgentSearchLoadFailed { error : string, code : string }
+    }
   }
+
   page "/agentsearchs" as AgentSearchPage -> AgentSearchBrowse, AgentSearchAgent
 }

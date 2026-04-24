@@ -3,15 +3,15 @@ app std-filter "1.0.0"
 
 orbital FilterTargetOrbital {
   entity FilterTarget [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type FilterTargetLoaded     = Event FilterTarget "Fired when FilterTarget collection finishes loading"
-  type FilterTargetLoadFailed = Event { message : string } "Fired when FilterTarget collection fails to load"
+  type FilterTargetLoaded     = Event { data : [FilterTarget] }        "Fired when FilterTarget finishes loading; payload.data holds the filtered list"
+  type FilterTargetLoadFailed = Event { error : string, code : string } "Fired when FilterTarget fails to load"
 
   trait FilterTargetFilter -> FilterTarget [interaction, collection] {
     initial: loading
@@ -20,21 +20,13 @@ orbital FilterTargetOrbital {
         (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       FilterTargetLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "filter" }, { type: "typography", content: "FilterTargets", variant: "h2" }] }, { type: "badge", label: "All" }] }, { type: "divider" }, { type: "filter-group", entity: "FilterTarget", filters: [{ field: "status", label: "Status", options: ["active", "inactive", "pending"], filterType: "select" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.status" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "filter" }, { type: "typography", content: "FilterTargets", variant: "h2" }] }, { type: "badge", label: "All" }] }, { type: "divider" }, { type: "filter-group", entity: "FilterTarget", filters: [{ field: "status", label: "Status", options: ["active", "inactive", "pending"], filterType: "select" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.status" }] }] }] })
       FilterTargetLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.message" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     state browsing {
-      INIT -> loading
-        (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "spinner" })
-      FILTER -> filtered
-        (fetch FilterTarget {filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "filter" }, { type: "typography", content: "FilterTargets", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "Filtered", variant: "primary" }, { type: "button", label: "Clear All", action: "CLEAR_FILTERS", variant: "ghost", icon: "x" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "filter" }, { type: "typography", variant: "caption", color: "muted", content: "Filtered by" }, { type: "badge", label: "@payload.field", variant: "secondary" }, { type: "typography", variant: "caption", content: "=" }, { type: "badge", label: "@payload.value", variant: "primary" }] }, { type: "divider" }, { type: "filter-group", entity: "FilterTarget", filters: [{ field: "status", label: "Status", options: ["active", "inactive", "pending"], filterType: "select" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.status" }] }] }] })
-    }
-    state filtered {
-      FILTER -> filtered
-        (fetch FilterTarget {filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" }, emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
+      FILTER -> loading
+        (fetch FilterTarget { filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
         (render-ui main { type: "spinner" })
       CLEAR_FILTERS -> loading
         (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
@@ -48,7 +40,7 @@ orbital FilterTargetOrbital {
     emits: [FilterTargetLoaded, FilterTargetLoadFailed]
     listens {
       FILTER { field : string!, value : string! }
-      FilterTargetLoadFailed { message : string }
+      FilterTargetLoadFailed { error : string, code : string }
     }
   }
   page "/filtertargets" as FilterTargetFilterPage -> FilterTargetFilter

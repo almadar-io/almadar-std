@@ -12,8 +12,8 @@ orbital TicketOrbital {
     pendingId : string = ""
   }
 
-  type TicketLoaded     = Event Ticket                  "Fired when Ticket finishes loading"
-  type TicketLoadFailed = Event { message : string } "Fired when Ticket fails to load"
+  type TicketLoaded     = Event { data : [Ticket] }                  "Fired when Ticket finishes loading"
+  type TicketLoadFailed = Event { error : string, code : string } "Fired when Ticket fails to load"
   type TicketSaved = Event { id : string }
   type TicketSaveFailed = Event { error : string, code : string }
   type TicketUpdated = Event { id : string }
@@ -25,8 +25,12 @@ orbital TicketOrbital {
   trait TicketBrowse -> Ticket [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Ticket)
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "inbox" }, { type: "typography", content: "Tickets", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Ticket", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Open Tickets", value: "@entity", icon: "inbox" }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "subject", variant: "h3", icon: "inbox" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "description", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TicketLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "inbox" }, { type: "typography", content: "Tickets", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Ticket", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Open Tickets", value: "@entity", icon: "inbox" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "subject", variant: "h3", icon: "inbox" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "description", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+      TicketLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load ticket" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       ASSIGN external { id: string }
@@ -38,7 +42,7 @@ orbital TicketOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          TicketLoadFailed { message : string }
+          TicketLoadFailed { error : string, code : string }
     
       TicketSaveFailed { error : string, code : string }
       TicketUpdateFailed { error : string, code : string }
@@ -72,7 +76,7 @@ orbital TicketOrbital {
     }
     listens {
       SAVE { data : object! }
-          TicketLoadFailed { message : string }
+          TicketLoadFailed { error : string, code : string }
     }
     emits: [TicketLoadFailed, TicketLoaded, TicketSaveFailed, TicketSaved]
   }
@@ -102,7 +106,7 @@ orbital TicketOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          TicketLoadFailed { message : string }
+          TicketLoadFailed { error : string, code : string }
     }
     emits: [TicketLoadFailed, TicketLoaded, TicketUpdateFailed, TicketUpdated]
   }
@@ -127,7 +131,7 @@ orbital TicketOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          TicketLoadFailed { message : string }
+          TicketLoadFailed { error : string, code : string }
     }
     emits: [TicketLoaded, TicketLoadFailed]
   }
@@ -162,7 +166,7 @@ orbital TicketOrbital {
     }
     listens {
       DELETE { id : string! }
-          TicketLoadFailed { message : string }
+          TicketLoadFailed { error : string, code : string }
     }
     emits: [TicketDeleteFailed, TicketDeleted, TicketLoadFailed, TicketLoaded]
   }
@@ -177,15 +181,19 @@ orbital ResponseOrbital {
     createdAt : datetime
   }
 
-  type ResponseLoaded     = Event Response                  "Fired when Response finishes loading"
-  type ResponseLoadFailed = Event { message : string } "Fired when Response fails to load"
+  type ResponseLoaded     = Event { data : [Response] }                  "Fired when Response finishes loading"
+  type ResponseLoadFailed = Event { error : string, code : string } "Fired when Response fails to load"
   type ResponseSaveFailed = Event { error : string, code : string }
   type ResponseSaved = Event { id : string }
   trait ResponseBrowse -> Response [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Response)
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Responses", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ResponseLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Responses", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+      ResponseLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load response" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
       RESOLVE external { id: string }
@@ -193,7 +201,7 @@ orbital ResponseOrbital {
     listens {
       ResponseCompose SEND -> INIT
       * ASSIGN -> INIT
-          ResponseLoadFailed { message : string }
+          ResponseLoadFailed { error : string, code : string }
     }
     emits: [ResponseLoaded, ResponseLoadFailed]
   }
@@ -220,7 +228,7 @@ orbital ResponseOrbital {
     }
     emits: [ResponseLoadFailed, ResponseLoaded, ResponseSaveFailed, ResponseSaved]
     listens {
-      ResponseLoadFailed { message : string }
+      ResponseLoadFailed { error : string, code : string }
       SEND { data : string }
     }
   }
@@ -244,7 +252,7 @@ orbital ResponseOrbital {
     }
     emits: [ResponseLoaded, ResponseLoadFailed]
     listens {
-      ResponseLoadFailed { message : string }
+      ResponseLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -260,8 +268,8 @@ orbital SupportMetricsOrbital {
     activeAgents : number
   }
 
-  type SupportMetricsLoaded     = Event SupportMetrics                  "Fired when SupportMetrics finishes loading"
-  type SupportMetricsLoadFailed = Event { message : string } "Fired when SupportMetrics fails to load"
+  type SupportMetricsLoaded     = Event { data : [SupportMetrics] }                  "Fired when SupportMetrics finishes loading"
+  type SupportMetricsLoadFailed = Event { error : string, code : string } "Fired when SupportMetrics fails to load"
   trait SupportMetricsDisplay -> SupportMetrics [interaction, collection] {
     initial: loading
     state loading {
@@ -287,7 +295,7 @@ orbital SupportMetricsOrbital {
     }
     listens {
       * RESOLVE -> INIT
-          SupportMetricsLoadFailed { message : string }
+          SupportMetricsLoadFailed { error : string, code : string }
     }
     emits: [SupportMetricsLoaded, SupportMetricsLoadFailed]
   }

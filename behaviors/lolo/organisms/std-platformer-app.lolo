@@ -12,8 +12,8 @@ orbital PlatLevelOrbital {
     platforms : string = ""
   }
 
-  type PlatLevelLoaded     = Event PlatLevel                  "Fired when PlatLevel finishes loading"
-  type PlatLevelLoadFailed = Event { message : string } "Fired when PlatLevel fails to load"
+  type PlatLevelLoaded     = Event { data : [PlatLevel] }                  "Fired when PlatLevel finishes loading"
+  type PlatLevelLoadFailed = Event { error : string, code : string } "Fired when PlatLevel fails to load"
   type CollectibleSaved = Event { id : string }
   type CollectibleSaveFailed = Event { error : string, code : string }
   type CollectibleUpdated = Event { id : string }
@@ -58,7 +58,7 @@ orbital PlatLevelOrbital {
     }
     emits: [PlatLevelLoaded, PlatLevelLoadFailed, CollectibleSaved, CollectibleSaveFailed, CollectibleUpdated, CollectibleUpdateFailed, CollectibleDeleted, CollectibleDeleteFailed]
     listens {
-      PlatLevelLoadFailed { message : string }
+      PlatLevelLoadFailed { error : string, code : string }
     
       CollectibleSaveFailed { error : string, code : string }
       CollectibleUpdateFailed { error : string, code : string }
@@ -82,7 +82,7 @@ orbital PlatLevelOrbital {
     }
     emits: [PlatLevelLoaded, PlatLevelLoadFailed]
     listens {
-      PlatLevelLoadFailed { message : string }
+      PlatLevelLoadFailed { error : string, code : string }
     }
   }
   page "/game" as GamePage -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas
@@ -99,8 +99,8 @@ orbital PlatScoreOrbital {
     multiplier : number
   }
 
-  type PlatScoreLoaded     = Event PlatScore                  "Fired when PlatScore finishes loading"
-  type PlatScoreLoadFailed = Event { message : string } "Fired when PlatScore fails to load"
+  type PlatScoreLoaded     = Event { data : [PlatScore] }                  "Fired when PlatScore finishes loading"
+  type PlatScoreLoadFailed = Event { error : string, code : string } "Fired when PlatScore fails to load"
   trait PlatScoreScoreBoard -> PlatScore [interaction, collection] {
     state idle {
       INIT -> idle
@@ -121,7 +121,7 @@ orbital PlatScoreOrbital {
     }
     emits: [PlatScoreLoaded, PlatScoreLoadFailed]
     listens {
-      PlatScoreLoadFailed { message : string }
+      PlatScoreLoadFailed { error : string, code : string }
       ADD_SCORE { points : string }
       COMBO { multiplier : string }
     }
@@ -138,8 +138,8 @@ orbital CollectibleOrbital {
     pendingId : string
   }
 
-  type CollectibleLoaded     = Event Collectible                  "Fired when Collectible finishes loading"
-  type CollectibleLoadFailed = Event { message : string } "Fired when Collectible fails to load"
+  type CollectibleLoaded     = Event { data : [Collectible] }                  "Fired when Collectible finishes loading"
+  type CollectibleLoadFailed = Event { error : string, code : string } "Fired when Collectible fails to load"
   type CollectibleDeleteFailed = Event { error : string, code : string }
   type CollectibleDeleted = Event { id : string }
   type CollectibleSaveFailed = Event { error : string, code : string }
@@ -149,14 +149,18 @@ orbital CollectibleOrbital {
   trait CollectibleBrowse -> Collectible [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Collectible)
-        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      CollectibleLoaded -> browsing
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", action: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost" }, { label: "Drop", event: "DROP", variant: "danger" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+      CollectibleLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load collectible" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       CollectibleAdd ITEM_ADDED -> INIT
       CollectibleUse ITEM_USED -> INIT
       CollectibleDrop CONFIRM_DROP -> INIT
-          CollectibleLoadFailed { message : string }
+          CollectibleLoadFailed { error : string, code : string }
     }
     emits: [CollectibleLoaded, CollectibleLoadFailed]
   }
@@ -185,7 +189,7 @@ orbital CollectibleOrbital {
     }
     emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleSaveFailed, CollectibleSaved]
     listens {
-      CollectibleLoadFailed { message : string }
+      CollectibleLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -214,7 +218,7 @@ orbital CollectibleOrbital {
     }
     emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleUpdateFailed, CollectibleUpdated]
     listens {
-      CollectibleLoadFailed { message : string }
+      CollectibleLoadFailed { error : string, code : string }
       USE_ITEM { id : string }
       SAVE { data : string }
     }
@@ -249,7 +253,7 @@ orbital CollectibleOrbital {
     }
     emits: [CollectibleDeleteFailed, CollectibleDeleted, CollectibleLoadFailed, CollectibleLoaded]
     listens {
-      CollectibleLoadFailed { message : string }
+      CollectibleLoadFailed { error : string, code : string }
       DROP { id : string }
     }
   }

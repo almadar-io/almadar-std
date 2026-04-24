@@ -3,130 +3,122 @@ app std-agent-session "1.0.0"
 
 orbital AgentSessionOrbital {
   entity AgentSession [persistent: agentsessions] {
-    id : string
-    name : string
+    id          : string!
+    name        : string
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
-    sessionId : string = ""
-    parentId : string = ""
-    label : string = ""
+    status      : "active" | "inactive" | "pending" | "forked" | "ended" = "active"
+    createdAt   : string
+    sessionId   : string = ""
+    parentId    : string = ""
+    label       : string = ""
   }
 
-  type AgentSessionLoaded     = Event AgentSession                  "Fired when AgentSession finishes loading"
-  type AgentSessionLoadFailed = Event { message : string } "Fired when AgentSession fails to load"
-  type AgentSessionUpdated = Event { id : string }
-  type AgentSessionUpdateFailed = Event { error : string, code : string }
-  type AgentSessionSaved = Event { id : string }
-  type AgentSessionSaveFailed = Event { error : string, code : string }
+  type AgentSessionLoaded        = Event { data : [AgentSession] }        "Fired when AgentSession finishes loading; payload.data holds the sessions"
+  type AgentSessionLoadFailed    = Event { error : string, code : string } "Fired when AgentSession fails to load"
+  type AgentSessionSaved         = Event { id : string }                   "Fired when a new session is persisted"
+  type AgentSessionSaveFailed    = Event { error : string, code : string } "Fired when persisting a session fails"
+  type AgentSessionUpdated       = Event { id : string }                   "Fired when a session is updated"
+  type AgentSessionUpdateFailed  = Event { error : string, code : string } "Fired when updating a session fails"
+
   trait AgentSessionBrowse -> AgentSession [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading sessions…" }] })
+      AgentSessionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal" }, { type: "typography", content: "AgentSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge" }, { name: "label", label: "Label", variant: "caption" }] }] })
+      AgentSessionLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load sessions" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state browsing {
-      INIT -> browsing
-        (ref AgentSession)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "AgentSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] })
+      INIT -> loading
+        (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
+        (render-ui main { type: "spinner" })
     }
     listens {
       AgentSessionAgent FORKED -> INIT
       AgentSessionLabel LABELED -> INIT
       AgentSessionAgent ENDED -> INIT
-      VIEW { id : string!, row : object }
-          AgentSessionLoadFailed { message : string }
-    
+      VIEW { id : string!, row : AgentSession }
+      AgentSessionLoadFailed { error : string, code : string }
       AgentSessionUpdateFailed { error : string, code : string }
       AgentSessionSaveFailed { error : string, code : string }
     }
     emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionUpdated, AgentSessionUpdateFailed, AgentSessionSaved, AgentSessionSaveFailed]
   }
-  trait AgentSessionLabel -> AgentSession [interaction, collection] {
+
+  trait AgentSessionLabel -> AgentSession [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
-        (ref AgentSession)
-      LABEL -> open
         (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Session:" }, { type: "badge", label: "@entity.sessionId" }] }, { type: "form-section", entity: "AgentSession", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
+      LABEL -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag" }, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentSession", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
     }
     state open {
       CLOSE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (notify Cancelled info)
       SAVE -> closed
         (persist update AgentSession @payload.data { emit: { success: "AgentSessionUpdated", failure: "AgentSessionUpdateFailed" } })
+        (emit LABELED { id: "@payload.data.id" })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (emit LABELED)
     }
     emits {
-      LABELED external { id: string }
+      LABELED external { id : string! }
     }
+    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionUpdated, AgentSessionUpdateFailed]
     listens {
-      SAVE { data : object! }
-          AgentSessionLoadFailed { message : string }
+      SAVE { data : AgentSession }
+      AgentSessionLoadFailed { error : string, code : string }
     }
-    emits: [AgentSessionLoadFailed, AgentSessionLoaded, AgentSessionUpdateFailed, AgentSessionUpdated]
   }
+
   trait AgentSessionAgent -> AgentSession [interaction, collection] {
     initial: active
     state active {
       INIT -> active
         (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
-        (agent/session-id)
-        (set @entity.createdAt @now)
         (render-ui main { type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" })
       FORK -> forked
-        (set @entity.parentId @entity.sessionId)
         (agent/fork)
-        (agent/session-id)
-        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
-        (emit FORKED)
+        (persist create AgentSession { status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
+        (emit FORKED { sessionId: "" })
       DO_LABEL -> active
         (agent/label @payload.data.label)
-        (set @entity.label @payload.data.label)
-      LABELED -> active
-        (agent/label @entity.label)
-        (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
       END -> ended
-        (set @entity.status ended)
-        (emit ENDED)
+        (emit ENDED { sessionId: "" })
     }
     state forked {
       FORK -> forked
-        (set @entity.parentId @entity.sessionId)
         (agent/fork)
-        (agent/session-id)
-        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
-        (emit FORKED)
-      DO_LABEL -> forked
-        (agent/label @payload.data.label)
-        (set @entity.label @payload.data.label)
-      LABELED -> forked
-        (agent/label @entity.label)
-        (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
+        (persist create AgentSession { status: "forked", createdAt: "@now" } { emit: { success: "AgentSessionSaved", failure: "AgentSessionSaveFailed" } })
+        (emit FORKED { sessionId: "" })
       END -> ended
-        (set @entity.status ended)
-        (emit ENDED)
+        (emit ENDED { sessionId: "" })
     }
     state ended {
       INIT -> active
         (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
-        (agent/session-id)
-        (set @entity.createdAt @now)
-        (set @entity.status active)
         (render-ui main { type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" })
     }
     emits {
-      ENDED external { sessionId: string }
-      FORKED external { sessionId: string }
+      ENDED  external { sessionId : string! }
+      FORKED external { sessionId : string! }
     }
+    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionSaved, AgentSessionSaveFailed]
     listens {
-      AgentSessionAgent ENDED -> INIT
-      AgentSessionAgent FORKED -> INIT
-      DO_LABEL { data : object! }
-      LABELED { data : object! }
-          AgentSessionLoadFailed { message : string }
+      DO_LABEL { data : AgentSession }
+      AgentSessionLoadFailed { error : string, code : string }
     }
-    emits: [AgentSessionLoadFailed, AgentSessionLoaded, AgentSessionSaveFailed, AgentSessionSaved]
   }
+
   page "/agentsessions" as AgentSessionPage -> AgentSessionBrowse, AgentSessionLabel, AgentSessionAgent
 }

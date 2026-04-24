@@ -11,8 +11,8 @@ orbital RouteOrbital {
     pendingId : string = ""
   }
 
-  type RouteLoaded     = Event Route                  "Fired when Route finishes loading"
-  type RouteLoadFailed = Event { message : string } "Fired when Route fails to load"
+  type RouteLoaded     = Event { data : [Route] }                  "Fired when Route finishes loading"
+  type RouteLoadFailed = Event { error : string, code : string } "Fired when Route fails to load"
   type RouteSaved = Event { id : string }
   type RouteSaveFailed = Event { error : string, code : string }
   type RouteUpdated = Event { id : string }
@@ -22,8 +22,12 @@ orbital RouteOrbital {
   trait RouteBrowse -> Route [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Route)
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "Routes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Route", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "method", variant: "badge" }, { name: "path", variant: "h3", icon: "git-branch" }, { name: "backend", variant: "body" }, { name: "rateLimit", label: "Rate Limit", variant: "caption", format: "number" }], variant: "card", gap: "sm" }] }] })
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading routes…" }] })
+      RouteLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "Routes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Route", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "method", variant: "badge" }, { name: "path", variant: "h3", icon: "git-branch" }, { name: "backend", variant: "body" }, { name: "rateLimit", label: "Rate Limit", variant: "caption", format: "number" }], variant: "card", gap: "sm" }] }] })
+      RouteLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load routes" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       RouteCreate ROUTE_CREATED -> INIT
@@ -32,7 +36,7 @@ orbital RouteOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
-          RouteLoadFailed { message : string }
+          RouteLoadFailed { error : string, code : string }
     
       RouteSaveFailed { error : string, code : string }
       RouteUpdateFailed { error : string, code : string }
@@ -65,7 +69,7 @@ orbital RouteOrbital {
     }
     listens {
       SAVE { data : object! }
-          RouteLoadFailed { message : string }
+          RouteLoadFailed { error : string, code : string }
     }
     emits: [RouteLoadFailed, RouteLoaded, RouteSaveFailed, RouteSaved]
   }
@@ -95,7 +99,7 @@ orbital RouteOrbital {
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
-          RouteLoadFailed { message : string }
+          RouteLoadFailed { error : string, code : string }
     }
     emits: [RouteLoadFailed, RouteLoaded, RouteUpdateFailed, RouteUpdated]
   }
@@ -121,7 +125,7 @@ orbital RouteOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          RouteLoadFailed { message : string }
+          RouteLoadFailed { error : string, code : string }
     }
     emits: [RouteLoaded, RouteLoadFailed]
   }
@@ -156,7 +160,7 @@ orbital RouteOrbital {
     }
     listens {
       DELETE { id : string! }
-          RouteLoadFailed { message : string }
+          RouteLoadFailed { error : string, code : string }
     }
     emits: [RouteDeleteFailed, RouteDeleted, RouteLoadFailed, RouteLoaded]
   }
@@ -174,8 +178,8 @@ orbital BackendOrbital {
     threshold : number
   }
 
-  type BackendLoaded     = Event Backend                  "Fired when Backend finishes loading"
-  type BackendLoadFailed = Event { message : string } "Fired when Backend fails to load"
+  type BackendLoaded     = Event { data : [Backend] }                  "Fired when Backend finishes loading"
+  type BackendLoadFailed = Event { error : string, code : string } "Fired when Backend fails to load"
   trait BackendCircuitBreaker -> Backend [interaction, collection] {
     initial: closed
     state closed {
@@ -203,7 +207,7 @@ orbital BackendOrbital {
     }
     emits: [BackendLoaded, BackendLoadFailed]
     listens {
-      BackendLoadFailed { message : string }
+      BackendLoadFailed { error : string, code : string }
     }
   }
   page "/backends" -> BackendCircuitBreaker
@@ -217,8 +221,8 @@ orbital AnalyticsOrbital {
     uptime : string
   }
 
-  type AnalyticsLoaded     = Event Analytics                  "Fired when Analytics finishes loading"
-  type AnalyticsLoadFailed = Event { message : string } "Fired when Analytics fails to load"
+  type AnalyticsLoaded     = Event { data : [Analytics] }                  "Fired when Analytics finishes loading"
+  type AnalyticsLoadFailed = Event { error : string, code : string } "Fired when Analytics fails to load"
   trait AnalyticsDisplay -> Analytics [interaction, collection] {
     initial: loading
     state loading {
@@ -244,7 +248,7 @@ orbital AnalyticsOrbital {
     }
     emits: [AnalyticsLoaded, AnalyticsLoadFailed]
     listens {
-      AnalyticsLoadFailed { message : string }
+      AnalyticsLoadFailed { error : string, code : string }
     }
   }
   page "/analytics" -> AnalyticsDisplay

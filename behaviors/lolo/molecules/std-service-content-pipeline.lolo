@@ -3,90 +3,73 @@ app std-service-content-pipeline "1.0.0"
 
 orbital ServiceContentPipelineOrbital {
   entity ServiceContentPipeline [runtime] {
-    id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
-    query : string = ""
-    videoTitle : string = ""
+    id               : string!
+    name             : string
+    description      : string
+    status           : "active" | "inactive" | "pending" = "active"
+    createdAt        : string
+    query            : string = ""
+    videoTitle       : string = ""
     videoDescription : string = ""
-    summary : string = ""
-    pipelineStatus : string = "idle"
-    error : string = ""
+    summary          : string = ""
+    pipelineStatus   : "idle" | "searching" | "results" | "summarizing" | "complete" | "error" = "idle"
+    error            : string = ""
   }
-  type ServiceContentPipelineYoutubeCompleted = Event { result : object }
-  type ServiceContentPipelineYoutubeFailed = Event { error : string, code : string }
-  type ServiceContentPipelineLlmCompleted = Event { result : object }
-  type ServiceContentPipelineLlmFailed = Event { error : string, code : string }
+
+  type ServiceContentPipelineYoutubeCompleted = Event { result : object }                "Fired when youtube.search/getVideo succeeds; result is the raw service response"
+  type ServiceContentPipelineYoutubeFailed    = Event { error : string, code : string }  "Fired when youtube service call fails"
+  type ServiceContentPipelineLlmCompleted     = Event { result : object }                "Fired when llm.summarize succeeds; result carries the summary text"
+  type ServiceContentPipelineLlmFailed        = Event { error : string, code : string }  "Fired when llm service call fails"
+  type SearchComplete                         = Event { results : [ServiceContentPipeline] } "Fired after youtube search completes with narrow result rows (projected into the entity shape)"
+
   trait ServiceContentPipelinePipeline -> ServiceContentPipeline [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
       SEARCH -> searching
-        (set @entity.pipelineStatus searching)
-        (call-service youtube search { query: "@entity.query", maxResults: 5, type: "video" } { emit: { success: "ServiceContentPipelineYoutubeCompleted", failure: "ServiceContentPipelineYoutubeFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Searching YouTube...", variant: "h3" }, { type: "spinner" }, { type: "typography", content: "@entity.query", variant: "caption" }] })
+        (call-service youtube search { query: "@payload.query", maxResults: 5, type: "video" } { emit: { success: "ServiceContentPipelineYoutubeCompleted", failure: "ServiceContentPipelineYoutubeFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Searching YouTube...", variant: "h3" }, { type: "spinner" }, { type: "typography", content: "@payload.query", variant: "caption" }] })
     }
     state searching {
-      SEARCH_COMPLETE -> results
-        (set @entity.pipelineStatus results)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], itemActions: [{ label: "Summarize", event: "SELECT_AND_SUMMARIZE", variant: "primary" }], columns: [{ name: "videoTitle", label: "Title", variant: "h4", icon: "video" }, { name: "videoDescription", label: "Description", variant: "caption" }] }] })
-      FAILED -> error
-        (set @entity.error @payload.error)
-        (set @entity.pipelineStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+      SearchComplete -> results
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.results, fields: [], itemActions: [{ label: "Summarize", event: "SELECT_AND_SUMMARIZE", variant: "primary" }], columns: [{ name: "videoTitle", label: "Title", variant: "h4", icon: "video" }, { name: "videoDescription", label: "Description", variant: "caption" }] }] })
+      ServiceContentPipelineYoutubeFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Search failed", variant: "h2" }, { type: "alert", variant: "error", message: "@payload.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
     }
     state results {
       SELECT_AND_SUMMARIZE -> summarizing
-        (set @entity.pipelineStatus summarizing)
         (call-service youtube "getVideo" { videoId: "@payload.videoId" } { emit: { success: "ServiceContentPipelineYoutubeCompleted", failure: "ServiceContentPipelineYoutubeFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu" }, { type: "typography", content: "Fetching & summarizing...", variant: "h3" }, { type: "spinner" }, { type: "typography", content: "@entity.videoTitle", variant: "caption" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu" }, { type: "typography", content: "Fetching & summarizing...", variant: "h3" }, { type: "spinner" }] })
       RESET -> idle
-        (set @entity.pipelineStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
     }
     state summarizing {
       VIDEO_FETCHED -> summarizing
-        (set @entity.videoTitle @payload.title)
-        (set @entity.videoDescription @payload.description)
-        (call-service llm summarize { text: "@entity.videoDescription" } { emit: { success: "ServiceContentPipelineLlmCompleted", failure: "ServiceContentPipelineLlmFailed" } })
+        (call-service llm summarize { text: "@payload.description" } { emit: { success: "ServiceContentPipelineLlmCompleted", failure: "ServiceContentPipelineLlmFailed" } })
       SUMMARY_COMPLETE -> complete
-        (set @entity.summary @payload.content)
-        (set @entity.pipelineStatus complete)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Research Complete", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "@entity.videoTitle", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "Summary", variant: "caption" }, { type: "typography", content: "@entity.summary", variant: "body" }] }] }] })
-      FAILED -> error
-        (set @entity.error @payload.error)
-        (set @entity.pipelineStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Research Complete", variant: "h2" }] }, { type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Summary", variant: "caption" }, { type: "typography", content: "@payload.content", variant: "body" }] }] }] })
+      ServiceContentPipelineLlmFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Summarization failed", variant: "h2" }, { type: "alert", variant: "error", message: "@payload.error" }, { type: "button", label: "Try Again", action: "RESET", variant: "primary", icon: "rotate-ccw" }] })
     }
     state complete {
       RESET -> idle
-        (set @entity.pipelineStatus idle)
-        (set @entity.error "")
-        (set @entity.summary "")
-        (set @entity.videoTitle "")
-        (set @entity.videoDescription "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
     }
     state error {
       RESET -> idle
-        (set @entity.pipelineStatus idle)
-        (set @entity.error "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
     }
 
-    emits: [ServiceContentPipelineLlmCompleted, ServiceContentPipelineLlmFailed, ServiceContentPipelineYoutubeCompleted, ServiceContentPipelineYoutubeFailed]
+    emits: [SearchComplete, ServiceContentPipelineLlmCompleted, ServiceContentPipelineLlmFailed, ServiceContentPipelineYoutubeCompleted, ServiceContentPipelineYoutubeFailed]
     listens {
-      SEARCH_COMPLETE { results : array! }
-      SELECT_AND_SUMMARIZE { videoId : string! }
-      VIDEO_FETCHED { title : string!, description : string! }
-      SUMMARY_COMPLETE { content : string! }
-      FAILED { error : string! }
-    
+      SEARCH                { query       : string! }
+      SearchComplete        { results     : [ServiceContentPipeline] }
+      SELECT_AND_SUMMARIZE  { videoId     : string! }
+      VIDEO_FETCHED         { title       : string!, description : string! }
+      SUMMARY_COMPLETE      { content     : string! }
       ServiceContentPipelineYoutubeFailed { error : string, code : string }
-      ServiceContentPipelineLlmFailed { error : string, code : string }
+      ServiceContentPipelineLlmFailed     { error : string, code : string }
     }
   }
   page "/servicecontentpipelines" as ServiceContentPipelinePage -> ServiceContentPipelinePipeline

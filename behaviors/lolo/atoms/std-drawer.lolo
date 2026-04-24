@@ -3,34 +3,45 @@ app std-drawer "1.0.0"
 
 orbital DrawerContentOrbital {
   entity DrawerContent [runtime] {
-    id : string
-    name : string
+    id          : string!
+    name        : string!
     description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
   }
 
-  type DrawerContentLoaded     = Event DrawerContent                  "Fired when DrawerContent finishes loading"
-  type DrawerContentLoadFailed = Event { message : string } "Fired when DrawerContent fails to load"
+  type DrawerContentLoaded     = Event { data : [DrawerContent] }        "Fired when DrawerContent finishes loading; payload.data holds the list"
+  type DrawerContentLoadFailed = Event { error : string, code : string } "Fired when DrawerContent fails to load"
+
   trait DrawerContentDrawer -> DrawerContent [interaction, collection] {
-    initial: closed
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch DrawerContent { emit: { success: "DrawerContentLoaded", failure: "DrawerContentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      DrawerContentLoaded -> closed
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "panel-right" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", action: "OPEN", variant: "primary", icon: "panel-right" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }] }] }] })
+      DrawerContentLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
     state closed {
-      INIT -> closed
-        (fetch DrawerContent { emit: { success: "DrawerContentLoaded", failure: "DrawerContentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "panel-right" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", action: "OPEN", variant: "primary", icon: "panel-right" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }] }] }] })
       OPEN -> open
-        (fetch DrawerContent { emit: { success: "DrawerContentLoaded", failure: "DrawerContentLoadFailed" } })
-        (render-ui drawer { type: "stack", direction: "vertical", gap: "none", children: [{ type: "drawer", title: "Details", isOpen: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] }] }, { type: "side-panel", onClose: "CLOSE", title: "Details", isOpen: true, position: "right", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }] }] }] })
+        (render-ui drawer { type: "side-panel", onClose: "CLOSE", title: "Details", isOpen: true, position: "right", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "body", content: "Drawer content" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] }] })
     }
     state open {
-      CLOSE -> closed
+      CLOSE -> loading
         (render-ui drawer null)
         (fetch DrawerContent { emit: { success: "DrawerContentLoaded", failure: "DrawerContentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "panel-right" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", action: "OPEN", variant: "primary", icon: "panel-right" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity", fields: [], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }] }] }] })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch DrawerContent { emit: { success: "DrawerContentLoaded", failure: "DrawerContentLoadFailed" } })
+        (render-ui main { type: "spinner" })
     }
     emits: [DrawerContentLoaded, DrawerContentLoadFailed]
     listens {
-      DrawerContentLoadFailed { message : string }
+      DrawerContentLoadFailed { error : string, code : string }
     }
   }
   page "/drawercontents/drawer" as DrawerContentDrawerPage -> DrawerContentDrawer

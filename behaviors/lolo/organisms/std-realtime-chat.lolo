@@ -10,8 +10,8 @@ orbital ChatMessageOrbital {
     timestamp : datetime
   }
 
-  type ChatMessageLoaded     = Event ChatMessage                  "Fired when ChatMessage finishes loading"
-  type ChatMessageLoadFailed = Event { message : string } "Fired when ChatMessage fails to load"
+  type ChatMessageLoaded     = Event { data : [ChatMessage] }                  "Fired when ChatMessage finishes loading"
+  type ChatMessageLoadFailed = Event { error : string, code : string } "Fired when ChatMessage fails to load"
   type ChatMessageSaved = Event { id : string }
   type ChatMessageSaveFailed = Event { error : string, code : string }
   type ChannelSaved = Event { id : string }
@@ -23,13 +23,17 @@ orbital ChatMessageOrbital {
   trait ChatMessageBrowse -> ChatMessage [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref ChatMessage)
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Chat", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "sender", variant: "h4" }, { name: "content", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "message", senderField: "sender", gap: "sm" }] }] })
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ChatMessageLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Chat", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], columns: [{ name: "sender", variant: "h4" }, { name: "content", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "message", senderField: "sender", gap: "sm" }] }] })
+      ChatMessageLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load chatmessage" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       ChatMessageCompose SEND -> INIT
       VIEW { id : string!, row : object }
-          ChatMessageLoadFailed { message : string }
+          ChatMessageLoadFailed { error : string, code : string }
     
       ChatMessageSaveFailed { error : string, code : string }
       ChannelSaveFailed { error : string, code : string }
@@ -61,7 +65,7 @@ orbital ChatMessageOrbital {
     }
     listens {
       SEND { data : object! }
-          ChatMessageLoadFailed { message : string }
+          ChatMessageLoadFailed { error : string, code : string }
     }
     emits: [ChatMessageLoadFailed, ChatMessageLoaded, ChatMessageSaveFailed, ChatMessageSaved]
   }
@@ -87,7 +91,7 @@ orbital ChatMessageOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
-          ChatMessageLoadFailed { message : string }
+          ChatMessageLoadFailed { error : string, code : string }
     }
     emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
@@ -103,8 +107,8 @@ orbital ChannelOrbital {
     pendingId : string = ""
   }
 
-  type ChannelLoaded     = Event Channel                  "Fired when Channel finishes loading"
-  type ChannelLoadFailed = Event { message : string } "Fired when Channel fails to load"
+  type ChannelLoaded     = Event { data : [Channel] }                  "Fired when Channel finishes loading"
+  type ChannelLoadFailed = Event { error : string, code : string } "Fired when Channel fails to load"
   type ChannelDeleteFailed = Event { error : string, code : string }
   type ChannelDeleted = Event { id : string }
   type ChannelSaveFailed = Event { error : string, code : string }
@@ -114,14 +118,18 @@ orbital ChannelOrbital {
   trait ChannelBrowse -> Channel [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref Channel)
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hash" }, { type: "typography", content: "Channels", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Channel", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "hash" }, { name: "memberCount", label: "Members", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "isPrivate", label: "Private", variant: "body", format: "boolean" }], variant: "card", gap: "sm" }] }] })
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      ChannelLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hash" }, { type: "typography", content: "Channels", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Channel", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "name", variant: "h3", icon: "hash" }, { name: "memberCount", label: "Members", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "isPrivate", label: "Private", variant: "body", format: "boolean" }], variant: "card", gap: "sm" }] }] })
+      ChannelLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load channel" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       ChannelCreate CHANNEL_CREATED -> INIT
       ChannelEdit CHANNEL_UPDATED -> INIT
       ChannelDelete CHANNEL_DELETED -> INIT
-          ChannelLoadFailed { message : string }
+          ChannelLoadFailed { error : string, code : string }
     }
     emits: [ChannelLoaded, ChannelLoadFailed]
   }
@@ -150,7 +158,7 @@ orbital ChannelOrbital {
     }
     emits: [ChannelLoadFailed, ChannelLoaded, ChannelSaveFailed, ChannelSaved]
     listens {
-      ChannelLoadFailed { message : string }
+      ChannelLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -179,7 +187,7 @@ orbital ChannelOrbital {
     }
     emits: [ChannelLoadFailed, ChannelLoaded, ChannelUpdateFailed, ChannelUpdated]
     listens {
-      ChannelLoadFailed { message : string }
+      ChannelLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -205,7 +213,7 @@ orbital ChannelOrbital {
 
     emits: [ChannelLoaded, ChannelLoadFailed]
     listens {
-      ChannelLoadFailed { message : string }
+      ChannelLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -240,7 +248,7 @@ orbital ChannelOrbital {
     }
     emits: [ChannelDeleteFailed, ChannelDeleted, ChannelLoadFailed, ChannelLoaded]
     listens {
-      ChannelLoadFailed { message : string }
+      ChannelLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -255,8 +263,8 @@ orbital OnlineUserOrbital {
     avatar : string
   }
 
-  type OnlineUserLoaded     = Event OnlineUser                  "Fired when OnlineUser finishes loading"
-  type OnlineUserLoadFailed = Event { message : string } "Fired when OnlineUser fails to load"
+  type OnlineUserLoaded     = Event { data : [OnlineUser] }                  "Fired when OnlineUser finishes loading"
+  type OnlineUserLoadFailed = Event { error : string, code : string } "Fired when OnlineUser fails to load"
   trait OnlineUserDisplay -> OnlineUser [interaction, collection] {
     initial: loading
     state loading {
@@ -282,7 +290,7 @@ orbital OnlineUserOrbital {
     }
     emits: [OnlineUserLoaded, OnlineUserLoadFailed]
     listens {
-      OnlineUserLoadFailed { message : string }
+      OnlineUserLoadFailed { error : string, code : string }
     }
   }
   page "/online" -> OnlineUserDisplay

@@ -12,7 +12,8 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
@@ -69,44 +70,12 @@
           "emits": [
             {
               "event": "AgentSearchLoaded",
-              "description": "Fired when AgentSearch finishes loading",
+              "description": "Fired when AgentSearch finishes loading; payload.data holds the list",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "query",
-                  "type": "string"
-                },
-                {
-                  "name": "results",
-                  "type": "[string]"
-                },
-                {
-                  "name": "language",
-                  "type": "string"
-                },
-                {
-                  "name": "resultCount",
-                  "type": "number"
+                  "name": "data",
+                  "type": "[AgentSearch]"
                 }
               ]
             },
@@ -116,7 +85,11 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -135,8 +108,14 @@
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "loading",
                 "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
               }
             ],
             "events": [
@@ -149,40 +128,8 @@
                 "name": "AgentSearch loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "query",
-                    "type": "string"
-                  },
-                  {
-                    "name": "results",
-                    "type": "[string]"
-                  },
-                  {
-                    "name": "language",
-                    "type": "string"
-                  },
-                  {
-                    "name": "resultCount",
-                    "type": "number"
+                    "name": "data",
+                    "type": "[AgentSearch]"
                   }
                 ]
               },
@@ -191,7 +138,11 @@
                 "name": "AgentSearch load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -207,124 +158,250 @@
                   },
                   {
                     "name": "row",
-                    "type": "object"
+                    "type": "AgentSearch"
                   }
                 ]
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "loading",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "AgentSearch"
+                    "fetch",
+                    "AgentSearch",
+                    {
+                      "emit": {
+                        "success": "AgentSearchLoaded",
+                        "failure": "AgentSearchLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "md",
-                          "justify": "between",
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading searches…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "AgentSearchLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-5xl mx-auto w-full",
+                      "children": [
+                        {
                           "children": [
                             {
-                              "align": "center",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "search"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "AgentSearch",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
-                              "gap": "sm",
                               "direction": "horizontal",
+                              "gap": "sm",
                               "type": "stack",
                               "children": [
                                 {
-                                  "icon": "search",
                                   "type": "button",
                                   "label": "Search",
+                                  "action": "SEARCH",
                                   "variant": "primary",
-                                  "action": "SEARCH"
+                                  "icon": "search"
                                 },
                                 {
-                                  "label": "Clear",
                                   "icon": "x",
                                   "type": "button",
-                                  "variant": "ghost",
-                                  "action": "CLEAR"
+                                  "label": "Clear",
+                                  "action": "CLEAR",
+                                  "variant": "ghost"
                                 }
                               ]
                             }
                           ],
+                          "justify": "between",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "variant": "ghost",
+                              "label": "View",
+                              "event": "VIEW"
+                            }
+                          ],
+                          "type": "data-grid",
                           "fields": [
                             {
                               "name": "query",
-                              "variant": "h4",
                               "icon": "search",
-                              "label": "Query"
+                              "label": "Query",
+                              "variant": "h4"
                             },
                             {
+                              "name": "language",
                               "label": "Language",
                               "variant": "badge",
                               "colorMap": {
-                                "archived": "neutral",
-                                "error": "destructive",
-                                "scheduled": "warning",
-                                "inactive": "neutral",
+                                "completed": "success",
                                 "active": "success",
                                 "done": "success",
                                 "disabled": "neutral",
-                                "completed": "success",
-                                "cancelled": "destructive",
-                                "pending": "warning",
+                                "error": "destructive",
+                                "draft": "warning",
                                 "failed": "destructive",
-                                "draft": "warning"
-                              },
-                              "name": "language"
+                                "inactive": "neutral",
+                                "pending": "warning",
+                                "scheduled": "warning",
+                                "archived": "neutral",
+                                "cancelled": "destructive"
+                              }
                             },
                             {
-                              "variant": "caption",
                               "name": "resultCount",
-                              "label": "Result Count"
+                              "label": "Result Count",
+                              "variant": "caption"
                             }
-                          ],
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "variant": "ghost",
-                              "label": "View"
-                            }
-                          ],
-                          "entity": "@entity",
-                          "type": "data-grid"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "AgentSearchLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "alert-triangle",
+                          "color": "destructive"
+                        },
+                        {
+                          "content": "Failed to load searches",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "@payload.error"
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "label": "Retry",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSearch",
+                    {
+                      "emit": {
+                        "success": "AgentSearchLoaded",
+                        "failure": "AgentSearchLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSearch",
+                    {
+                      "emit": {
+                        "failure": "AgentSearchLoadFailed",
+                        "success": "AgentSearchLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -344,7 +421,8 @@
               "payload": [
                 {
                   "name": "query",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
                 },
                 {
                   "name": "resultCount",
@@ -354,44 +432,12 @@
             },
             {
               "event": "AgentSearchLoaded",
-              "description": "Fired when AgentSearch finishes loading",
+              "description": "Fired when AgentSearch finishes loading; payload.data holds the list",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "query",
-                  "type": "string"
-                },
-                {
-                  "name": "results",
-                  "type": "[string]"
-                },
-                {
-                  "name": "language",
-                  "type": "string"
-                },
-                {
-                  "name": "resultCount",
-                  "type": "number"
+                  "name": "data",
+                  "type": "[AgentSearch]"
                 }
               ]
             },
@@ -401,20 +447,14 @@
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "SEARCHED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "AgentSearchAgent"
-              }
             }
           ],
           "stateMachine": {
@@ -463,40 +503,8 @@
                 "name": "AgentSearch loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "query",
-                    "type": "string"
-                  },
-                  {
-                    "name": "results",
-                    "type": "[string]"
-                  },
-                  {
-                    "name": "language",
-                    "type": "string"
-                  },
-                  {
-                    "name": "resultCount",
-                    "type": "number"
+                    "name": "data",
+                    "type": "[AgentSearch]"
                   }
                 ]
               },
@@ -505,7 +513,11 @@
                 "name": "AgentSearch load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -531,10 +543,10 @@
                     "render-ui",
                     "main",
                     {
-                      "icon": "search",
-                      "type": "empty-state",
+                      "title": "Code Search",
                       "description": "Code Search is ready",
-                      "title": "Code Search"
+                      "type": "empty-state",
+                      "icon": "search"
                     }
                   ]
                 ]
@@ -544,16 +556,6 @@
                 "to": "searching",
                 "event": "SEARCH",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.query",
-                    "@payload.query"
-                  ],
-                  [
-                    "set",
-                    "@entity.language",
-                    "@payload.language"
-                  ],
                   [
                     "agent/search-code",
                     "@payload.query",
@@ -578,7 +580,11 @@
                   ],
                   [
                     "emit",
-                    "SEARCHED"
+                    "SEARCHED",
+                    {
+                      "query": "@payload.query",
+                      "resultCount": 0.0
+                    }
                   ]
                 ]
               },
@@ -587,16 +593,6 @@
                 "to": "searching",
                 "event": "SEARCH",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.query",
-                    "@payload.query"
-                  ],
-                  [
-                    "set",
-                    "@entity.language",
-                    "@payload.language"
-                  ],
                   [
                     "agent/search-code",
                     "@payload.query",
@@ -607,29 +603,7 @@
               {
                 "from": "results",
                 "to": "idle",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.query",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.results",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.language",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.resultCount",
-                    0.0
-                  ]
-                ]
+                "event": "CLEAR"
               }
             ]
           },

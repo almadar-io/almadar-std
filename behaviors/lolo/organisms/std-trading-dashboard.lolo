@@ -10,8 +10,8 @@ orbital PortfolioOrbital {
     cashBalance : number = 0
   }
 
-  type PortfolioLoaded     = Event Portfolio                  "Fired when Portfolio finishes loading"
-  type PortfolioLoadFailed = Event { message : string } "Fired when Portfolio fails to load"
+  type PortfolioLoaded     = Event { data : [Portfolio] }                  "Fired when Portfolio finishes loading"
+  type PortfolioLoadFailed = Event { error : string, code : string } "Fired when Portfolio fails to load"
   type TradeOrderSaved = Event { id : string }
   type TradeOrderSaveFailed = Event { error : string, code : string }
   type TradeOrderUpdated = Event { id : string }
@@ -45,7 +45,7 @@ orbital PortfolioOrbital {
     }
     emits: [PortfolioLoaded, PortfolioLoadFailed, TradeOrderSaved, TradeOrderSaveFailed, TradeOrderUpdated, TradeOrderUpdateFailed, TradeOrderDeleted, TradeOrderDeleteFailed, MarketFeedSaved, MarketFeedSaveFailed]
     listens {
-      PortfolioLoadFailed { message : string }
+      PortfolioLoadFailed { error : string, code : string }
     
       TradeOrderSaveFailed { error : string, code : string }
       TradeOrderUpdateFailed { error : string, code : string }
@@ -65,8 +65,8 @@ orbital TradeOrderOrbital {
     pendingId : string = ""
   }
 
-  type TradeOrderLoaded     = Event TradeOrder                  "Fired when TradeOrder finishes loading"
-  type TradeOrderLoadFailed = Event { message : string } "Fired when TradeOrder fails to load"
+  type TradeOrderLoaded     = Event { data : [TradeOrder] }        "Fired when TradeOrder finishes loading; payload.data holds the list"
+  type TradeOrderLoadFailed = Event { error : string, code : string } "Fired when TradeOrder fails to load"
   type TradeOrderDeleteFailed = Event { error : string, code : string }
   type TradeOrderDeleted = Event { id : string }
   type TradeOrderSaveFailed = Event { error : string, code : string }
@@ -76,14 +76,18 @@ orbital TradeOrderOrbital {
   trait TradeOrderBrowse -> TradeOrder [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref TradeOrder)
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-cart" }, { type: "typography", content: "Trade Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create TradeOrder", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "@entity", fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "symbol", variant: "h3", icon: "trending-up" }, { name: "side", variant: "badge" }, { name: "quantity", variant: "body", format: "number" }, { name: "price", variant: "h4", format: "currency" }], variant: "card", gap: "sm" }] }] })
+        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading orders…" }] })
+      TradeOrderLoaded -> browsing
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-cart" }, { type: "typography", content: "Trade Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create TradeOrder", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, fields: [], itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], columns: [{ name: "symbol", variant: "h3", icon: "trending-up" }, { name: "side", variant: "badge" }, { name: "quantity", variant: "body", format: "number" }, { name: "price", variant: "h4", format: "currency" }], variant: "card", gap: "sm" }] }] })
+      TradeOrderLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load orders" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     listens {
       TradeOrderCreate TRADE_ORDER_CREATED -> INIT
       TradeOrderEdit TRADE_ORDER_UPDATED -> INIT
       TradeOrderDelete TRADE_ORDER_DELETED -> INIT
-          TradeOrderLoadFailed { message : string }
+          TradeOrderLoadFailed { error : string, code : string }
     }
     emits: [TradeOrderLoaded, TradeOrderLoadFailed]
   }
@@ -112,7 +116,7 @@ orbital TradeOrderOrbital {
     }
     emits: [TradeOrderLoadFailed, TradeOrderLoaded, TradeOrderSaveFailed, TradeOrderSaved]
     listens {
-      TradeOrderLoadFailed { message : string }
+      TradeOrderLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
   }
@@ -141,7 +145,7 @@ orbital TradeOrderOrbital {
     }
     emits: [TradeOrderLoadFailed, TradeOrderLoaded, TradeOrderUpdateFailed, TradeOrderUpdated]
     listens {
-      TradeOrderLoadFailed { message : string }
+      TradeOrderLoadFailed { error : string, code : string }
       EDIT { id : string }
       SAVE { data : string }
     }
@@ -167,7 +171,7 @@ orbital TradeOrderOrbital {
 
     emits: [TradeOrderLoaded, TradeOrderLoadFailed]
     listens {
-      TradeOrderLoadFailed { message : string }
+      TradeOrderLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
   }
@@ -202,7 +206,7 @@ orbital TradeOrderOrbital {
     }
     emits: [TradeOrderDeleteFailed, TradeOrderDeleted, TradeOrderLoadFailed, TradeOrderLoaded]
     listens {
-      TradeOrderLoadFailed { message : string }
+      TradeOrderLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
   }
@@ -217,8 +221,8 @@ orbital MarketFeedOrbital {
     volume : number
   }
 
-  type MarketFeedLoaded     = Event MarketFeed                  "Fired when MarketFeed finishes loading"
-  type MarketFeedLoadFailed = Event { message : string } "Fired when MarketFeed fails to load"
+  type MarketFeedLoaded     = Event { data : [MarketFeed] }                  "Fired when MarketFeed finishes loading"
+  type MarketFeedLoadFailed = Event { error : string, code : string } "Fired when MarketFeed fails to load"
   type MarketFeedSaveFailed = Event { error : string, code : string }
   type MarketFeedSaved = Event { id : string }
   trait MarketFeedAsync -> MarketFeed [interaction, collection] {
@@ -249,7 +253,7 @@ orbital MarketFeedOrbital {
     }
     emits: [MarketFeedLoadFailed, MarketFeedLoaded, MarketFeedSaveFailed, MarketFeedSaved]
     listens {
-      MarketFeedLoadFailed { message : string }
+      MarketFeedLoadFailed { error : string, code : string }
       LOADED { data : string }
     }
   }

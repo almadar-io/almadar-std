@@ -11,11 +11,13 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "name",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "description",
@@ -45,38 +47,26 @@
           "emits": [
             {
               "event": "FilterTargetLoaded",
-              "description": "Fired when FilterTarget collection finishes loading",
+              "description": "Fired when FilterTarget finishes loading; payload.data holds the filtered list",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
+                  "name": "data",
+                  "type": "[FilterTarget]"
                 }
               ]
             },
             {
               "event": "FilterTargetLoadFailed",
-              "description": "Fired when FilterTarget collection fails to load",
+              "description": "Fired when FilterTarget fails to load",
               "scope": "internal",
               "payload": [
                 {
-                  "name": "message",
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -92,9 +82,6 @@
                 "name": "browsing"
               },
               {
-                "name": "filtered"
-              },
-              {
                 "name": "error"
               }
             ],
@@ -108,24 +95,8 @@
                 "name": "FilterTarget loaded",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
+                    "name": "data",
+                    "type": "[FilterTarget]"
                   }
                 ]
               },
@@ -134,7 +105,11 @@
                 "name": "FilterTarget load failed",
                 "payload": [
                   {
-                    "name": "message",
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
                     "type": "string"
                   }
                 ]
@@ -180,20 +155,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Loading…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "Loading…"
                         }
                       ]
                     }
@@ -210,37 +185,36 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "justify": "between",
-                          "gap": "md",
                           "type": "stack",
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
+                              "align": "center",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "filter",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "filter"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "FilterTargets",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "align": "center"
+                              "gap": "md"
                             },
                             {
                               "type": "badge",
                               "label": "All"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -265,34 +239,35 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@entity",
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "@item.name",
                                   "type": "typography",
-                                  "variant": "h4"
+                                  "variant": "h4",
+                                  "content": "@item.name"
                                 },
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
                                   "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
                                   "content": "@item.status"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "type": "data-grid",
                           "fields": []
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -306,36 +281,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Failed to load"
+                          "content": "Failed to load",
+                          "variant": "h3"
                         },
                         {
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.message"
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
                           "label": "Retry",
                           "action": "INIT",
-                          "icon": "rotate-ccw"
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -343,16 +318,25 @@
               {
                 "from": "browsing",
                 "to": "loading",
-                "event": "INIT",
+                "event": "FILTER",
                 "effects": [
                   [
                     "fetch",
                     "FilterTarget",
                     {
                       "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
+                        "success": "FilterTargetLoaded",
+                        "failure": "FilterTargetLoadFailed"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@payload.field"
+                        ],
+                        "@payload.value"
+                      ]
                     }
                   ],
                   [
@@ -366,204 +350,6 @@
               },
               {
                 "from": "browsing",
-                "to": "filtered",
-                "event": "FILTER",
-                "effects": [
-                  [
-                    "fetch",
-                    "FilterTarget",
-                    {
-                      "filter": [
-                        "=",
-                        [
-                          "object/get",
-                          "@entity",
-                          "@payload.field"
-                        ],
-                        "@payload.value"
-                      ],
-                      "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "justify": "between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "filter",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "FilterTargets",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "variant": "primary",
-                                  "label": "Filtered",
-                                  "type": "badge"
-                                },
-                                {
-                                  "action": "CLEAR_FILTERS",
-                                  "variant": "ghost",
-                                  "label": "Clear All",
-                                  "icon": "x",
-                                  "type": "button"
-                                }
-                              ],
-                              "type": "stack"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "filter",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Filtered by",
-                              "variant": "caption",
-                              "color": "muted"
-                            },
-                            {
-                              "label": "@payload.field",
-                              "variant": "secondary",
-                              "type": "badge"
-                            },
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "="
-                            },
-                            {
-                              "variant": "primary",
-                              "type": "badge",
-                              "label": "@payload.value"
-                            }
-                          ],
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "filter-group",
-                          "filters": [
-                            {
-                              "filterType": "select",
-                              "label": "Status",
-                              "options": [
-                                "active",
-                                "inactive",
-                                "pending"
-                              ],
-                              "field": "status"
-                            }
-                          ],
-                          "entity": "FilterTarget"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "variant": "h4",
-                                  "type": "typography",
-                                  "content": "@item.name"
-                                },
-                                {
-                                  "content": "@item.status",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                }
-                              ]
-                            }
-                          ],
-                          "fields": [],
-                          "type": "data-grid",
-                          "entity": "@entity"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "filtered",
-                "to": "filtered",
-                "event": "FILTER",
-                "effects": [
-                  [
-                    "fetch",
-                    "FilterTarget",
-                    {
-                      "filter": [
-                        "=",
-                        [
-                          "object/get",
-                          "@entity",
-                          "@payload.field"
-                        ],
-                        "@payload.value"
-                      ],
-                      "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "filtered",
                 "to": "loading",
                 "event": "CLEAR_FILTERS",
                 "effects": [
