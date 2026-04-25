@@ -6,7 +6,7 @@ orbital AgentToolCallOrbital {
     id : string
     name : string
     description : string
-    status : "active" | "inactive" | "pending" = "active"
+    status : "idle" | "executing" | "completed" | "failed" = "idle"
     createdAt : string
     toolName : string = ""
     args : string = ""
@@ -64,35 +64,35 @@ orbital AgentToolCallOrbital {
       DO_INVOKE -> executing
         (set @entity.toolName @payload.data.toolName)
         (set @entity.args @payload.data.args)
-        (set @entity.status executing)
+        (set @entity.status "executing")
         (emit TOOL_STARTED)
         (emit LOG_ENTRY)
         (agent/invoke @payload.data.toolName @payload.data.args)
       INVOKED -> executing
-        (set @entity.status executing)
+        (set @entity.status "executing")
         (emit TOOL_STARTED)
         (emit LOG_ENTRY)
         (agent/invoke @entity.toolName @entity.args)
     }
     state executing {
       DO_INVOKE -> completed
-        (set @entity.status completed)
+        (set @entity.status "completed")
         (set @entity.result @payload.data.result)
         (emit TOOL_COMPLETED)
         (emit LOG_ENTRY)
-      CANCEL -> failed when (= @entity.status executing)
-        (set @entity.status failed)
-        (set @entity.error Cancelled)
+      CANCEL -> failed when (= @entity.status "executing")
+        (set @entity.status "failed")
+        (set @entity.error "Cancelled")
         (emit TOOL_COMPLETED)
       CANCEL -> idle
-        (set @entity.status idle)
+        (set @entity.status "idle")
         (emit TOOL_COMPLETED)
     }
     state completed {
       DO_INVOKE -> executing
         (set @entity.toolName @payload.data.toolName)
         (set @entity.args @payload.data.args)
-        (set @entity.status executing)
+        (set @entity.status "executing")
         (emit TOOL_STARTED)
         (emit LOG_ENTRY)
         (agent/invoke @payload.data.toolName @payload.data.args)
@@ -101,7 +101,7 @@ orbital AgentToolCallOrbital {
       DO_INVOKE -> executing
         (set @entity.toolName @payload.data.toolName)
         (set @entity.args @payload.data.args)
-        (set @entity.status executing)
+        (set @entity.status "executing")
         (emit TOOL_STARTED)
         (emit LOG_ENTRY)
         (agent/invoke @payload.data.toolName @payload.data.args)
