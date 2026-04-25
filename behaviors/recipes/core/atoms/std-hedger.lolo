@@ -1,0 +1,49 @@
+app std-hedger "0.1.0"
+"std-hedger — wrapper that races two providers and takes the first response"
+;;
+;; RECIPE-ONLY (proposed). Wraps any fetching trait with a fallback. Great
+;; for std-agent-provider failover where two LLM gateways are reachable: it
+;; dispatches to both, keeps the first reply, aborts the loser.
+;;
+;; Usage idea:
+;;   trait LLMHedger = Hedger.traits.Race -> Completion {
+;;     config: { providers: ["openrouter", "anthropic"] }
+;;   }
+
+orbital HedgerOrbital {
+  entity Race [runtime] {
+    id      : string
+    winner  : string = ""
+  }
+
+  type RaceWon    = Event { provider : string, value : string }
+  type RaceFailed = Event { errors : string }
+
+  trait HedgedRead -> Race [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      CALL -> racing
+    }
+    state racing {
+      A_OK       -> done
+        (emit RaceWon { provider: "A", value: "@payload.value" })
+      B_OK       -> done
+        (emit RaceWon { provider: "B", value: "@payload.value" })
+      BOTH_FAIL  -> failed
+        (emit RaceFailed { errors: "@payload.errors" })
+    }
+    state done {
+      RESET -> idle
+    }
+    state failed {
+      RETRY -> racing
+    }
+    emits {
+      RaceWon    external { provider : string, value : string }
+      RaceFailed external { errors : string }
+    }
+  }
+
+  page "/hedger" -> HedgedRead
+}

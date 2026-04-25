@@ -1,0 +1,45 @@
+app std-notifier "0.1.0"
+"std-notifier — coordinator that turns Persistor outcomes into UI toasts"
+;;
+;; RECIPE-ONLY (proposed). Listens on the conventional output events of any
+;; coordinator (SAVED / DELETED / FAILED) and forwards them as toast events
+;; with the appropriate severity. Removes per-molecule notification wiring.
+;;
+;; Usage idea:
+;;   trait OutcomeNotifier = Notifier.traits.OutcomeToast -> Notice {
+;;     config: { onSaved: "info", onDeleted: "info", onFailed: "error" }
+;;   }
+
+orbital NotifierOrbital {
+  entity Notice [runtime] {
+    id       : string
+    severity : "info" | "success" | "warning" | "error" = "info"
+    message  : string
+  }
+
+  type ToastShown    = Event { severity : string, message : string }
+  type ToastDismissed = Event { id : string }
+
+  trait OutcomeToast -> Notice [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      SAVED   -> showing
+        (emit ToastShown { severity: "info", message: "Saved" })
+      DELETED -> showing
+        (emit ToastShown { severity: "info", message: "Deleted" })
+      FAILED  -> showing
+        (emit ToastShown { severity: "error", message: "@payload.error" })
+    }
+    state showing {
+      DISMISS -> idle
+        (emit ToastDismissed { id: "@payload.id" })
+    }
+    emits {
+      ToastShown     external { severity : string, message : string }
+      ToastDismissed external { id : string }
+    }
+  }
+
+  page "/notifier" -> OutcomeToast
+}

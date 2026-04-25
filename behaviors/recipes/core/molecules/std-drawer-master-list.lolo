@@ -1,0 +1,40 @@
+app std-drawer-master-list "1.0.0"
+"std-drawer-master-list as a Function"
+;;
+;; Browse on the left (60%), Drawer on the right (40%) for selected-item
+;; detail. The composition wire:
+;;   DrawerMasterBrowse emits SELECT external -> DrawerMasterDrawer listens, fires OPEN.
+;; Uses @trait.X to embed atoms into a shared layout.
+
+orbital DrawerMasterOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Drawer from "std/behaviors/std-drawer"
+
+  entity DrawerMasterItem [persistent: drawermasteritems] {
+    id : string!
+    name : string
+    description : string
+    status : string
+  }
+  type DrawerMasterItemLoaded = Event { data : [DrawerMasterItem] }
+  type DrawerMasterItemLoadFailed = Event { error : string, code : string }
+
+  trait DrawerMasterBrowse = Browse.traits.BrowseItemBrowse -> DrawerMasterItem {
+    ;; Browse already emits BrowseItemLoaded; we additionally declare SELECT as an external
+    ;; event fired via an itemAction. The layout-level wiring is via the Drawer's listens.
+  }
+
+  trait DrawerMasterDrawer = Drawer.traits.DrawerContentDrawer -> DrawerMasterItem {
+  }
+
+  trait DrawerMasterLayout -> DrawerMasterItem [interaction, collection] {
+    state composing {
+      INIT -> composing
+        (fetch DrawerMasterItem { emit: { success: "DrawerMasterItemLoaded", failure: "DrawerMasterItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "box", children: ["@trait.DrawerMasterBrowse"] }, { type: "box", children: ["@trait.DrawerMasterDrawer"] }] })
+    }
+    emits: [DrawerMasterItemLoadFailed, DrawerMasterItemLoaded]
+  }
+
+  page "/drawer-master" as DrawerMaster -> DrawerMasterLayout
+}

@@ -1,0 +1,48 @@
+app std-quota "0.1.0"
+"std-quota — wrapper that enforces a per-actor consumption ceiling"
+;;
+;; RECIPE-ONLY (proposed). Different from std-rate-limiter: not "calls per
+;; second" but "tokens spent this month". Wraps anything with a measurable
+;; cost (LLM tokens, API credits, storage bytes).
+;;
+;; Usage idea:
+;;   trait LLMTokenQuota = Quota.traits.Budget -> Completion {
+;;     config: { capPerActor: 100000, costPath: "@response.tokens" }
+;;   }
+
+orbital QuotaOrbital {
+  entity Budget [persistent: quotas] {
+    id        : string!
+    actorId   : string
+    used      : number = 0
+    cap       : number = 100000
+    windowEnd : datetime
+  }
+
+  type QuotaThrottled = Event { actorId : string, used : number, cap : number }
+  type QuotaReset     = Event { actorId : string }
+
+  trait BudgetLimit -> Budget [interaction, collection] {
+    initial: under
+    state under {
+      INIT  -> under
+      HIT   -> under
+        ;; consumer increments used += cost; transition triggered when
+        ;; used > cap.
+      OVER  -> over
+        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@row.cap" })
+    }
+    state over {
+      HIT   -> over
+        (emit QuotaThrottled { actorId: "@payload.actorId", used: "@payload.used", cap: "@row.cap" })
+      RESET -> under
+        (emit QuotaReset { actorId: "@payload.actorId" })
+    }
+    emits {
+      QuotaThrottled external { actorId : string, used : number, cap : number }
+      QuotaReset     external { actorId : string }
+    }
+  }
+
+  page "/quota" -> BudgetLimit
+}

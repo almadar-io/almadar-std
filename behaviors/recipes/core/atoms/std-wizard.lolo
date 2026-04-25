@@ -1,0 +1,94 @@
+app std-wizard "1.0.0"
+"std-wizard as a Function — DEPRECATED"
+;;
+;; DEPRECATED. Do not use this atom in new behaviors.
+;;
+;; A wizard's essence is its step sequence, and step count varies per
+;; consumer (3 for sign-up, 5 for onboarding, 7 for checkout). Encoding
+;; a fixed-topology state machine in an atom is a false abstraction —
+;; consumers either waste states they don't need or rewrite the atom
+;; anyway. Atoms exist to encode *portable* state-machine topology
+;; (Modal = open/closed, Confirmation = idle/confirming); wizards fail
+;; that bar.
+;;
+;; Correct pattern: each consumer writes their own wizard trait at the
+;; molecule tier with states for its exact step count. Reuse UI via
+;; the `wizard-progress`, `wizard-navigation`, and `progress-dots`
+;; patterns from @almadar/patterns. See `std-wizard-form` for the
+;; worked reference.
+;;
+;; Why kept on disk: backward compatibility for any existing consumer;
+;; removal would break their trait refs. Remove in a future major bump
+;; once no imports remain.
+;;
+;; See docs/Almadar_Std_Behaviors.md "Atom-tier criterion" for the
+;; principle.
+
+
+orbital WizardEntryOrbital {
+  entity WizardEntry [runtime] {
+    id : string
+    name : string
+    description : string
+    status : "active" | "inactive" | "pending" = "active"
+    createdAt : string
+  }
+
+  type WizardEntryLoaded     = Event WizardEntry                  "Fired when WizardEntry finishes loading"
+  type WizardEntryLoadFailed = Event { message : string } "Fired when WizardEntry fails to load"
+  type WizardEntrySaved = Event { id : string }
+  type WizardEntrySaveFailed = Event { error : string, code : string }
+  trait WizardEntryWizard -> WizardEntry [interaction, instance] {
+    initial: step1
+    state step1 {
+      INIT -> step1
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["name", "description"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+      NEXT -> step2
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Settings", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["status"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+    }
+    state step2 {
+      NEXT -> step3
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Review", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["createdAt"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+      PREV -> step1
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["name", "description"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+    }
+    state step3 {
+      NEXT -> review
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "badge", label: "Review" }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 3 }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }] }, { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showComplete: true, showNext: false }] })
+      PREV -> step2
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Settings", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["status"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+    }
+    state review {
+      PREV -> step3
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Review", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["createdAt"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+      COMPLETE -> complete
+        (persist create WizardEntry @payload.data { emit: { success: "WizardEntrySaved", failure: "WizardEntrySaveFailed" } })
+        (notify success "WizardEntry created successfully")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Complete!", variant: "h2" }, { type: "typography", content: "Your wizardentry has been created successfully.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] })
+    }
+    state complete {
+      RESTART -> step1
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["name", "description"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+      INIT -> step1
+        (fetch WizardEntry { emit: { success: "WizardEntryLoaded", failure: "WizardEntryLoadFailed" } })
+        (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["name", "description"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
+    }
+    listens {
+      NEXT { data : object! }
+      COMPLETE { data : object! }
+          WizardEntryLoadFailed { message : string }
+    
+      WizardEntrySaveFailed { error : string, code : string }
+    }
+    emits: [WizardEntryLoaded, WizardEntryLoadFailed, WizardEntrySaved, WizardEntrySaveFailed]
+  }
+  page "/wizard" as WizardEntryPage -> WizardEntryWizard
+}

@@ -1,0 +1,39 @@
+app std-debouncer "0.1.0"
+"std-debouncer — wrapper that collapses rapid events into one trailing fire"
+;;
+;; RECIPE-ONLY (proposed). For search-as-you-type, scroll-position commits,
+;; slider drags. The caller sees a single downstream event after the burst
+;; settles, not N events.
+;;
+;; Usage idea:
+;;   trait SearchDebouncer = Debouncer.traits.Coalesce -> Query {
+;;     config: { window: 300 }
+;;   }
+
+orbital DebouncerOrbital {
+  entity DebounceWindow [runtime] {
+    id      : string
+    lastHit : string = ""
+    windowMs: number = 300
+  }
+
+  type DebounceFlushed = Event { value : string }
+
+  trait Coalesce -> DebounceWindow [interaction, instance] {
+    initial: open
+    state open {
+      INIT -> open
+      HIT  -> pending
+    }
+    state pending {
+      HIT      -> pending     ;; reset the timer
+      SETTLE   -> open
+        (emit DebounceFlushed { value: "@payload.value" })
+    }
+    emits {
+      DebounceFlushed external { value : string }
+    }
+  }
+
+  page "/debouncer" -> Coalesce
+}

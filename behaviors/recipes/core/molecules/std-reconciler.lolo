@@ -1,0 +1,54 @@
+app std-reconciler "0.1.0"
+"std-reconciler — molecule that picks a winner when local state drifts from server"
+;;
+;; RECIPE-ONLY (proposed). For optimistic-update molecules where the entity
+;; changed both client and server-side between fetch and save. Default
+;; policy is configurable (server-wins | local-wins | merge-via-rule), with
+;; the conflict state exposing the diff to the UI when the policy is "ask".
+;;
+;; Usage idea:
+;;   uses Versioner  from "<recipe: std-versioner>"
+;;   uses Reconciler from "<recipe: std-reconciler>"
+;;   trait CartReconcile = Reconciler.traits.OptimisticMerge -> CartItem {
+;;     config: { policy: "ask" }
+;;   }
+
+orbital ReconcilerOrbital {
+  entity DriftedEntity [runtime] {
+    id          : string
+    local       : string = ""
+    server      : string = ""
+    policy      : "server-wins" | "local-wins" | "merge" | "ask" = "ask"
+  }
+
+  type EntitySynced   = Event { id : string, source : string }
+  type ConflictRaised = Event { id : string, localValue : string, serverValue : string }
+
+  trait OptimisticMerge -> DriftedEntity [interaction, instance] {
+    initial: synced
+    state synced {
+      INIT       -> synced
+      LOCAL_EDIT -> dirty
+    }
+    state dirty {
+      SERVER_PUSH -> conflict
+        (emit ConflictRaised { id: "@row.id", localValue: "@row.local", serverValue: "@row.server" })
+      LOCAL_OK    -> synced
+        (emit EntitySynced { id: "@row.id", source: "local" })
+    }
+    state conflict {
+      PICK_LOCAL  -> synced
+        (emit EntitySynced { id: "@row.id", source: "local" })
+      PICK_SERVER -> synced
+        (emit EntitySynced { id: "@row.id", source: "server" })
+      MERGE       -> synced
+        (emit EntitySynced { id: "@row.id", source: "merge" })
+    }
+    emits {
+      EntitySynced   external { id : string, source : string }
+      ConflictRaised external { id : string, localValue : string, serverValue : string }
+    }
+  }
+
+  page "/reconciler" -> OptimisticMerge
+}

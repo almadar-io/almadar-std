@@ -1,0 +1,42 @@
+app std-related-master-detail "1.0.0"
+"std-related-master-detail as a Function"
+;;
+;; The canonical @trait.X showcase for the new std-related atom:
+;; Browse (40%) on the left, Related (60%) on the right. Browse emits
+;; SELECT with @payload.id; Related's INIT listens, runs its fetch with
+;; include:, emits FETCH_OK, renders the populated children.
+
+orbital MasterDetailOrbital {
+  uses Browse  from "std/behaviors/std-browse"
+  uses Related from "std/behaviors/std-related"
+
+  entity MasterDetailItem [persistent: masterdetailitems] {
+    id : string!
+    name : string
+    items : string
+  }
+  type MasterDetailItemLoaded = Event { data : [MasterDetailItem] }
+  type MasterDetailItemLoadFailed = Event { error : string, code : string }
+
+  trait MasterDetailList    = Browse.traits.BrowseItemBrowse    -> MasterDetailItem {}
+  trait MasterDetailRelated = Related.traits.RelatedItemList    -> MasterDetailItem {}
+
+  trait MasterDetailLayout -> MasterDetailItem [interaction, instance] {
+    state composing {
+      INIT -> composing
+        (fetch MasterDetailItem { emit: { success: "MasterDetailItemLoaded", failure: "MasterDetailItemLoadFailed" } })
+        (render-ui main {
+          type: "stack",
+          direction: "horizontal",
+          gap: "md",
+          children: [
+            { type: "box", children: [ "@trait.MasterDetailList" ] },
+            { type: "box", children: [ "@trait.MasterDetailRelated" ] }
+          ]
+        })
+    }
+    emits: [MasterDetailItemLoadFailed, MasterDetailItemLoaded]
+  }
+
+  page "/master-detail" as MasterDetail -> MasterDetailLayout
+}

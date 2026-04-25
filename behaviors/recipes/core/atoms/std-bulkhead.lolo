@@ -1,0 +1,43 @@
+app std-bulkhead "0.1.0"
+"std-bulkhead — wrapper that isolates resource pools per tenant"
+;;
+;; RECIPE-ONLY (proposed). A keyed rate-limiter where the key is the
+;; actor/tenant. One runaway tenant hits its own ceiling without starving
+;; others. Sibling to std-rate-limiter, different invariant.
+;;
+;; Usage idea:
+;;   trait TenantBulkhead = Bulkhead.traits.PerTenantQueue -> Request {
+;;     config: { capacity: 50, key: "@actor.tenantId" }
+;;   }
+
+orbital BulkheadOrbital {
+  entity TenantPool [runtime] {
+    id        : string
+    tenantId  : string
+    capacity  : number = 50
+    inFlight  : number = 0
+  }
+
+  type RequestRejected = Event { tenantId : string, reason : string }
+
+  trait PerTenantQueue -> TenantPool [interaction, collection] {
+    initial: open
+    state open {
+      INIT -> open
+      HIT  -> open
+        ;; consumer's predicate keeps it open while inFlight < capacity.
+      OVERFLOW -> full
+        (emit RequestRejected { tenantId: "@payload.tenantId", reason: "capacity" })
+    }
+    state full {
+      HIT      -> full
+        (emit RequestRejected { tenantId: "@payload.tenantId", reason: "capacity" })
+      DRAIN    -> open
+    }
+    emits {
+      RequestRejected external { tenantId : string, reason : string }
+    }
+  }
+
+  page "/bulkhead" -> PerTenantQueue
+}

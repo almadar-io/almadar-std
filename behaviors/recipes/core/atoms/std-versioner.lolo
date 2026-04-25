@@ -1,0 +1,45 @@
+app std-versioner "0.1.0"
+"std-versioner — wrapper that rejects writes with a stale etag"
+;;
+;; RECIPE-ONLY (proposed). Stops "last writer wins" silently overwriting
+;; concurrent edits. Stamps every fetched entity with its etag and rejects
+;; writes whose etag is no longer current, kicking the molecule into the
+;; proposed Reconciler trait.
+;;
+;; Usage idea:
+;;   trait OptimisticWrite = Versioner.traits.EtagGuard -> Item {
+;;     config: { etagPath: "@response.headers.etag" }
+;;   }
+
+orbital VersionerOrbital {
+  entity HeldVersion [runtime] {
+    id    : string
+    etag  : string
+  }
+
+  type WriteAccepted = Event { id : string, etag : string }
+  type Conflict      = Event { id : string, currentEtag : string, attemptedEtag : string }
+
+  trait EtagGuard -> HeldVersion [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      READ -> held
+    }
+    state held {
+      WRITE_OK    -> idle
+        (emit WriteAccepted { id: "@payload.id", etag: "@payload.etag" })
+      WRITE_STALE -> stale
+        (emit Conflict { id: "@payload.id", currentEtag: "@payload.currentEtag", attemptedEtag: "@payload.attemptedEtag" })
+    }
+    state stale {
+      REFETCH -> held
+    }
+    emits {
+      WriteAccepted external { id : string, etag : string }
+      Conflict      external { id : string, currentEtag : string, attemptedEtag : string }
+    }
+  }
+
+  page "/versioner" -> EtagGuard
+}

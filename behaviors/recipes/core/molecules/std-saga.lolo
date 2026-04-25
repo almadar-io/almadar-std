@@ -1,0 +1,66 @@
+app std-saga "0.1.0"
+"std-saga — molecule that runs multi-step transactions with compensation"
+;;
+;; RECIPE-ONLY (proposed). Cart's "reserve inventory → charge card → confirm
+;; order" is the canonical hand-rolled case today. Saga makes it
+;; declarative: a forward-step list and a matching compensation list.
+;; On any forward failure the trait walks the compensations backward.
+;;
+;; Usage idea:
+;;   trait CheckoutSaga = Saga.traits.Forward -> Order {
+;;     config: {
+;;       steps:         [reserveInventory, chargeCard, confirmOrder],
+;;       compensations: [releaseInventory, refundCard,  cancelOrder]
+;;     }
+;;   }
+
+orbital SagaOrbital {
+  entity SagaRun [persistent: saga_runs] {
+    id           : string!
+    name         : string
+    currentStep  : number = 0
+    direction    : "forward" | "compensating" | "done" = "forward"
+    lastError    : string = ""
+  }
+
+  type SagaCommitted    = Event { id : string }
+  type SagaRolledBack   = Event { id : string, lastError : string }
+  type StepStarted      = Event { id : string, step : number }
+  type StepCompensated  = Event { id : string, step : number }
+
+  trait Forward -> SagaRun [interaction, collection] {
+    initial: idle
+    state idle {
+      INIT  -> idle
+      START -> stepping
+        (emit StepStarted { id: "@row.id", step: 0 })
+    }
+    state stepping {
+      OK   -> stepping
+        (emit StepStarted { id: "@row.id", step: "@payload.step" })
+      DONE -> committed
+        (emit SagaCommitted { id: "@row.id" })
+      FAIL -> compensating
+    }
+    state compensating {
+      OK   -> compensating
+        (emit StepCompensated { id: "@row.id", step: "@payload.step" })
+      DONE -> rolledBack
+        (emit SagaRolledBack { id: "@row.id", lastError: "@row.lastError" })
+    }
+    state committed {
+      RESET -> idle
+    }
+    state rolledBack {
+      RESET -> idle
+    }
+    emits {
+      SagaCommitted    external { id : string }
+      SagaRolledBack   external { id : string, lastError : string }
+      StepStarted      external { id : string, step : number }
+      StepCompensated  external { id : string, step : number }
+    }
+  }
+
+  page "/saga" -> Forward
+}

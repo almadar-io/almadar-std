@@ -1,0 +1,43 @@
+app std-authorizer "0.1.0"
+"std-authorizer — coordinator that gates a transition by actor role"
+;;
+;; RECIPE-ONLY (proposed). Sits in front of any destructive coordinator.
+;; Reads the actor's role from session, emits the original event when allowed
+;; or ACTION_DENIED when refused. Same wedge shape as std-confirmation,
+;; different decision input.
+;;
+;; Usage idea:
+;;   trait DeleteAuthorizer = Authorizer.traits.RoleGate -> Item {
+;;     config: { roles: ["admin", "editor"] }
+;;   }
+
+orbital AuthorizerOrbital {
+  entity AuthorizationRequest [runtime] {
+    id          : string
+    actorId     : string
+    role        : string = "guest"
+    targetEvent : string
+  }
+
+  type ActionAllowed = Event { event : string }
+  type ActionDenied  = Event { event : string, reason : string }
+
+  trait RoleGate -> AuthorizationRequest [interaction, instance] {
+    initial: idle
+    state idle {
+      REQUEST -> checking
+    }
+    state checking {
+      ALLOWED -> idle
+        (emit ActionAllowed { event: "@payload.event" })
+      DENIED -> idle
+        (emit ActionDenied { event: "@payload.event", reason: "@payload.reason" })
+    }
+    emits {
+      ActionAllowed external { event: string }
+      ActionDenied  external { event: string, reason: string }
+    }
+  }
+
+  page "/authorizer" -> RoleGate
+}

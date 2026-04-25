@@ -1,0 +1,52 @@
+app std-idempotency "0.1.0"
+"std-idempotency — wrapper that dedupes replayed events at the edge"
+;;
+;; RECIPE-ONLY (proposed). For inbox traits receiving webhooks, retried API
+;; calls, or any at-least-once delivery channel. Guarantees one logical
+;; execution per key by recording { key -> result } and short-circuiting
+;; replays.
+;;
+;; Usage idea:
+;;   trait WebhookInbox = Idempotency.traits.KeyedDedupe -> Event {
+;;     config: { keyPath: "@payload.eventId" }
+;;   }
+
+orbital IdempotencyOrbital {
+  entity SeenKey [persistent: idempotency_keys] {
+    id       : string!
+    keyValue : string!
+    result   : string = ""
+    seenAt   : datetime!
+  }
+
+  type ReplayDropped = Event { keyValue : string }
+  type EventForwarded = Event { keyValue : string }
+
+  trait KeyedDedupe -> SeenKey [interaction, collection] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      HIT  -> check
+    }
+    state check {
+      SEEN  -> idle
+        (emit ReplayDropped { keyValue: "@payload.keyValue" })
+      NEW   -> forwarding
+    }
+    state forwarding {
+      DONE -> idle
+        (persist create SeenKey {
+           keyValue: "@payload.keyValue",
+           result: "@payload.result",
+           seenAt: "@payload.seenAt"
+         })
+        (emit EventForwarded { keyValue: "@payload.keyValue" })
+    }
+    emits {
+      ReplayDropped  external { keyValue : string }
+      EventForwarded external { keyValue : string }
+    }
+  }
+
+  page "/idempotency" -> KeyedDedupe
+}
