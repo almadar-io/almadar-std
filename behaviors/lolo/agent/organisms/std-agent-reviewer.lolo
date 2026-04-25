@@ -317,7 +317,7 @@ orbital AnalysisOrbital {
     state classifying {
       DO_CLASSIFY -> classified
         (set @entity.category @payload.data.input)
-        (emit SHOW)
+        (emit SHOW { message: "Input classified", notificationType: "success" })
     }
     state classified {
       RESET -> idle
@@ -326,7 +326,7 @@ orbital AnalysisOrbital {
         (set @entity.confidence 0)
     }
     emits {
-      SHOW internal { category: string, confidence: number }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
     }
     listens {
       InputClassifier CLASSIFIED -> CLASSIFIED
@@ -426,7 +426,7 @@ orbital ReviewCompletionOrbital {
       DO_GENERATE -> completed
         (set @entity.response @payload.data.prompt)
         (set @entity.status completed)
-        (emit SHOW)
+        (emit SHOW { message: "Review complete", notificationType: "success" })
       RESET -> error when (= @entity.status generating)
         (set @entity.status error)
         (set @entity.error "Generation was cancelled")
@@ -447,7 +447,7 @@ orbital ReviewCompletionOrbital {
         (set @entity.error "")
     }
     emits {
-      SHOW internal { response: string }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
     }
     listens {
       ReviewCompletionFlow GENERATED -> GENERATED

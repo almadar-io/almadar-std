@@ -47,16 +47,6 @@
               ]
             },
             {
-              "event": "PUSH_DISCONNECTED",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "data",
-                  "type": "object"
-                }
-              ]
-            },
-            {
               "event": "PushDisconnected",
               "description": "Fired when the push connection drops",
               "scope": "internal",
@@ -220,119 +210,17 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Connecting…"
-                        }
-                      ],
-                      "align": "center",
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "connecting",
-                "to": "subscribed",
-                "event": "PUSH_RECEIVED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.status",
-                    "subscribed"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "color": "success",
-                          "name": "wifi"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Connected"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "align": "center",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "connecting",
-                "to": "reconnecting",
-                "event": "PUSH_DISCONNECTED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.status",
-                    "reconnecting"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "color": "warning",
-                          "type": "icon",
-                          "name": "wifi-off"
-                        },
-                        {
-                          "content": "Reconnecting…",
+                          "content": "Connecting…",
                           "variant": "caption",
                           "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "subscribed",
-                "to": "subscribed",
-                "event": "PUSH_RECEIVED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.status",
-                    "subscribed"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "sm",
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "color": "success",
-                          "type": "icon",
-                          "name": "wifi"
-                        },
-                        {
-                          "content": "Connected",
-                          "type": "typography",
-                          "variant": "caption"
                         }
                       ]
                     }
@@ -340,6 +228,108 @@
                 ]
               },
               {
+                "from": "connecting",
+                "to": "subscribed",
+                "event": "PUSH_RECEIVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "subscribed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "wifi",
+                          "color": "success",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Connected"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "connecting",
+                "to": "reconnecting",
+                "event": "PUSH_DISCONNECTED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "reconnecting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "wifi-off",
+                          "color": "warning"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Reconnecting…"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "subscribed",
+                "to": "subscribed",
+                "event": "PUSH_RECEIVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "subscribed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "sm",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "name": "wifi",
+                          "color": "success",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Connected",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    }
+                  ]
+                ]
+              },
+              {
                 "from": "subscribed",
                 "to": "reconnecting",
                 "event": "PUSH_DISCONNECTED",
@@ -353,22 +343,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "type": "stack",
                       "children": [
                         {
-                          "color": "warning",
                           "type": "icon",
-                          "name": "wifi-off"
+                          "name": "wifi-off",
+                          "color": "warning"
                         },
                         {
+                          "content": "Reconnecting…",
                           "variant": "caption",
-                          "type": "typography",
-                          "content": "Reconnecting…"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "sm"
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -387,22 +377,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "name": "wifi",
                           "type": "icon",
-                          "color": "success",
-                          "name": "wifi"
+                          "color": "success"
                         },
                         {
-                          "content": "Connected",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Connected"
                         }
                       ],
                       "type": "stack",
                       "gap": "sm",
-                      "direction": "horizontal"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -416,22 +406,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "sm",
                       "children": [
                         {
+                          "color": "destructive",
                           "name": "wifi-off",
-                          "type": "icon",
-                          "color": "destructive"
+                          "type": "icon"
                         },
                         {
                           "content": "Disconnected",
-                          "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "horizontal"
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]

@@ -364,7 +364,7 @@ orbital AssistantContextOrbital {
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
         (emit UPDATE)
-        (emit SHOW)
+        (emit SHOW { message: "Token usage approaching limit", notificationType: "warning" })
     }
     state approaching_limit {
       UPDATE_TOKENS -> at_limit when (>= (/ @entity.tokenCount @entity.maxTokens) 1)
@@ -373,7 +373,7 @@ orbital AssistantContextOrbital {
         (set @entity.usage 100)
         (set @entity.current @entity.tokenCount)
         (emit UPDATE)
-        (emit SHOW)
+        (emit SHOW { message: "Token usage at limit", notificationType: "error" })
       COMPACT -> normal
         (agent/compact)
         (agent/token-count)
@@ -400,7 +400,7 @@ orbital AssistantContextOrbital {
         (emit UPDATE)
     }
     emits {
-      SHOW internal { tokenCount: number, usage: number }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
       UPDATE internal { current: number, max: number }
     }
     emits: [AssistantContextLoaded, AssistantContextLoadFailed]
@@ -512,10 +512,10 @@ orbital ProviderConfigOrbital {
         (agent/provider)
         (agent/model)
         (set @entity.requestCount (+ @entity.requestCount 1))
-        (emit SHOW)
+        (emit SHOW { message: "Provider switched", notificationType: "info" })
     }
     emits {
-      SHOW internal { provider: string, model: string }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
     }
     listens {
       ProviderManager SWITCHED -> SWITCHED
