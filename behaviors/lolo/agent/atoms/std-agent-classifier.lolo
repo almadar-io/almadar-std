@@ -91,7 +91,7 @@ orbital AgentClassifierOrbital {
     state classifying {
       DO_CLASSIFY -> classified
         (set @entity.category @payload.data.input)
-        (emit SHOW)
+        (emit SHOW { message: "Classification complete", notificationType: "success" })
     }
     state classified {
       RESET -> idle
@@ -100,7 +100,7 @@ orbital AgentClassifierOrbital {
         (set @entity.confidence 0)
     }
     emits {
-      SHOW internal { category: string, confidence: number }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
     }
     listens {
       AgentClassifierModal CLASSIFIED -> CLASSIFIED
