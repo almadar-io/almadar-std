@@ -126,13 +126,13 @@ orbital AgentContextWindowOrbital {
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
       UPDATE_TOKENS -> approaching_limit when (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
         (emit SHOW { message: "Token usage approaching limit", notificationType: "warning" })
     }
     state approaching_limit {
@@ -141,7 +141,7 @@ orbital AgentContextWindowOrbital {
         (agent/context-usage)
         (set @entity.usage 100)
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
         (emit SHOW { message: "Token usage at limit. Compact required.", notificationType: "error" })
       COMPACT -> normal
         (agent/compact)
@@ -150,13 +150,13 @@ orbital AgentContextWindowOrbital {
         (set @entity.lastCompactedAt @now)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
       UPDATE_TOKENS -> approaching_limit when (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
     }
     state at_limit {
       COMPACT -> normal
@@ -166,7 +166,7 @@ orbital AgentContextWindowOrbital {
         (set @entity.lastCompactedAt @now)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
-        (emit UPDATE)
+        (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
     }
     emits {
       SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
