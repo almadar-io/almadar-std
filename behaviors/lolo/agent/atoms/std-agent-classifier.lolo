@@ -13,7 +13,7 @@ orbital AgentClassifierOrbital {
     confidence : number = 0
     model : string = "claude-sonnet-4-20250514"
     message : string = ""
-    notificationType : string = "info"
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type AgentClassifierLoaded     = Event AgentClassifier                  "Fired when AgentClassifier finishes loading"
@@ -72,7 +72,7 @@ orbital AgentClassifierOrbital {
         (set @entity.message "")
     }
     listens {
-      SHOW { message : string!, notificationType : string }
+      SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
           AgentClassifierLoadFailed { message : string }
     }
     emits: [AgentClassifierLoaded, AgentClassifierLoadFailed]

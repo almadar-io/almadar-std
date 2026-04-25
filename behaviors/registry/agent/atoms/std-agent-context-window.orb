@@ -79,7 +79,13 @@
           {
             "name": "notificationType",
             "type": "string",
-            "default": "info"
+            "default": "info",
+            "values": [
+              "info",
+              "success",
+              "warning",
+              "error"
+            ]
           }
         ]
       },
@@ -294,14 +300,96 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "gauge"
+                            },
+                            {
+                              "content": "Token Usage",
+                              "variant": "h2",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "Normal",
+                              "type": "badge",
+                              "variant": "default"
+                            }
+                          ],
                           "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "value": "@entity.current",
+                          "max": "@entity.max",
+                          "type": "progress-bar"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Tokens Used",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "value": "@entity.max",
+                              "label": "Max Tokens",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "action": "RESET",
+                          "label": "Reset",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "normal",
+                "to": "normal",
+                "event": "UPDATE",
+                "guard": [
+                  "<",
+                  [
+                    "/",
+                    "@payload.current",
+                    "@entity.max"
+                  ],
+                  0.85
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -311,6 +399,698 @@
                               "content": "Token Usage",
                               "type": "typography",
                               "variant": "h2"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "Normal"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "value": "@entity.current",
+                          "type": "progress-bar",
+                          "max": "@entity.max"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Tokens Used",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "label": "Max Tokens",
+                              "type": "stat-display",
+                              "value": "@entity.max"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "variant": "ghost",
+                          "type": "button",
+                          "action": "RESET",
+                          "icon": "rotate-ccw",
+                          "label": "Reset"
+                        }
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "normal",
+                "to": "warning",
+                "event": "UPDATE",
+                "guard": [
+                  "and",
+                  [
+                    ">=",
+                    [
+                      "/",
+                      "@payload.current",
+                      "@entity.max"
+                    ],
+                    0.85
+                  ],
+                  [
+                    "<",
+                    [
+                      "/",
+                      "@payload.current",
+                      "@entity.max"
+                    ],
+                    0.95
+                  ]
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "alert-triangle",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Token Usage",
+                              "variant": "h2"
+                            },
+                            {
+                              "label": "Warning",
+                              "type": "badge",
+                              "variant": "warning"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "Token usage approaching limit. Consider compacting.",
+                          "variant": "warning",
+                          "type": "alert"
+                        },
+                        {
+                          "value": "@entity.current",
+                          "max": "@entity.max",
+                          "type": "progress-bar"
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Tokens Used",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.max",
+                              "label": "Max Tokens"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Compact",
+                              "action": "COMPACT",
+                              "icon": "minimize-2",
+                              "variant": "primary"
+                            },
+                            {
+                              "icon": "rotate-ccw",
+                              "action": "RESET",
+                              "type": "button",
+                              "label": "Reset",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "normal",
+                "to": "critical",
+                "event": "UPDATE",
+                "guard": [
+                  ">=",
+                  [
+                    "/",
+                    "@payload.current",
+                    "@entity.max"
+                  ],
+                  0.95
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-octagon"
+                            },
+                            {
+                              "content": "Token Usage",
+                              "variant": "h2",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "Critical",
+                              "variant": "danger",
+                              "type": "badge"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "Token usage critical. Compact immediately to avoid truncation."
+                        },
+                        {
+                          "max": "@entity.max",
+                          "value": "@entity.current",
+                          "type": "progress-bar"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Tokens Used",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "value": "@entity.max",
+                              "type": "stat-display",
+                              "label": "Max Tokens"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "icon": "minimize-2",
+                              "type": "button",
+                              "label": "Compact Now",
+                              "action": "COMPACT"
+                            },
+                            {
+                              "type": "button",
+                              "icon": "rotate-ccw",
+                              "variant": "ghost",
+                              "action": "RESET",
+                              "label": "Reset"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "normal",
+                "to": "normal",
+                "event": "COMPACT",
+                "effects": [
+                  [
+                    "agent/compact"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastCompactedAt",
+                    "@now"
+                  ],
+                  [
+                    "agent/token-count"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "gauge"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Token Usage"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Normal",
+                              "variant": "default"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "max": "@entity.max",
+                          "type": "progress-bar",
+                          "value": "@entity.current"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "label": "Tokens Used",
+                              "value": "@entity.current",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.max",
+                              "label": "Max Tokens"
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "ghost",
+                          "action": "RESET",
+                          "type": "button",
+                          "label": "Reset",
+                          "icon": "rotate-ccw"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "normal",
+                "to": "normal",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "gauge",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Token Usage"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "Normal"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": "@entity.current",
+                          "max": "@entity.max"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Tokens Used",
+                              "type": "stat-display",
+                              "value": "@entity.current"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.max",
+                              "label": "Max Tokens"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "label": "Reset",
+                          "action": "RESET",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "warning",
+                "to": "warning",
+                "event": "UPDATE",
+                "guard": [
+                  "and",
+                  [
+                    ">=",
+                    [
+                      "/",
+                      "@payload.current",
+                      "@entity.max"
+                    ],
+                    0.85
+                  ],
+                  [
+                    "<",
+                    [
+                      "/",
+                      "@payload.current",
+                      "@entity.max"
+                    ],
+                    0.95
+                  ]
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "alert-triangle",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Token Usage",
+                              "variant": "h2",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Warning",
+                              "variant": "warning"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "Token usage approaching limit. Consider compacting.",
+                          "variant": "warning",
+                          "type": "alert"
+                        },
+                        {
+                          "value": "@entity.current",
+                          "type": "progress-bar",
+                          "max": "@entity.max"
+                        },
+                        {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "value": "@entity.current",
+                              "label": "Tokens Used",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Max Tokens",
+                              "value": "@entity.max"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "icon": "minimize-2",
+                              "action": "COMPACT",
+                              "label": "Compact",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "icon": "rotate-ccw",
+                              "action": "RESET",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Reset"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "warning",
+                "to": "critical",
+                "event": "UPDATE",
+                "guard": [
+                  ">=",
+                  [
+                    "/",
+                    "@payload.current",
+                    "@entity.max"
+                  ],
+                  0.95
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "alert-octagon",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Token Usage",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Critical",
+                              "variant": "danger"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "Token usage critical. Compact immediately to avoid truncation."
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": "@entity.current",
+                          "max": "@entity.max"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Tokens Used",
+                              "value": "@entity.current",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "@entity.max",
+                              "label": "Max Tokens",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "action": "COMPACT",
+                              "label": "Compact Now",
+                              "type": "button",
+                              "icon": "minimize-2"
+                            },
+                            {
+                              "action": "RESET",
+                              "label": "Reset",
+                              "icon": "rotate-ccw",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "warning",
+                "to": "normal",
+                "event": "UPDATE",
+                "guard": [
+                  "<",
+                  [
+                    "/",
+                    "@payload.current",
+                    "@entity.max"
+                  ],
+                  0.85
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.current",
+                    "@payload.current"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "gauge"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Token Usage"
                             },
                             {
                               "type": "badge",
@@ -323,96 +1103,12 @@
                           "type": "divider"
                         },
                         {
-                          "type": "progress-bar",
-                          "value": "@entity.current",
-                          "max": "@entity.max"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "label": "Tokens Used",
-                              "type": "stat-display",
-                              "value": "@entity.current"
-                            },
-                            {
-                              "type": "stat-display",
-                              "value": "@entity.max",
-                              "label": "Max Tokens"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "action": "RESET",
-                          "icon": "rotate-ccw",
-                          "variant": "ghost"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "normal",
-                "to": "normal",
-                "event": "UPDATE",
-                "guard": [
-                  "<",
-                  [
-                    "/",
-                    "@payload.current",
-                    "@entity.max"
-                  ],
-                  0.85
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "name": "gauge",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Token Usage",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "variant": "default",
-                              "label": "Normal"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
                           "max": "@entity.max",
-                          "value": "@entity.current",
-                          "type": "progress-bar"
+                          "type": "progress-bar",
+                          "value": "@entity.current"
                         },
                         {
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
@@ -421,136 +1117,19 @@
                               "type": "stat-display"
                             },
                             {
-                              "label": "Max Tokens",
+                              "type": "stat-display",
                               "value": "@entity.max",
-                              "type": "stat-display"
+                              "label": "Max Tokens"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
+                          "icon": "rotate-ccw",
+                          "type": "button",
                           "variant": "ghost",
-                          "icon": "rotate-ccw",
-                          "action": "RESET",
-                          "type": "button",
-                          "label": "Reset"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "normal",
-                "to": "warning",
-                "event": "UPDATE",
-                "guard": [
-                  "and",
-                  [
-                    ">=",
-                    [
-                      "/",
-                      "@payload.current",
-                      "@entity.max"
-                    ],
-                    0.85
-                  ],
-                  [
-                    "<",
-                    [
-                      "/",
-                      "@payload.current",
-                      "@entity.max"
-                    ],
-                    0.95
-                  ]
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "alert-triangle",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Token Usage"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Warning",
-                              "variant": "warning"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "warning",
-                          "message": "Token usage approaching limit. Consider compacting.",
-                          "type": "alert"
-                        },
-                        {
-                          "value": "@entity.current",
-                          "max": "@entity.max",
-                          "type": "progress-bar"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "label": "Tokens Used",
-                              "value": "@entity.current",
-                              "type": "stat-display"
-                            },
-                            {
-                              "label": "Max Tokens",
-                              "value": "@entity.max",
-                              "type": "stat-display"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "button",
-                              "icon": "minimize-2",
-                              "variant": "primary",
-                              "action": "COMPACT",
-                              "label": "Compact"
-                            },
-                            {
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
-                              "type": "button",
-                              "action": "RESET",
-                              "variant": "ghost"
-                            }
-                          ]
+                          "label": "Reset",
+                          "action": "RESET"
                         }
                       ],
                       "direction": "vertical",
@@ -561,112 +1140,7 @@
                 ]
               },
               {
-                "from": "normal",
-                "to": "critical",
-                "event": "UPDATE",
-                "guard": [
-                  ">=",
-                  [
-                    "/",
-                    "@payload.current",
-                    "@entity.max"
-                  ],
-                  0.95
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "alert-octagon",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "Token Usage",
-                              "type": "typography",
-                              "variant": "h2"
-                            },
-                            {
-                              "label": "Critical",
-                              "variant": "danger",
-                              "type": "badge"
-                            }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "message": "Token usage critical. Compact immediately to avoid truncation.",
-                          "variant": "error",
-                          "type": "alert"
-                        },
-                        {
-                          "type": "progress-bar",
-                          "value": "@entity.current",
-                          "max": "@entity.max"
-                        },
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Tokens Used",
-                              "value": "@entity.current",
-                              "type": "stat-display"
-                            },
-                            {
-                              "type": "stat-display",
-                              "value": "@entity.max",
-                              "label": "Max Tokens"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Compact Now",
-                              "action": "COMPACT",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "minimize-2"
-                            },
-                            {
-                              "type": "button",
-                              "action": "RESET",
-                              "label": "Reset",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "normal",
+                "from": "warning",
                 "to": "normal",
                 "event": "COMPACT",
                 "effects": [
@@ -687,8 +1161,6 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "name": "gauge",
@@ -700,23 +1172,28 @@
                               "content": "Token Usage"
                             },
                             {
-                              "label": "Normal",
                               "variant": "default",
+                              "label": "Normal",
                               "type": "badge"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "value": "@entity.current",
                           "max": "@entity.max",
-                          "type": "progress-bar"
+                          "type": "progress-bar",
+                          "value": "@entity.current"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "stat-display",
@@ -724,32 +1201,29 @@
                               "value": "@entity.current"
                             },
                             {
-                              "label": "Max Tokens",
                               "type": "stat-display",
+                              "label": "Max Tokens",
                               "value": "@entity.max"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "button",
-                          "variant": "ghost",
                           "label": "Reset",
+                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "action": "RESET"
+                          "variant": "ghost"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
-                "from": "normal",
+                "from": "warning",
                 "to": "normal",
                 "event": "RESET",
                 "effects": [
@@ -762,44 +1236,45 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "gauge"
+                              "name": "gauge",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Token Usage"
+                              "content": "Token Usage",
+                              "variant": "h2"
                             },
                             {
+                              "label": "Normal",
                               "variant": "default",
-                              "type": "badge",
-                              "label": "Normal"
+                              "type": "badge"
                             }
                           ],
+                          "gap": "sm",
+                          "align": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "max": "@entity.max",
                           "type": "progress-bar",
-                          "value": "@entity.current"
+                          "value": "@entity.current",
+                          "max": "@entity.max"
                         },
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "label": "Tokens Used",
                               "value": "@entity.current",
-                              "type": "stat-display",
-                              "label": "Tokens Used"
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
@@ -807,488 +1282,19 @@
                               "value": "@entity.max"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "variant": "ghost",
-                          "type": "button",
                           "action": "RESET",
+                          "icon": "rotate-ccw",
+                          "type": "button",
                           "label": "Reset"
                         }
                       ],
                       "gap": "lg",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "warning",
-                "event": "UPDATE",
-                "guard": [
-                  "and",
-                  [
-                    ">=",
-                    [
-                      "/",
-                      "@payload.current",
-                      "@entity.max"
-                    ],
-                    0.85
-                  ],
-                  [
-                    "<",
-                    [
-                      "/",
-                      "@payload.current",
-                      "@entity.max"
-                    ],
-                    0.95
-                  ]
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-triangle"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h2",
-                              "content": "Token Usage"
-                            },
-                            {
-                              "label": "Warning",
-                              "type": "badge",
-                              "variant": "warning"
-                            }
-                          ],
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "message": "Token usage approaching limit. Consider compacting.",
-                          "type": "alert",
-                          "variant": "warning"
-                        },
-                        {
-                          "max": "@entity.max",
-                          "value": "@entity.current",
-                          "type": "progress-bar"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "value": "@entity.current",
-                              "type": "stat-display",
-                              "label": "Tokens Used"
-                            },
-                            {
-                              "value": "@entity.max",
-                              "type": "stat-display",
-                              "label": "Max Tokens"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "label": "Compact",
-                              "variant": "primary",
-                              "action": "COMPACT",
-                              "icon": "minimize-2",
-                              "type": "button"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
-                              "action": "RESET"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack",
                       "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "critical",
-                "event": "UPDATE",
-                "guard": [
-                  ">=",
-                  [
-                    "/",
-                    "@payload.current",
-                    "@entity.max"
-                  ],
-                  0.95
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-octagon"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Token Usage",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Critical",
-                              "variant": "danger"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "message": "Token usage critical. Compact immediately to avoid truncation.",
-                          "type": "alert",
-                          "variant": "error"
-                        },
-                        {
-                          "type": "progress-bar",
-                          "max": "@entity.max",
-                          "value": "@entity.current"
-                        },
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Tokens Used",
-                              "value": "@entity.current"
-                            },
-                            {
-                              "value": "@entity.max",
-                              "type": "stat-display",
-                              "label": "Max Tokens"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "action": "COMPACT",
-                              "label": "Compact Now",
-                              "variant": "primary",
-                              "icon": "minimize-2",
-                              "type": "button"
-                            },
-                            {
-                              "icon": "rotate-ccw",
-                              "type": "button",
-                              "variant": "ghost",
-                              "label": "Reset",
-                              "action": "RESET"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "normal",
-                "event": "UPDATE",
-                "guard": [
-                  "<",
-                  [
-                    "/",
-                    "@payload.current",
-                    "@entity.max"
-                  ],
-                  0.85
-                ],
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    "@payload.current"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "gauge"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Token Usage",
-                              "type": "typography"
-                            },
-                            {
-                              "label": "Normal",
-                              "variant": "default",
-                              "type": "badge"
-                            }
-                          ],
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "max": "@entity.max",
-                          "value": "@entity.current",
-                          "type": "progress-bar"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Tokens Used",
-                              "value": "@entity.current"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Max Tokens",
-                              "value": "@entity.max"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "label": "Reset",
-                          "action": "RESET",
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "variant": "ghost"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "normal",
-                "event": "COMPACT",
-                "effects": [
-                  [
-                    "agent/compact"
-                  ],
-                  [
-                    "set",
-                    "@entity.lastCompactedAt",
-                    "@now"
-                  ],
-                  [
-                    "agent/token-count"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "gauge"
-                            },
-                            {
-                              "content": "Token Usage",
-                              "variant": "h2",
-                              "type": "typography"
-                            },
-                            {
-                              "label": "Normal",
-                              "variant": "default",
-                              "type": "badge"
-                            }
-                          ],
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "value": "@entity.current",
-                          "type": "progress-bar",
-                          "max": "@entity.max"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "value": "@entity.current",
-                              "label": "Tokens Used"
-                            },
-                            {
-                              "label": "Max Tokens",
-                              "value": "@entity.max",
-                              "type": "stat-display"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "label": "Reset",
-                          "icon": "rotate-ccw",
-                          "action": "RESET",
-                          "variant": "ghost",
-                          "type": "button"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "warning",
-                "to": "normal",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.current",
-                    0.0
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "gauge",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Token Usage"
-                            },
-                            {
-                              "variant": "default",
-                              "type": "badge",
-                              "label": "Normal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "value": "@entity.current",
-                          "max": "@entity.max",
-                          "type": "progress-bar"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Tokens Used",
-                              "value": "@entity.current",
-                              "type": "stat-display"
-                            },
-                            {
-                              "value": "@entity.max",
-                              "type": "stat-display",
-                              "label": "Max Tokens"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "variant": "ghost",
-                          "type": "button",
-                          "label": "Reset",
-                          "icon": "rotate-ccw",
-                          "action": "RESET"
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
                     }
                   ]
                 ]
@@ -1316,42 +1322,43 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "alert-octagon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-octagon"
                             },
                             {
-                              "content": "Token Usage",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Token Usage"
                             },
                             {
-                              "label": "Critical",
                               "type": "badge",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Critical"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "Token usage critical. Compact immediately to avoid truncation.",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "Token usage critical. Compact immediately to avoid truncation."
                         },
                         {
-                          "value": "@entity.current",
                           "max": "@entity.max",
+                          "value": "@entity.current",
                           "type": "progress-bar"
                         },
                         {
@@ -1363,8 +1370,8 @@
                             },
                             {
                               "label": "Max Tokens",
-                              "type": "stat-display",
-                              "value": "@entity.max"
+                              "value": "@entity.max",
+                              "type": "stat-display"
                             }
                           ],
                           "gap": "md",
@@ -1372,6 +1379,8 @@
                           "type": "stack"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
@@ -1384,16 +1393,13 @@
                               "label": "Reset",
                               "type": "button",
                               "variant": "ghost",
-                              "action": "RESET",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "action": "RESET"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1433,38 +1439,37 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "content": "Token Usage",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             },
                             {
+                              "type": "badge",
                               "variant": "warning",
-                              "label": "Warning",
-                              "type": "badge"
+                              "label": "Warning"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "Token usage approaching limit. Consider compacting.",
                           "type": "alert",
+                          "message": "Token usage approaching limit. Consider compacting.",
                           "variant": "warning"
                         },
                         {
@@ -1475,42 +1480,43 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
-                              "value": "@entity.current",
                               "type": "stat-display",
-                              "label": "Tokens Used"
+                              "label": "Tokens Used",
+                              "value": "@entity.current"
                             },
                             {
-                              "value": "@entity.max",
                               "type": "stat-display",
-                              "label": "Max Tokens"
+                              "label": "Max Tokens",
+                              "value": "@entity.max"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "icon": "minimize-2",
-                              "variant": "primary",
                               "label": "Compact",
                               "type": "button",
-                              "action": "COMPACT"
+                              "action": "COMPACT",
+                              "variant": "primary",
+                              "icon": "minimize-2"
                             },
                             {
-                              "icon": "rotate-ccw",
-                              "type": "button",
-                              "label": "Reset",
                               "action": "RESET",
+                              "label": "Reset",
+                              "type": "button",
+                              "icon": "rotate-ccw",
                               "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1538,43 +1544,41 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "gauge",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "gauge"
                             },
                             {
                               "content": "Token Usage",
-                              "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             },
                             {
-                              "label": "Normal",
                               "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Normal"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "max": "@entity.max",
+                          "type": "progress-bar",
                           "value": "@entity.current",
-                          "type": "progress-bar"
+                          "max": "@entity.max"
                         },
                         {
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "stat-display",
@@ -1582,21 +1586,23 @@
                               "value": "@entity.current"
                             },
                             {
-                              "label": "Max Tokens",
                               "type": "stat-display",
+                              "label": "Max Tokens",
                               "value": "@entity.max"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "RESET",
                           "label": "Reset",
-                          "type": "button",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "RESET",
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1621,9 +1627,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
@@ -1631,55 +1639,53 @@
                               "name": "gauge"
                             },
                             {
+                              "content": "Token Usage",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Token Usage"
+                              "type": "typography"
                             },
                             {
-                              "label": "Normal",
+                              "type": "badge",
                               "variant": "default",
-                              "type": "badge"
+                              "label": "Normal"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "progress-bar",
-                          "value": "@entity.current",
-                          "max": "@entity.max"
+                          "max": "@entity.max",
+                          "value": "@entity.current"
                         },
                         {
-                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stat-display",
+                              "value": "@entity.current",
                               "label": "Tokens Used",
-                              "value": "@entity.current"
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.max",
+                              "type": "stat-display",
                               "label": "Max Tokens",
-                              "type": "stat-display"
+                              "value": "@entity.max"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
-                          "variant": "ghost",
                           "action": "RESET",
-                          "label": "Reset",
                           "type": "button",
+                          "label": "Reset",
+                          "variant": "ghost",
                           "icon": "rotate-ccw"
                         }
                       ],
                       "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1698,14 +1704,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -1717,46 +1723,46 @@
                               "content": "Token Usage"
                             },
                             {
-                              "label": "Normal",
                               "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Normal"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "max": "@entity.max",
+                          "value": "@entity.current",
                           "type": "progress-bar",
-                          "value": "@entity.current"
+                          "max": "@entity.max"
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
+                              "value": "@entity.current",
                               "type": "stat-display",
-                              "label": "Tokens Used",
-                              "value": "@entity.current"
+                              "label": "Tokens Used"
                             },
                             {
                               "value": "@entity.max",
                               "label": "Max Tokens",
                               "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
-                          "action": "RESET",
-                          "type": "button",
-                          "label": "Reset",
                           "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "label": "Reset",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RESET"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1963,8 +1969,8 @@
                     "AgentContextWindow",
                     {
                       "emit": {
-                        "failure": "AgentContextWindowLoadFailed",
-                        "success": "AgentContextWindowLoaded"
+                        "success": "AgentContextWindowLoaded",
+                        "failure": "AgentContextWindowLoadFailed"
                       }
                     }
                   ]
@@ -1989,59 +1995,59 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "align": "center",
                               "direction": "horizontal",
+                              "align": "center",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "layers",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Context Window Alert"
+                                  "content": "Context Window Alert",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "type": "button",
                               "variant": "ghost",
-                              "icon": "x",
                               "action": "HIDE",
-                              "label": "Dismiss"
+                              "type": "button",
+                              "label": "Dismiss",
+                              "icon": "x"
                             }
                           ],
+                          "align": "center",
+                          "gap": "md",
                           "justify": "between",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": "@entity.notificationType",
-                          "message": "@entity.message"
+                          "message": "@entity.message",
+                          "type": "alert"
                         },
                         {
                           "type": "toast-slot"
                         },
                         {
                           "type": "alert",
-                          "message": "@entity.message",
-                          "variant": "warning"
+                          "variant": "warning",
+                          "message": "@entity.message"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -2068,37 +2074,37 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
                           "gap": "md",
-                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "layers"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Context Window Alert",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "align": "center"
                             },
                             {
-                              "action": "HIDE",
-                              "variant": "ghost",
                               "type": "button",
-                              "icon": "x",
-                              "label": "Dismiss"
+                              "variant": "ghost",
+                              "label": "Dismiss",
+                              "action": "HIDE",
+                              "icon": "x"
                             }
                           ],
-                          "justify": "between"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -2381,10 +2387,10 @@
                     "render-ui",
                     "main",
                     {
-                      "description": "Context Window is ready",
-                      "type": "empty-state",
                       "icon": "layers",
-                      "title": "Context Window"
+                      "type": "empty-state",
+                      "title": "Context Window",
+                      "description": "Context Window is ready"
                     }
                   ]
                 ]

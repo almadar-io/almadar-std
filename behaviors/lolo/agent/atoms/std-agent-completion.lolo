@@ -14,7 +14,7 @@ orbital AgentCompletionOrbital {
     model : string = "claude-sonnet-4-20250514"
     error : string = ""
     message : string = ""
-    notificationType : string = "info"
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type AgentCompletionLoaded     = Event AgentCompletion                  "Fired when AgentCompletion finishes loading"
@@ -73,7 +73,7 @@ orbital AgentCompletionOrbital {
         (set @entity.message "")
     }
     listens {
-      SHOW { message : string!, notificationType : string }
+      SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
           AgentCompletionLoadFailed { message : string }
     }
     emits: [AgentCompletionLoaded, AgentCompletionLoadFailed]
@@ -95,7 +95,7 @@ orbital AgentCompletionOrbital {
       DO_GENERATE -> completed
         (set @entity.response @payload.data.prompt)
         (set @entity.status completed)
-        (emit SHOW)
+        (emit SHOW { message: "Completion ready", notificationType: "success" })
       RESET -> error when (= @entity.status generating)
         (set @entity.status error)
         (set @entity.error "Generation was cancelled")
@@ -116,7 +116,7 @@ orbital AgentCompletionOrbital {
         (set @entity.error "")
     }
     emits {
-      SHOW internal { response: string }
+      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
     }
     listens {
       AgentCompletionModal GENERATED -> GENERATED

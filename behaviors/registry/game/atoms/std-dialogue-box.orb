@@ -194,8 +194,8 @@
                     "DialogueNode",
                     {
                       "emit": {
-                        "failure": "DialogueNodeLoadFailed",
-                        "success": "DialogueNodeLoaded"
+                        "success": "DialogueNodeLoaded",
+                        "failure": "DialogueNodeLoadFailed"
                       }
                     }
                   ],
@@ -213,13 +213,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dialogue-box",
                       "position": "bottom",
-                      "typewriterSpeed": 30.0,
+                      "type": "dialogue-box",
                       "dialogue": {
-                        "speaker": "@entity.speaker",
-                        "text": "@entity.text"
-                      }
+                        "text": "@entity.text",
+                        "speaker": "@entity.speaker"
+                      },
+                      "typewriterSpeed": 30.0
                     }
                   ]
                 ]
@@ -228,87 +228,6 @@
                 "from": "talking",
                 "to": "talking",
                 "event": "ADVANCE",
-                "effects": [
-                  [
-                    "fetch",
-                    "DialogueNode",
-                    {
-                      "emit": {
-                        "failure": "DialogueNodeLoadFailed",
-                        "success": "DialogueNodeLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "typewriterSpeed": 30.0,
-                      "dialogue": {
-                        "speaker": "@entity.speaker",
-                        "text": "@entity.text"
-                      },
-                      "position": "bottom",
-                      "type": "dialogue-box"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "talking",
-                "to": "talking",
-                "event": "CHOICE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "dialogue": {
-                        "speaker": "@entity.speaker",
-                        "text": "@entity.text"
-                      },
-                      "type": "dialogue-box",
-                      "typewriterSpeed": 30.0,
-                      "position": "bottom"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "talking",
-                "to": "idle",
-                "event": "COMPLETE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Dialogue complete",
-                          "variant": "caption"
-                        },
-                        {
-                          "variant": "primary",
-                          "action": "START_DIALOGUE",
-                          "icon": "message-circle",
-                          "type": "button",
-                          "label": "New Dialogue"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "talking",
-                "event": "START_DIALOGUE",
                 "effects": [
                   [
                     "fetch",
@@ -324,13 +243,94 @@
                     "render-ui",
                     "main",
                     {
+                      "dialogue": {
+                        "text": "@entity.text",
+                        "speaker": "@entity.speaker"
+                      },
                       "position": "bottom",
-                      "type": "dialogue-box",
+                      "typewriterSpeed": 30.0,
+                      "type": "dialogue-box"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "talking",
+                "to": "talking",
+                "event": "CHOICE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "typewriterSpeed": 30.0,
                       "dialogue": {
                         "speaker": "@entity.speaker",
                         "text": "@entity.text"
+                      },
+                      "type": "dialogue-box",
+                      "position": "bottom"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "talking",
+                "to": "idle",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Dialogue complete",
+                          "variant": "caption"
+                        },
+                        {
+                          "icon": "message-circle",
+                          "label": "New Dialogue",
+                          "type": "button",
+                          "action": "START_DIALOGUE",
+                          "variant": "primary"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "talking",
+                "event": "START_DIALOGUE",
+                "effects": [
+                  [
+                    "fetch",
+                    "DialogueNode",
+                    {
+                      "emit": {
+                        "failure": "DialogueNodeLoadFailed",
+                        "success": "DialogueNodeLoaded"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "dialogue": {
+                        "speaker": "@entity.speaker",
+                        "text": "@entity.text"
+                      },
+                      "position": "bottom",
+                      "type": "dialogue-box",
+                      "typewriterSpeed": 30.0
                     }
                   ]
                 ]

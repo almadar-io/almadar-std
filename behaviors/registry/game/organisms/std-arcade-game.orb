@@ -189,11 +189,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
                       "appName": "Arcade Game",
                       "children": [
                         {
                           "type": "game-menu",
-                          "subtitle": "Main Menu",
                           "menuItems": [
                             {
                               "variant": "primary",
@@ -201,10 +201,10 @@
                               "event": "START"
                             }
                           ],
-                          "title": "Arcade"
+                          "title": "Arcade",
+                          "subtitle": "Main Menu"
                         }
                       ],
-                      "type": "game-shell",
                       "showTopBar": true
                     }
                   ]
@@ -214,69 +214,6 @@
                 "from": "menu",
                 "to": "playing",
                 "event": "START",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "Arcade Game",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "stats": [
-                            {
-                              "value": "@entity.score",
-                              "label": "Score"
-                            },
-                            {
-                              "label": "Level",
-                              "value": "@entity.level"
-                            }
-                          ],
-                          "type": "game-hud"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE"
-              },
-              {
-                "from": "playing",
-                "to": "paused",
-                "event": "PAUSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "game-menu",
-                      "title": "Paused",
-                      "menuItems": [
-                        {
-                          "event": "RESUME",
-                          "variant": "primary",
-                          "label": "Resume"
-                        },
-                        {
-                          "variant": "ghost",
-                          "label": "Quit",
-                          "event": "RESTART"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
                 "effects": [
                   [
                     "render-ui",
@@ -295,24 +232,87 @@
                               "value": "@entity.level"
                             }
                           ],
-                          "type": "game-over-screen",
-                          "menuItems": [
-                            {
-                              "variant": "primary",
-                              "label": "Play Again",
-                              "event": "RESTART"
-                            },
-                            {
-                              "variant": "secondary",
-                              "event": "RESTART",
-                              "label": "Main Menu"
-                            }
-                          ],
-                          "title": "Game Over"
+                          "type": "game-hud"
                         }
                       ],
                       "type": "game-shell",
                       "showTopBar": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "playing",
+                "to": "paused",
+                "event": "PAUSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "title": "Paused",
+                      "type": "game-menu",
+                      "menuItems": [
+                        {
+                          "label": "Resume",
+                          "event": "RESUME",
+                          "variant": "primary"
+                        },
+                        {
+                          "event": "RESTART",
+                          "label": "Quit",
+                          "variant": "ghost"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-shell",
+                      "appName": "Arcade Game",
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "title": "Game Over",
+                          "menuItems": [
+                            {
+                              "label": "Play Again",
+                              "event": "RESTART",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Main Menu",
+                              "variant": "secondary",
+                              "event": "RESTART"
+                            }
+                          ],
+                          "type": "game-over-screen",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Level",
+                              "value": "@entity.level"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -336,13 +336,16 @@
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "appName": "Arcade Game",
                       "children": [
                         {
                           "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             },
                             {
                               "value": "@entity.level",
@@ -350,10 +353,7 @@
                             }
                           ]
                         }
-                      ],
-                      "appName": "Arcade Game",
-                      "showTopBar": true,
-                      "type": "game-shell"
+                      ]
                     }
                   ]
                 ]
@@ -374,6 +374,7 @@
                     {
                       "appName": "Arcade Game",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "stats": [
@@ -382,14 +383,13 @@
                               "label": "Score"
                             },
                             {
-                              "value": "@entity.level",
-                              "label": "Level"
+                              "label": "Level",
+                              "value": "@entity.level"
                             }
                           ],
                           "type": "game-hud"
                         }
-                      ],
-                      "type": "game-shell"
+                      ]
                     }
                   ]
                 ]
@@ -409,22 +409,22 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "showTopBar": true,
-                      "appName": "Arcade Game",
                       "children": [
                         {
-                          "subtitle": "Main Menu",
+                          "type": "game-menu",
                           "menuItems": [
                             {
-                              "event": "START",
+                              "label": "Start Game",
                               "variant": "primary",
-                              "label": "Start Game"
+                              "event": "START"
                             }
                           ],
-                          "title": "Arcade",
-                          "type": "game-menu"
+                          "subtitle": "Main Menu",
+                          "title": "Arcade"
                         }
-                      ]
+                      ],
+                      "appName": "Arcade Game",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -438,19 +438,19 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
                       "type": "game-shell",
+                      "showTopBar": true,
                       "children": [
                         {
+                          "type": "game-menu",
+                          "subtitle": "Main Menu",
                           "menuItems": [
                             {
-                              "event": "START",
                               "variant": "primary",
-                              "label": "Start Game"
+                              "label": "Start Game",
+                              "event": "START"
                             }
                           ],
-                          "subtitle": "Main Menu",
-                          "type": "game-menu",
                           "title": "Arcade"
                         }
                       ],
@@ -627,8 +627,8 @@
                     "ArcadeCanvas",
                     {
                       "emit": {
-                        "success": "ArcadeCanvasLoaded",
-                        "failure": "ArcadeCanvasLoadFailed"
+                        "failure": "ArcadeCanvasLoadFailed",
+                        "success": "ArcadeCanvasLoaded"
                       }
                     }
                   ],
@@ -637,52 +637,52 @@
                     "main",
                     {
                       "type": "game-shell",
+                      "appName": "Arcade Game",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "direction": "vertical",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "monitor",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "monitor"
                                 },
                                 {
-                                  "content": "ArcadeCanvas Canvas",
                                   "variant": "h3",
+                                  "content": "ArcadeCanvas Canvas",
                                   "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
+                              "type": "stack",
                               "align": "center"
                             },
                             {
-                              "type": "typography",
                               "content": "800x600 @ 60fps",
+                              "type": "typography",
                               "color": "muted",
                               "variant": "caption"
                             },
                             {
                               "width": 800.0,
+                              "fps": 60.0,
                               "height": 600.0,
-                              "type": "game-canvas-2d",
-                              "fps": 60.0
+                              "type": "game-canvas-2d"
                             },
                             {
-                              "type": "button",
-                              "action": "START",
-                              "icon": "play",
                               "variant": "primary",
+                              "icon": "play",
+                              "action": "START",
+                              "type": "button",
                               "label": "Start"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         }
                       ],
-                      "appName": "Arcade Game",
                       "showTopBar": true
                     }
                   ]
@@ -697,48 +697,48 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Arcade Game",
                       "children": [
                         {
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "monitor"
+                                  "name": "monitor",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "ArcadeCanvas Canvas",
                                   "variant": "h3",
+                                  "content": "ArcadeCanvas Canvas",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              ]
                             },
                             {
+                              "fps": 60.0,
                               "type": "game-canvas-2d",
                               "height": 600.0,
-                              "width": 800.0,
-                              "fps": 60.0
+                              "width": 800.0
                             },
                             {
+                              "type": "button",
+                              "icon": "square",
                               "action": "STOP",
                               "label": "Stop",
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "square"
+                              "variant": "ghost"
                             }
                           ],
-                          "gap": "md",
                           "direction": "vertical"
                         }
                       ],
+                      "showTopBar": true,
                       "type": "game-shell",
-                      "showTopBar": true
+                      "appName": "Arcade Game"
                     }
                   ]
                 ]
@@ -757,14 +757,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "showTopBar": true,
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -773,38 +772,39 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h3",
-                                  "content": "ArcadeCanvas Canvas"
+                                  "content": "ArcadeCanvas Canvas",
+                                  "variant": "h3"
                                 }
                               ],
+                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm"
                             },
                             {
-                              "content": "800x600 @ 60fps",
                               "color": "muted",
                               "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "800x600 @ 60fps"
                             },
                             {
-                              "height": 600.0,
-                              "fps": 60.0,
+                              "type": "game-canvas-2d",
                               "width": 800.0,
-                              "type": "game-canvas-2d"
+                              "fps": 60.0,
+                              "height": 600.0
                             },
                             {
-                              "action": "START",
+                              "type": "button",
                               "variant": "primary",
                               "label": "Start",
-                              "type": "button",
-                              "icon": "play"
+                              "icon": "play",
+                              "action": "START"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md"
+                          ]
                         }
                       ],
-                      "appName": "Arcade Game"
+                      "appName": "Arcade Game",
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1031,8 +1031,8 @@
                     "ArcadeScore",
                     {
                       "emit": {
-                        "failure": "ArcadeScoreLoadFailed",
-                        "success": "ArcadeScoreLoaded"
+                        "success": "ArcadeScoreLoaded",
+                        "failure": "ArcadeScoreLoadFailed"
                       }
                     }
                   ],
@@ -1040,17 +1040,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
                       "showTopBar": true,
                       "appName": "Arcade Game",
-                      "type": "game-shell",
                       "children": [
                         {
-                          "combo": "@entity.combo",
+                          "score": "@entity.score",
+                          "multiplier": "@entity.multiplier",
+                          "highScore": "@entity.highScore",
                           "level": "@entity.level",
                           "type": "score-board",
-                          "highScore": "@entity.highScore",
-                          "score": "@entity.score",
-                          "multiplier": "@entity.multiplier"
+                          "combo": "@entity.combo"
                         }
                       ]
                     }
@@ -1084,19 +1084,19 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
+                      "appName": "Arcade Game",
+                      "showTopBar": true,
                       "children": [
                         {
                           "combo": "@entity.combo",
-                          "highScore": "@entity.highScore",
-                          "multiplier": "@entity.multiplier",
-                          "type": "score-board",
                           "score": "@entity.score",
-                          "level": "@entity.level"
+                          "multiplier": "@entity.multiplier",
+                          "level": "@entity.level",
+                          "type": "score-board",
+                          "highScore": "@entity.highScore"
                         }
-                      ],
-                      "type": "game-shell",
-                      "showTopBar": true,
-                      "appName": "Arcade Game"
+                      ]
                     }
                   ]
                 ]
@@ -1115,19 +1115,19 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
+                      "appName": "Arcade Game",
                       "children": [
                         {
-                          "multiplier": "@entity.multiplier",
-                          "score": "@entity.score",
-                          "combo": "@entity.combo",
-                          "level": "@entity.level",
                           "highScore": "@entity.highScore",
-                          "type": "score-board"
+                          "type": "score-board",
+                          "combo": "@entity.combo",
+                          "score": "@entity.score",
+                          "multiplier": "@entity.multiplier",
+                          "level": "@entity.level"
                         }
                       ],
-                      "appName": "Arcade Game",
-                      "showTopBar": true,
-                      "type": "game-shell"
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1156,19 +1156,19 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Arcade Game",
+                      "showTopBar": true,
                       "type": "game-shell",
                       "children": [
                         {
-                          "combo": "@entity.combo",
                           "score": "@entity.score",
-                          "type": "score-board",
+                          "combo": "@entity.combo",
+                          "level": "@entity.level",
                           "multiplier": "@entity.multiplier",
                           "highScore": "@entity.highScore",
-                          "level": "@entity.level"
+                          "type": "score-board"
                         }
-                      ],
-                      "appName": "Arcade Game",
-                      "showTopBar": true
+                      ]
                     }
                   ]
                 ]
@@ -1333,8 +1333,8 @@
                     "ArcadeHud",
                     {
                       "emit": {
-                        "success": "ArcadeHudLoaded",
-                        "failure": "ArcadeHudLoadFailed"
+                        "failure": "ArcadeHudLoadFailed",
+                        "success": "ArcadeHudLoaded"
                       }
                     }
                   ],
@@ -1343,15 +1343,14 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "showTopBar": true,
                       "children": [
                         {
+                          "position": "top-left",
                           "type": "game-hud",
-                          "transparent": false,
                           "stats": [
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             },
                             {
                               "label": "Lives",
@@ -1362,13 +1361,14 @@
                               "value": "@entity.level"
                             },
                             {
-                              "label": "Timer",
-                              "value": "@entity.timer"
+                              "value": "@entity.timer",
+                              "label": "Timer"
                             }
                           ],
-                          "position": "top-left"
+                          "transparent": false
                         }
                       ],
+                      "showTopBar": true,
                       "appName": "Arcade Game"
                     }
                   ]
@@ -1393,10 +1393,12 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Arcade Game",
                       "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
+                          "position": "top-left",
                           "stats": [
                             {
                               "label": "Score",
@@ -1407,20 +1409,18 @@
                               "label": "Lives"
                             },
                             {
-                              "label": "Level",
-                              "value": "@entity.level"
+                              "value": "@entity.level",
+                              "label": "Level"
                             },
                             {
-                              "value": "@entity.timer",
-                              "label": "Timer"
+                              "label": "Timer",
+                              "value": "@entity.timer"
                             }
                           ],
                           "transparent": false,
-                          "position": "top-left",
                           "type": "game-hud"
                         }
-                      ],
-                      "appName": "Arcade Game"
+                      ]
                     }
                   ]
                 ]

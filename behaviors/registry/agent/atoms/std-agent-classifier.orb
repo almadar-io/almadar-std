@@ -64,7 +64,13 @@
           {
             "name": "notificationType",
             "type": "string",
-            "default": "info"
+            "default": "info",
+            "values": [
+              "info",
+              "success",
+              "warning",
+              "error"
+            ]
           }
         ]
       },
@@ -308,48 +314,48 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "tag",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "AgentClassifier"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "action": "CLASSIFY",
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Open",
-                              "icon": "tag"
-                            }
-                          ],
                           "gap": "md",
                           "justify": "between",
-                          "direction": "horizontal"
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "variant": "primary",
+                              "icon": "tag",
+                              "action": "CLASSIFY",
+                              "type": "button",
+                              "label": "Open"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
                           "icon": "tag",
                           "title": "Nothing open",
+                          "type": "empty-state",
                           "description": "Click Open to view details in a modal overlay."
                         }
                       ]
@@ -367,19 +373,20 @@
                     "modal",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "tag"
                             },
                             {
-                              "content": "AgentClassifier",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "AgentClassifier"
                             }
                           ],
                           "gap": "sm"
@@ -389,6 +396,8 @@
                         },
                         {
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "variant": "caption",
@@ -396,9 +405,9 @@
                               "type": "typography"
                             },
                             {
-                              "variant": "secondary",
+                              "type": "badge",
                               "label": "positive",
-                              "type": "badge"
+                              "variant": "secondary"
                             },
                             {
                               "variant": "secondary",
@@ -406,25 +415,22 @@
                               "label": "negative"
                             },
                             {
-                              "variant": "secondary",
+                              "type": "badge",
                               "label": "neutral",
-                              "type": "badge"
+                              "variant": "secondary"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
-                          "cancelEvent": "CLOSE",
                           "mode": "create",
-                          "submitEvent": "SAVE",
                           "fields": [
                             "input"
                           ],
-                          "type": "form-section"
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -453,51 +459,51 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "tag",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "AgentClassifier",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
-                              "icon": "tag",
                               "label": "Open",
+                              "icon": "tag",
                               "action": "CLASSIFY",
                               "type": "button",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
+                          "description": "Click Open to view details in a modal overlay.",
                           "icon": "tag",
                           "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
+                          "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -514,8 +520,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AgentClassifierSaved",
-                        "failure": "AgentClassifierSaveFailed"
+                        "failure": "AgentClassifierSaveFailed",
+                        "success": "AgentClassifierSaved"
                       }
                     }
                   ],
@@ -537,20 +543,16 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "tag"
+                                  "name": "tag",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
@@ -558,29 +560,33 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
-                              "label": "Open",
-                              "variant": "primary",
-                              "action": "CLASSIFY",
                               "icon": "tag",
+                              "variant": "primary",
+                              "label": "Open",
+                              "action": "CLASSIFY",
                               "type": "button"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "description": "Click Open to view details in a modal overlay.",
                           "icon": "tag",
                           "title": "Nothing open",
-                          "type": "empty-state"
+                          "type": "empty-state",
+                          "description": "Click Open to view details in a modal overlay."
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -789,38 +795,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
                           "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
+                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "tag"
+                                  "name": "tag",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "AgentClassifier Result",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "AgentClassifier Result"
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
-                              "label": "Dismiss",
                               "icon": "x",
                               "variant": "ghost",
-                              "type": "button",
-                              "action": "HIDE"
+                              "action": "HIDE",
+                              "label": "Dismiss",
+                              "type": "button"
                             }
                           ]
                         },
@@ -828,21 +834,21 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "@entity.notificationType",
                           "type": "alert",
-                          "message": "@entity.message"
+                          "message": "@entity.message",
+                          "variant": "@entity.notificationType"
                         },
                         {
                           "type": "toast-slot"
                         },
                         {
-                          "variant": "warning",
                           "message": "@entity.message",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "warning"
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -866,48 +872,48 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
-                              "gap": "md",
-                              "align": "center",
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "tag"
+                                  "name": "tag",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "AgentClassifier Result",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
-                              "label": "Dismiss",
-                              "type": "button",
+                              "action": "HIDE",
                               "variant": "ghost",
                               "icon": "x",
-                              "action": "HIDE"
+                              "type": "button",
+                              "label": "Dismiss"
                             }
                           ],
+                          "gap": "md",
                           "align": "center",
                           "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between"
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "@entity.notificationType",
                           "type": "alert",
+                          "variant": "@entity.notificationType",
                           "message": "@entity.message"
                         },
                         {
@@ -919,7 +925,7 @@
                           "message": "@entity.message"
                         }
                       ],
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1145,8 +1151,8 @@
                     "AgentClassifier",
                     {
                       "emit": {
-                        "success": "AgentClassifierLoaded",
-                        "failure": "AgentClassifierLoadFailed"
+                        "failure": "AgentClassifierLoadFailed",
+                        "success": "AgentClassifierLoaded"
                       }
                     }
                   ],
@@ -1154,10 +1160,10 @@
                     "render-ui",
                     "main",
                     {
-                      "description": "Classifier is ready",
                       "icon": "tag",
                       "title": "Classifier",
-                      "type": "empty-state"
+                      "type": "empty-state",
+                      "description": "Classifier is ready"
                     }
                   ]
                 ]
