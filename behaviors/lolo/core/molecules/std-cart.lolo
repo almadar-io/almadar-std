@@ -87,11 +87,9 @@ orbital CartItemOrbital {
     state idle {
       INIT -> idle
       DO_CREATE -> idle
-        (persist create CartItem @payload.data)
-        (emit ITEM_CREATED { id: "@payload.data.id" })
+        (persist create CartItem @payload.data { emit: { success: "ITEM_CREATED" } })
       DO_DELETE -> idle
-        (persist delete CartItem @payload.id)
-        (emit ITEM_DELETED { id: "@payload.id" })
+        (persist delete CartItem @payload.id { emit: { success: "ITEM_DELETED" } })
     }
     emits {
       ITEM_CREATED external { id : string }
