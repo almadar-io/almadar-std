@@ -49,7 +49,7 @@
               "event": "DrawerContentLoaded",
               "description": "Fired when DrawerContent finishes loading; payload.data holds the list",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[DrawerContent]"
@@ -60,7 +60,7 @@
               "event": "DrawerContentLoadFailed",
               "description": "Fired when DrawerContent fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -96,7 +96,7 @@
               {
                 "key": "DrawerContentLoaded",
                 "name": "DrawerContent loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[DrawerContent]"
@@ -106,7 +106,7 @@
               {
                 "key": "DrawerContentLoadFailed",
                 "name": "DrawerContent load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -137,8 +137,8 @@
                     "DrawerContent",
                     {
                       "emit": {
-                        "failure": "DrawerContentLoadFailed",
-                        "success": "DrawerContentLoaded"
+                        "success": "DrawerContentLoaded",
+                        "failure": "DrawerContentLoadFailed"
                       }
                     }
                   ],
@@ -146,22 +146,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
-                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -175,37 +175,38 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "justify": "between",
+                          "gap": "md",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "panel-right",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "panel-right"
                                 },
                                 {
-                                  "content": "Details",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Details"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "action": "OPEN",
+                              "variant": "primary",
+                              "icon": "panel-right",
                               "type": "button",
                               "label": "Open",
-                              "icon": "panel-right",
-                              "variant": "primary"
+                              "action": "OPEN"
                             }
                           ]
                         },
@@ -213,28 +214,27 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "gap": "sm",
-                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "h4",
+                                  "type": "typography",
                                   "content": "@item.name",
-                                  "type": "typography"
+                                  "variant": "h4"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "sm",
+                              "direction": "vertical"
                             }
                           ],
                           "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": []
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg"
                     }
@@ -252,9 +252,9 @@
                     {
                       "children": [
                         {
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
                           "type": "typography",
@@ -262,24 +262,24 @@
                           "content": "Failed to load"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "content": "@payload.error",
-                          "variant": "body"
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "INIT",
                           "type": "button",
-                          "variant": "primary"
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "action": "INIT"
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "className": "py-12",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -293,39 +293,39 @@
                     "render-ui",
                     "drawer",
                     {
-                      "isOpen": true,
+                      "type": "side-panel",
                       "children": [
                         {
+                          "direction": "vertical",
                           "gap": "md",
                           "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
+                              "variant": "body",
                               "content": "Drawer content",
-                              "type": "typography",
-                              "variant": "body"
+                              "type": "typography"
                             },
                             {
-                              "type": "stack",
                               "gap": "sm",
+                              "justify": "end",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "action": "CLOSE",
-                                  "type": "button",
                                   "label": "Close",
+                                  "type": "button",
+                                  "action": "CLOSE",
                                   "variant": "ghost"
                                 }
-                              ],
-                              "justify": "end",
-                              "direction": "horizontal"
+                              ]
                             }
                           ]
                         }
                       ],
-                      "position": "right",
-                      "type": "side-panel",
+                      "title": "Details",
+                      "isOpen": true,
                       "onClose": "CLOSE",
-                      "title": "Details"
+                      "position": "right"
                     }
                   ]
                 ]
@@ -345,8 +345,8 @@
                     "DrawerContent",
                     {
                       "emit": {
-                        "success": "DrawerContentLoaded",
-                        "failure": "DrawerContentLoadFailed"
+                        "failure": "DrawerContentLoadFailed",
+                        "success": "DrawerContentLoaded"
                       }
                     }
                   ],

@@ -44,7 +44,7 @@
               "event": "SensorReadingLoaded",
               "description": "Fired when SensorReading finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[SensorReading]"
@@ -55,7 +55,7 @@
               "event": "SensorReadingLoadFailed",
               "description": "Fired when SensorReading fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -69,7 +69,7 @@
             {
               "event": "DeviceSaved",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -79,7 +79,7 @@
             {
               "event": "DeviceSaveFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -93,7 +93,7 @@
             {
               "event": "DeviceUpdated",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -103,7 +103,7 @@
             {
               "event": "DeviceUpdateFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -117,7 +117,7 @@
             {
               "event": "DeviceDeleted",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -127,7 +127,7 @@
             {
               "event": "DeviceDeleteFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -172,7 +172,7 @@
               {
                 "key": "SensorReadingLoaded",
                 "name": "SensorReading loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[SensorReading]"
@@ -182,7 +182,7 @@
               {
                 "key": "SensorReadingLoadFailed",
                 "name": "SensorReading load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -196,7 +196,7 @@
               {
                 "key": "DeviceSaved",
                 "name": "Device saved",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -206,7 +206,7 @@
               {
                 "key": "DeviceSaveFailed",
                 "name": "Device save failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -220,7 +220,7 @@
               {
                 "key": "DeviceUpdated",
                 "name": "Device updated",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -230,7 +230,7 @@
               {
                 "key": "DeviceUpdateFailed",
                 "name": "Device update failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -244,7 +244,7 @@
               {
                 "key": "DeviceDeleted",
                 "name": "Device deleted",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -254,7 +254,7 @@
               {
                 "key": "DeviceDeleteFailed",
                 "name": "Device delete failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -286,96 +286,92 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "IoT Dashboard",
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "label": "Sensors",
-                          "icon": "layout-list",
-                          "href": "/sensors"
+                          "href": "/sensors",
+                          "icon": "layout-list"
                         },
                         {
-                          "label": "Devices",
                           "icon": "cpu",
+                          "label": "Devices",
                           "href": "/devices"
                         },
                         {
+                          "icon": "bell",
                           "label": "Alerts",
-                          "href": "/alerts",
-                          "icon": "bell"
+                          "href": "/alerts"
                         }
                       ],
+                      "appName": "IoT Dashboard",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
+                              "gap": "lg",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Sensor Readings"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "justify": "between",
+                                  "gap": "md",
                                   "children": [
                                     {
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "thermometer"
                                         },
                                         {
-                                          "content": "Sensor Readings",
                                           "type": "typography",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "content": "Sensor Readings"
                                         }
                                       ],
-                                      "direction": "horizontal",
                                       "gap": "md",
-                                      "type": "stack"
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
                                       "variant": "secondary",
                                       "icon": "refresh-cw",
+                                      "type": "button",
+                                      "label": "Refresh",
                                       "action": "REFRESH"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "justify": "between",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "cols": 3.0,
                                       "children": [
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
                                               "direction": "vertical",
+                                              "type": "stack",
                                               "children": [
                                                 {
-                                                  "type": "typography",
+                                                  "variant": "caption",
                                                   "content": "SensorId",
-                                                  "variant": "caption"
+                                                  "type": "typography"
                                                 },
                                                 {
                                                   "variant": "h3",
@@ -385,12 +381,13 @@
                                               ],
                                               "gap": "sm"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "value": "@entity.value",
-                                          "label": "Value"
+                                          "label": "Value",
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "card",
@@ -398,19 +395,19 @@
                                             {
                                               "children": [
                                                 {
-                                                  "content": "Unit",
                                                   "type": "typography",
+                                                  "content": "Unit",
                                                   "variant": "caption"
                                                 },
                                                 {
-                                                  "variant": "h3",
                                                   "type": "typography",
-                                                  "content": "@entity.unit"
+                                                  "content": "@entity.unit",
+                                                  "variant": "h3"
                                                 }
                                               ],
                                               "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              "type": "stack",
+                                              "gap": "sm"
                                             }
                                           ]
                                         },
@@ -418,34 +415,38 @@
                                           "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
                                               "gap": "sm",
-                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "content": "Timestamp",
+                                                  "variant": "caption",
                                                   "type": "typography",
-                                                  "variant": "caption"
+                                                  "content": "Timestamp"
                                                 },
                                                 {
                                                   "variant": "h3",
-                                                  "content": "@entity.timestamp",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "@entity.timestamp"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical",
+                                              "type": "stack"
                                             }
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "cols": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md",
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
                                   "cols": 2.0,
+                                  "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "type": "card",
@@ -458,32 +459,31 @@
                                       ]
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
                                           "content": "Graph View",
                                           "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ],
-                                  "gap": "md"
+                                  ]
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "value": 19.0,
                                       "date": "Feb"
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "value": 25.0,
@@ -503,8 +503,8 @@
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
                                       "label": "Previous",
@@ -513,19 +513,8 @@
                                   ]
                                 },
                                 {
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
                                   "type": "graph-view",
                                   "height": 200.0,
-                                  "width": 400.0,
                                   "nodes": [
                                     {
                                       "label": "Start",
@@ -539,16 +528,27 @@
                                       "id": "c",
                                       "label": "End"
                                     }
+                                  ],
+                                  "width": 400.0,
+                                  "edges": [
+                                    {
+                                      "target": "b",
+                                      "source": "a"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
+                                    }
                                   ]
                                 }
                               ],
-                              "gap": "lg",
-                              "direction": "vertical",
                               "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -572,17 +572,31 @@
                     "render-ui",
                     "main",
                     {
+                      "navItems": [
+                        {
+                          "label": "Sensors",
+                          "href": "/sensors",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Devices",
+                          "href": "/devices",
+                          "icon": "cpu"
+                        },
+                        {
+                          "label": "Alerts",
+                          "href": "/alerts",
+                          "icon": "bell"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "direction": "vertical",
-                              "gap": "lg",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "href": "/",
@@ -591,13 +605,13 @@
                                     {
                                       "label": "Sensor Readings"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "stack",
+                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
@@ -605,23 +619,24 @@
                                           "name": "thermometer"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Sensor Readings",
-                                          "variant": "h2"
+                                          "content": "Sensor Readings"
                                         }
                                       ],
-                                      "direction": "horizontal"
+                                      "type": "stack"
                                     },
                                     {
+                                      "label": "Refresh",
                                       "variant": "secondary",
                                       "type": "button",
-                                      "label": "Refresh",
                                       "icon": "refresh-cw",
                                       "action": "REFRESH"
                                     }
                                   ],
-                                  "type": "stack",
+                                  "gap": "md",
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "justify": "between"
                                 },
                                 {
@@ -629,53 +644,51 @@
                                 },
                                 {
                                   "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
                                       "cols": 3.0,
                                       "children": [
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "type": "stack",
                                               "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
                                                   "content": "SensorId",
-                                                  "type": "typography",
-                                                  "variant": "caption"
+                                                  "variant": "caption",
+                                                  "type": "typography"
                                                 },
                                                 {
-                                                  "content": "@entity.sensorId",
                                                   "type": "typography",
-                                                  "variant": "h3"
+                                                  "variant": "h3",
+                                                  "content": "@entity.sensorId"
                                                 }
-                                              ]
+                                              ],
+                                              "type": "stack"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         },
                                         {
-                                          "label": "Value",
                                           "type": "stat-display",
+                                          "label": "Value",
                                           "value": "@entity.value"
                                         },
                                         {
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "gap": "sm",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "content": "Unit",
                                                   "type": "typography",
-                                                  "variant": "caption"
+                                                  "variant": "caption",
+                                                  "content": "Unit"
                                                 },
                                                 {
-                                                  "variant": "h3",
                                                   "type": "typography",
+                                                  "variant": "h3",
                                                   "content": "@entity.unit"
                                                 }
                                               ],
@@ -687,7 +700,6 @@
                                         {
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "children": [
                                                 {
                                                   "content": "Timestamp",
@@ -695,20 +707,23 @@
                                                   "variant": "caption"
                                                 },
                                                 {
-                                                  "content": "@entity.timestamp",
                                                   "type": "typography",
+                                                  "content": "@entity.timestamp",
                                                   "variant": "h3"
                                                 }
                                               ],
+                                              "type": "stack",
                                               "gap": "sm",
-                                              "type": "stack"
+                                              "direction": "vertical"
                                             }
                                           ],
                                           "type": "card"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
@@ -716,22 +731,22 @@
                                 {
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Chart View",
                                           "type": "typography",
                                           "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "type": "typography"
                                         }
                                       ]
                                     }
@@ -741,23 +756,22 @@
                                   "cols": 2.0
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
@@ -767,7 +781,8 @@
                                       "date": "Jun",
                                       "value": 30.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
                                   "items": [
@@ -783,7 +798,8 @@
                                   "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
+                                  "width": 400.0,
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "source": "a",
@@ -796,45 +812,29 @@
                                   ],
                                   "nodes": [
                                     {
-                                      "id": "a",
-                                      "label": "Start"
+                                      "label": "Start",
+                                      "id": "a"
                                     },
                                     {
-                                      "label": "Process",
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process"
                                     },
                                     {
-                                      "label": "End",
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
-                                  "height": 200.0,
-                                  "width": 400.0
+                                  "type": "graph-view"
                                 }
-                              ]
+                              ],
+                              "gap": "lg",
+                              "direction": "vertical"
                             }
                           ]
                         }
                       ],
-                      "navItems": [
-                        {
-                          "label": "Sensors",
-                          "href": "/sensors",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/devices",
-                          "icon": "cpu",
-                          "label": "Devices"
-                        },
-                        {
-                          "label": "Alerts",
-                          "icon": "bell",
-                          "href": "/alerts"
-                        }
-                      ],
-                      "appName": "IoT Dashboard",
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "appName": "IoT Dashboard"
                     }
                   ]
                 ]
@@ -860,18 +860,18 @@
                     {
                       "navItems": [
                         {
-                          "icon": "layout-list",
                           "href": "/sensors",
+                          "icon": "layout-list",
                           "label": "Sensors"
                         },
                         {
-                          "icon": "cpu",
                           "label": "Devices",
+                          "icon": "cpu",
                           "href": "/devices"
                         },
                         {
-                          "label": "Alerts",
                           "href": "/alerts",
+                          "label": "Alerts",
                           "icon": "bell"
                         }
                       ],
@@ -882,12 +882,15 @@
                           "type": "scaled-diagram",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "lg",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Sensor Readings"
@@ -896,65 +899,64 @@
                                   "type": "breadcrumb"
                                 },
                                 {
+                                  "direction": "horizontal",
                                   "justify": "between",
+                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "thermometer"
+                                          "name": "thermometer",
+                                          "type": "icon"
                                         },
                                         {
-                                          "content": "Sensor Readings",
+                                          "type": "typography",
                                           "variant": "h2",
-                                          "type": "typography"
+                                          "content": "Sensor Readings"
                                         }
                                       ],
                                       "gap": "md",
-                                      "type": "stack"
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "icon": "refresh-cw",
                                       "action": "REFRESH",
                                       "type": "button",
                                       "label": "Refresh",
-                                      "variant": "secondary"
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw"
                                     }
-                                  ],
-                                  "gap": "md",
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
+                                      "cols": 3.0,
                                       "type": "simple-grid",
                                       "children": [
                                         {
                                           "type": "card",
                                           "children": [
                                             {
+                                              "gap": "sm",
                                               "direction": "vertical",
                                               "type": "stack",
                                               "children": [
                                                 {
+                                                  "content": "SensorId",
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "SensorId"
+                                                  "variant": "caption"
                                                 },
                                                 {
-                                                  "variant": "h3",
+                                                  "type": "typography",
                                                   "content": "@entity.sensorId",
-                                                  "type": "typography"
+                                                  "variant": "h3"
                                                 }
-                                              ],
-                                              "gap": "sm"
+                                              ]
                                             }
                                           ]
                                         },
@@ -967,21 +969,21 @@
                                           "type": "card",
                                           "children": [
                                             {
+                                              "gap": "sm",
                                               "type": "stack",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "content": "Unit",
                                                   "variant": "caption",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "Unit"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "content": "@entity.unit",
+                                                  "type": "typography",
                                                   "variant": "h3"
                                                 }
-                                              ],
-                                              "direction": "vertical",
-                                              "gap": "sm"
+                                              ]
                                             }
                                           ]
                                         },
@@ -989,54 +991,55 @@
                                           "type": "card",
                                           "children": [
                                             {
-                                              "direction": "vertical",
                                               "type": "stack",
+                                              "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Timestamp"
+                                                  "content": "Timestamp",
+                                                  "variant": "caption"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
-                                                  "content": "@entity.timestamp"
+                                                  "content": "@entity.timestamp",
+                                                  "type": "typography"
                                                 }
-                                              ],
-                                              "gap": "sm"
+                                              ]
                                             }
                                           ]
                                         }
-                                      ],
-                                      "cols": 3.0
+                                      ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "cols": 2.0,
-                                  "gap": "md",
                                   "type": "grid",
+                                  "gap": "md",
                                   "children": [
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
-                                          "variant": "caption",
                                           "content": "Chart View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
                                           "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
@@ -1054,8 +1057,8 @@
                                       "value": 19.0
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
@@ -1074,49 +1077,46 @@
                                 {
                                   "items": [
                                     {
-                                      "color": "primary",
-                                      "label": "Current"
+                                      "label": "Current",
+                                      "color": "primary"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ],
                                   "type": "chart-legend"
                                 },
                                 {
+                                  "width": 400.0,
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
-                                      "label": "Process",
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process"
                                     },
                                     {
                                       "id": "c",
                                       "label": "End"
                                     }
                                   ],
-                                  "height": 200.0,
-                                  "type": "graph-view",
                                   "edges": [
                                     {
-                                      "target": "b",
-                                      "source": "a"
+                                      "source": "a",
+                                      "target": "b"
                                     },
                                     {
                                       "source": "b",
                                       "target": "c"
                                     }
                                   ],
-                                  "width": 400.0
+                                  "type": "graph-view",
+                                  "height": 200.0
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg"
+                              ]
                             }
                           ]
                         }
@@ -1145,19 +1145,34 @@
                     "main",
                     {
                       "appName": "IoT Dashboard",
-                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "label": "Sensors",
+                          "icon": "layout-list",
+                          "href": "/sensors"
+                        },
+                        {
+                          "icon": "cpu",
+                          "href": "/devices",
+                          "label": "Devices"
+                        },
+                        {
+                          "href": "/alerts",
+                          "label": "Alerts",
+                          "icon": "bell"
+                        }
+                      ],
                       "children": [
                         {
                           "children": [
                             {
                               "gap": "lg",
-                              "type": "stack",
                               "children": [
                                 {
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Sensor Readings"
@@ -1166,76 +1181,77 @@
                                   "type": "breadcrumb"
                                 },
                                 {
+                                  "type": "stack",
+                                  "gap": "md",
                                   "children": [
                                     {
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "thermometer"
                                         },
                                         {
+                                          "type": "typography",
                                           "content": "Sensor Readings",
-                                          "variant": "h2",
-                                          "type": "typography"
+                                          "variant": "h2"
                                         }
                                       ],
                                       "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md"
                                     },
                                     {
-                                      "variant": "secondary",
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
                                       "type": "button",
-                                      "icon": "refresh-cw"
+                                      "label": "Refresh",
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw",
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "padding": "md",
                                   "type": "box",
                                   "children": [
                                     {
-                                      "cols": 3.0,
+                                      "type": "simple-grid",
                                       "children": [
+                                        {
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "caption",
+                                                  "content": "SensorId"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "h3",
+                                                  "content": "@entity.sensorId"
+                                                }
+                                              ],
+                                              "direction": "vertical",
+                                              "gap": "sm"
+                                            }
+                                          ],
+                                          "type": "card"
+                                        },
+                                        {
+                                          "label": "Value",
+                                          "type": "stat-display",
+                                          "value": "@entity.value"
+                                        },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "content": "SensorId",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "content": "@entity.sensorId",
-                                                  "variant": "h3"
-                                                }
-                                              ],
-                                              "direction": "vertical",
-                                              "type": "stack"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "value": "@entity.value",
-                                          "type": "stat-display",
-                                          "label": "Value"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
                                               "gap": "sm",
                                               "type": "stack",
                                               "children": [
@@ -1249,10 +1265,10 @@
                                                   "variant": "h3",
                                                   "content": "@entity.unit"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         },
                                         {
                                           "type": "card",
@@ -1260,42 +1276,43 @@
                                             {
                                               "children": [
                                                 {
-                                                  "variant": "caption",
                                                   "content": "Timestamp",
+                                                  "variant": "caption",
                                                   "type": "typography"
                                                 },
                                                 {
                                                   "variant": "h3",
-                                                  "content": "@entity.timestamp",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "@entity.timestamp"
                                                 }
                                               ],
+                                              "type": "stack",
                                               "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              "gap": "sm"
                                             }
                                           ]
                                         }
                                       ],
-                                      "type": "simple-grid"
+                                      "cols": 3.0
                                     }
-                                  ],
-                                  "padding": "md"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "cols": 2.0,
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
@@ -1308,66 +1325,53 @@
                                       ]
                                     }
                                   ],
-                                  "gap": "md",
-                                  "type": "grid",
-                                  "cols": 2.0
+                                  "type": "grid"
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "value": 12.0,
-                                      "date": "Jan"
+                                      "date": "Jan",
+                                      "value": 12.0
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
                                       "value": 15.0
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22.0
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "value": 30.0,
                                       "date": "Jun"
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "width": 400.0,
                                   "height": 200.0,
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ],
+                                  "type": "graph-view",
                                   "nodes": [
                                     {
                                       "label": "Start",
@@ -1378,35 +1382,31 @@
                                       "label": "Process"
                                     },
                                     {
-                                      "id": "c",
-                                      "label": "End"
+                                      "label": "End",
+                                      "id": "c"
+                                    }
+                                  ],
+                                  "width": 400.0,
+                                  "edges": [
+                                    {
+                                      "target": "b",
+                                      "source": "a"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ]
                                 }
                               ],
+                              "type": "stack",
                               "direction": "vertical"
                             }
                           ],
                           "type": "scaled-diagram"
                         }
                       ],
-                      "navItems": [
-                        {
-                          "href": "/sensors",
-                          "icon": "layout-list",
-                          "label": "Sensors"
-                        },
-                        {
-                          "href": "/devices",
-                          "icon": "cpu",
-                          "label": "Devices"
-                        },
-                        {
-                          "icon": "bell",
-                          "label": "Alerts",
-                          "href": "/alerts"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -1430,15 +1430,33 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
+                      "appName": "IoT Dashboard",
+                      "navItems": [
+                        {
+                          "label": "Sensors",
+                          "icon": "layout-list",
+                          "href": "/sensors"
+                        },
+                        {
+                          "icon": "cpu",
+                          "href": "/devices",
+                          "label": "Devices"
+                        },
+                        {
+                          "href": "/alerts",
+                          "icon": "bell",
+                          "label": "Alerts"
+                        }
+                      ],
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "href": "/",
@@ -1447,38 +1465,37 @@
                                     {
                                       "label": "Sensor Readings"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
-                                  "type": "stack",
+                                  "gap": "md",
+                                  "justify": "between",
                                   "children": [
                                     {
                                       "type": "stack",
                                       "direction": "horizontal",
+                                      "gap": "md",
                                       "children": [
                                         {
-                                          "name": "thermometer",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "thermometer"
                                         },
                                         {
-                                          "content": "Sensor Readings",
+                                          "type": "typography",
                                           "variant": "h2",
-                                          "type": "typography"
+                                          "content": "Sensor Readings"
                                         }
-                                      ],
-                                      "gap": "md"
+                                      ]
                                     },
                                     {
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH",
                                       "label": "Refresh",
-                                      "variant": "secondary"
+                                      "icon": "refresh-cw",
+                                      "variant": "secondary",
+                                      "type": "button",
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "gap": "md",
-                                  "justify": "between",
+                                  "type": "stack",
                                   "direction": "horizontal"
                                 },
                                 {
@@ -1486,7 +1503,6 @@
                                 },
                                 {
                                   "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
                                       "cols": 3.0,
@@ -1495,33 +1511,34 @@
                                           "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
                                                   "content": "SensorId",
-                                                  "type": "typography",
-                                                  "variant": "caption"
+                                                  "variant": "caption",
+                                                  "type": "typography"
                                                 },
                                                 {
+                                                  "type": "typography",
                                                   "variant": "h3",
-                                                  "content": "@entity.sensorId",
-                                                  "type": "typography"
+                                                  "content": "@entity.sensorId"
                                                 }
                                               ],
-                                              "direction": "vertical",
+                                              "type": "stack",
                                               "gap": "sm"
                                             }
                                           ]
                                         },
                                         {
+                                          "value": "@entity.value",
                                           "type": "stat-display",
-                                          "label": "Value",
-                                          "value": "@entity.value"
+                                          "label": "Value"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
+                                              "direction": "vertical",
                                               "children": [
                                                 {
                                                   "type": "typography",
@@ -1530,95 +1547,95 @@
                                                 },
                                                 {
                                                   "variant": "h3",
-                                                  "content": "@entity.unit",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "@entity.unit"
                                                 }
                                               ],
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack"
+                                              "type": "stack",
+                                              "gap": "sm"
                                             }
                                           ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "gap": "sm",
                                               "type": "stack",
-                                              "direction": "vertical",
+                                              "gap": "sm",
                                               "children": [
                                                 {
+                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Timestamp",
-                                                  "type": "typography"
+                                                  "content": "Timestamp"
                                                 },
                                                 {
                                                   "type": "typography",
                                                   "variant": "h3",
                                                   "content": "@entity.timestamp"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
                                       ],
                                       "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "cols": 2.0,
                                   "children": [
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "content": "Chart View",
+                                          "variant": "caption",
+                                          "type": "typography"
+                                        }
+                                      ]
+                                    },
                                     {
                                       "children": [
                                         {
                                           "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
+                                          "content": "Graph View"
                                         }
                                       ],
                                       "type": "card"
                                     }
                                   ],
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "gap": "md"
+                                  "gap": "md",
+                                  "type": "grid"
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
                                       "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
@@ -1630,27 +1647,17 @@
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
                                   "nodes": [
                                     {
                                       "label": "Start",
@@ -1666,31 +1673,24 @@
                                     }
                                   ],
                                   "width": 400.0,
-                                  "height": 200.0
+                                  "height": 200.0,
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
+                                    }
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "lg"
                             }
                           ],
                           "type": "scaled-diagram"
-                        }
-                      ],
-                      "appName": "IoT Dashboard",
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "href": "/sensors",
-                          "label": "Sensors"
-                        },
-                        {
-                          "href": "/devices",
-                          "label": "Devices",
-                          "icon": "cpu"
-                        },
-                        {
-                          "label": "Alerts",
-                          "icon": "bell",
-                          "href": "/alerts"
                         }
                       ]
                     }
@@ -1761,7 +1761,7 @@
               "event": "DeviceLoaded",
               "description": "Fired when Device finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Device]"
@@ -1772,7 +1772,7 @@
               "event": "DeviceLoadFailed",
               "description": "Fired when Device fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -1825,7 +1825,7 @@
               {
                 "key": "DeviceLoaded",
                 "name": "Device loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[Device]"
@@ -1835,7 +1835,7 @@
               {
                 "key": "DeviceLoadFailed",
                 "name": "Device load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -1858,8 +1858,8 @@
                     "Device",
                     {
                       "emit": {
-                        "success": "DeviceLoaded",
-                        "failure": "DeviceLoadFailed"
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
                       }
                     }
                   ],
@@ -1867,7 +1867,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -1876,13 +1877,12 @@
                         },
                         {
                           "variant": "caption",
+                          "content": "Loading…",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Loading…"
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1896,41 +1896,23 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "label": "Sensors",
-                          "href": "/sensors"
-                        },
-                        {
-                          "label": "Devices",
-                          "href": "/devices",
-                          "icon": "cpu"
-                        },
-                        {
-                          "icon": "bell",
-                          "href": "/alerts",
-                          "label": "Alerts"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "IoT Dashboard",
                       "children": [
                         {
-                          "direction": "vertical",
                           "type": "stack",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "justify": "between",
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "md",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "name": "cpu",
@@ -1938,27 +1920,24 @@
                                     },
                                     {
                                       "content": "Devices",
-                                      "variant": "h2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "variant": "h2"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "align": "center"
+                                  ]
                                 },
                                 {
-                                  "gap": "sm",
+                                  "type": "stack",
                                   "direction": "horizontal",
                                   "children": [
                                     {
-                                      "variant": "primary",
-                                      "type": "button",
                                       "action": "CREATE",
                                       "label": "Create Device",
-                                      "icon": "plus"
+                                      "variant": "primary",
+                                      "icon": "plus",
+                                      "type": "button"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "gap": "sm"
                                 }
                               ]
                             },
@@ -1966,7 +1945,11 @@
                               "type": "divider"
                             },
                             {
+                              "cols": 3.0,
+                              "gap": "md",
                               "type": "data-grid",
+                              "entity": "@payload.data",
+                              "fields": [],
                               "itemActions": [
                                 {
                                   "variant": "ghost",
@@ -1974,45 +1957,62 @@
                                   "event": "VIEW"
                                 },
                                 {
-                                  "label": "Edit",
+                                  "event": "EDIT",
                                   "variant": "ghost",
-                                  "event": "EDIT"
+                                  "label": "Edit"
                                 },
                                 {
-                                  "event": "DELETE",
                                   "label": "Delete",
+                                  "event": "DELETE",
                                   "variant": "danger"
                                 }
                               ],
-                              "gap": "md",
-                              "fields": [],
-                              "entity": "@payload.data",
                               "columns": [
                                 {
                                   "variant": "h3",
-                                  "name": "name",
-                                  "icon": "cpu"
+                                  "icon": "cpu",
+                                  "name": "name"
                                 },
                                 {
-                                  "name": "status",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "name": "status"
                                 },
                                 {
                                   "name": "type",
                                   "variant": "body"
                                 },
                                 {
+                                  "label": "Last Seen",
                                   "variant": "caption",
-                                  "name": "lastSeen",
                                   "format": "date",
-                                  "label": "Last Seen"
+                                  "name": "lastSeen"
                                 }
-                              ],
-                              "cols": 3.0
+                              ]
                             }
-                          ]
+                          ],
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "layout-list",
+                          "href": "/sensors",
+                          "label": "Sensors"
+                        },
+                        {
+                          "icon": "cpu",
+                          "label": "Devices",
+                          "href": "/devices"
+                        },
+                        {
+                          "label": "Alerts",
+                          "href": "/alerts",
+                          "icon": "bell"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "IoT Dashboard"
                     }
                   ]
                 ]
@@ -2028,7 +2028,6 @@
                     {
                       "gap": "md",
                       "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "color": "destructive",
@@ -2036,26 +2035,27 @@
                           "name": "alert-triangle"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load device",
-                          "type": "typography"
+                          "content": "Failed to load device"
                         },
                         {
                           "variant": "body",
-                          "content": "@payload.error",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "@payload.error"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
                           "icon": "rotate-ccw",
+                          "type": "button",
                           "action": "INIT",
-                          "type": "button"
+                          "label": "Retry",
+                          "variant": "primary"
                         }
                       ],
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -2076,7 +2076,7 @@
               "event": "DeviceLoadFailed",
               "description": "Fired when Device fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2091,7 +2091,7 @@
               "event": "DeviceLoaded",
               "description": "Fired when Device finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Device]"
@@ -2101,7 +2101,7 @@
             {
               "event": "DeviceSaveFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2115,7 +2115,7 @@
             {
               "event": "DeviceSaved",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -2149,7 +2149,7 @@
               {
                 "key": "SAVE",
                 "name": "Save",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "string"
@@ -2163,7 +2163,7 @@
               {
                 "key": "DeviceLoadFailed",
                 "name": "Device load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -2177,7 +2177,7 @@
               {
                 "key": "DeviceLoaded",
                 "name": "Device loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[Device]"
@@ -2187,7 +2187,7 @@
               {
                 "key": "DeviceSaveFailed",
                 "name": "Device save failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -2201,7 +2201,7 @@
               {
                 "key": "DeviceSaved",
                 "name": "Device saved",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -2231,8 +2231,8 @@
                     "Device",
                     {
                       "emit": {
-                        "success": "DeviceLoaded",
-                        "failure": "DeviceLoadFailed"
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
                       }
                     }
                   ],
@@ -2242,20 +2242,20 @@
                     {
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Create Device"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -2267,15 +2267,15 @@
                             "status",
                             "lastSeen"
                           ],
-                          "submitEvent": "SAVE",
                           "mode": "create",
+                          "cancelEvent": "CLOSE",
                           "type": "form-section",
-                          "cancelEvent": "CLOSE"
+                          "submitEvent": "SAVE"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2316,8 +2316,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "DeviceSaveFailed",
-                        "success": "DeviceSaved"
+                        "success": "DeviceSaved",
+                        "failure": "DeviceSaveFailed"
                       }
                     }
                   ],
@@ -2355,7 +2355,7 @@
               "event": "DeviceLoadFailed",
               "description": "Fired when Device fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2370,7 +2370,7 @@
               "event": "DeviceLoaded",
               "description": "Fired when Device finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Device]"
@@ -2380,7 +2380,7 @@
             {
               "event": "DeviceUpdateFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2394,7 +2394,7 @@
             {
               "event": "DeviceUpdated",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -2420,7 +2420,7 @@
               {
                 "key": "EDIT",
                 "name": "Edit",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -2438,7 +2438,7 @@
               {
                 "key": "SAVE",
                 "name": "Save",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "string"
@@ -2452,7 +2452,7 @@
               {
                 "key": "DeviceLoadFailed",
                 "name": "Device load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -2466,7 +2466,7 @@
               {
                 "key": "DeviceLoaded",
                 "name": "Device loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[Device]"
@@ -2476,7 +2476,7 @@
               {
                 "key": "DeviceUpdateFailed",
                 "name": "Device update failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -2490,7 +2490,7 @@
               {
                 "key": "DeviceUpdated",
                 "name": "Device updated",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -2521,8 +2521,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "DeviceLoadFailed",
-                        "success": "DeviceLoaded"
+                        "success": "DeviceLoaded",
+                        "failure": "DeviceLoadFailed"
                       }
                     }
                   ],
@@ -2535,36 +2535,36 @@
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
                               "type": "typography",
-                              "content": "Edit Device",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "Edit Device"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.row",
-                          "mode": "edit",
                           "cancelEvent": "CLOSE",
-                          "submitEvent": "SAVE",
+                          "mode": "edit",
                           "fields": [
                             "name",
                             "type",
                             "status",
                             "lastSeen"
                           ],
-                          "type": "form-section"
+                          "type": "form-section",
+                          "entity": "@payload.row",
+                          "submitEvent": "SAVE"
                         }
                       ]
                     }
@@ -2607,8 +2607,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "DeviceUpdateFailed",
-                        "success": "DeviceUpdated"
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
                       }
                     }
                   ],
@@ -2643,7 +2643,7 @@
               "event": "DeviceLoaded",
               "description": "Fired when Device finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Device]"
@@ -2654,7 +2654,7 @@
               "event": "DeviceLoadFailed",
               "description": "Fired when Device fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2684,7 +2684,7 @@
               {
                 "key": "VIEW",
                 "name": "View",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -2702,7 +2702,7 @@
               {
                 "key": "DeviceLoaded",
                 "name": "Device loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[Device]"
@@ -2712,7 +2712,7 @@
               {
                 "key": "DeviceLoadFailed",
                 "name": "Device load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -2756,28 +2756,33 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
                               "type": "typography",
                               "variant": "h3",
                               "content": "@entity.name"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
@@ -2786,25 +2791,40 @@
                               "content": "Name"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.name",
+                              "content": "@entity.name"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Type",
+                              "variant": "caption",
                               "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.type",
+                              "variant": "body"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "stack",
                           "children": [
                             {
-                              "content": "Type",
                               "type": "typography",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "content": "Status"
                             },
                             {
-                              "content": "@entity.type",
                               "type": "typography",
+                              "content": "@entity.status",
                               "variant": "body"
                             }
                           ],
@@ -2812,67 +2832,47 @@
                           "gap": "md"
                         },
                         {
+                          "gap": "md",
                           "type": "stack",
-                          "children": [
-                            {
-                              "content": "Status",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.status",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "caption",
                               "type": "typography",
-                              "content": "Last Seen",
-                              "variant": "caption"
+                              "content": "Last Seen"
                             },
                             {
-                              "type": "typography",
+                              "variant": "body",
                               "content": "@entity.lastSeen",
-                              "variant": "body"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "end",
                           "children": [
                             {
-                              "action": "EDIT",
                               "label": "Edit",
+                              "action": "EDIT",
                               "type": "button",
                               "variant": "primary",
                               "icon": "edit"
                             },
                             {
-                              "label": "Close",
+                              "variant": "ghost",
                               "type": "button",
                               "action": "CLOSE",
-                              "variant": "ghost"
+                              "label": "Close"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "end"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2935,7 +2935,7 @@
             {
               "event": "DeviceDeleteFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2949,7 +2949,7 @@
             {
               "event": "DeviceDeleted",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -2960,7 +2960,7 @@
               "event": "DeviceLoadFailed",
               "description": "Fired when Device fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -2975,7 +2975,7 @@
               "event": "DeviceLoaded",
               "description": "Fired when Device finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Device]"
@@ -3001,7 +3001,7 @@
               {
                 "key": "DELETE",
                 "name": "Delete",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -3027,7 +3027,7 @@
               {
                 "key": "DeviceDeleteFailed",
                 "name": "Device delete failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -3041,7 +3041,7 @@
               {
                 "key": "DeviceDeleted",
                 "name": "Device deleted",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -3051,7 +3051,7 @@
               {
                 "key": "DeviceLoadFailed",
                 "name": "Device load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -3065,7 +3065,7 @@
               {
                 "key": "DeviceLoaded",
                 "name": "Device loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[Device]"
@@ -3101,8 +3101,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "DeviceLoaded",
-                        "failure": "DeviceLoadFailed"
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
                       }
                     }
                   ],
@@ -3110,55 +3110,55 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "Delete Device",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "variant": "error",
-                          "type": "alert",
-                          "message": "This action cannot be undone."
+                          "message": "This action cannot be undone.",
+                          "type": "alert"
                         },
                         {
                           "gap": "sm",
-                          "justify": "end",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "action": "CANCEL",
+                              "variant": "ghost",
                               "type": "button",
-                              "variant": "ghost"
+                              "label": "Cancel",
+                              "action": "CANCEL"
                             },
                             {
                               "icon": "check",
-                              "type": "button",
                               "action": "CONFIRM_DELETE",
+                              "type": "button",
                               "variant": "danger",
                               "label": "Delete"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "end",
+                          "direction": "horizontal"
                         }
                       ]
                     }
@@ -3332,7 +3332,7 @@
               "event": "DeviceAlertLoaded",
               "description": "Fired when DeviceAlert finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[DeviceAlert]"
@@ -3343,7 +3343,7 @@
               "event": "DeviceAlertLoadFailed",
               "description": "Fired when DeviceAlert fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -3392,7 +3392,7 @@
               {
                 "key": "DeviceAlertLoaded",
                 "name": "DeviceAlert loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[DeviceAlert]"
@@ -3402,7 +3402,7 @@
               {
                 "key": "DeviceAlertLoadFailed",
                 "name": "DeviceAlert load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -3425,8 +3425,8 @@
                     "DeviceAlert",
                     {
                       "emit": {
-                        "success": "DeviceAlertLoaded",
-                        "failure": "DeviceAlertLoadFailed"
+                        "failure": "DeviceAlertLoadFailed",
+                        "success": "DeviceAlertLoaded"
                       }
                     }
                   ],
@@ -3434,59 +3434,42 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "href": "/sensors",
-                          "icon": "layout-list",
-                          "label": "Sensors"
-                        },
-                        {
-                          "href": "/devices",
-                          "icon": "cpu",
-                          "label": "Devices"
-                        },
-                        {
-                          "icon": "bell",
-                          "href": "/alerts",
-                          "label": "Alerts"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "IoT Dashboard",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
+                              "align": "center",
                               "children": [
                                 {
-                                  "direction": "horizontal",
-                                  "type": "stack",
                                   "align": "center",
+                                  "direction": "horizontal",
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "bell"
+                                      "name": "bell",
+                                      "type": "icon"
                                     },
                                     {
+                                      "type": "typography",
                                       "content": "DeviceAlert",
-                                      "variant": "h2",
-                                      "type": "typography"
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "gap": "md"
+                                  "type": "stack"
                                 },
                                 {
+                                  "label": "Circuit Closed",
                                   "type": "status-dot",
                                   "status": "online",
-                                  "label": "Circuit Closed",
                                   "pulse": false
                                 }
                               ],
                               "justify": "between",
-                              "gap": "md",
-                              "direction": "horizontal",
                               "type": "stack",
-                              "align": "center"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
@@ -3497,31 +3480,48 @@
                               "variant": "success"
                             },
                             {
-                              "type": "simple-grid",
-                              "cols": 2.0,
                               "children": [
                                 {
+                                  "value": "@entity.failureCount",
                                   "type": "stat-display",
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount"
+                                  "label": "Failures"
                                 },
                                 {
-                                  "value": "@entity.successCount",
+                                  "label": "Successes",
                                   "type": "stat-display",
-                                  "label": "Successes"
+                                  "value": "@entity.successCount"
                                 }
-                              ]
+                              ],
+                              "cols": 2.0,
+                              "type": "simple-grid"
                             },
                             {
-                              "value": "@entity.failureCount",
                               "min": 0.0,
                               "max": "@entity.threshold",
+                              "value": "@entity.failureCount",
                               "type": "meter"
                             }
                           ],
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "IoT Dashboard",
+                      "navItems": [
+                        {
+                          "icon": "layout-list",
+                          "href": "/sensors",
+                          "label": "Sensors"
+                        },
+                        {
+                          "href": "/devices",
+                          "label": "Devices",
+                          "icon": "cpu"
+                        },
+                        {
+                          "href": "/alerts",
+                          "icon": "bell",
+                          "label": "Alerts"
                         }
                       ]
                     }
@@ -3537,8 +3537,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "IoT Dashboard",
                       "navItems": [
                         {
                           "href": "/sensors",
@@ -3546,94 +3544,96 @@
                           "icon": "layout-list"
                         },
                         {
-                          "icon": "cpu",
+                          "href": "/devices",
                           "label": "Devices",
-                          "href": "/devices"
+                          "icon": "cpu"
                         },
                         {
-                          "label": "Alerts",
                           "icon": "bell",
-                          "href": "/alerts"
+                          "href": "/alerts",
+                          "label": "Alerts"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "align": "center",
                                   "direction": "horizontal",
+                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "alert-triangle"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "h2",
+                                      "type": "typography",
                                       "content": "DeviceAlert"
                                     }
-                                  ],
-                                  "align": "center",
-                                  "gap": "md",
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
                                   "type": "status-dot",
-                                  "label": "Circuit Open",
                                   "pulse": true,
+                                  "label": "Circuit Open",
                                   "status": "critical"
                                 }
                               ],
-                              "align": "center",
-                              "justify": "between"
+                              "gap": "md",
+                              "type": "stack",
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
                               "variant": "error",
-                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
+                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures.",
+                              "type": "alert"
                             },
                             {
+                              "cols": 2.0,
+                              "type": "simple-grid",
                               "children": [
                                 {
                                   "type": "stat-display",
-                                  "value": "@entity.failureCount",
-                                  "label": "Failures"
+                                  "label": "Failures",
+                                  "value": "@entity.failureCount"
                                 },
                                 {
+                                  "label": "Successes",
                                   "type": "stat-display",
-                                  "value": "@entity.successCount",
-                                  "label": "Successes"
+                                  "value": "@entity.successCount"
                                 }
-                              ],
-                              "type": "simple-grid",
-                              "cols": 2.0
+                              ]
                             },
                             {
-                              "type": "meter",
-                              "max": "@entity.threshold",
                               "value": "@entity.failureCount",
-                              "min": 0.0
+                              "type": "meter",
+                              "min": 0.0,
+                              "max": "@entity.threshold"
                             },
                             {
-                              "type": "button",
-                              "variant": "ghost",
                               "action": "RESET",
-                              "icon": "rotate-ccw",
-                              "label": "Reset"
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Reset",
+                              "icon": "rotate-ccw"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg"
+                          ]
                         }
-                      ]
+                      ],
+                      "appName": "IoT Dashboard"
                     }
                   ]
                 ]
@@ -3648,37 +3648,39 @@
                     "main",
                     {
                       "appName": "IoT Dashboard",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/sensors",
                           "icon": "layout-list",
-                          "label": "Sensors"
+                          "label": "Sensors",
+                          "href": "/sensors"
                         },
                         {
+                          "icon": "cpu",
                           "label": "Devices",
-                          "href": "/devices",
-                          "icon": "cpu"
+                          "href": "/devices"
                         },
                         {
-                          "href": "/alerts",
                           "label": "Alerts",
+                          "href": "/alerts",
                           "icon": "bell"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "md",
                               "align": "center",
+                              "justify": "between",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "bell"
+                                      "name": "bell",
+                                      "type": "icon"
                                     },
                                     {
                                       "content": "DeviceAlert",
@@ -3686,19 +3688,16 @@
                                       "variant": "h2"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "type": "stack",
                                   "gap": "md"
                                 },
                                 {
-                                  "type": "status-dot",
-                                  "label": "Circuit Closed",
                                   "status": "online",
-                                  "pulse": false
+                                  "type": "status-dot",
+                                  "pulse": false,
+                                  "label": "Circuit Closed"
                                 }
                               ],
-                              "justify": "between",
+                              "gap": "md",
                               "direction": "horizontal",
                               "type": "stack"
                             },
@@ -3706,34 +3705,35 @@
                               "type": "divider"
                             },
                             {
-                              "message": "Service is healthy. All requests are being processed.",
+                              "variant": "success",
                               "type": "alert",
-                              "variant": "success"
+                              "message": "Service is healthy. All requests are being processed."
                             },
                             {
-                              "cols": 2.0,
                               "type": "simple-grid",
                               "children": [
                                 {
-                                  "label": "Failures",
                                   "type": "stat-display",
+                                  "label": "Failures",
                                   "value": "@entity.failureCount"
                                 },
                                 {
+                                  "type": "stat-display",
                                   "label": "Successes",
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display"
+                                  "value": "@entity.successCount"
                                 }
-                              ]
+                              ],
+                              "cols": 2.0
                             },
                             {
-                              "value": "@entity.failureCount",
-                              "type": "meter",
                               "min": 0.0,
-                              "max": "@entity.threshold"
+                              "max": "@entity.threshold",
+                              "value": "@entity.failureCount",
+                              "type": "meter"
                             }
                           ],
                           "direction": "vertical",
+                          "gap": "lg",
                           "type": "stack"
                         }
                       ]
@@ -3750,42 +3750,61 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "IoT Dashboard",
+                      "navItems": [
+                        {
+                          "label": "Sensors",
+                          "href": "/sensors",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Devices",
+                          "href": "/devices",
+                          "icon": "cpu"
+                        },
+                        {
+                          "icon": "bell",
+                          "href": "/alerts",
+                          "label": "Alerts"
+                        }
+                      ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "align": "center",
                               "justify": "between",
+                              "type": "stack",
                               "gap": "md",
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "gap": "md",
-                                  "align": "center",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "activity",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "activity"
                                     },
                                     {
                                       "type": "typography",
-                                      "variant": "h2",
-                                      "content": "DeviceAlert"
+                                      "content": "DeviceAlert",
+                                      "variant": "h2"
                                     }
                                   ],
+                                  "gap": "md",
+                                  "align": "center",
+                                  "direction": "horizontal",
                                   "type": "stack"
                                 },
                                 {
-                                  "pulse": true,
-                                  "label": "Circuit Half-Open",
                                   "type": "status-dot",
-                                  "status": "warning"
+                                  "label": "Circuit Half-Open",
+                                  "status": "warning",
+                                  "pulse": true
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             },
                             {
                               "type": "divider"
@@ -3796,42 +3815,23 @@
                               "message": "Testing recovery. Limited requests are being allowed through."
                             },
                             {
-                              "type": "simple-grid",
                               "cols": 2.0,
                               "children": [
                                 {
-                                  "value": "@entity.failureCount",
                                   "type": "stat-display",
+                                  "value": "@entity.failureCount",
                                   "label": "Failures"
                                 },
                                 {
-                                  "value": "@entity.successCount",
                                   "label": "Successes",
+                                  "value": "@entity.successCount",
                                   "type": "stat-display"
                                 }
-                              ]
+                              ],
+                              "type": "simple-grid"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Sensors",
-                          "href": "/sensors",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/devices",
-                          "label": "Devices",
-                          "icon": "cpu"
-                        },
-                        {
-                          "label": "Alerts",
-                          "href": "/alerts",
-                          "icon": "bell"
+                          "type": "stack"
                         }
                       ]
                     }
@@ -3847,171 +3847,66 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "IoT Dashboard",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
+                          "icon": "layout-list",
                           "label": "Sensors",
-                          "href": "/sensors",
-                          "icon": "layout-list"
+                          "href": "/sensors"
                         },
                         {
-                          "label": "Devices",
                           "href": "/devices",
-                          "icon": "cpu"
+                          "icon": "cpu",
+                          "label": "Devices"
                         },
                         {
-                          "href": "/alerts",
                           "icon": "bell",
-                          "label": "Alerts"
+                          "label": "Alerts",
+                          "href": "/alerts"
                         }
                       ],
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             {
+                              "gap": "md",
+                              "justify": "between",
                               "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "align": "center",
+                                  "gap": "md",
                                   "type": "stack",
                                   "children": [
                                     {
-                                      "name": "bell",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "bell"
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "DeviceAlert",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "type": "typography"
                                     }
                                   ]
                                 },
                                 {
+                                  "status": "online",
                                   "type": "status-dot",
                                   "label": "Circuit Closed",
-                                  "status": "online",
                                   "pulse": false
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center",
-                              "justify": "between"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert",
-                              "variant": "success"
-                            },
-                            {
-                              "cols": 2.0,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.failureCount",
-                                  "label": "Failures"
-                                },
-                                {
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display",
-                                  "label": "Successes"
-                                }
-                              ],
-                              "type": "simple-grid"
-                            },
-                            {
-                              "min": 0.0,
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount",
-                              "type": "meter"
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
-                      "type": "dashboard-layout"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "SUCCESS",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "label": "Sensors",
-                          "href": "/sensors",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Devices",
-                          "href": "/devices",
-                          "icon": "cpu"
-                        },
-                        {
-                          "label": "Alerts",
-                          "href": "/alerts",
-                          "icon": "bell"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "name": "bell",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "DeviceAlert",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "align": "center",
-                                  "gap": "md",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "status": "online",
-                                  "pulse": false,
-                                  "label": "Circuit Closed",
-                                  "type": "status-dot"
-                                }
-                              ],
-                              "justify": "between",
                               "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "success",
                               "type": "alert",
-                              "message": "Service is healthy. All requests are being processed."
+                              "message": "Service is healthy. All requests are being processed.",
+                              "variant": "success"
                             },
                             {
                               "children": [
@@ -4026,20 +3921,125 @@
                                   "value": "@entity.successCount"
                                 }
                               ],
-                              "type": "simple-grid",
-                              "cols": 2.0
+                              "cols": 2.0,
+                              "type": "simple-grid"
                             },
                             {
-                              "type": "meter",
                               "value": "@entity.failureCount",
                               "max": "@entity.threshold",
-                              "min": 0.0
+                              "min": 0.0,
+                              "type": "meter"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack"
                         }
                       ],
+                      "appName": "IoT Dashboard"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "halfOpen",
+                "to": "closed",
+                "event": "SUCCESS",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "appName": "IoT Dashboard",
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/sensors",
+                          "icon": "layout-list",
+                          "label": "Sensors"
+                        },
+                        {
+                          "href": "/devices",
+                          "label": "Devices",
+                          "icon": "cpu"
+                        },
+                        {
+                          "label": "Alerts",
+                          "href": "/alerts",
+                          "icon": "bell"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "align": "center",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "name": "bell",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "content": "DeviceAlert",
+                                      "variant": "h2",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "pulse": false,
+                                  "status": "online",
+                                  "label": "Circuit Closed",
+                                  "type": "status-dot"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "message": "Service is healthy. All requests are being processed.",
+                              "type": "alert",
+                              "variant": "success"
+                            },
+                            {
+                              "type": "simple-grid",
+                              "cols": 2.0,
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Failures",
+                                  "value": "@entity.failureCount"
+                                },
+                                {
+                                  "value": "@entity.successCount",
+                                  "type": "stat-display",
+                                  "label": "Successes"
+                                }
+                              ]
+                            },
+                            {
+                              "min": 0.0,
+                              "max": "@entity.threshold",
+                              "type": "meter",
+                              "value": "@entity.failureCount"
+                            }
+                          ],
+                          "gap": "lg",
+                          "type": "stack"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -4053,69 +4053,51 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "IoT Dashboard",
                       "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "label": "Sensors",
-                          "href": "/sensors"
-                        },
-                        {
-                          "href": "/devices",
-                          "icon": "cpu",
-                          "label": "Devices"
-                        },
-                        {
-                          "href": "/alerts",
-                          "icon": "bell",
-                          "label": "Alerts"
-                        }
-                      ],
                       "children": [
                         {
-                          "gap": "lg",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
-                              "align": "center",
+                              "justify": "between",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "align": "center",
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "name": "alert-triangle",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "alert-triangle"
                                     },
                                     {
-                                      "content": "DeviceAlert",
                                       "variant": "h2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "DeviceAlert"
                                     }
                                   ],
+                                  "type": "stack",
                                   "gap": "md",
+                                  "align": "center",
                                   "direction": "horizontal"
                                 },
                                 {
-                                  "pulse": true,
                                   "status": "critical",
-                                  "label": "Circuit Open",
-                                  "type": "status-dot"
+                                  "pulse": true,
+                                  "type": "status-dot",
+                                  "label": "Circuit Open"
                                 }
                               ],
-                              "justify": "between",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "error",
                               "message": "Circuit is open. Requests are being rejected to prevent cascading failures.",
-                              "type": "alert"
+                              "type": "alert",
+                              "variant": "error"
                             },
                             {
                               "type": "simple-grid",
@@ -4123,8 +4105,8 @@
                               "children": [
                                 {
                                   "type": "stat-display",
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount"
+                                  "value": "@entity.failureCount",
+                                  "label": "Failures"
                                 },
                                 {
                                   "label": "Successes",
@@ -4134,22 +4116,40 @@
                               ]
                             },
                             {
-                              "value": "@entity.failureCount",
                               "max": "@entity.threshold",
+                              "value": "@entity.failureCount",
                               "type": "meter",
                               "min": 0.0
                             },
                             {
+                              "type": "button",
                               "action": "RESET",
-                              "variant": "ghost",
-                              "label": "Reset",
                               "icon": "rotate-ccw",
-                              "type": "button"
+                              "label": "Reset",
+                              "variant": "ghost"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "layout-list",
+                          "href": "/sensors",
+                          "label": "Sensors"
+                        },
+                        {
+                          "icon": "cpu",
+                          "href": "/devices",
+                          "label": "Devices"
+                        },
+                        {
+                          "href": "/alerts",
+                          "label": "Alerts",
+                          "icon": "bell"
+                        }
+                      ],
+                      "appName": "IoT Dashboard"
                     }
                   ]
                 ]
@@ -4163,28 +4163,16 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "label": "Sensors",
-                          "icon": "layout-list",
-                          "href": "/sensors"
-                        },
-                        {
-                          "icon": "cpu",
-                          "href": "/devices",
-                          "label": "Devices"
-                        },
-                        {
-                          "href": "/alerts",
-                          "icon": "bell",
-                          "label": "Alerts"
-                        }
-                      ],
-                      "appName": "IoT Dashboard",
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
+                              "gap": "md",
+                              "align": "center",
+                              "justify": "between",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "direction": "horizontal",
@@ -4194,44 +4182,40 @@
                                       "type": "icon"
                                     },
                                     {
+                                      "content": "DeviceAlert",
                                       "variant": "h2",
-                                      "type": "typography",
-                                      "content": "DeviceAlert"
+                                      "type": "typography"
                                     }
                                   ],
-                                  "align": "center",
                                   "gap": "md",
-                                  "type": "stack"
+                                  "type": "stack",
+                                  "align": "center"
                                 },
                                 {
-                                  "status": "online",
+                                  "type": "status-dot",
                                   "label": "Circuit Closed",
                                   "pulse": false,
-                                  "type": "status-dot"
+                                  "status": "online"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "justify": "between",
-                              "gap": "md",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "alert",
                               "variant": "success",
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert"
+                              "message": "Service is healthy. All requests are being processed."
                             },
                             {
                               "type": "simple-grid",
                               "cols": 2.0,
                               "children": [
                                 {
-                                  "type": "stat-display",
                                   "label": "Failures",
-                                  "value": "@entity.failureCount"
+                                  "value": "@entity.failureCount",
+                                  "type": "stat-display"
                                 },
                                 {
                                   "type": "stat-display",
@@ -4241,18 +4225,34 @@
                               ]
                             },
                             {
-                              "type": "meter",
-                              "min": 0.0,
                               "value": "@entity.failureCount",
-                              "max": "@entity.threshold"
+                              "min": 0.0,
+                              "max": "@entity.threshold",
+                              "type": "meter"
                             }
                           ],
-                          "type": "stack",
                           "gap": "lg",
                           "direction": "vertical"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "appName": "IoT Dashboard",
+                      "navItems": [
+                        {
+                          "href": "/sensors",
+                          "icon": "layout-list",
+                          "label": "Sensors"
+                        },
+                        {
+                          "icon": "cpu",
+                          "label": "Devices",
+                          "href": "/devices"
+                        },
+                        {
+                          "icon": "bell",
+                          "label": "Alerts",
+                          "href": "/alerts"
+                        }
+                      ]
                     }
                   ]
                 ]

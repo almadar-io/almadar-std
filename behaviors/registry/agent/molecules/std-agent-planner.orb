@@ -169,7 +169,7 @@
             {
               "event": "PLAN_READY",
               "scope": "external",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "plan",
                   "type": "string"
@@ -230,7 +230,7 @@
               {
                 "key": "CLASSIFIED",
                 "name": "Classified",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "category",
                     "type": "string",
@@ -241,7 +241,7 @@
               {
                 "key": "FAILED",
                 "name": "Failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string",
@@ -252,7 +252,7 @@
               {
                 "key": "MEMORIES_LOADED",
                 "name": "Memories Loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "memories",
                     "type": "string",
@@ -268,7 +268,7 @@
               {
                 "key": "PLAN_GENERATED",
                 "name": "Plan Generated",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "steps",
                     "type": "string",
@@ -300,26 +300,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "map",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "map"
                             },
                             {
-                              "content": "Task Planner",
                               "type": "typography",
+                              "content": "Task Planner",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -328,29 +325,32 @@
                           "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "gap": "md",
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Describe the task to plan",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
-                                  "submitEvent": "PLAN",
-                                  "entity": "@entity",
-                                  "mode": "edit",
                                   "fields": [
                                     "task"
-                                  ]
+                                  ],
+                                  "mode": "edit",
+                                  "entity": "@entity",
+                                  "type": "form-section",
+                                  "submitEvent": "PLAN"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -383,29 +383,29 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "tag"
+                          "name": "tag",
+                          "type": "icon"
                         },
                         {
+                          "content": "Classifying task...",
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Classifying task..."
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "@entity.task",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "@entity.task"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -440,13 +440,11 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "name": "brain",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "brain"
                         },
                         {
                           "variant": "h3",
@@ -457,10 +455,12 @@
                           "type": "spinner"
                         },
                         {
-                          "label": "@entity.category",
-                          "type": "badge"
+                          "type": "badge",
+                          "label": "@entity.category"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -484,33 +484,33 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "variant": "h2",
-                          "content": "Planning Failed",
-                          "type": "typography"
+                          "content": "Planning Failed"
                         },
                         {
-                          "type": "alert",
                           "message": "@entity.error",
+                          "type": "alert",
                           "variant": "error"
                         },
                         {
                           "type": "button",
-                          "label": "Try Again",
+                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "variant": "primary",
-                          "action": "RESET"
+                          "label": "Try Again",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -556,11 +556,12 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "gap": "lg",
                       "children": [
                         {
-                          "name": "cpu",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "cpu"
                         },
                         {
                           "variant": "h3",
@@ -571,25 +572,24 @@
                           "type": "spinner"
                         },
                         {
-                          "justify": "center",
-                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "badge",
                               "label": "@entity.category"
                             },
                             {
-                              "label": "@entity.memoryCount",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.memoryCount"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -614,32 +614,32 @@
                     "main",
                     {
                       "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
-                          "variant": "h2",
+                          "type": "typography",
                           "content": "Planning Failed",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
                           "variant": "error",
-                          "message": "@entity.error",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "@entity.error"
                         },
                         {
-                          "action": "RESET",
-                          "variant": "primary",
                           "label": "Try Again",
+                          "variant": "primary",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -683,85 +683,90 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "check-circle"
+                                  "name": "check-circle",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Plan Ready",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center"
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "action": "RESET",
-                              "label": "New Plan",
                               "variant": "ghost",
+                              "action": "RESET",
                               "type": "button",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "label": "New Plan"
                             }
-                          ],
-                          "align": "center",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 3.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@entity.category",
-                              "label": "Category",
-                              "icon": "tag"
-                            },
-                            {
-                              "value": "@entity.confidence",
                               "type": "stat-display",
-                              "label": "Confidence",
-                              "icon": "target"
+                              "icon": "tag",
+                              "label": "Category"
                             },
                             {
-                              "icon": "brain",
-                              "value": "@entity.memoryCount",
+                              "icon": "target",
+                              "type": "stat-display",
+                              "value": "@entity.confidence",
+                              "label": "Confidence"
+                            },
+                            {
+                              "type": "stat-display",
                               "label": "Memories Used",
-                              "type": "stat-display"
+                              "icon": "brain",
+                              "value": "@entity.memoryCount"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
+                                  "type": "typography",
                                   "content": "Task"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.task"
+                                  "content": "@entity.task",
+                                  "variant": "body"
                                 },
                                 {
                                   "type": "divider"
@@ -772,20 +777,17 @@
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.steps",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
@@ -793,21 +795,19 @@
                                   "content": "Relevant Memories"
                                 },
                                 {
+                                  "content": "@entity.relevantMemories",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.relevantMemories"
+                                  "variant": "body"
                                 }
                               ],
                               "gap": "sm",
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
                           "type": "card"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -831,33 +831,33 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
+                          "content": "Planning Failed",
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Planning Failed"
+                          "type": "typography"
                         },
                         {
+                          "type": "alert",
                           "variant": "error",
-                          "message": "@entity.error",
-                          "type": "alert"
+                          "message": "@entity.error"
                         },
                         {
-                          "type": "button",
+                          "icon": "rotate-ccw",
                           "label": "Try Again",
                           "action": "RESET",
-                          "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "type": "button",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -911,23 +911,26 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "map"
                             },
                             {
-                              "type": "typography",
                               "content": "Task Planner",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -936,32 +939,29 @@
                           "type": "card",
                           "children": [
                             {
+                              "direction": "vertical",
                               "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Describe the task to plan",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Describe the task to plan"
                                 },
                                 {
                                   "type": "form-section",
+                                  "entity": "@entity",
+                                  "mode": "edit",
                                   "submitEvent": "PLAN",
                                   "fields": [
                                     "task"
-                                  ],
-                                  "entity": "@entity",
-                                  "mode": "edit"
+                                  ]
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical"
+                              ]
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -976,11 +976,11 @@
           "linkedEntity": "AgentPlanner",
           "config": {
             "icon": "plus-circle",
+            "title": "New Task",
+            "mode": "create",
             "fields": [
               "task"
-            ],
-            "title": "New Task",
-            "mode": "create"
+            ]
           },
           "events": {
             "OPEN": "NEW_TASK",

@@ -78,7 +78,7 @@
               "event": "ServiceOauthLoaded",
               "description": "Fired when ServiceOauth finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
@@ -130,7 +130,7 @@
               "event": "ServiceOauthLoadFailed",
               "description": "Fired when ServiceOauth fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
@@ -140,7 +140,7 @@
             {
               "event": "ServiceOauthOauthCompleted",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "result",
                   "type": "object"
@@ -150,7 +150,7 @@
             {
               "event": "ServiceOauthOauthFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -193,7 +193,7 @@
               {
                 "key": "AUTH_URL_RECEIVED",
                 "name": "Auth Url Received",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "authUrl",
                     "type": "string",
@@ -204,7 +204,7 @@
               {
                 "key": "CALLBACK",
                 "name": "Callback",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "code",
                     "type": "string",
@@ -215,7 +215,7 @@
               {
                 "key": "FAILED",
                 "name": "Failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string",
@@ -226,7 +226,7 @@
               {
                 "key": "TOKEN_RECEIVED",
                 "name": "Token Received",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "accessToken",
                     "type": "string",
@@ -250,7 +250,7 @@
               {
                 "key": "TOKEN_REFRESHED",
                 "name": "Token Refreshed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "accessToken",
                     "type": "string",
@@ -265,7 +265,7 @@
               {
                 "key": "ServiceOauthLoaded",
                 "name": "ServiceOauth loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
@@ -316,7 +316,7 @@
               {
                 "key": "ServiceOauthLoadFailed",
                 "name": "ServiceOauth load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "message",
                     "type": "string"
@@ -326,7 +326,7 @@
               {
                 "key": "ServiceOauthOauthCompleted",
                 "name": "ServiceOauth oauth completed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "result",
                     "type": "object"
@@ -336,7 +336,7 @@
               {
                 "key": "ServiceOauthOauthFailed",
                 "name": "ServiceOauth oauth failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -370,12 +370,11 @@
                     {
                       "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
@@ -383,11 +382,12 @@
                               "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "content": "Sign In",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
+                          "gap": "md",
                           "direction": "horizontal"
                         },
                         {
@@ -400,8 +400,8 @@
                               "label": "Google"
                             },
                             {
-                              "label": "GitHub",
-                              "value": "github"
+                              "value": "github",
+                              "label": "GitHub"
                             },
                             {
                               "label": "Microsoft",
@@ -411,11 +411,11 @@
                           "type": "select"
                         },
                         {
-                          "label": "Login",
-                          "action": "LOGIN",
-                          "icon": "log-in",
                           "type": "button",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "label": "Login",
+                          "icon": "log-in",
+                          "action": "LOGIN"
                         }
                       ]
                     }
@@ -431,9 +431,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Redirecting to provider for authorization.",
+                      "title": "Authorizing...",
                       "type": "loading-state",
-                      "title": "Authorizing..."
+                      "message": "Redirecting to provider for authorization."
                     }
                   ],
                   [
@@ -441,16 +441,16 @@
                     "oauth",
                     "authorize",
                     {
+                      "provider": "@entity.provider",
                       "scopes": [
                         "openid",
                         "email"
-                      ],
-                      "provider": "@entity.provider"
+                      ]
                     },
                     {
                       "emit": {
-                        "failure": "ServiceOauthOauthFailed",
-                        "success": "ServiceOauthOauthCompleted"
+                        "success": "ServiceOauthOauthCompleted",
+                        "failure": "ServiceOauthOauthFailed"
                       }
                     }
                   ]
@@ -470,37 +470,37 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "external-link",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "external-link"
                         },
                         {
-                          "type": "typography",
+                          "content": "Authorization Required",
                           "variant": "h2",
-                          "content": "Authorization Required"
+                          "type": "typography"
                         },
                         {
+                          "variant": "body",
                           "color": "muted",
                           "type": "typography",
-                          "content": "@entity.authUrl",
-                          "variant": "body"
+                          "content": "@entity.authUrl"
                         },
                         {
                           "type": "input",
                           "placeholder": "Paste authorization code here"
                         },
                         {
-                          "icon": "check",
                           "type": "button",
+                          "variant": "primary",
+                          "icon": "check",
                           "label": "Submit",
-                          "action": "CALLBACK",
-                          "variant": "primary"
+                          "action": "CALLBACK"
                         }
                       ],
-                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
@@ -520,8 +520,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ServiceOauthOauthFailed",
-                        "success": "ServiceOauthOauthCompleted"
+                        "success": "ServiceOauthOauthCompleted",
+                        "failure": "ServiceOauthOauthFailed"
                       }
                     }
                   ],
@@ -529,43 +529,43 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
+                          "type": "alert",
                           "variant": "success",
-                          "message": "Authenticated successfully",
-                          "type": "alert"
+                          "message": "Authenticated successfully"
                         },
                         {
-                          "justify": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "icon": "refresh-cw",
                               "action": "REFRESH",
                               "label": "Refresh Token",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "type": "button",
+                              "icon": "refresh-cw"
                             },
                             {
+                              "icon": "log-out",
                               "type": "button",
-                              "label": "Logout",
-                              "action": "LOGOUT",
                               "variant": "ghost",
-                              "icon": "log-out"
+                              "action": "LOGOUT",
+                              "label": "Logout"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
-                      "type": "stack",
-                      "align": "center"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -585,24 +585,24 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "error-state",
                           "title": "Authentication Failed",
+                          "type": "error-state",
                           "message": "@entity.error",
                           "onRetry": "RETRY"
                         },
                         {
-                          "type": "button",
-                          "action": "RETRY",
                           "label": "Try Again",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RETRY"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -631,43 +631,43 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
-                          "message": "Authenticated successfully",
+                          "variant": "success",
                           "type": "alert",
-                          "variant": "success"
+                          "message": "Authenticated successfully"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "justify": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "icon": "refresh-cw",
-                              "variant": "ghost",
                               "label": "Refresh Token",
+                              "icon": "refresh-cw",
                               "type": "button",
+                              "variant": "ghost",
                               "action": "REFRESH"
                             },
                             {
-                              "type": "button",
                               "action": "LOGOUT",
-                              "label": "Logout",
                               "variant": "ghost",
+                              "type": "button",
+                              "label": "Logout",
                               "icon": "log-out"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -681,9 +681,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Obtaining a new access token.",
+                      "type": "loading-state",
                       "title": "Refreshing token...",
-                      "type": "loading-state"
+                      "message": "Obtaining a new access token."
                     }
                   ],
                   [
@@ -695,8 +695,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ServiceOauthOauthFailed",
-                        "success": "ServiceOauthOauthCompleted"
+                        "success": "ServiceOauthOauthCompleted",
+                        "failure": "ServiceOauthOauthFailed"
                       }
                     }
                   ]
@@ -716,24 +716,23 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "lock"
                             },
                             {
-                              "content": "Sign In",
                               "type": "typography",
+                              "content": "Sign In",
                               "variant": "h2"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -742,30 +741,31 @@
                           "type": "select",
                           "options": [
                             {
-                              "value": "google",
-                              "label": "Google"
+                              "label": "Google",
+                              "value": "google"
                             },
                             {
                               "label": "GitHub",
                               "value": "github"
                             },
                             {
-                              "value": "microsoft",
-                              "label": "Microsoft"
+                              "label": "Microsoft",
+                              "value": "microsoft"
                             }
                           ]
                         },
                         {
                           "icon": "log-in",
-                          "action": "LOGIN",
                           "type": "button",
+                          "variant": "primary",
                           "label": "Login",
-                          "variant": "primary"
+                          "action": "LOGIN"
                         }
                       ],
-                      "gap": "lg",
+                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -784,10 +784,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
@@ -795,32 +794,33 @@
                         },
                         {
                           "type": "alert",
-                          "message": "Authenticated successfully",
-                          "variant": "success"
+                          "variant": "success",
+                          "message": "Authenticated successfully"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "action": "REFRESH",
-                              "label": "Refresh Token",
                               "variant": "ghost",
+                              "label": "Refresh Token",
                               "icon": "refresh-cw",
+                              "action": "REFRESH",
                               "type": "button"
                             },
                             {
-                              "type": "button",
-                              "action": "LOGOUT",
-                              "label": "Logout",
                               "icon": "log-out",
-                              "variant": "ghost"
+                              "label": "Logout",
+                              "action": "LOGOUT",
+                              "variant": "ghost",
+                              "type": "button"
                             }
                           ],
-                          "justify": "center"
+                          "type": "stack",
+                          "justify": "center",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -839,25 +839,25 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "error-state",
-                          "message": "@entity.error",
-                          "title": "Authentication Failed",
-                          "onRetry": "RETRY"
-                        },
-                        {
-                          "action": "RETRY",
-                          "type": "button",
-                          "label": "Try Again",
-                          "icon": "rotate-ccw",
-                          "variant": "primary"
-                        }
-                      ],
+                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "lg",
-                      "type": "stack"
+                      "children": [
+                        {
+                          "title": "Authentication Failed",
+                          "onRetry": "RETRY",
+                          "type": "error-state",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "label": "Try Again",
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "action": "RETRY",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -872,28 +872,30 @@
                     "main",
                     {
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "lock"
+                              "name": "lock",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
-                              "content": "Sign In",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Sign In"
                             }
                           ],
                           "type": "stack",
-                          "align": "center"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "select",
                           "options": [
                             {
                               "label": "Google",
@@ -904,21 +906,19 @@
                               "value": "github"
                             },
                             {
-                              "label": "Microsoft",
-                              "value": "microsoft"
+                              "value": "microsoft",
+                              "label": "Microsoft"
                             }
-                          ],
-                          "type": "select"
+                          ]
                         },
                         {
-                          "icon": "log-in",
-                          "variant": "primary",
                           "type": "button",
                           "label": "Login",
-                          "action": "LOGIN"
+                          "variant": "primary",
+                          "action": "LOGIN",
+                          "icon": "log-in"
                         }
                       ],
-                      "align": "center",
                       "direction": "vertical",
                       "type": "stack"
                     }

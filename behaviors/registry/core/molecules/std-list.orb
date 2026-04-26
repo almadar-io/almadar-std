@@ -65,7 +65,7 @@
               "event": "ListItemLoaded",
               "description": "Fired when the ListItem collection finishes loading; payload.data holds the list",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[ListItem]"
@@ -76,7 +76,7 @@
               "event": "ListItemLoadFailed",
               "description": "Fired when the ListItem collection fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -135,7 +135,7 @@
               {
                 "key": "ListItemLoaded",
                 "name": "ListItem loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[ListItem]"
@@ -145,7 +145,7 @@
               {
                 "key": "ListItemLoadFailed",
                 "name": "ListItem load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string",
@@ -169,8 +169,8 @@
                     "ListItem",
                     {
                       "emit": {
-                        "success": "ListItemLoaded",
-                        "failure": "ListItemLoadFailed"
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
                       }
                     }
                   ],
@@ -178,20 +178,20 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading list…",
+                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "content": "Loading list…",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -207,18 +207,19 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "between",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "list"
+                                  "name": "list",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "ListItems",
@@ -226,61 +227,60 @@
                                   "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
-                              "action": "CREATE",
-                              "variant": "primary",
                               "type": "button",
                               "label": "Create",
+                              "action": "CREATE",
+                              "variant": "primary",
                               "icon": "plus"
                             }
                           ],
                           "gap": "md",
-                          "direction": "horizontal"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "fields": [
                             {
+                              "label": "Name",
                               "variant": "h4",
                               "icon": "list",
-                              "name": "name",
-                              "label": "Name"
+                              "name": "name"
                             },
                             {
-                              "variant": "caption",
+                              "name": "description",
                               "label": "Description",
-                              "name": "description"
+                              "variant": "caption"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
+                              "name": "status",
                               "label": "Status"
                             }
                           ],
+                          "type": "data-grid",
                           "itemActions": [
                             {
                               "label": "Edit",
-                              "variant": "ghost",
-                              "event": "EDIT"
+                              "event": "EDIT",
+                              "variant": "ghost"
                             },
                             {
-                              "label": "Delete",
                               "event": "DELETE",
+                              "label": "Delete",
                               "variant": "danger"
                             }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -294,7 +294,11 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -302,28 +306,24 @@
                           "type": "icon"
                         },
                         {
+                          "content": "Failed to load list",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load list"
+                          "variant": "h3"
                         },
                         {
+                          "variant": "body",
                           "content": "@payload.error",
                           "type": "typography",
-                          "variant": "body",
                           "color": "muted"
                         },
                         {
+                          "icon": "rotate-ccw",
                           "action": "INIT",
-                          "type": "button",
                           "variant": "primary",
-                          "label": "Retry",
-                          "icon": "rotate-ccw"
+                          "type": "button",
+                          "label": "Retry"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -338,8 +338,8 @@
                     "ListItem",
                     {
                       "emit": {
-                        "success": "ListItemLoaded",
-                        "failure": "ListItemLoadFailed"
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
                       }
                     }
                   ],
@@ -362,8 +362,8 @@
                     "ListItem",
                     {
                       "emit": {
-                        "failure": "ListItemLoadFailed",
-                        "success": "ListItemLoaded"
+                        "success": "ListItemLoaded",
+                        "failure": "ListItemLoadFailed"
                       }
                     }
                   ],
@@ -385,18 +385,18 @@
           "name": "ListItemCreate",
           "linkedEntity": "ListItem",
           "config": {
-            "mode": "create",
-            "title": "Create ListItem",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "title": "Create ListItem",
+            "mode": "create"
           },
           "events": {
-            "OPEN": "CREATE",
-            "SAVE": "LIST_ITEM_CREATED"
+            "SAVE": "LIST_ITEM_CREATED",
+            "OPEN": "CREATE"
           }
         },
         {
@@ -404,14 +404,14 @@
           "name": "ListItemEdit",
           "linkedEntity": "ListItem",
           "config": {
-            "icon": "edit",
-            "title": "Edit ListItem",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit ListItem"
           },
           "events": {
             "SAVE": "LIST_ITEM_UPDATED",
@@ -423,14 +423,14 @@
           "name": "ListItemDelete",
           "linkedEntity": "ListItem",
           "config": {
-            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
             "title": "Delete ListItem",
+            "confirmLabel": "Delete",
             "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           }
         },
         {
@@ -441,7 +441,7 @@
             {
               "event": "ITEM_CREATED",
               "scope": "external",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
@@ -452,7 +452,7 @@
             {
               "event": "ITEM_UPDATED",
               "scope": "external",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
@@ -463,7 +463,7 @@
             {
               "event": "ITEM_DELETED",
               "scope": "external",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
@@ -513,7 +513,7 @@
               {
                 "key": "DO_CREATE",
                 "name": "Do Create",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "ListItem"
@@ -523,7 +523,7 @@
               {
                 "key": "DO_UPDATE",
                 "name": "Do Update",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "ListItem"
@@ -533,7 +533,7 @@
               {
                 "key": "DO_DELETE",
                 "name": "Do Delete",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",

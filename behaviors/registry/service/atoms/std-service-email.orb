@@ -76,7 +76,7 @@
               "event": "ServiceEmailLoaded",
               "description": "Fired when ServiceEmail finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -131,7 +131,7 @@
               "event": "ServiceEmailLoadFailed",
               "description": "Fired when ServiceEmail fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
@@ -141,7 +141,7 @@
             {
               "event": "ServiceEmailEmailCompleted",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "result",
                   "type": "object"
@@ -151,7 +151,7 @@
             {
               "event": "ServiceEmailEmailFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -191,7 +191,7 @@
               {
                 "key": "SENT",
                 "name": "Sent",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "messageId",
                     "type": "string"
@@ -201,7 +201,7 @@
               {
                 "key": "FAILED",
                 "name": "Failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string",
@@ -220,7 +220,7 @@
               {
                 "key": "ServiceEmailLoaded",
                 "name": "ServiceEmail loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -274,7 +274,7 @@
               {
                 "key": "ServiceEmailLoadFailed",
                 "name": "ServiceEmail load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "message",
                     "type": "string"
@@ -284,7 +284,7 @@
               {
                 "key": "ServiceEmailEmailCompleted",
                 "name": "ServiceEmail email completed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "result",
                     "type": "object"
@@ -294,7 +294,7 @@
               {
                 "key": "ServiceEmailEmailFailed",
                 "name": "ServiceEmail email failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -326,31 +326,32 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "stretch",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
+                          "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "mail",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "mail"
                             },
                             {
                               "type": "typography",
-                              "content": "ServiceEmail Email",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "ServiceEmail Email"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "recipient@example.com"
+                          "placeholder": "recipient@example.com",
+                          "type": "input"
                         },
                         {
                           "placeholder": "Email subject",
@@ -362,15 +363,14 @@
                         },
                         {
                           "label": "Send",
-                          "icon": "send",
                           "type": "button",
                           "variant": "primary",
+                          "icon": "send",
                           "action": "SEND"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -384,8 +384,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Delivering serviceemail email...",
+                      "type": "loading-state",
                       "title": "Sending email..."
                     }
                   ],
@@ -400,8 +400,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceEmailEmailCompleted",
-                        "failure": "ServiceEmailEmailFailed"
+                        "failure": "ServiceEmailEmailFailed",
+                        "success": "ServiceEmailEmailCompleted"
                       }
                     }
                   ]
@@ -421,28 +421,28 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "type": "alert",
+                          "message": "Email sent successfully",
                           "variant": "success",
-                          "message": "Email sent successfully"
+                          "type": "alert"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "RESET",
                           "label": "Send Another",
                           "type": "button",
-                          "variant": "ghost"
+                          "action": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -461,40 +461,40 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
+                          "title": "Send Failed",
                           "message": "Could not deliver the email.",
                           "onRetry": "RETRY",
-                          "type": "error-state",
-                          "title": "Send Failed"
+                          "type": "error-state"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
-                              "action": "RETRY",
-                              "label": "Retry",
                               "variant": "primary",
-                              "icon": "refresh-cw"
+                              "label": "Retry",
+                              "icon": "refresh-cw",
+                              "action": "RETRY"
                             },
                             {
-                              "label": "Reset",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw",
                               "type": "button",
                               "action": "RESET",
-                              "icon": "rotate-ccw",
-                              "variant": "ghost"
+                              "label": "Reset"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "justify": "center"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -513,50 +513,50 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "align": "stretch",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "ServiceEmail Email"
+                              "content": "ServiceEmail Email",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "recipient@example.com"
+                          "placeholder": "recipient@example.com",
+                          "type": "input"
                         },
                         {
                           "type": "input",
                           "placeholder": "Email subject"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
                         },
                         {
-                          "variant": "primary",
                           "icon": "send",
-                          "action": "SEND",
                           "type": "button",
+                          "variant": "primary",
+                          "action": "SEND",
                           "label": "Send"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -572,13 +572,10 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "stretch",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -590,7 +587,10 @@
                               "variant": "h2"
                             }
                           ],
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -611,11 +611,11 @@
                           "type": "button",
                           "label": "Send",
                           "icon": "send",
-                          "action": "SEND",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "action": "SEND"
                         }
                       ],
-                      "direction": "vertical"
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -634,51 +634,51 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "align": "stretch",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "name": "mail",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "mail"
                             },
                             {
-                              "type": "typography",
                               "content": "ServiceEmail Email",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "recipient@example.com"
+                          "placeholder": "recipient@example.com",
+                          "type": "input"
                         },
                         {
                           "placeholder": "Email subject",
                           "type": "input"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
                         },
                         {
-                          "action": "SEND",
-                          "icon": "send",
-                          "label": "Send",
                           "type": "button",
-                          "variant": "primary"
+                          "icon": "send",
+                          "variant": "primary",
+                          "label": "Send",
+                          "action": "SEND"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]

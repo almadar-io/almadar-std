@@ -54,7 +54,7 @@
               "event": "GalleryItemLoaded",
               "description": "Fired when GalleryItem finishes loading; payload.data holds the gallery",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[GalleryItem]"
@@ -65,7 +65,7 @@
               "event": "GalleryItemLoadFailed",
               "description": "Fired when GalleryItem fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -101,7 +101,7 @@
               {
                 "key": "GalleryItemLoaded",
                 "name": "GalleryItem loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[GalleryItem]"
@@ -111,7 +111,7 @@
               {
                 "key": "GalleryItemLoadFailed",
                 "name": "GalleryItem load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -125,7 +125,7 @@
               {
                 "key": "VIEW",
                 "name": "View",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
@@ -149,8 +149,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],
@@ -158,22 +158,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading…",
+                          "color": "muted"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -187,19 +187,16 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
                               "type": "stack",
                               "direction": "horizontal",
                               "children": [
@@ -208,16 +205,18 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
+                                  "type": "typography",
                                   "content": "GalleryItems Gallery"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
-                              "color": "muted",
-                              "variant": "caption",
                               "content": "Click any image to view full size",
+                              "variant": "caption",
+                              "color": "muted",
                               "type": "typography"
                             }
                           ]
@@ -226,33 +225,34 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
-                          "entity": "@payload.data",
                           "type": "data-grid",
-                          "imageField": "imageUrl",
+                          "entity": "@payload.data",
+                          "gap": "md",
                           "itemActions": [
                             {
+                              "event": "VIEW",
                               "icon": "maximize",
-                              "label": "View",
-                              "event": "VIEW"
+                              "label": "View"
                             }
                           ],
-                          "gap": "md",
                           "fields": [
                             {
-                              "variant": "h4",
+                              "label": "Title",
                               "name": "name",
-                              "label": "Title"
+                              "variant": "h4"
                             },
                             {
-                              "label": "Status",
+                              "name": "status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Status"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "imageField": "imageUrl"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -266,7 +266,8 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -274,28 +275,27 @@
                           "color": "destructive"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load"
+                          "content": "Failed to load",
+                          "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
                           "label": "Retry",
-                          "variant": "primary"
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "action": "INIT"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -309,17 +309,17 @@
                     "render-ui",
                     "modal",
                     {
-                      "closeAction": "CLOSE",
                       "type": "lightbox",
                       "images": [
                         {
-                          "alt": "Image",
                           "caption": "Image",
-                          "src": "https://picsum.photos/seed/gallery1/800/600"
+                          "src": "https://picsum.photos/seed/gallery1/800/600",
+                          "alt": "Image"
                         }
                       ],
-                      "currentIndex": 0.0,
+                      "closeAction": "CLOSE",
                       "showCounter": true,
+                      "currentIndex": 0.0,
                       "isOpen": true
                     }
                   ]
@@ -340,8 +340,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],

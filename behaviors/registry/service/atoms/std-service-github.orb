@@ -88,7 +88,7 @@
               "event": "ServiceGithubLoaded",
               "description": "Fired when ServiceGithub finishes loading",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
@@ -148,7 +148,7 @@
               "event": "ServiceGithubLoadFailed",
               "description": "Fired when ServiceGithub fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
@@ -158,7 +158,7 @@
             {
               "event": "ServiceGithubGithubCompleted",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "result",
                   "type": "object"
@@ -168,7 +168,7 @@
             {
               "event": "ServiceGithubGithubFailed",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -208,7 +208,7 @@
               {
                 "key": "PR_CREATED",
                 "name": "Pr Created",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "url",
                     "type": "string",
@@ -224,7 +224,7 @@
               {
                 "key": "FAILED",
                 "name": "Failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string",
@@ -243,7 +243,7 @@
               {
                 "key": "ServiceGithubLoaded",
                 "name": "ServiceGithub loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
@@ -302,7 +302,7 @@
               {
                 "key": "ServiceGithubLoadFailed",
                 "name": "ServiceGithub load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "message",
                     "type": "string"
@@ -312,7 +312,7 @@
               {
                 "key": "ServiceGithubGithubCompleted",
                 "name": "ServiceGithub github completed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "result",
                     "type": "object"
@@ -322,7 +322,7 @@
               {
                 "key": "ServiceGithubGithubFailed",
                 "name": "ServiceGithub github failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -355,32 +355,37 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "git-pull-request"
+                              "name": "git-pull-request",
+                              "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Create Pull Request",
-                              "variant": "h2"
+                              "content": "Create Pull Request"
                             }
                           ],
-                          "gap": "md"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "PR title"
+                              "placeholder": "PR title",
+                              "type": "input"
                             },
                             {
                               "type": "textarea",
@@ -395,21 +400,16 @@
                               "placeholder": "main"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "gap": "md"
                         },
                         {
-                          "type": "button",
                           "icon": "git-pull-request",
-                          "action": "CREATE_PR",
                           "variant": "primary",
-                          "label": "Create PR"
+                          "label": "Create PR",
+                          "action": "CREATE_PR",
+                          "type": "button"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -423,9 +423,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "loading-state",
                       "message": "Submitting your PR to GitHub.",
-                      "title": "Creating pull request...",
-                      "type": "loading-state"
+                      "title": "Creating pull request..."
                     }
                   ],
                   [
@@ -433,15 +433,15 @@
                     "github",
                     "createPR",
                     {
+                      "body": "@entity.body",
                       "head": "@entity.head",
                       "base": "@entity.base",
-                      "title": "@entity.title",
-                      "body": "@entity.body"
+                      "title": "@entity.title"
                     },
                     {
                       "emit": {
-                        "failure": "ServiceGithubGithubFailed",
-                        "success": "ServiceGithubGithubCompleted"
+                        "success": "ServiceGithubGithubCompleted",
+                        "failure": "ServiceGithubGithubFailed"
                       }
                     }
                   ]
@@ -471,34 +471,34 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "message": "Pull request created!",
                           "type": "alert",
-                          "variant": "success"
+                          "variant": "success",
+                          "message": "Pull request created!"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "body",
+                          "type": "typography",
+                          "color": "muted",
                           "content": "@entity.prUrl"
                         },
                         {
                           "variant": "ghost",
-                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "label": "Create Another",
-                          "type": "button"
+                          "type": "button",
+                          "action": "RESET",
+                          "label": "Create Another"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -517,10 +517,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "error-state",
                       "title": "PR Creation Failed",
-                      "onRetry": "RETRY",
                       "message": "@entity.error",
-                      "type": "error-state"
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -529,75 +529,6 @@
                 "from": "prCreated",
                 "to": "idle",
                 "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "git-pull-request",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Create Pull Request",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "vertical",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "input",
-                              "placeholder": "PR title"
-                            },
-                            {
-                              "type": "textarea",
-                              "placeholder": "Describe your changes..."
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "feature-branch"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "main"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "label": "Create PR",
-                          "type": "button",
-                          "icon": "git-pull-request",
-                          "variant": "primary",
-                          "action": "CREATE_PR"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RETRY",
                 "effects": [
                   [
                     "render-ui",
@@ -612,52 +543,52 @@
                               "name": "git-pull-request"
                             },
                             {
-                              "type": "typography",
                               "content": "Create Pull Request",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "input",
-                              "placeholder": "PR title"
+                              "placeholder": "PR title",
+                              "type": "input"
                             },
                             {
                               "placeholder": "Describe your changes...",
                               "type": "textarea"
                             },
                             {
-                              "type": "input",
-                              "placeholder": "feature-branch"
+                              "placeholder": "feature-branch",
+                              "type": "input"
                             },
                             {
                               "placeholder": "main",
                               "type": "input"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         },
                         {
-                          "icon": "git-pull-request",
-                          "action": "CREATE_PR",
                           "label": "Create PR",
                           "type": "button",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "icon": "git-pull-request",
+                          "action": "CREATE_PR"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -666,41 +597,37 @@
               {
                 "from": "error",
                 "to": "idle",
-                "event": "RESET",
+                "event": "RETRY",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "git-pull-request",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "git-pull-request"
                             },
                             {
-                              "content": "Create Pull Request",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "Create Pull Request"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "placeholder": "PR title",
@@ -718,16 +645,89 @@
                               "type": "input",
                               "placeholder": "main"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
-                          "icon": "git-pull-request",
+                          "variant": "primary",
                           "label": "Create PR",
-                          "type": "button",
+                          "icon": "git-pull-request",
                           "action": "CREATE_PR",
-                          "variant": "primary"
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "git-pull-request",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Create Pull Request"
+                            }
+                          ],
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "input",
+                              "placeholder": "PR title"
+                            },
+                            {
+                              "type": "textarea",
+                              "placeholder": "Describe your changes..."
+                            },
+                            {
+                              "type": "input",
+                              "placeholder": "feature-branch"
+                            },
+                            {
+                              "placeholder": "main",
+                              "type": "input"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "git-pull-request",
+                          "action": "CREATE_PR",
+                          "type": "button",
+                          "label": "Create PR"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg"
                     }
                   ]
                 ]

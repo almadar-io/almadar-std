@@ -61,7 +61,7 @@
               "event": "QuestLogLoaded",
               "description": "Fired when QuestLog finishes loading; payload.data holds the quests",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[QuestLog]"
@@ -72,7 +72,7 @@
               "event": "QuestLogLoadFailed",
               "description": "Fired when QuestLog fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -87,7 +87,7 @@
               "event": "QuestLogUpdated",
               "description": "Fired when a quest is updated",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
@@ -98,7 +98,7 @@
               "event": "QuestLogUpdateFailed",
               "description": "Fired when updating a quest fails",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -143,7 +143,7 @@
               {
                 "key": "QuestLogLoaded",
                 "name": "QuestLog loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[QuestLog]"
@@ -153,7 +153,7 @@
               {
                 "key": "QuestLogLoadFailed",
                 "name": "QuestLog load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -167,7 +167,7 @@
               {
                 "key": "ACCEPT",
                 "name": "Accept",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
@@ -198,7 +198,7 @@
               {
                 "key": "QuestLogUpdated",
                 "name": "QuestLog updated",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
@@ -208,7 +208,7 @@
               {
                 "key": "QuestLogUpdateFailed",
                 "name": "QuestLog update failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -242,20 +242,20 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading quests…"
+                          "content": "Loading quests…",
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -269,30 +269,31 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "flag"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "QuestLogs Board",
+                                  "variant": "h2",
                                   "type": "typography"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
+                              ]
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
+                          "type": "stack",
                           "justify": "between"
                         },
                         {
@@ -300,13 +301,11 @@
                         },
                         {
                           "type": "data-list",
-                          "fields": [],
                           "groupBy": "status",
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Accept",
-                              "event": "ACCEPT"
+                              "event": "ACCEPT",
+                              "label": "Accept"
                             }
                           ],
                           "renderItem": [
@@ -314,17 +313,18 @@
                             "item",
                             {
                               "type": "stack",
+                              "gap": "sm",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "stack",
+                                  "justify": "between",
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "gap": "sm",
                                       "align": "center",
-                                      "direction": "horizontal",
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -336,28 +336,28 @@
                                           "variant": "h4"
                                         }
                                       ],
+                                      "direction": "horizontal",
                                       "type": "stack"
                                     },
                                     {
-                                      "label": "@item.description",
-                                      "type": "badge"
+                                      "type": "badge",
+                                      "label": "@item.description"
                                     }
-                                  ],
-                                  "justify": "between"
+                                  ]
                                 },
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "@item.status"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
-                          ]
+                          ],
+                          "fields": [],
+                          "entity": "@payload.data"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -371,36 +371,36 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
-                          "content": "Failed to load quests",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@payload.error",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "h3",
+                          "content": "Failed to load quests"
                         },
                         {
-                          "icon": "rotate-ccw",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "@payload.error"
+                        },
+                        {
                           "label": "Retry",
-                          "action": "INIT",
+                          "type": "button",
                           "variant": "primary",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "action": "INIT"
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -426,44 +426,44 @@
                     {
                       "children": [
                         {
-                          "type": "typography",
+                          "content": "@entity.activeName",
                           "variant": "h2",
-                          "content": "@entity.activeName"
+                          "type": "typography"
                         },
                         {
-                          "value": 50.0,
+                          "type": "progress-bar",
                           "showPercentage": true,
-                          "type": "progress-bar"
+                          "value": 50.0
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "primary",
-                              "type": "button",
+                              "label": "Progress",
                               "action": "PROGRESS",
-                              "label": "Progress"
+                              "type": "button"
                             },
                             {
-                              "type": "button",
+                              "action": "COMPLETE",
                               "variant": "success",
-                              "label": "Complete",
-                              "action": "COMPLETE"
+                              "type": "button",
+                              "label": "Complete"
                             },
                             {
-                              "type": "button",
                               "action": "FAIL",
                               "label": "Fail",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
+                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -493,40 +493,40 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "type": "typography",
                           "variant": "h2",
+                          "type": "typography",
                           "content": "@entity.activeName"
                         },
                         {
+                          "showPercentage": true,
                           "type": "progress-bar",
-                          "value": 75.0,
-                          "showPercentage": true
+                          "value": 75.0
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Complete",
-                              "variant": "success",
-                              "action": "COMPLETE"
+                              "type": "button",
+                              "action": "COMPLETE",
+                              "variant": "success"
                             },
                             {
+                              "label": "Fail",
                               "action": "FAIL",
                               "type": "button",
-                              "variant": "danger",
-                              "label": "Fail"
+                              "variant": "danger"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
-                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -547,8 +547,8 @@
                     },
                     {
                       "emit": {
-                        "success": "QuestLogUpdated",
-                        "failure": "QuestLogUpdateFailed"
+                        "failure": "QuestLogUpdateFailed",
+                        "success": "QuestLogUpdated"
                       }
                     }
                   ],
@@ -557,11 +557,10 @@
                     "main",
                     {
                       "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "content": "Quest Complete",
@@ -569,18 +568,19 @@
                           "variant": "h2"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
+                          "type": "alert",
                           "message": "Congratulations! The quest has been completed."
                         },
                         {
-                          "action": "RESET",
-                          "type": "button",
-                          "variant": "primary",
+                          "label": "View Quests",
                           "icon": "arrow-left",
-                          "label": "View Quests"
+                          "variant": "primary",
+                          "action": "RESET",
+                          "type": "button"
                         }
                       ],
+                      "align": "center",
                       "type": "stack",
                       "direction": "vertical"
                     }
@@ -602,8 +602,8 @@
                     },
                     {
                       "emit": {
-                        "success": "QuestLogUpdated",
-                        "failure": "QuestLogUpdateFailed"
+                        "failure": "QuestLogUpdateFailed",
+                        "success": "QuestLogUpdated"
                       }
                     }
                   ],
@@ -611,9 +611,7 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
-                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
@@ -621,8 +619,8 @@
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "variant": "h2",
+                          "type": "typography",
                           "content": "Quest Failed"
                         },
                         {
@@ -631,13 +629,15 @@
                           "type": "alert"
                         },
                         {
-                          "action": "RESET",
                           "type": "button",
-                          "label": "View Quests",
+                          "icon": "arrow-left",
                           "variant": "primary",
-                          "icon": "arrow-left"
+                          "label": "View Quests",
+                          "action": "RESET"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -652,8 +652,8 @@
                     "update",
                     "QuestLog",
                     {
-                      "id": "@entity.activeId",
-                      "status": "complete"
+                      "status": "complete",
+                      "id": "@entity.activeId"
                     },
                     {
                       "emit": {
@@ -666,33 +666,33 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "content": "Quest Complete",
                           "variant": "h2",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Quest Complete"
                         },
                         {
-                          "type": "alert",
+                          "message": "Congratulations! The quest has been completed.",
                           "variant": "success",
-                          "message": "Congratulations! The quest has been completed."
+                          "type": "alert"
                         },
                         {
-                          "type": "button",
-                          "label": "View Quests",
                           "variant": "primary",
+                          "label": "View Quests",
+                          "icon": "arrow-left",
                           "action": "RESET",
-                          "icon": "arrow-left"
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -712,8 +712,8 @@
                     },
                     {
                       "emit": {
-                        "success": "QuestLogUpdated",
-                        "failure": "QuestLogUpdateFailed"
+                        "failure": "QuestLogUpdateFailed",
+                        "success": "QuestLogUpdated"
                       }
                     }
                   ],
@@ -721,19 +721,15 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
                           "name": "x-circle"
                         },
                         {
+                          "content": "Quest Failed",
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Quest Failed"
+                          "variant": "h2"
                         },
                         {
                           "type": "alert",
@@ -741,13 +737,17 @@
                           "message": "The quest was not completed. You can try again."
                         },
                         {
-                          "type": "button",
                           "variant": "primary",
                           "icon": "arrow-left",
-                          "label": "View Quests",
-                          "action": "RESET"
+                          "type": "button",
+                          "action": "RESET",
+                          "label": "View Quests"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -762,8 +762,8 @@
                     "QuestLog",
                     {
                       "emit": {
-                        "failure": "QuestLogLoadFailed",
-                        "success": "QuestLogLoaded"
+                        "success": "QuestLogLoaded",
+                        "failure": "QuestLogLoadFailed"
                       }
                     }
                   ],
@@ -786,8 +786,8 @@
                     "QuestLog",
                     {
                       "emit": {
-                        "success": "QuestLogLoaded",
-                        "failure": "QuestLogLoadFailed"
+                        "failure": "QuestLogLoadFailed",
+                        "success": "QuestLogLoaded"
                       }
                     }
                   ],

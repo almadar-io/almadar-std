@@ -49,7 +49,7 @@
               "event": "FilterTargetLoaded",
               "description": "Fired when FilterTarget finishes loading; payload.data holds the filtered list",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[FilterTarget]"
@@ -60,7 +60,7 @@
               "event": "FilterTargetLoadFailed",
               "description": "Fired when FilterTarget fails to load",
               "scope": "internal",
-              "payload": [
+              "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
@@ -93,7 +93,7 @@
               {
                 "key": "FilterTargetLoaded",
                 "name": "FilterTarget loaded",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[FilterTarget]"
@@ -103,7 +103,7 @@
               {
                 "key": "FilterTargetLoadFailed",
                 "name": "FilterTarget load failed",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "error",
                     "type": "string"
@@ -117,7 +117,7 @@
               {
                 "key": "FILTER",
                 "name": "Filter",
-                "payload": [
+                "payloadSchema": [
                   {
                     "name": "field",
                     "type": "string",
@@ -155,22 +155,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading…"
+                          "variant": "caption",
+                          "content": "Loading…",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -184,89 +184,89 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "filter"
+                                  "name": "filter",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "FilterTargets",
-                                  "variant": "h2"
+                                  "content": "FilterTargets"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
-                              "label": "All",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "All"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "justify": "between",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "filter-group",
                           "entity": "FilterTarget",
                           "filters": [
                             {
+                              "field": "status",
+                              "label": "Status",
                               "options": [
                                 "active",
                                 "inactive",
                                 "pending"
                               ],
-                              "filterType": "select",
-                              "field": "status",
-                              "label": "Status"
+                              "filterType": "select"
                             }
-                          ],
-                          "type": "filter-group"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "h4",
                                   "type": "typography",
+                                  "variant": "h4",
                                   "content": "@item.name"
                                 },
                                 {
+                                  "color": "muted",
                                   "type": "typography",
                                   "content": "@item.status",
-                                  "color": "muted",
                                   "variant": "caption"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "entity": "@payload.data",
                           "type": "data-grid",
-                          "fields": []
+                          "entity": "@payload.data"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -281,36 +281,36 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
+                          "type": "icon",
                           "color": "destructive"
                         },
                         {
+                          "variant": "h3",
                           "content": "Failed to load",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
+                          "content": "@payload.error",
                           "type": "typography",
                           "variant": "body",
-                          "content": "@payload.error",
                           "color": "muted"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
-                          "variant": "primary",
                           "label": "Retry",
-                          "type": "button"
+                          "variant": "primary",
+                          "type": "button",
+                          "action": "INIT",
+                          "icon": "rotate-ccw"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -324,10 +324,6 @@
                     "fetch",
                     "FilterTarget",
                     {
-                      "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
-                      },
                       "filter": [
                         "=",
                         [
@@ -336,7 +332,11 @@
                           "@payload.field"
                         ],
                         "@payload.value"
-                      ]
+                      ],
+                      "emit": {
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
+                      }
                     }
                   ],
                   [
@@ -358,8 +358,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
                       }
                     }
                   ],
@@ -382,8 +382,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
                       }
                     }
                   ],
