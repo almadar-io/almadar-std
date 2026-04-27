@@ -128,7 +128,7 @@ orbital BuildPlanOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
       NEW_TASK -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "icon", name: "map"}, { type: "typography", content: "Describe the task to plan", variant: "h3" }, { type: "divider" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "PLAN", cancelEvent: "CLOSE", fields: ["task"] }] })
     }
@@ -151,7 +151,7 @@ orbital BuildPlanOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       CLASSIFY -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "schema", variant: "secondary" }, { type: "badge", label: "component", variant: "secondary" }, { type: "badge", label: "trait", variant: "secondary" }, { type: "badge", label: "page", variant: "secondary" }, { type: "badge", label: "behavior", variant: "secondary" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
@@ -160,13 +160,13 @@ orbital BuildPlanOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildPlan @payload.data { emit: { success: "BuildPlanSaved", failure: "BuildPlanSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -183,7 +183,7 @@ orbital BuildPlanOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
@@ -192,13 +192,13 @@ orbital BuildPlanOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildPlan @payload.data { emit: { success: "BuildPlanSaved", failure: "BuildPlanSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
-        (ref BuildPlan)
+        (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -407,7 +407,7 @@ orbital BuildLoopOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
@@ -416,13 +416,13 @@ orbital BuildLoopOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildLoop @payload.data { emit: { success: "BuildLoopSaved", failure: "BuildLoopSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -439,7 +439,7 @@ orbital BuildLoopOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       INVOKE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
@@ -448,13 +448,13 @@ orbital BuildLoopOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildLoop @payload.data { emit: { success: "BuildLoopSaved", failure: "BuildLoopSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
-        (ref BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -721,7 +721,7 @@ orbital BuildFixOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       INVOKE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
@@ -730,13 +730,13 @@ orbital BuildFixOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -753,7 +753,7 @@ orbital BuildFixOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       INVOKE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
@@ -762,13 +762,13 @@ orbital BuildFixOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit INVOKED)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -785,7 +785,7 @@ orbital BuildFixOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
@@ -794,13 +794,13 @@ orbital BuildFixOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create BuildFix @payload.data { emit: { success: "BuildFixSaved", failure: "BuildFixSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
-        (ref BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -851,7 +851,7 @@ orbital BuildSessionOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
       LABEL -> open
         (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Session:" }, { type: "badge", label: "@entity.sessionId" }] }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
@@ -888,8 +888,7 @@ orbital BuildSessionOrbital {
         (set @entity.parentId @entity.sessionId)
         (agent/fork)
         (agent/session-id)
-        (persist create BuildSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
-        (emit FORKED)
+        (persist create BuildSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "FORKED" } })
       DO_LABEL -> active
         (agent/label @payload.data.label)
         (set @entity.label @payload.data.label)
@@ -905,8 +904,7 @@ orbital BuildSessionOrbital {
         (set @entity.parentId @entity.sessionId)
         (agent/fork)
         (agent/session-id)
-        (persist create BuildSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
-        (emit FORKED)
+        (persist create BuildSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" } { emit: { success: "FORKED" } })
       DO_LABEL -> forked
         (agent/label @payload.data.label)
         (set @entity.label @payload.data.label)

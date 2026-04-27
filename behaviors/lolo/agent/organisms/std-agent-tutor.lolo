@@ -172,8 +172,7 @@ orbital TutorChatOrbital {
     }
     state composing {
       SEND -> idle
-        (persist create TutorChat { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
-        (emit SEND_MESSAGE)
+        (persist create TutorChat { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "SEND_MESSAGE" } })
         (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "spinner" })
       CANCEL_COMPOSE -> idle
@@ -277,7 +276,7 @@ orbital ConceptOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Concept)
+        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
       MEMORIZE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle"}, { type: "typography", content: "Memorize", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["content", "category", "scope"] }] })
     }
@@ -371,7 +370,7 @@ orbital StudentAssessmentOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref StudentAssessment)
+        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       CLASSIFY -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "beginner", variant: "secondary" }, { type: "badge", label: "intermediate", variant: "secondary" }, { type: "badge", label: "advanced", variant: "secondary" }, { type: "badge", label: "expert", variant: "secondary" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
@@ -380,13 +379,13 @@ orbital StudentAssessmentOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref StudentAssessment)
+        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create StudentAssessment @payload.data { emit: { success: "StudentAssessmentSaved", failure: "StudentAssessmentSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
-        (ref StudentAssessment)
+        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "StudentAssessment", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {

@@ -64,7 +64,7 @@ orbital EmployeeOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
       CREATE -> open
         (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New Employee", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "email", "department", "role", "startDate"] }] })
@@ -93,7 +93,7 @@ orbital EmployeeOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
       EDIT -> open
         (fetch Employee {id: "@payload.id" , emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" }, emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Employee", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "email", "department", "role", "startDate"] }] })
@@ -123,7 +123,7 @@ orbital EmployeeOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
       VIEW -> open
         (fetch Employee {id: "@payload.id" , emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" }, emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Department" }, { type: "typography", variant: "body", content: "@entity.department" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Role" }, { type: "typography", variant: "body", content: "@entity.role" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -148,7 +148,7 @@ orbital EmployeeOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Employee {id: "@payload.id" , emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" }, emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
@@ -159,16 +159,16 @@ orbital EmployeeOrbital {
         (persist delete Employee @entity.pendingId { emit: { success: "EmployeeDeleted", failure: "EmployeeDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
         (emit EMPLOYEE_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Employee)
+        (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
     }
     emits {
       EMPLOYEE_DELETED external { id: string }
@@ -291,7 +291,7 @@ orbital TimeOffOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
       CREATE -> open
         (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New Time Off Request", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["employeeName", "leaveType", "startDate", "endDate", "status"] }] })
@@ -320,7 +320,7 @@ orbital TimeOffOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
       EDIT -> open
         (fetch TimeOff {id: "@payload.id" , emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" }, emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit TimeOff", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["employeeName", "leaveType", "startDate", "endDate", "status"] }] })
@@ -350,7 +350,7 @@ orbital TimeOffOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
       VIEW -> open
         (fetch TimeOff {id: "@payload.id" , emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" }, emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.employeeName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Employee Name" }, { type: "typography", variant: "body", content: "@entity.employeeName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Leave Type" }, { type: "typography", variant: "body", content: "@entity.leaveType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -374,7 +374,7 @@ orbital TimeOffOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch TimeOff {id: "@payload.id" , emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" }, emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
@@ -385,16 +385,16 @@ orbital TimeOffOrbital {
         (persist delete TimeOff @entity.pendingId { emit: { success: "TimeOffDeleted", failure: "TimeOffDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
         (emit TIME_OFF_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref TimeOff)
+        (fetch TimeOff { emit: { success: "TimeOffLoaded", failure: "TimeOffLoadFailed" } })
     }
     emits {
       TIME_OFF_DELETED

@@ -168,7 +168,7 @@ orbital CollectibleOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       ADD_ITEM -> open
         (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Add Collectible", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "quantity", "rarity"] }] })
@@ -197,7 +197,7 @@ orbital CollectibleOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       USE_ITEM -> open
         (fetch Collectible {id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" }, emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap" }, { type: "typography", content: "Use Collectible", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", action: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", action: "SAVE", variant: "primary", icon: "check" }] }] })
@@ -227,7 +227,7 @@ orbital CollectibleOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       DROP -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Collectible {id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" }, emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
@@ -238,15 +238,15 @@ orbital CollectibleOrbital {
         (persist delete Collectible @entity.pendingId { emit: { success: "CollectibleDeleted", failure: "CollectibleDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
     }
     emits {
       CONFIRM_DROP

@@ -55,7 +55,7 @@ orbital TicketOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       CREATE -> open
         (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
@@ -84,7 +84,7 @@ orbital TicketOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       EDIT -> open
         (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
@@ -114,7 +114,7 @@ orbital TicketOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       VIEW -> open
         (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Priority" }, { type: "typography", variant: "body", content: "@entity.priority" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Assignee" }, { type: "typography", variant: "body", content: "@entity.assignee" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -139,7 +139,7 @@ orbital TicketOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
@@ -150,16 +150,16 @@ orbital TicketOrbital {
         (persist delete Ticket @entity.pendingId { emit: { success: "TicketDeleted", failure: "TicketDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
         (emit TICKET_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Ticket)
+        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
     }
     emits {
       TICKET_DELETED external { id: string }
@@ -209,7 +209,7 @@ orbital ResponseOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Response)
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
       COMPOSE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New Response", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["ticketId", "body", "author"] }] })
     }
@@ -236,7 +236,7 @@ orbital ResponseOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Response)
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
       VIEW -> open
         (fetch Response {id: "@payload.id" , emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" }, emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.ticketId" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Ticket ID" }, { type: "typography", variant: "body", content: "@entity.ticketId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })

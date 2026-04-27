@@ -110,14 +110,11 @@ orbital ListItemOrbital {
     state idle {
       INIT -> idle
       DO_CREATE -> idle
-        (persist create ListItem @payload.data)
-        (emit ITEM_CREATED { id: "@payload.data.id" })
+        (persist create ListItem @payload.data { emit: { success: "ITEM_CREATED" } })
       DO_UPDATE -> idle
-        (persist update ListItem @payload.data)
-        (emit ITEM_UPDATED { id: "@payload.data.id" })
+        (persist update ListItem @payload.data { emit: { success: "ITEM_UPDATED" } })
       DO_DELETE -> idle
-        (persist delete ListItem @payload.id)
-        (emit ITEM_DELETED { id: "@payload.id" })
+        (persist delete ListItem @payload.id { emit: { success: "ITEM_DELETED" } })
     }
     emits {
       ITEM_CREATED external { id : string! }

@@ -43,6 +43,30 @@
                   "required": true
                 }
               ]
+            },
+            {
+              "event": "ProbeCreateLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Probe]"
+                }
+              ]
+            },
+            {
+              "event": "ProbeCreateLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -56,6 +80,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "ProbeCreateLoaded",
+                "name": "Probe create loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Probe]"
+                  }
+                ]
+              },
+              {
+                "key": "ProbeCreateLoadFailed",
+                "name": "Probe create load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SAVE",
@@ -80,17 +128,57 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "Probe"
+                    "fetch",
+                    "Probe",
+                    {
+                      "emit": {
+                        "failure": "ProbeCreateLoadFailed",
+                        "success": "ProbeCreateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "label": "Fire Create SAVE",
-                      "type": "button",
                       "action": "SAVE",
-                      "variant": "primary"
+                      "type": "button",
+                      "variant": "primary",
+                      "label": "Fire Create SAVE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbeCreateLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "primary",
+                      "type": "button",
+                      "label": "Fire Create SAVE",
+                      "action": "SAVE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbeCreateLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "primary",
+                      "label": "Fire Create SAVE",
+                      "action": "SAVE",
+                      "type": "button"
                     }
                   ]
                 ]
@@ -111,10 +199,10 @@
                     "render-ui",
                     "main",
                     {
-                      "action": "SAVE",
                       "type": "button",
                       "variant": "primary",
-                      "label": "Fire Create SAVE"
+                      "label": "Fire Create SAVE",
+                      "action": "SAVE"
                     }
                   ]
                 ]
@@ -138,6 +226,30 @@
                   "required": true
                 }
               ]
+            },
+            {
+              "event": "ProbeEditLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Probe]"
+                }
+              ]
+            },
+            {
+              "event": "ProbeEditLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -151,6 +263,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "ProbeEditLoaded",
+                "name": "Probe edit loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Probe]"
+                  }
+                ]
+              },
+              {
+                "key": "ProbeEditLoadFailed",
+                "name": "Probe edit load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "SAVE",
@@ -175,17 +311,57 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "Probe"
+                    "fetch",
+                    "Probe",
+                    {
+                      "emit": {
+                        "failure": "ProbeEditLoadFailed",
+                        "success": "ProbeEditLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "label": "Fire Edit SAVE",
+                      "action": "SAVE",
                       "type": "button",
+                      "label": "Fire Edit SAVE",
+                      "variant": "secondary"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbeEditLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "label": "Fire Edit SAVE",
                       "variant": "secondary",
-                      "action": "SAVE"
+                      "action": "SAVE",
+                      "type": "button"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbeEditLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "SAVE",
+                      "type": "button",
+                      "label": "Fire Edit SAVE",
+                      "variant": "secondary"
                     }
                   ]
                 ]
@@ -206,9 +382,9 @@
                     "render-ui",
                     "main",
                     {
+                      "action": "SAVE",
                       "type": "button",
                       "label": "Fire Edit SAVE",
-                      "action": "SAVE",
                       "variant": "secondary"
                     }
                   ]
@@ -270,6 +446,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "ProbePersistorLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Probe]"
+                }
+              ]
+            },
+            {
+              "event": "ProbePersistorLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "listens": [
@@ -301,6 +501,30 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "ProbePersistorLoaded",
+                "name": "Probe persistor loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Probe]"
+                  }
+                ]
+              },
+              {
+                "key": "ProbePersistorLoadFailed",
+                "name": "Probe persistor load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "DO_CREATE",
@@ -366,16 +590,54 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "Probe"
+                    "fetch",
+                    "Probe",
+                    {
+                      "emit": {
+                        "failure": "ProbePersistorLoadFailed",
+                        "success": "ProbePersistorLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "typography",
+                      "content": "Persistor idle",
+                      "variant": "caption"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbePersistorLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "Persistor idle",
                       "variant": "caption",
-                      "content": "Persistor idle"
+                      "type": "typography"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ProbePersistorLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "Persistor idle",
+                      "variant": "caption",
+                      "type": "typography"
                     }
                   ]
                 ]
@@ -404,9 +666,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "typography",
                       "variant": "caption",
-                      "content": "DO_CREATE fired",
-                      "type": "typography"
+                      "content": "DO_CREATE fired"
                     }
                   ]
                 ]
@@ -421,8 +683,8 @@
                     "create",
                     "Probe",
                     {
-                      "kind": "edit",
-                      "name": "probe-updated"
+                      "name": "probe-updated",
+                      "kind": "edit"
                     },
                     {
                       "emit": {
@@ -435,9 +697,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "caption",
+                      "type": "typography",
                       "content": "DO_UPDATE fired",
-                      "type": "typography"
+                      "variant": "caption"
                     }
                   ]
                 ]

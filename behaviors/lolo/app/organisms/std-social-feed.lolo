@@ -43,7 +43,7 @@ orbital PostOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Post)
+        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
       CREATE -> open
         (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Post", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "content", "author", "likes"] }] })
@@ -68,7 +68,7 @@ orbital PostOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Post)
+        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
       VIEW -> open
         (fetch Post {id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" }, emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Likes" }, { type: "typography", variant: "body", content: "@entity.likes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -125,7 +125,7 @@ orbital CommentOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Comment)
+        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
       COMPOSE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New Comment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["body", "author", "postId"] }] })
     }
@@ -152,7 +152,7 @@ orbital CommentOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Comment)
+        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
       VIEW -> open
         (fetch Comment {id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" }, emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.body" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Post ID" }, { type: "typography", variant: "body", content: "@entity.postId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })

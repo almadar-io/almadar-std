@@ -23,12 +23,22 @@ orbital SourceProbeOrbital {
   type ProbeSaveFailed = Event { error : string, code : string }
   type ProbeUpdated    = Event { id : string }
   type ProbeUpdateFailed = Event { error : string, code : string }
+  type ProbeCreateLoaded     = Event { data : [Probe] }
+  type ProbeCreateLoadFailed = Event { error : string, code : string }
+  type ProbeEditLoaded       = Event { data : [Probe] }
+  type ProbeEditLoadFailed   = Event { error : string, code : string }
+  type ProbePersistorLoaded     = Event { data : [Probe] }
+  type ProbePersistorLoadFailed = Event { error : string, code : string }
 
   trait ProbeCreate -> Probe [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Probe)
+        (fetch Probe { emit: { success: "ProbeCreateLoaded", failure: "ProbeCreateLoadFailed" } })
+        (render-ui main { type: "button", label: "Fire Create SAVE", action: "SAVE", variant: "primary" })
+      ProbeCreateLoaded -> idle
+        (render-ui main { type: "button", label: "Fire Create SAVE", action: "SAVE", variant: "primary" })
+      ProbeCreateLoadFailed -> idle
         (render-ui main { type: "button", label: "Fire Create SAVE", action: "SAVE", variant: "primary" })
       SAVE -> idle
         (emit SAVED { kind: "create" })
@@ -36,6 +46,8 @@ orbital SourceProbeOrbital {
     }
     emits {
       SAVED external { kind : string! }
+      ProbeCreateLoaded internal { data : [Probe] }
+      ProbeCreateLoadFailed internal { error : string, code : string }
     }
     listens {
       SAVE { data : object! }
@@ -46,7 +58,11 @@ orbital SourceProbeOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Probe)
+        (fetch Probe { emit: { success: "ProbeEditLoaded", failure: "ProbeEditLoadFailed" } })
+        (render-ui main { type: "button", label: "Fire Edit SAVE", action: "SAVE", variant: "secondary" })
+      ProbeEditLoaded -> idle
+        (render-ui main { type: "button", label: "Fire Edit SAVE", action: "SAVE", variant: "secondary" })
+      ProbeEditLoadFailed -> idle
         (render-ui main { type: "button", label: "Fire Edit SAVE", action: "SAVE", variant: "secondary" })
       SAVE -> idle
         (emit SAVED { kind: "edit" })
@@ -54,6 +70,8 @@ orbital SourceProbeOrbital {
     }
     emits {
       SAVED external { kind : string! }
+      ProbeEditLoaded internal { data : [Probe] }
+      ProbeEditLoadFailed internal { error : string, code : string }
     }
     listens {
       SAVE { data : object! }
@@ -64,7 +82,11 @@ orbital SourceProbeOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Probe)
+        (fetch Probe { emit: { success: "ProbePersistorLoaded", failure: "ProbePersistorLoadFailed" } })
+        (render-ui main { type: "typography", variant: "caption", content: "Persistor idle" })
+      ProbePersistorLoaded -> idle
+        (render-ui main { type: "typography", variant: "caption", content: "Persistor idle" })
+      ProbePersistorLoadFailed -> idle
         (render-ui main { type: "typography", variant: "caption", content: "Persistor idle" })
       DO_CREATE -> idle
         (persist create Probe { kind: "create", name: "probe-created" } { emit: { success: "ProbeSaved", failure: "ProbeSaveFailed" } })
@@ -73,7 +95,7 @@ orbital SourceProbeOrbital {
         (persist create Probe { kind: "edit", name: "probe-updated" } { emit: { success: "ProbeUpdated", failure: "ProbeUpdateFailed" } })
         (render-ui main { type: "typography", variant: "caption", content: "DO_UPDATE fired" })
     }
-    emits: [ProbeSaved, ProbeSaveFailed, ProbeUpdated, ProbeUpdateFailed]
+    emits: [ProbeSaved, ProbeSaveFailed, ProbeUpdated, ProbeUpdateFailed, ProbePersistorLoaded, ProbePersistorLoadFailed]
     listens {
       ProbeCreate SAVED -> DO_CREATE
       ProbeEdit   SAVED -> DO_UPDATE

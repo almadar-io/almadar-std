@@ -66,7 +66,7 @@ orbital ArticleOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       CREATE -> open
         (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"] }] })
@@ -95,7 +95,7 @@ orbital ArticleOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       EDIT -> open
         (fetch Article {id: "@payload.id" , emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" }, emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"] }] })
@@ -125,7 +125,7 @@ orbital ArticleOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       VIEW -> open
         (fetch Article {id: "@payload.id" , emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" }, emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Published At" }, { type: "typography", variant: "body", content: "@entity.publishedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -150,7 +150,7 @@ orbital ArticleOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Article {id: "@payload.id" , emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" }, emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
@@ -161,16 +161,16 @@ orbital ArticleOrbital {
         (persist delete Article @entity.pendingId { emit: { success: "ArticleDeleted", failure: "ArticleDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (emit ARTICLE_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Article)
+        (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
     }
     emits {
       ARTICLE_DELETED external { id: string }
@@ -218,7 +218,7 @@ orbital MediaAssetOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref MediaAsset)
+        (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
       CREATE -> open
         (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New MediaAsset", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["fileName", "fileType", "fileSize", "url", "altText", "uploadedAt"] }] })
@@ -243,7 +243,7 @@ orbital MediaAssetOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref MediaAsset)
+        (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
       VIEW -> open
         (fetch MediaAsset {id: "@payload.id" , emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" }, emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.fileName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Name" }, { type: "typography", variant: "body", content: "@entity.fileName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Type" }, { type: "typography", variant: "body", content: "@entity.fileType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Size" }, { type: "typography", variant: "body", content: "@entity.fileSize" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Url" }, { type: "typography", variant: "body", content: "@entity.url" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Alt Text" }, { type: "typography", variant: "body", content: "@entity.altText" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Uploaded At" }, { type: "typography", variant: "body", content: "@entity.uploadedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -307,7 +307,7 @@ orbital CategoryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       CREATE -> open
         (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"] }] })
@@ -336,7 +336,7 @@ orbital CategoryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       EDIT -> open
         (fetch Category {id: "@payload.id" , emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" }, emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"] }] })
@@ -366,7 +366,7 @@ orbital CategoryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       VIEW -> open
         (fetch Category {id: "@payload.id" , emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" }, emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Parent Category" }, { type: "typography", variant: "body", content: "@entity.parentCategory" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Article Count" }, { type: "typography", variant: "body", content: "@entity.articleCount" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -390,7 +390,7 @@ orbital CategoryOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Category {id: "@payload.id" , emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" }, emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
@@ -401,16 +401,16 @@ orbital CategoryOrbital {
         (persist delete Category @entity.pendingId { emit: { success: "CategoryDeleted", failure: "CategoryDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (emit CATEGORY_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Category)
+        (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
     }
     emits {
       CATEGORY_DELETED

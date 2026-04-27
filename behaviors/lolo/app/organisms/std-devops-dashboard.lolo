@@ -138,7 +138,7 @@ orbital LogEntryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       CREATE -> open
         (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"] }] })
@@ -167,7 +167,7 @@ orbital LogEntryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       EDIT -> open
         (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"] }] })
@@ -197,7 +197,7 @@ orbital LogEntryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       VIEW -> open
         (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "body", content: "@entity.message" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Service" }, { type: "typography", variant: "body", content: "@entity.service" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -222,7 +222,7 @@ orbital LogEntryOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
@@ -233,16 +233,16 @@ orbital LogEntryOrbital {
         (persist delete LogEntry @entity.pendingId { emit: { success: "LogEntryDeleted", failure: "LogEntryDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
         (emit LOG_ENTRY_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref LogEntry)
+        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
     }
     emits {
       LOG_ENTRY_DELETED

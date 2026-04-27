@@ -70,7 +70,7 @@ orbital ProductOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       CREATE -> open
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Product", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "price", "category", "inStock"] }] })
@@ -99,7 +99,7 @@ orbital ProductOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       EDIT -> open
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Product", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "price", "category", "inStock"] }] })
@@ -129,7 +129,7 @@ orbital ProductOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       VIEW -> open
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "In Stock" }, { type: "typography", variant: "body", content: "@entity.inStock" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -154,7 +154,7 @@ orbital ProductOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
@@ -165,16 +165,16 @@ orbital ProductOrbital {
         (persist delete Product @entity.pendingId { emit: { success: "ProductDeleted", failure: "ProductDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (emit PRODUCT_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Product)
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
     }
     emits {
       PRODUCT_DELETED external { id: string }
@@ -406,7 +406,7 @@ orbital OrderOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
       CREATE -> open
         (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Order", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["productName", "amount", "paymentStatus", "orderDate"] }] })
@@ -435,7 +435,7 @@ orbital OrderOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
       EDIT -> open
         (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Order", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["productName", "amount", "paymentStatus", "orderDate"] }] })
@@ -465,7 +465,7 @@ orbital OrderOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
       VIEW -> open
         (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.productName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Product Name" }, { type: "typography", variant: "body", content: "@entity.productName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Amount" }, { type: "typography", variant: "body", content: "@entity.amount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Payment Status" }, { type: "typography", variant: "body", content: "@entity.paymentStatus" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Order Date" }, { type: "typography", variant: "body", content: "@entity.orderDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -489,7 +489,7 @@ orbital OrderOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Order {id: "@payload.id" , emit: { success: "OrderLoaded", failure: "OrderLoadFailed" }, emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
@@ -500,16 +500,16 @@ orbital OrderOrbital {
         (persist delete Order @entity.pendingId { emit: { success: "OrderDeleted", failure: "OrderDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
         (emit ORDER_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Order)
+        (fetch Order { emit: { success: "OrderLoaded", failure: "OrderLoadFailed" } })
     }
     emits {
       ORDER_DELETED

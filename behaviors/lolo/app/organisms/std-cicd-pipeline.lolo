@@ -51,7 +51,7 @@ orbital BuildOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
       CREATE -> open
         (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
@@ -80,7 +80,7 @@ orbital BuildOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
       EDIT -> open
         (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
@@ -110,7 +110,7 @@ orbital BuildOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
       VIEW -> open
         (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.branch" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Branch" }, { type: "typography", variant: "body", content: "@entity.branch" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Commit" }, { type: "typography", variant: "body", content: "@entity.commit" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Triggered By" }, { type: "typography", variant: "body", content: "@entity.triggeredBy" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -136,7 +136,7 @@ orbital BuildOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
@@ -147,16 +147,16 @@ orbital BuildOrbital {
         (persist delete Build @entity.pendingId { emit: { success: "BuildDeleted", failure: "BuildDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (emit BUILD_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
     }
     emits {
       BUILD_DELETED external { id: string }

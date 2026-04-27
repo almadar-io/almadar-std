@@ -202,7 +202,7 @@ orbital ReviewRagOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ReviewRag)
+        (fetch ReviewRag { emit: { success: "ReviewRagLoaded", failure: "ReviewRagLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewRag", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
@@ -211,13 +211,13 @@ orbital ReviewRagOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref ReviewRag)
+        (fetch ReviewRag { emit: { success: "ReviewRagLoaded", failure: "ReviewRagLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create ReviewRag @payload.data { emit: { success: "ReviewRagSaved", failure: "ReviewRagSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
-        (ref ReviewRag)
+        (fetch ReviewRag { emit: { success: "ReviewRagLoaded", failure: "ReviewRagLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -251,7 +251,7 @@ orbital AnalysisOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Analysis)
+        (fetch Analysis { emit: { success: "AnalysisLoaded", failure: "AnalysisLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       CLASSIFY -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Analysis", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "schema", variant: "secondary" }, { type: "badge", label: "component", variant: "secondary" }, { type: "badge", label: "trait", variant: "secondary" }, { type: "badge", label: "page", variant: "secondary" }, { type: "badge", label: "behavior", variant: "secondary" }, { type: "badge", label: "style", variant: "secondary" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
@@ -260,13 +260,13 @@ orbital AnalysisOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref Analysis)
+        (fetch Analysis { emit: { success: "AnalysisLoaded", failure: "AnalysisLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create Analysis @payload.data { emit: { success: "AnalysisSaved", failure: "AnalysisSaveFailed" } })
         (render-ui modal null)
         (emit CLASSIFIED)
-        (ref Analysis)
+        (fetch Analysis { emit: { success: "AnalysisLoaded", failure: "AnalysisLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
@@ -358,7 +358,7 @@ orbital ReviewCompletionOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ReviewCompletion)
+        (fetch ReviewCompletion { emit: { success: "ReviewCompletionLoaded", failure: "ReviewCompletionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewCompletion", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
@@ -367,13 +367,13 @@ orbital ReviewCompletionOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref ReviewCompletion)
+        (fetch ReviewCompletion { emit: { success: "ReviewCompletionLoaded", failure: "ReviewCompletionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist create ReviewCompletion @payload.data { emit: { success: "ReviewCompletionSaved", failure: "ReviewCompletionSaveFailed" } })
         (render-ui modal null)
         (emit GENERATED)
-        (ref ReviewCompletion)
+        (fetch ReviewCompletion { emit: { success: "ReviewCompletionLoaded", failure: "ReviewCompletionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {

@@ -158,8 +158,8 @@
                     "SelectableItem",
                     {
                       "emit": {
-                        "success": "SelectableItemLoaded",
-                        "failure": "SelectableItemLoadFailed"
+                        "failure": "SelectableItemLoadFailed",
+                        "success": "SelectableItemLoaded"
                       }
                     }
                   ],
@@ -167,22 +167,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
                           "variant": "caption",
+                          "content": "Loading…",
                           "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -199,59 +199,59 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "check-square"
                             },
                             {
-                              "content": "SelectableItems",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "SelectableItems"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
                           "content": "Choose a selectableitem to continue."
                         },
                         {
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "SELECT",
-                              "label": "Select",
-                              "icon": "check"
-                            }
-                          ],
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "checkbox",
                                   "label": "@item.name"
                                 }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             }
                           ],
-                          "fields": [],
+                          "itemActions": [
+                            {
+                              "label": "Select",
+                              "icon": "check",
+                              "event": "SELECT"
+                            }
+                          ],
                           "type": "data-grid",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer"
+                          "entity": "@payload.data",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "fields": []
                         }
                       ],
                       "type": "stack",
@@ -269,9 +269,10 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -279,26 +280,25 @@
                           "type": "icon"
                         },
                         {
-                          "content": "Failed to load",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
                           "color": "muted",
-                          "content": "@payload.error"
+                          "content": "@payload.error",
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "label": "Retry",
+                          "action": "INIT",
                           "variant": "primary",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "type": "button",
+                          "label": "Retry"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -313,33 +313,31 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "md",
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "check-square",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "SelectableItems",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "align": "center",
+                              "gap": "md"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
                               "children": [
@@ -348,45 +346,47 @@
                                   "label": "Selecting"
                                 },
                                 {
-                                  "icon": "x",
-                                  "type": "button",
-                                  "label": "Clear",
                                   "action": "CLEAR",
+                                  "label": "Clear",
+                                  "type": "button",
+                                  "icon": "x",
                                   "variant": "ghost"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
-                          "justify": "between"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "info",
+                          "type": "alert",
                           "message": "@payload.id",
-                          "type": "alert"
+                          "variant": "info"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "primary",
-                              "icon": "check",
+                              "label": "Confirm",
+                              "type": "button",
                               "action": "CONFIRM_SELECTION",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
-                              "type": "button",
-                              "label": "Confirm"
+                              "icon": "check",
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -401,50 +401,48 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "check-circle"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Selection Confirmed",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
                               "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "label": "Confirmed",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Confirmed"
                             }
                           ],
-                          "gap": "md",
-                          "align": "center",
-                          "justify": "between"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "success",
                           "message": "Selection confirmed successfully.",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "success"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "content": "Selected ID:",
@@ -453,20 +451,22 @@
                             },
                             {
                               "type": "typography",
-                              "content": "@payload.id",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@payload.id"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
-                          "label": "Clear Selection",
                           "type": "button",
                           "variant": "ghost",
-                          "icon": "rotate-ccw",
-                          "action": "CLEAR"
+                          "label": "Clear Selection",
+                          "action": "CLEAR",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]

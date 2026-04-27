@@ -49,8 +49,7 @@ orbital AssistantOrbital {
     }
     state composing {
       SEND -> idle
-        (persist create Assistant { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
-        (emit SEND_MESSAGE)
+        (persist create Assistant { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" } { emit: { success: "SEND_MESSAGE" } })
         (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "spinner" })
       CANCEL_COMPOSE -> idle
@@ -161,7 +160,7 @@ orbital MemoryOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Memory)
+        (fetch Memory { emit: { success: "MemoryLoaded", failure: "MemoryLoadFailed" } })
       MEMORIZE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle"}, { type: "typography", content: "Memorize", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["content", "category", "scope"] }] })
     }
@@ -429,7 +428,7 @@ orbital ProviderConfigOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SWITCH -> open
         (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
@@ -439,13 +438,13 @@ orbital ProviderConfigOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SAVE -> closed
         (persist update ProviderConfig @payload.data { emit: { success: "ProviderConfigUpdated", failure: "ProviderConfigUpdateFailed" } })
         (render-ui modal null)
         (emit SWITCHED)
-        (ref ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {

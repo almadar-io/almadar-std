@@ -55,7 +55,7 @@ orbital CourseOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       CREATE -> open
         (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"] }] })
@@ -84,7 +84,7 @@ orbital CourseOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       EDIT -> open
         (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"] }] })
@@ -114,7 +114,7 @@ orbital CourseOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       VIEW -> open
         (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Instructor" }, { type: "typography", variant: "body", content: "@entity.instructor" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "body", content: "@entity.duration" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -139,7 +139,7 @@ orbital CourseOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
@@ -150,16 +150,16 @@ orbital CourseOrbital {
         (persist delete Course @entity.pendingId { emit: { success: "CourseDeleted", failure: "CourseDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
         (emit COURSE_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Course)
+        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
     }
     emits {
       COURSE_DELETED external { id: string }

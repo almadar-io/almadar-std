@@ -46,7 +46,7 @@ orbital ChatMessageOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ChatMessage)
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
       COMPOSE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New ChatMessage", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["sender", "content", "channel", "timestamp"] }] })
     }
@@ -73,7 +73,7 @@ orbital ChatMessageOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ChatMessage)
+        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
       VIEW -> open
         (fetch ChatMessage {id: "@payload.id" , emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" }, emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.sender" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Sender" }, { type: "typography", variant: "body", content: "@entity.sender" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Channel" }, { type: "typography", variant: "body", content: "@entity.channel" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -137,7 +137,7 @@ orbital ChannelOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
       CREATE -> open
         (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
@@ -166,7 +166,7 @@ orbital ChannelOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
       EDIT -> open
         (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
@@ -196,7 +196,7 @@ orbital ChannelOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
       VIEW -> open
         (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Member Count" }, { type: "typography", variant: "body", content: "@entity.memberCount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Is Private" }, { type: "typography", variant: "body", content: "@entity.isPrivate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -221,7 +221,7 @@ orbital ChannelOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
@@ -232,16 +232,16 @@ orbital ChannelOrbital {
         (persist delete Channel @entity.pendingId { emit: { success: "ChannelDeleted", failure: "ChannelDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (emit CHANNEL_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
     }
     emits {
       CHANNEL_DELETED

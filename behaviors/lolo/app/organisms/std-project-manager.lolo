@@ -61,7 +61,7 @@ orbital TaskOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       CREATE -> open
         (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"] }] })
@@ -90,7 +90,7 @@ orbital TaskOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       EDIT -> open
         (fetch Task {id: "@payload.id" , emit: { success: "TaskLoaded", failure: "TaskLoadFailed" }, emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"] }] })
@@ -120,7 +120,7 @@ orbital TaskOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       VIEW -> open
         (fetch Task {id: "@payload.id" , emit: { success: "TaskLoaded", failure: "TaskLoadFailed" }, emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Assignee" }, { type: "typography", variant: "body", content: "@entity.assignee" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Priority" }, { type: "typography", variant: "body", content: "@entity.priority" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Story Points" }, { type: "typography", variant: "body", content: "@entity.storyPoints" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Due Date" }, { type: "typography", variant: "body", content: "@entity.dueDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -145,7 +145,7 @@ orbital TaskOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Task {id: "@payload.id" , emit: { success: "TaskLoaded", failure: "TaskLoadFailed" }, emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
@@ -156,16 +156,16 @@ orbital TaskOrbital {
         (persist delete Task @entity.pendingId { emit: { success: "TaskDeleted", failure: "TaskDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
         (emit TASK_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Task)
+        (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
     }
     emits {
       TASK_DELETED external { id: string }
@@ -224,7 +224,7 @@ orbital SprintOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       CREATE -> open
         (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"] }] })
@@ -253,7 +253,7 @@ orbital SprintOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       EDIT -> open
         (fetch Sprint {id: "@payload.id" , emit: { success: "SprintLoaded", failure: "SprintLoadFailed" }, emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"] }] })
@@ -283,7 +283,7 @@ orbital SprintOrbital {
     initial: closed
     state closed {
       INIT -> closed
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       VIEW -> open
         (fetch Sprint {id: "@payload.id" , emit: { success: "SprintLoaded", failure: "SprintLoadFailed" }, emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Goal" }, { type: "typography", variant: "body", content: "@entity.goal" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Task Count" }, { type: "typography", variant: "body", content: "@entity.taskCount" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
@@ -307,7 +307,7 @@ orbital SprintOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
         (fetch Sprint {id: "@payload.id" , emit: { success: "SprintLoaded", failure: "SprintLoadFailed" }, emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
@@ -318,16 +318,16 @@ orbital SprintOrbital {
         (persist delete Sprint @entity.pendingId { emit: { success: "SprintDeleted", failure: "SprintDeleteFailed" } })
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
         (emit SPRINT_DELETED)
       CANCEL -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       CLOSE -> idle
         (render-ui modal null)
         (render-ui main { type: "box" })
-        (ref Sprint)
+        (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
     }
     emits {
       SPRINT_DELETED

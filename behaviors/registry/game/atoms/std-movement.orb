@@ -217,6 +217,168 @@
                     "MovableEntity",
                     {
                       "emit": {
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "justify": "between",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "move",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "status-dot",
+                              "status": "offline",
+                              "label": "Idle"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "value": "@entity.x",
+                              "type": "stat-display",
+                              "label": "X"
+                            },
+                            {
+                              "label": "Y",
+                              "value": "@entity.y",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Name",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Description"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.description",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Status",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.status",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "CreatedAt"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.createdAt",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "MOVE",
+                              "label": "Move",
+                              "icon": "navigation"
+                            }
+                          ],
+                          "justify": "end",
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "moving",
+                "event": "MOVE",
+                "effects": [
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
                         "failure": "MovableEntityLoadFailed",
                         "success": "MovableEntityLoaded"
                       }
@@ -226,36 +388,38 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "justify": "between",
                           "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "move"
                                 },
                                 {
-                                  "content": "MovableEntitys Movement",
                                   "variant": "h2",
+                                  "content": "MovableEntitys Movement",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "status": "offline",
+                              "pulse": true,
                               "type": "status-dot",
-                              "label": "Idle"
+                              "status": "online",
+                              "label": "Moving"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -277,8 +441,8 @@
                           "cols": 2.0
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "content": "Name",
@@ -291,243 +455,79 @@
                               "variant": "body"
                             }
                           ],
-                          "gap": "md"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "content": "Description",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.description"
-                            }
-                          ],
-                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "content": "Status",
+                              "content": "Description",
                               "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.description",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Status"
                             },
                             {
                               "content": "@entity.status",
                               "type": "typography",
                               "variant": "body"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "CreatedAt"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.createdAt"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "end",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Move",
-                              "action": "MOVE",
-                              "icon": "navigation",
-                              "variant": "primary"
-                            }
-                          ]
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "moving",
-                "event": "MOVE",
-                "effects": [
-                  [
-                    "fetch",
-                    "MovableEntity",
-                    {
-                      "emit": {
-                        "success": "MovableEntityLoaded",
-                        "failure": "MovableEntityLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "gap": "md",
-                          "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "name": "move",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "MovableEntitys Movement",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "pulse": true,
-                              "type": "status-dot",
-                              "status": "online",
-                              "label": "Moving"
-                            }
                           ]
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "cols": 2.0,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "X",
-                              "value": "@entity.x"
-                            },
-                            {
-                              "value": "@entity.y",
-                              "type": "stat-display",
-                              "label": "Y"
-                            }
-                          ],
-                          "type": "simple-grid"
-                        },
-                        {
-                          "children": [
-                            {
-                              "content": "Name",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
                           "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Description"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.description"
-                            }
-                          ],
                           "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Status",
+                              "content": "CreatedAt",
                               "type": "typography",
                               "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.status"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "CreatedAt"
                             },
                             {
                               "variant": "body",
                               "content": "@entity.createdAt",
                               "type": "typography"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "end",
                           "children": [
                             {
-                              "action": "STOP",
+                              "type": "button",
                               "label": "Stop",
-                              "variant": "danger",
+                              "action": "STOP",
                               "icon": "square",
-                              "type": "button"
+                              "variant": "danger"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -552,93 +552,92 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "name": "move",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "move"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "MovableEntitys Movement",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
+                              "status": "offline",
                               "type": "status-dot",
-                              "label": "Idle",
-                              "status": "offline"
+                              "label": "Idle"
                             }
-                          ],
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
                               "type": "stat-display",
-                              "label": "X",
-                              "value": "@entity.x"
+                              "value": "@entity.x",
+                              "label": "X"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Y",
-                              "value": "@entity.y",
-                              "type": "stat-display"
-                            }
-                          ],
-                          "cols": 2.0
-                        },
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Name"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.name",
-                              "type": "typography"
+                              "value": "@entity.y"
                             }
                           ]
                         },
                         {
-                          "gap": "md",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Name",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.name",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
                           "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Description"
                             },
                             {
-                              "content": "@entity.description",
                               "type": "typography",
+                              "content": "@entity.description",
                               "variant": "body"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "typography",
@@ -647,48 +646,49 @@
                             },
                             {
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.status"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "CreatedAt"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.createdAt",
-                              "variant": "body"
+                              "content": "@entity.status",
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal"
                         },
                         {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "CreatedAt",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.createdAt"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack",
                           "children": [
                             {
-                              "icon": "navigation",
-                              "action": "MOVE",
-                              "label": "Move",
                               "type": "button",
-                              "variant": "primary"
+                              "label": "Move",
+                              "icon": "navigation",
+                              "variant": "primary",
+                              "action": "MOVE"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "end"
+                          ]
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -703,10 +703,14 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "alert-triangle",
@@ -717,42 +721,38 @@
                               "type": "typography",
                               "content": "Collision Detected"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "A collision has been detected. Resolve to continue.",
                           "type": "typography",
+                          "content": "A collision has been detected. Resolve to continue.",
                           "variant": "body"
                         },
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "end",
                           "children": [
                             {
                               "type": "button",
                               "label": "Cancel",
-                              "variant": "ghost",
-                              "action": "CANCEL"
+                              "action": "CANCEL",
+                              "variant": "ghost"
                             },
                             {
-                              "label": "Resolve",
-                              "type": "button",
-                              "icon": "check",
+                              "action": "RESOLVE",
                               "variant": "primary",
-                              "action": "RESOLVE"
+                              "type": "button",
+                              "label": "Resolve",
+                              "icon": "check"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end"
+                          "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -772,8 +772,8 @@
                     "MovableEntity",
                     {
                       "emit": {
-                        "success": "MovableEntityLoaded",
-                        "failure": "MovableEntityLoadFailed"
+                        "failure": "MovableEntityLoadFailed",
+                        "success": "MovableEntityLoaded"
                       }
                     }
                   ],
@@ -783,41 +783,42 @@
                     {
                       "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "name": "move",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "move"
                                 },
                                 {
                                   "content": "MovableEntitys Movement",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
+                              "gap": "md",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "status": "offline",
                               "type": "status-dot",
-                              "label": "Idle"
+                              "label": "Idle",
+                              "status": "offline"
                             }
                           ],
-                          "type": "stack",
-                          "justify": "between"
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "value": "@entity.x",
@@ -830,60 +831,63 @@
                               "label": "Y"
                             }
                           ],
-                          "type": "simple-grid"
+                          "cols": 2.0
                         },
                         {
                           "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "content": "Name",
                               "variant": "caption",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Name"
                             },
                             {
-                              "content": "@entity.name",
+                              "type": "typography",
                               "variant": "body",
-                              "type": "typography"
+                              "content": "@entity.name"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Description"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.description"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "content": "Description",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.description",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "variant": "caption",
                               "type": "typography",
-                              "content": "Status"
+                              "content": "Status",
+                              "variant": "caption"
                             },
                             {
                               "content": "@entity.status",
                               "type": "typography",
                               "variant": "body"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "caption",
@@ -891,14 +895,11 @@
                               "type": "typography"
                             },
                             {
-                              "content": "@entity.createdAt",
+                              "type": "typography",
                               "variant": "body",
-                              "type": "typography"
+                              "content": "@entity.createdAt"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -906,20 +907,19 @@
                         {
                           "justify": "end",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Move",
                               "action": "MOVE",
+                              "type": "button",
+                              "label": "Move",
                               "variant": "primary",
-                              "icon": "navigation",
-                              "type": "button"
+                              "icon": "navigation"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -948,38 +948,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "move"
                                 },
                                 {
-                                  "content": "MovableEntitys Movement",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
                               "label": "Idle",
-                              "type": "status-dot",
-                              "status": "offline"
+                              "status": "offline",
+                              "type": "status-dot"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -989,83 +987,83 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
+                              "label": "X",
                               "value": "@entity.x",
-                              "label": "X"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Y",
                               "type": "stat-display",
+                              "label": "Y",
                               "value": "@entity.y"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
                               "content": "Name",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "content": "Description",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "content": "@entity.description",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "content": "Status",
                               "variant": "caption",
                               "type": "typography"
                             },
                             {
-                              "content": "@entity.status",
+                              "content": "@entity.name",
                               "type": "typography",
                               "variant": "body"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
                           "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "variant": "caption",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.description",
+                              "variant": "body"
+                            }
+                          ],
                           "gap": "md"
                         },
                         {
+                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "CreatedAt"
+                              "content": "Status",
+                              "type": "typography"
                             },
                             {
-                              "content": "@entity.createdAt",
                               "type": "typography",
+                              "content": "@entity.status",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "CreatedAt",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.createdAt",
                               "variant": "body"
                             }
                           ],
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
@@ -1074,19 +1072,21 @@
                         {
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Move",
-                              "action": "MOVE",
                               "variant": "primary",
-                              "icon": "navigation"
+                              "type": "button",
+                              "icon": "navigation",
+                              "label": "Move",
+                              "action": "MOVE"
                             }
                           ],
+                          "justify": "end",
                           "type": "stack",
                           "direction": "horizontal",
-                          "justify": "end",
                           "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1115,36 +1115,33 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
+                          "justify": "between",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
-                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "move"
                                 },
                                 {
-                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "MovableEntitys Movement"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "status": "offline",
-                              "label": "Idle",
-                              "type": "status-dot"
+                              "type": "status-dot",
+                              "label": "Idle"
                             }
                           ]
                         },
@@ -1155,60 +1152,58 @@
                           "type": "simple-grid",
                           "children": [
                             {
-                              "label": "X",
                               "value": "@entity.x",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "X"
                             },
                             {
-                              "value": "@entity.y",
+                              "label": "Y",
                               "type": "stat-display",
-                              "label": "Y"
+                              "value": "@entity.y"
                             }
                           ],
                           "cols": 2.0
                         },
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "caption",
+                              "content": "Name",
                               "type": "typography",
-                              "content": "Name"
+                              "variant": "caption"
                             },
                             {
+                              "content": "@entity.name",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.name"
+                              "variant": "body"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Description"
+                              "content": "Description",
+                              "variant": "caption"
                             },
                             {
-                              "content": "@entity.description",
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@entity.description"
                             }
                           ],
                           "gap": "md",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Status"
                             },
                             {
@@ -1216,44 +1211,49 @@
                               "type": "typography",
                               "content": "@entity.status"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
-                          "gap": "md",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "typography",
                               "variant": "caption",
-                              "content": "CreatedAt",
-                              "type": "typography"
+                              "content": "CreatedAt"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "type": "typography",
                               "content": "@entity.createdAt"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "justify": "end",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
+                              "label": "Move",
                               "action": "MOVE",
                               "type": "button",
                               "variant": "primary",
-                              "label": "Move",
                               "icon": "navigation"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
