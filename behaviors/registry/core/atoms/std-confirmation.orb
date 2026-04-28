@@ -151,8 +151,8 @@
                     "ConfirmAction",
                     {
                       "emit": {
-                        "failure": "ConfirmActionLoadFailed",
-                        "success": "ConfirmActionLoaded"
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
                       }
                     }
                   ]
@@ -162,6 +162,7 @@
                 "from": "idle",
                 "to": "confirming",
                 "event": "REQUEST",
+                "guard": "@payload.row",
                 "effects": [
                   [
                     "set",
@@ -178,70 +179,70 @@
                     "modal",
                     {
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "name": "@config.icon",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
+                          "variant": "error",
                           "message": "@config.alertMessage",
-                          "variant": "error"
+                          "type": "alert"
                         },
                         {
-                          "variant": "h4",
-                          "content": "@entity.name",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "@entity.pendingId",
-                          "color": "muted"
+                          "content": "@entity.name",
+                          "variant": "h4"
                         },
                         {
+                          "content": "@entity.pendingId",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
+                              "action": "CANCEL",
                               "variant": "ghost",
                               "label": "Cancel",
-                              "action": "CANCEL"
+                              "type": "button"
                             },
                             {
-                              "icon": "check",
-                              "type": "button",
-                              "label": "@config.confirmLabel",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
                               "variant": "danger",
-                              "action": "CONFIRM"
+                              "type": "button",
+                              "label": "@config.confirmLabel",
+                              "action": "CONFIRM",
+                              "icon": "check"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

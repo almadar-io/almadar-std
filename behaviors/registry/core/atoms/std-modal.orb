@@ -159,6 +159,15 @@
                 "from": "closed",
                 "to": "open",
                 "event": "OPEN",
+                "guard": [
+                  "or",
+                  [
+                    "=",
+                    "@config.mode",
+                    "create"
+                  ],
+                  "@payload.row"
+                ],
                 "effects": [
                   [
                     "set",
@@ -170,22 +179,20 @@
                     "modal",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -193,14 +200,16 @@
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.row",
+                          "cancelEvent": "CLOSE",
+                          "fields": "@config.fields",
                           "type": "form-section",
                           "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "mode": "@config.mode",
-                          "fields": "@config.fields",
-                          "entity": "@payload.row"
+                          "mode": "@config.mode"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]

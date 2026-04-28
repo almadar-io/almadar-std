@@ -30,7 +30,12 @@ orbital ModalRecordOrbital {
     state closed {
       INIT -> closed
         (fetch ModalRecord { emit: { success: "ModalRecordLoaded", failure: "ModalRecordLoadFailed" } })
-      OPEN -> open
+      ;; Mode-aware guard: in create mode the modal opens unconditionally
+      ;; (no row exists yet); in edit mode @payload.row must be present
+      ;; or the OPEN is rejected (no silent first-row fallback). The
+      ;; @config.mode literal is substituted at molecule inline time —
+      ;; atoms validate this with @config allowed-but-unresolved.
+      OPEN -> open when (or (= @config.mode "create") @payload.row)
         (set @entity.id @payload.id)
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "@config.icon" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "@config.mode", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: "@config.fields" }] })
     }
