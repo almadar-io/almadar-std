@@ -40,14 +40,15 @@ orbital ContactOrbital {
     }
     emits {
       CONVERT_LEAD external { id: string }
+      CREATE
+      VIEW   { id : string!, row : Contact }
+      EDIT   { id : string!, row : Contact }
+      DELETE { id : string!, row : Contact }
     }
     listens {
       ContactCreate CONTACT_CREATED -> INIT
       ContactEdit CONTACT_UPDATED -> INIT
       ContactDelete CONTACT_DELETED -> INIT
-      VIEW { id : string!, row : Contact }
-      EDIT { id : string!, row : Contact }
-      DELETE { id : string!, row : Contact }
           ContactLoadFailed { error : string, code : string }
     
       ContactSaveFailed { error : string, code : string }
@@ -84,6 +85,7 @@ orbital ContactOrbital {
       CONTACT_CREATED external { id: string }
     }
     listens {
+      ContactBrowse CREATE -> CREATE
       SAVE { data : object! }
           ContactLoadFailed { error : string, code : string }
     }
@@ -113,6 +115,8 @@ orbital ContactOrbital {
       CONTACT_UPDATED external { id: string }
     }
     listens {
+      ContactBrowse EDIT -> EDIT
+      ContactView   EDIT -> EDIT
       EDIT { id : string!, row : Contact }
       SAVE { data : object! }
           ContactLoadFailed { error : string, code : string }
@@ -137,7 +141,11 @@ orbital ContactOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
+    emits {
+      EDIT { id : string!, row : Contact }
+    }
     listens {
+      ContactBrowse VIEW -> VIEW
       VIEW { id : string! }
       SAVE { data : object! }
           ContactLoadFailed { error : string, code : string }
@@ -174,6 +182,7 @@ orbital ContactOrbital {
       CONTACT_DELETED external { id: string }
     }
     listens {
+      ContactBrowse DELETE -> DELETE
       DELETE { id : string! }
           ContactLoadFailed { error : string, code : string }
     }
@@ -212,6 +221,10 @@ orbital DealOrbital {
     }
     emits {
       CLOSE_DEAL external { id: string }
+      CREATE
+      VIEW   { id : string!, row : Deal }
+      EDIT   { id : string!, row : Deal }
+      DELETE { id : string!, row : Deal }
     }
     listens {
       DealCreate DEAL_CREATED -> INIT
@@ -247,6 +260,7 @@ orbital DealOrbital {
     }
     emits: [DealLoadFailed, DealLoaded, DealSaveFailed, DealSaved]
     listens {
+      DealBrowse CREATE -> CREATE
       DealLoadFailed { error : string, code : string }
       SAVE { data : string }
     }
@@ -276,6 +290,8 @@ orbital DealOrbital {
     }
     emits: [DealLoadFailed, DealLoaded, DealUpdateFailed, DealUpdated]
     listens {
+      DealBrowse EDIT -> EDIT
+      DealView   EDIT -> EDIT
       DealLoadFailed { error : string, code : string }
       EDIT { id : string, row : Deal }
       SAVE { data : string }
@@ -299,8 +315,12 @@ orbital DealOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
+    emits {
+      EDIT { id : string!, row : Deal }
+    }
     emits: [DealLoaded, DealLoadFailed]
     listens {
+      DealBrowse VIEW -> VIEW
       DealLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
@@ -336,6 +356,7 @@ orbital DealOrbital {
     }
     emits: [DealDeleteFailed, DealDeleted, DealLoadFailed, DealLoaded]
     listens {
+      DealBrowse DELETE -> DELETE
       DealLoadFailed { error : string, code : string }
       DELETE { id : string }
     }
@@ -408,6 +429,10 @@ orbital NoteOrbital {
       NoteLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load note" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      COMPOSE
+      VIEW { id : string!, row : Note }
+    }
     listens {
       NoteCompose SEND -> INIT
           NoteLoadFailed { error : string, code : string }
@@ -437,6 +462,7 @@ orbital NoteOrbital {
     }
     emits: [NoteLoadFailed, NoteLoaded, NoteSaveFailed, NoteSaved]
     listens {
+      NoteBrowse COMPOSE -> COMPOSE
       NoteLoadFailed { error : string, code : string }
       SEND { data : string }
     }
@@ -461,6 +487,7 @@ orbital NoteOrbital {
     }
     emits: [NoteLoaded, NoteLoadFailed]
     listens {
+      NoteBrowse VIEW -> VIEW
       NoteLoadFailed { error : string, code : string }
       VIEW { id : string }
     }
