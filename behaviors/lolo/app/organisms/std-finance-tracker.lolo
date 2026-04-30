@@ -31,6 +31,12 @@ orbital TransactionOrbital {
       TransactionLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load transaction" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Transaction }
+      EDIT { id : string!, row : Transaction }
+      DELETE { id : string!, row : Transaction }
+    }
     listens {
       TransactionCreate TRANSACTION_CREATED -> INIT
       TransactionEdit TRANSACTION_UPDATED -> INIT
@@ -73,10 +79,14 @@ orbital TransactionOrbital {
     listens {
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
+      TransactionBrowse CREATE -> CREATE
     }
     emits: [TransactionLoadFailed, TransactionLoaded, TransactionSaveFailed, TransactionSaved]
   }
   trait TransactionEdit -> Transaction [interaction, collection] {
+    listens {
+      TransactionView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -103,10 +113,14 @@ orbital TransactionOrbital {
       EDIT { id : string!, row : Transaction }
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
+      TransactionBrowse EDIT -> EDIT
     }
     emits: [TransactionLoadFailed, TransactionLoaded, TransactionUpdateFailed, TransactionUpdated]
   }
   trait TransactionView -> Transaction [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -129,6 +143,7 @@ orbital TransactionOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
+      TransactionBrowse VIEW -> VIEW
     }
     emits: [TransactionLoaded, TransactionLoadFailed]
   }
@@ -164,6 +179,7 @@ orbital TransactionOrbital {
     listens {
       DELETE { id : string! }
           TransactionLoadFailed { error : string, code : string }
+      TransactionBrowse DELETE -> DELETE
     }
     emits: [TransactionDeleteFailed, TransactionDeleted, TransactionLoadFailed, TransactionLoaded]
   }
@@ -233,6 +249,10 @@ orbital FinanceReportOrbital {
       FinanceReportLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load financereport" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : FinanceReport }
+    }
     listens {
           FinanceReportLoadFailed { error : string, code : string }
     }
@@ -262,6 +282,7 @@ orbital FinanceReportOrbital {
     listens {
       FinanceReportLoadFailed { error : string, code : string }
       SAVE { data : string }
+      FinanceReportBrowse CREATE -> CREATE
     }
   }
   trait FinanceReportView -> FinanceReport [interaction, collection] {
@@ -287,6 +308,7 @@ orbital FinanceReportOrbital {
     listens {
       FinanceReportLoadFailed { error : string, code : string }
       VIEW { id : string }
+      FinanceReportBrowse VIEW -> VIEW
     }
   }
   page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView

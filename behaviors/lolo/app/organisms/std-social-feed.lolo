@@ -29,6 +29,8 @@ orbital PostOrbital {
     }
     emits {
       COMMENT external { id: string }
+      CREATE
+      VIEW { id : string!, row : Post }
     }
     listens {
       VIEW { id : string!, row : Post }
@@ -61,6 +63,7 @@ orbital PostOrbital {
     listens {
       SAVE { data : object! }
           PostLoadFailed { error : string, code : string }
+      PostBrowse CREATE -> CREATE
     }
     emits: [PostLoadFailed, PostLoaded, PostSaveFailed, PostSaved]
   }
@@ -86,6 +89,7 @@ orbital PostOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           PostLoadFailed { error : string, code : string }
+      PostBrowse VIEW -> VIEW
     }
     emits: [PostLoaded, PostLoadFailed]
   }
@@ -113,6 +117,10 @@ orbital CommentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
       CommentLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load comment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    emits {
+      COMPOSE
+      VIEW { id : string!, row : Comment }
     }
     listens {
       CommentCompose SEND -> INIT
@@ -146,6 +154,7 @@ orbital CommentOrbital {
     listens {
       CommentLoadFailed { error : string, code : string }
       SEND { data : string }
+      CommentBrowse COMPOSE -> COMPOSE
     }
   }
   trait CommentView -> Comment [interaction, collection] {
@@ -170,6 +179,7 @@ orbital CommentOrbital {
     listens {
       CommentLoadFailed { error : string, code : string }
       VIEW { id : string }
+      CommentBrowse VIEW -> VIEW
     }
   }
   page "/messages" -> CommentBrowse, CommentCompose, CommentView

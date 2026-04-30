@@ -30,6 +30,10 @@ orbital ChatMessageOrbital {
       ChatMessageLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load chatmessage" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      COMPOSE
+      VIEW { id : string!, row : ChatMessage }
+    }
     listens {
       ChatMessageCompose SEND -> INIT
       VIEW { id : string!, row : ChatMessage }
@@ -66,10 +70,14 @@ orbital ChatMessageOrbital {
     listens {
       SEND { data : object! }
           ChatMessageLoadFailed { error : string, code : string }
+      ChatMessageBrowse COMPOSE -> COMPOSE
     }
     emits: [ChatMessageLoadFailed, ChatMessageLoaded, ChatMessageSaveFailed, ChatMessageSaved]
   }
   trait ChatMessageView -> ChatMessage [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -92,6 +100,7 @@ orbital ChatMessageOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ChatMessageLoadFailed { error : string, code : string }
+      ChatMessageBrowse VIEW -> VIEW
     }
     emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
@@ -124,6 +133,12 @@ orbital ChannelOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hash" }, { type: "typography", content: "Channels", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Channel", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "hash" }, { name: "memberCount", label: "Members", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "isPrivate", label: "Private", variant: "body", format: "boolean" }], variant: "card", gap: "sm" }] }] })
       ChannelLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load channel" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Channel }
+      EDIT { id : string!, row : Channel }
+      DELETE { id : string!, row : Channel }
     }
     listens {
       ChannelCreate CHANNEL_CREATED -> INIT
@@ -160,6 +175,7 @@ orbital ChannelOrbital {
     listens {
       ChannelLoadFailed { error : string, code : string }
       SAVE { data : string }
+      ChannelBrowse CREATE -> CREATE
     }
   }
   trait ChannelEdit -> Channel [interaction, collection] {
@@ -187,12 +203,17 @@ orbital ChannelOrbital {
     }
     emits: [ChannelLoadFailed, ChannelLoaded, ChannelUpdateFailed, ChannelUpdated]
     listens {
+      ChannelView EDIT -> EDIT
       ChannelLoadFailed { error : string, code : string }
       EDIT { id : string, row : Channel }
       SAVE { data : string }
+      ChannelBrowse EDIT -> EDIT
     }
   }
   trait ChannelView -> Channel [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -215,6 +236,7 @@ orbital ChannelOrbital {
     listens {
       ChannelLoadFailed { error : string, code : string }
       VIEW { id : string }
+      ChannelBrowse VIEW -> VIEW
     }
   }
   trait ChannelDelete -> Channel [interaction, collection] {
@@ -250,6 +272,7 @@ orbital ChannelOrbital {
     listens {
       ChannelLoadFailed { error : string, code : string }
       DELETE { id : string }
+      ChannelBrowse DELETE -> DELETE
     }
   }
   page "/channels" -> ChannelBrowse, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete

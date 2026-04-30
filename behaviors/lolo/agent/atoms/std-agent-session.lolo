@@ -45,6 +45,11 @@ orbital AgentSessionOrbital {
         (fetch AgentSession { emit: { success: "AgentSessionLoaded", failure: "AgentSessionLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
+    emits {
+      FORK { id : string!, row : AgentSession }
+      LABEL { id : string!, row : AgentSession }
+      END { id : string!, row : AgentSession }
+    }
     listens {
       AgentSessionAgent FORKED -> INIT
       AgentSessionLabel LABELED -> INIT
@@ -82,6 +87,7 @@ orbital AgentSessionOrbital {
       LABEL { id : string!, row : AgentSession }
       SAVE { data : AgentSession }
       AgentSessionLoadFailed { error : string, code : string }
+      AgentSessionBrowse LABEL -> LABEL
     }
   }
 
@@ -132,6 +138,8 @@ orbital AgentSessionOrbital {
       END { id : string!, row : AgentSession }
       DO_LABEL { data : AgentSession }
       AgentSessionLoadFailed { error : string, code : string }
+      AgentSessionBrowse FORK -> FORK
+      AgentSessionBrowse END -> END
     }
   }
 

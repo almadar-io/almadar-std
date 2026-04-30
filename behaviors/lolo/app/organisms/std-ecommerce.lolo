@@ -45,6 +45,10 @@ orbital ProductOrbital {
     }
     emits {
       ADD_TO_CART external { id: string }
+      CREATE
+      VIEW { id : string!, row : Product }
+      EDIT { id : string!, row : Product }
+      DELETE { id : string!, row : Product }
     }
     listens {
       ProductCreate PRODUCT_CREATED -> INIT
@@ -93,10 +97,14 @@ orbital ProductOrbital {
     listens {
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse CREATE -> CREATE
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductSaveFailed, ProductSaved]
   }
   trait ProductEdit -> Product [interaction, collection] {
+    listens {
+      ProductView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -123,10 +131,14 @@ orbital ProductOrbital {
       EDIT { id : string!, row : Product }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse EDIT -> EDIT
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductUpdateFailed, ProductUpdated]
   }
   trait ProductView -> Product [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -148,6 +160,7 @@ orbital ProductOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse VIEW -> VIEW
     }
     emits: [ProductLoaded, ProductLoadFailed]
   }
@@ -183,6 +196,7 @@ orbital ProductOrbital {
     listens {
       DELETE { id : string! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse DELETE -> DELETE
     }
     emits: [ProductDeleteFailed, ProductDeleted, ProductLoadFailed, ProductLoaded]
   }
@@ -229,6 +243,8 @@ orbital CartItemOrbital {
     }
     emits {
       CHECKOUT_STARTED external { id: string }
+      ADD_ITEM
+      REQUEST_REMOVE { id : string!, row : CartItem }
     }
     listens {
       * ADD_TO_CART -> INIT
@@ -259,6 +275,7 @@ orbital CartItemOrbital {
     listens {
       CartItemLoadFailed { error : string, code : string }
       SAVE { data : string }
+      CartItemCartBrowse ADD_ITEM -> ADD_ITEM
     }
   }
   trait CartItemRemoveConfirm -> CartItem [interaction, collection] {
@@ -290,6 +307,7 @@ orbital CartItemOrbital {
     listens {
       CartItemLoadFailed { error : string, code : string }
       REQUEST_REMOVE { id : string }
+      CartItemCartBrowse REQUEST_REMOVE -> REQUEST_REMOVE
     }
   }
   page "/cart" -> CartItemCartBrowse, CartItemAddItem
@@ -394,6 +412,12 @@ orbital OrderRecordOrbital {
       OrderRecordLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load orderrecord" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : OrderRecord }
+      EDIT { id : string!, row : OrderRecord }
+      DELETE { id : string!, row : OrderRecord }
+    }
     listens {
       OrderRecordCreate ORDER_RECORD_CREATED -> INIT
       OrderRecordEdit ORDER_RECORD_UPDATED -> INIT
@@ -430,6 +454,7 @@ orbital OrderRecordOrbital {
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       SAVE { data : string }
+      OrderRecordBrowse CREATE -> CREATE
     }
   }
   trait OrderRecordEdit -> OrderRecord [interaction, collection] {
@@ -457,12 +482,17 @@ orbital OrderRecordOrbital {
     }
     emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordUpdateFailed, OrderRecordUpdated]
     listens {
+      OrderRecordView EDIT -> EDIT
       OrderRecordLoadFailed { error : string, code : string }
       EDIT { id : string, row : OrderRecord }
       SAVE { data : string }
+      OrderRecordBrowse EDIT -> EDIT
     }
   }
   trait OrderRecordView -> OrderRecord [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -484,6 +514,7 @@ orbital OrderRecordOrbital {
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       VIEW { id : string }
+      OrderRecordBrowse VIEW -> VIEW
     }
   }
   trait OrderRecordDelete -> OrderRecord [interaction, collection] {
@@ -519,6 +550,7 @@ orbital OrderRecordOrbital {
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       DELETE { id : string }
+      OrderRecordBrowse DELETE -> DELETE
     }
   }
   page "/orders" -> OrderRecordBrowse, OrderRecordCreate, OrderRecordEdit, OrderRecordView, OrderRecordDelete

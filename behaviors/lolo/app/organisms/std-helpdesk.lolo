@@ -34,6 +34,10 @@ orbital TicketOrbital {
     }
     emits {
       ASSIGN external { id: string }
+      CREATE
+      VIEW { id : string!, row : Ticket }
+      EDIT { id : string!, row : Ticket }
+      DELETE { id : string!, row : Ticket }
     }
     listens {
       TicketCreate TICKET_CREATED -> INIT
@@ -77,10 +81,14 @@ orbital TicketOrbital {
     listens {
       SAVE { data : object! }
           TicketLoadFailed { error : string, code : string }
+      TicketBrowse CREATE -> CREATE
     }
     emits: [TicketLoadFailed, TicketLoaded, TicketSaveFailed, TicketSaved]
   }
   trait TicketEdit -> Ticket [interaction, collection] {
+    listens {
+      TicketView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -107,10 +115,14 @@ orbital TicketOrbital {
       EDIT { id : string!, row : Ticket }
       SAVE { data : object! }
           TicketLoadFailed { error : string, code : string }
+      TicketBrowse EDIT -> EDIT
     }
     emits: [TicketLoadFailed, TicketLoaded, TicketUpdateFailed, TicketUpdated]
   }
   trait TicketView -> Ticket [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -132,6 +144,7 @@ orbital TicketOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           TicketLoadFailed { error : string, code : string }
+      TicketBrowse VIEW -> VIEW
     }
     emits: [TicketLoaded, TicketLoadFailed]
   }
@@ -167,6 +180,7 @@ orbital TicketOrbital {
     listens {
       DELETE { id : string! }
           TicketLoadFailed { error : string, code : string }
+      TicketBrowse DELETE -> DELETE
     }
     emits: [TicketDeleteFailed, TicketDeleted, TicketLoadFailed, TicketLoaded]
   }
@@ -197,6 +211,8 @@ orbital ResponseOrbital {
     }
     emits {
       RESOLVE external { id: string }
+      COMPOSE
+      VIEW { id : string!, row : Response }
     }
     listens {
       ResponseCompose SEND -> INIT
@@ -230,6 +246,7 @@ orbital ResponseOrbital {
     listens {
       ResponseLoadFailed { error : string, code : string }
       SEND { data : string }
+      ResponseBrowse COMPOSE -> COMPOSE
     }
   }
   trait ResponseView -> Response [interaction, collection] {
@@ -254,6 +271,7 @@ orbital ResponseOrbital {
     listens {
       ResponseLoadFailed { error : string, code : string }
       VIEW { id : string }
+      ResponseBrowse VIEW -> VIEW
     }
   }
   page "/responses" -> ResponseBrowse, ResponseCompose, ResponseView

@@ -41,6 +41,10 @@ orbital ProviderOrbital {
     }
     emits {
       BOOK external { id: string }
+      CREATE
+      VIEW { id : string!, row : Provider }
+      EDIT { id : string!, row : Provider }
+      DELETE { id : string!, row : Provider }
     }
     listens {
       ProviderCreate PROVIDER_CREATED -> INIT
@@ -87,10 +91,14 @@ orbital ProviderOrbital {
     listens {
       SAVE { data : object! }
           ProviderLoadFailed { error : string, code : string }
+      ProviderBrowse CREATE -> CREATE
     }
     emits: [ProviderLoadFailed, ProviderLoaded, ProviderSaveFailed, ProviderSaved]
   }
   trait ProviderEdit -> Provider [interaction, collection] {
+    listens {
+      ProviderView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -117,10 +125,14 @@ orbital ProviderOrbital {
       EDIT { id : string!, row : Provider }
       SAVE { data : object! }
           ProviderLoadFailed { error : string, code : string }
+      ProviderBrowse EDIT -> EDIT
     }
     emits: [ProviderLoadFailed, ProviderLoaded, ProviderUpdateFailed, ProviderUpdated]
   }
   trait ProviderView -> Provider [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -142,6 +154,7 @@ orbital ProviderOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ProviderLoadFailed { error : string, code : string }
+      ProviderBrowse VIEW -> VIEW
     }
     emits: [ProviderLoaded, ProviderLoadFailed]
   }
@@ -177,6 +190,7 @@ orbital ProviderOrbital {
     listens {
       DELETE { id : string! }
           ProviderLoadFailed { error : string, code : string }
+      ProviderBrowse DELETE -> DELETE
     }
     emits: [ProviderDeleteFailed, ProviderDeleted, ProviderLoadFailed, ProviderLoaded]
   }
@@ -279,6 +293,12 @@ orbital AppointmentOrbital {
       AppointmentLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load appointment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Appointment }
+      EDIT { id : string!, row : Appointment }
+      DELETE { id : string!, row : Appointment }
+    }
     listens {
       AppointmentCreate APPOINTMENT_CREATED -> INIT
       AppointmentEdit APPOINTMENT_UPDATED -> INIT
@@ -314,6 +334,7 @@ orbital AppointmentOrbital {
     listens {
       AppointmentLoadFailed { error : string, code : string }
       SAVE { data : string }
+      AppointmentBrowse CREATE -> CREATE
     }
   }
   trait AppointmentEdit -> Appointment [interaction, collection] {
@@ -341,12 +362,17 @@ orbital AppointmentOrbital {
     }
     emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentUpdateFailed, AppointmentUpdated]
     listens {
+      AppointmentView EDIT -> EDIT
       AppointmentLoadFailed { error : string, code : string }
       EDIT { id : string, row : Appointment }
       SAVE { data : string }
+      AppointmentBrowse EDIT -> EDIT
     }
   }
   trait AppointmentView -> Appointment [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -368,6 +394,7 @@ orbital AppointmentOrbital {
     listens {
       AppointmentLoadFailed { error : string, code : string }
       VIEW { id : string }
+      AppointmentBrowse VIEW -> VIEW
     }
   }
   trait AppointmentDelete -> Appointment [interaction, collection] {
@@ -403,6 +430,7 @@ orbital AppointmentOrbital {
     listens {
       AppointmentLoadFailed { error : string, code : string }
       DELETE { id : string }
+      AppointmentBrowse DELETE -> DELETE
     }
   }
   page "/appointments" -> AppointmentBrowse, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete

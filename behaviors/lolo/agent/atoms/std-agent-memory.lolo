@@ -48,6 +48,14 @@ orbital AgentMemoryOrbital {
         (render-ui main { type: "spinner" })
     }
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed, AgentMemorySaved, AgentMemorySaveFailed]
+    emits {
+      MEMORIZE
+      RECALL
+      DECAY
+      PIN { id : string!, row : AgentMemory }
+      REINFORCE { id : string!, row : AgentMemory }
+      FORGET { id : string!, row : AgentMemory }
+    }
     listens {
       * MEMORIZED -> INIT
       * MEMORY_CREATED -> INIT
@@ -87,6 +95,7 @@ orbital AgentMemoryOrbital {
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed, AgentMemorySaved, AgentMemorySaveFailed]
     listens {
       SAVE { data : AgentMemory }
+      AgentMemoryBrowse MEMORIZE -> MEMORIZE
     }
   }
   trait AgentMemoryAgent -> AgentMemory [interaction, collection] {
@@ -136,6 +145,11 @@ orbital AgentMemoryOrbital {
       FORGET      { id    : string! }
       REINFORCE   { id    : string! }
       MEMORIZED   { data  : AgentMemory }
+      AgentMemoryBrowse RECALL -> RECALL
+      AgentMemoryBrowse DECAY -> DECAY
+      AgentMemoryBrowse PIN -> PIN
+      AgentMemoryBrowse REINFORCE -> REINFORCE
+      AgentMemoryBrowse FORGET -> FORGET
     }
   }
   page "/agentmemorys" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryCreate, AgentMemoryAgent

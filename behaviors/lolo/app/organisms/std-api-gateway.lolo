@@ -29,6 +29,12 @@ orbital RouteOrbital {
       RouteLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load routes" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Route }
+      EDIT { id : string!, row : Route }
+      DELETE { id : string!, row : Route }
+    }
     listens {
       RouteCreate ROUTE_CREATED -> INIT
       RouteEdit ROUTE_UPDATED -> INIT
@@ -70,10 +76,14 @@ orbital RouteOrbital {
     listens {
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
+      RouteBrowse CREATE -> CREATE
     }
     emits: [RouteLoadFailed, RouteLoaded, RouteSaveFailed, RouteSaved]
   }
   trait RouteEdit -> Route [interaction, collection] {
+    listens {
+      RouteView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -100,10 +110,14 @@ orbital RouteOrbital {
       EDIT { id : string!, row : Route }
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
+      RouteBrowse EDIT -> EDIT
     }
     emits: [RouteLoadFailed, RouteLoaded, RouteUpdateFailed, RouteUpdated]
   }
   trait RouteView -> Route [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -126,6 +140,7 @@ orbital RouteOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
+      RouteBrowse VIEW -> VIEW
     }
     emits: [RouteLoaded, RouteLoadFailed]
   }
@@ -161,6 +176,7 @@ orbital RouteOrbital {
     listens {
       DELETE { id : string! }
           RouteLoadFailed { error : string, code : string }
+      RouteBrowse DELETE -> DELETE
     }
     emits: [RouteDeleteFailed, RouteDeleted, RouteLoadFailed, RouteLoaded]
   }

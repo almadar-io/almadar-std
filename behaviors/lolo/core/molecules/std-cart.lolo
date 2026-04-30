@@ -43,6 +43,10 @@ orbital CartItemOrbital {
         (fetch CartItem { emit: { success: "CartItemLoaded", failure: "CartItemLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
+    emits {
+      ADD_ITEM
+      REQUEST_REMOVE { id : string!, row : CartItem }
+    }
     emits: [CartItemLoaded, CartItemLoadFailed]
     listens {
       CartItemLoadFailed { error : string, code : string }
@@ -63,6 +67,12 @@ orbital CartItemOrbital {
     events {
       OPEN: ADD_ITEM
     }
+    listens {
+      CartItemCartBrowse ADD_ITEM -> ADD_ITEM
+      ADD_ITEM { id : string, row : CartItem }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
   }
 
   ;; Remove-confirm: configured via `config`, no effects overrides.
@@ -76,6 +86,11 @@ orbital CartItemOrbital {
     events {
       REQUEST: REQUEST_REMOVE
       CONFIRM: CONFIRM_REMOVE
+    }
+    listens {
+      CartItemCartBrowse REQUEST_REMOVE -> REQUEST_REMOVE
+      REQUEST_REMOVE { id : string, row : CartItem }
+      ConfirmActionLoadFailed { error : string, code : string }
     }
   }
 

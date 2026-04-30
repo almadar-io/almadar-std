@@ -146,6 +146,14 @@ orbital MemoryOrbital {
       MemoryLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load memory" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      MEMORIZE
+      RECALL
+      DECAY
+      PIN { id : string!, row : Memory }
+      REINFORCE { id : string!, row : Memory }
+      FORGET { id : string!, row : Memory }
+    }
     listens {
       MemoryCreate MEMORIZED -> INIT
       MemoryAgent PINNED -> INIT
@@ -182,6 +190,7 @@ orbital MemoryOrbital {
     listens {
       MemoryLoadFailed { error : string, code : string }
       SAVE { data : string }
+      MemoryBrowse MEMORIZE -> MEMORIZE
     }
   }
   trait MemoryAgent -> Memory [interaction, collection] {
@@ -230,6 +239,11 @@ orbital MemoryOrbital {
           PIN { id : string }
           FORGET { id : string }
           REINFORCE { id : string }
+      MemoryBrowse RECALL -> RECALL
+      MemoryBrowse DECAY -> DECAY
+      MemoryBrowse PIN -> PIN
+      MemoryBrowse REINFORCE -> REINFORCE
+      MemoryBrowse FORGET -> FORGET
     }
     emits: [MemoryLoadFailed, MemoryLoaded, MemorySaveFailed, MemorySaved]
   }
@@ -314,6 +328,9 @@ orbital AssistantContextOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     emits: [AssistantContextLoaded, AssistantContextLoadFailed]
+    emits {
+      COMPACT
+    }
     listens {
       AssistantContextLoadFailed { error : string, code : string }
       UPDATE { current : string }
@@ -405,6 +422,7 @@ orbital AssistantContextOrbital {
     emits: [AssistantContextLoaded, AssistantContextLoadFailed]
     listens {
       AssistantContextLoadFailed { error : string, code : string }
+      AssistantContextMonitor COMPACT -> COMPACT
     }
   }
   page "/context" -> AssistantContextMonitor

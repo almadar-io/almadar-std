@@ -34,6 +34,10 @@ orbital CourseOrbital {
     }
     emits {
       ENROLL external { id: string }
+      CREATE
+      VIEW { id : string!, row : Course }
+      EDIT { id : string!, row : Course }
+      DELETE { id : string!, row : Course }
     }
     listens {
       CourseCreate COURSE_CREATED -> INIT
@@ -77,10 +81,14 @@ orbital CourseOrbital {
     listens {
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
+      CourseBrowse CREATE -> CREATE
     }
     emits: [CourseLoadFailed, CourseLoaded, CourseSaveFailed, CourseSaved]
   }
   trait CourseEdit -> Course [interaction, collection] {
+    listens {
+      CourseView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -107,10 +115,14 @@ orbital CourseOrbital {
       EDIT { id : string!, row : Course }
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
+      CourseBrowse EDIT -> EDIT
     }
     emits: [CourseLoadFailed, CourseLoaded, CourseUpdateFailed, CourseUpdated]
   }
   trait CourseView -> Course [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -132,6 +144,7 @@ orbital CourseOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
+      CourseBrowse VIEW -> VIEW
     }
     emits: [CourseLoaded, CourseLoadFailed]
   }
@@ -167,6 +180,7 @@ orbital CourseOrbital {
     listens {
       DELETE { id : string! }
           CourseLoadFailed { error : string, code : string }
+      CourseBrowse DELETE -> DELETE
     }
     emits: [CourseDeleteFailed, CourseDeleted, CourseLoadFailed, CourseLoaded]
   }

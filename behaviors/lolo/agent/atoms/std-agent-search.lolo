@@ -38,6 +38,10 @@ orbital AgentSearchOrbital {
         (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
+    emits {
+      SEARCH
+      CLEAR
+    }
     listens {
       AgentSearchAgent SEARCHED -> INIT
       VIEW { id : string!, row : AgentSearch }
@@ -72,6 +76,8 @@ orbital AgentSearchOrbital {
     listens {
       SEARCH { query : string!, language : string }
       AgentSearchLoadFailed { error : string, code : string }
+      AgentSearchBrowse SEARCH -> SEARCH
+      AgentSearchBrowse CLEAR -> CLEAR
     }
   }
 

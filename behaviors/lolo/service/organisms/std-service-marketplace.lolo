@@ -44,6 +44,10 @@ orbital ProductOrbital {
     }
     emits {
       CHECKOUT external { id: string }
+      CREATE
+      VIEW { id : string!, row : Product }
+      EDIT { id : string!, row : Product }
+      DELETE { id : string!, row : Product }
     }
     listens {
       ProductCreate PRODUCT_CREATED -> INIT
@@ -92,6 +96,7 @@ orbital ProductOrbital {
     listens {
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse CREATE -> CREATE
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductSaveFailed, ProductSaved]
   }
@@ -119,13 +124,18 @@ orbital ProductOrbital {
       PRODUCT_UPDATED external { id: string }
     }
     listens {
+      ProductView EDIT -> EDIT
       EDIT { id : string!, row : Product }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse EDIT -> EDIT
     }
     emits: [ProductLoadFailed, ProductLoaded, ProductUpdateFailed, ProductUpdated]
   }
   trait ProductView -> Product [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -147,6 +157,7 @@ orbital ProductOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse VIEW -> VIEW
     }
     emits: [ProductLoaded, ProductLoadFailed]
   }
@@ -182,6 +193,7 @@ orbital ProductOrbital {
     listens {
       DELETE { id : string! }
           ProductLoadFailed { error : string, code : string }
+      ProductBrowse DELETE -> DELETE
     }
     emits: [ProductDeleteFailed, ProductDeleted, ProductLoadFailed, ProductLoaded]
   }
@@ -394,6 +406,12 @@ orbital OrderOrbital {
       OrderLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load order" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Order }
+      EDIT { id : string!, row : Order }
+      DELETE { id : string!, row : Order }
+    }
     listens {
       OrderCreate ORDER_CREATED -> INIT
       OrderEdit ORDER_UPDATED -> INIT
@@ -429,6 +447,7 @@ orbital OrderOrbital {
     listens {
       OrderLoadFailed { error : string, code : string }
       SAVE { data : string }
+      OrderBrowse CREATE -> CREATE
     }
   }
   trait OrderEdit -> Order [interaction, collection] {
@@ -456,12 +475,17 @@ orbital OrderOrbital {
     }
     emits: [OrderLoadFailed, OrderLoaded, OrderUpdateFailed, OrderUpdated]
     listens {
+      OrderView EDIT -> EDIT
       OrderLoadFailed { error : string, code : string }
       EDIT { id : string, row : Order }
       SAVE { data : string }
+      OrderBrowse EDIT -> EDIT
     }
   }
   trait OrderView -> Order [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -483,6 +507,7 @@ orbital OrderOrbital {
     listens {
       OrderLoadFailed { error : string, code : string }
       VIEW { id : string }
+      OrderBrowse VIEW -> VIEW
     }
   }
   trait OrderDelete -> Order [interaction, collection] {
@@ -518,6 +543,7 @@ orbital OrderOrbital {
     listens {
       OrderLoadFailed { error : string, code : string }
       DELETE { id : string }
+      OrderBrowse DELETE -> DELETE
     }
   }
   page "/orders" -> OrderBrowse, OrderCreate, OrderEdit, OrderView, OrderDelete

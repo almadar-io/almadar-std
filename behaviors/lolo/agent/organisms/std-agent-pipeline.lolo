@@ -347,6 +347,7 @@ orbital PipelineExecOrbital {
       STEP_COMPLETE internal { step: number }
       STEP_COMPLETE external { step: number }
       PIPELINE_FINISHED external { result: string }
+      RESET
     }
     listens {
       * PIPELINE_PLANNED -> EXECUTE
@@ -356,6 +357,8 @@ orbital PipelineExecOrbital {
           MAX_ITERATIONS { error : string }
           PLAN_GENERATED { plan : string, toolName : string, toolArgs : string }
           FAILED { error : string }
+      ToolLoopStepProgress RESET -> RESET
+      ToolLoopContextMonitor RESET -> RESET
     }
   }
   trait ToolLoopStepProgress -> PipelineExec [interaction, collection] {
@@ -402,8 +405,13 @@ orbital PipelineExecOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
     }
     emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    emits {
+      RESET
+    }
     listens {
       PipelineExecLoadFailed { error : string, code : string }
+      PipelineExecutor RESET -> RESET
+      ToolLoopContextMonitor RESET -> RESET
     }
   }
   trait ToolLoopCompletionFlow -> PipelineExec [interaction, collection] {
@@ -533,9 +541,14 @@ orbital PipelineExecOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    emits {
+      RESET
+    }
     listens {
       PipelineExecLoadFailed { error : string, code : string }
       UPDATE { current : string }
+      PipelineExecutor RESET -> RESET
+      ToolLoopStepProgress RESET -> RESET
     }
   }
   page "/execution" -> PipelineExecutor
@@ -563,6 +576,11 @@ orbital PipelineSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
       PipelineSessionLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load pipelinesession" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    emits {
+      FORK
+      LABEL
+      END
     }
     listens {
       PipelineSessionAgent FORKED -> INIT
@@ -600,6 +618,7 @@ orbital PipelineSessionOrbital {
     listens {
       PipelineSessionLoadFailed { error : string, code : string }
       SAVE { data : string }
+      PipelineSessionManager LABEL -> LABEL
     }
   }
   trait PipelineSessionAgent -> PipelineSession [interaction, collection] {
@@ -658,6 +677,8 @@ orbital PipelineSessionOrbital {
       PipelineSessionAgent FORKED -> INIT
           PipelineSessionLoadFailed { error : string, code : string }
           DO_LABEL { data : string }
+      PipelineSessionManager FORK -> FORK
+      PipelineSessionManager END -> END
     }
     emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
   }
@@ -688,6 +709,14 @@ orbital ExecutionLogOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "ExecutionLog Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
       ExecutionLogLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load executionlog" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    emits {
+      MEMORIZE
+      RECALL
+      DECAY
+      PIN { id : string!, row : ExecutionLog }
+      REINFORCE { id : string!, row : ExecutionLog }
+      FORGET { id : string!, row : ExecutionLog }
     }
     listens {
       ExecutionLogCreate MEMORIZED -> INIT
@@ -725,6 +754,7 @@ orbital ExecutionLogOrbital {
     listens {
       ExecutionLogLoadFailed { error : string, code : string }
       SAVE { data : string }
+      ExecutionLogBrowse MEMORIZE -> MEMORIZE
     }
   }
   trait ExecutionLogAgent -> ExecutionLog [interaction, collection] {
@@ -773,6 +803,11 @@ orbital ExecutionLogOrbital {
           PIN { id : string }
           FORGET { id : string }
           REINFORCE { id : string }
+      ExecutionLogBrowse RECALL -> RECALL
+      ExecutionLogBrowse DECAY -> DECAY
+      ExecutionLogBrowse PIN -> PIN
+      ExecutionLogBrowse REINFORCE -> REINFORCE
+      ExecutionLogBrowse FORGET -> FORGET
     }
     emits: [ExecutionLogLoadFailed, ExecutionLogLoaded, ExecutionLogSaveFailed, ExecutionLogSaved]
   }

@@ -83,6 +83,12 @@ orbital TradeOrderOrbital {
       TradeOrderLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load orders" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : TradeOrder }
+      EDIT { id : string!, row : TradeOrder }
+      DELETE { id : string!, row : TradeOrder }
+    }
     listens {
       TradeOrderCreate TRADE_ORDER_CREATED -> INIT
       TradeOrderEdit TRADE_ORDER_UPDATED -> INIT
@@ -118,6 +124,7 @@ orbital TradeOrderOrbital {
     listens {
       TradeOrderLoadFailed { error : string, code : string }
       SAVE { data : string }
+      TradeOrderBrowse CREATE -> CREATE
     }
   }
   trait TradeOrderEdit -> TradeOrder [interaction, collection] {
@@ -145,12 +152,17 @@ orbital TradeOrderOrbital {
     }
     emits: [TradeOrderLoadFailed, TradeOrderLoaded, TradeOrderUpdateFailed, TradeOrderUpdated]
     listens {
+      TradeOrderView EDIT -> EDIT
       TradeOrderLoadFailed { error : string, code : string }
       EDIT { id : string, row : TradeOrder }
       SAVE { data : string }
+      TradeOrderBrowse EDIT -> EDIT
     }
   }
   trait TradeOrderView -> TradeOrder [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -173,6 +185,7 @@ orbital TradeOrderOrbital {
     listens {
       TradeOrderLoadFailed { error : string, code : string }
       VIEW { id : string }
+      TradeOrderBrowse VIEW -> VIEW
     }
   }
   trait TradeOrderDelete -> TradeOrder [interaction, collection] {
@@ -208,6 +221,7 @@ orbital TradeOrderOrbital {
     listens {
       TradeOrderLoadFailed { error : string, code : string }
       DELETE { id : string }
+      TradeOrderBrowse DELETE -> DELETE
     }
   }
   page "/orders" -> TradeOrderBrowse, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete

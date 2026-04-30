@@ -38,6 +38,12 @@ orbital TaskOrbital {
       TaskLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load task" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
+    emits {
+      CREATE
+      VIEW { id : string!, row : Task }
+      EDIT { id : string!, row : Task }
+      DELETE { id : string!, row : Task }
+    }
     listens {
       TaskCreate TASK_CREATED -> INIT
       TaskEdit TASK_UPDATED -> INIT
@@ -83,10 +89,14 @@ orbital TaskOrbital {
     listens {
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
+      TaskBrowse CREATE -> CREATE
     }
     emits: [TaskLoadFailed, TaskLoaded, TaskSaveFailed, TaskSaved]
   }
   trait TaskEdit -> Task [interaction, collection] {
+    listens {
+      TaskView EDIT -> EDIT
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -113,10 +123,14 @@ orbital TaskOrbital {
       EDIT { id : string!, row : Task }
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
+      TaskBrowse EDIT -> EDIT
     }
     emits: [TaskLoadFailed, TaskLoaded, TaskUpdateFailed, TaskUpdated]
   }
   trait TaskView -> Task [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -138,6 +152,7 @@ orbital TaskOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
+      TaskBrowse VIEW -> VIEW
     }
     emits: [TaskLoaded, TaskLoadFailed]
   }
@@ -173,6 +188,7 @@ orbital TaskOrbital {
     listens {
       DELETE { id : string! }
           TaskLoadFailed { error : string, code : string }
+      TaskBrowse DELETE -> DELETE
     }
     emits: [TaskDeleteFailed, TaskDeleted, TaskLoadFailed, TaskLoaded]
   }
@@ -211,6 +227,10 @@ orbital SprintOrbital {
     emits {
       ASSIGN_TASK external { id: string }
       COMPLETE_SPRINT external { id: string }
+      CREATE
+      VIEW { id : string!, row : Sprint }
+      EDIT { id : string!, row : Sprint }
+      DELETE { id : string!, row : Sprint }
     }
     listens {
       SprintCreate SPRINT_CREATED -> INIT
@@ -247,6 +267,7 @@ orbital SprintOrbital {
     listens {
       SprintLoadFailed { error : string, code : string }
       SAVE { data : string }
+      SprintBrowse CREATE -> CREATE
     }
   }
   trait SprintEdit -> Sprint [interaction, collection] {
@@ -274,12 +295,17 @@ orbital SprintOrbital {
     }
     emits: [SprintLoadFailed, SprintLoaded, SprintUpdateFailed, SprintUpdated]
     listens {
+      SprintView EDIT -> EDIT
       SprintLoadFailed { error : string, code : string }
       EDIT { id : string, row : Sprint }
       SAVE { data : string }
+      SprintBrowse EDIT -> EDIT
     }
   }
   trait SprintView -> Sprint [interaction, collection] {
+    emits {
+      EDIT { id : string }
+    }
     initial: closed
     state closed {
       INIT -> closed
@@ -301,6 +327,7 @@ orbital SprintOrbital {
     listens {
       SprintLoadFailed { error : string, code : string }
       VIEW { id : string }
+      SprintBrowse VIEW -> VIEW
     }
   }
   trait SprintDelete -> Sprint [interaction, collection] {
@@ -336,6 +363,7 @@ orbital SprintOrbital {
     listens {
       SprintLoadFailed { error : string, code : string }
       DELETE { id : string }
+      SprintBrowse DELETE -> DELETE
     }
   }
   page "/sprints" -> SprintBrowse, SprintCreate, SprintEdit, SprintView, SprintDelete
