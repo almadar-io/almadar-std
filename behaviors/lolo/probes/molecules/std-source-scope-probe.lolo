@@ -45,9 +45,9 @@ orbital SourceProbeOrbital {
         (render-ui main { type: "button", label: "Fire Create SAVE", action: "SAVE", variant: "primary" })
     }
     emits {
-      SAVED external { kind : string! }
-      ProbeCreateLoaded internal { data : [Probe] }
-      ProbeCreateLoadFailed internal { error : string, code : string }
+      SAVED -> external { kind : string! }
+      ProbeCreateLoaded -> internal { data : [Probe] }
+      ProbeCreateLoadFailed -> internal { error : string, code : string }
     }
     listens {
       SAVE { data : object! }
@@ -69,9 +69,9 @@ orbital SourceProbeOrbital {
         (render-ui main { type: "button", label: "Fire Edit SAVE", action: "SAVE", variant: "secondary" })
     }
     emits {
-      SAVED external { kind : string! }
-      ProbeEditLoaded internal { data : [Probe] }
-      ProbeEditLoadFailed internal { error : string, code : string }
+      SAVED -> external { kind : string! }
+      ProbeEditLoaded -> internal { data : [Probe] }
+      ProbeEditLoadFailed -> internal { error : string, code : string }
     }
     listens {
       SAVE { data : object! }
@@ -95,10 +95,18 @@ orbital SourceProbeOrbital {
         (persist create Probe { kind: "edit", name: "probe-updated" } { emit: { success: "ProbeUpdated", failure: "ProbeUpdateFailed" } })
         (render-ui main { type: "typography", variant: "caption", content: "DO_UPDATE fired" })
     }
-    emits: [ProbeSaved, ProbeSaveFailed, ProbeUpdated, ProbeUpdateFailed, ProbePersistorLoaded, ProbePersistorLoadFailed]
-    listens {
-      ProbeCreate SAVED -> DO_CREATE
-      ProbeEdit   SAVED -> DO_UPDATE
+emits {
+      ProbeSaved
+      ProbeSaveFailed
+      ProbeUpdated
+      ProbeUpdateFailed
+      ProbePersistorLoaded
+      ProbePersistorLoadFailed
+    }
+
+        listens {
+      ProbeCreate.SAVED -> DO_CREATE
+      ProbeEdit.SAVED -> DO_UPDATE
     }
   }
 

@@ -171,7 +171,9 @@
               "event": "CLASSIFIED",
               "triggers": "SUBMIT_REVIEW",
               "source": {
-                "kind": "any"
+                "kind": "orbital",
+                "orbital": "AnalysisOrbital",
+                "trait": "InputClassifier"
               }
             }
           ],
@@ -326,8 +328,8 @@
                     "Review",
                     {
                       "emit": {
-                        "success": "ReviewLoaded",
-                        "failure": "ReviewLoadFailed"
+                        "failure": "ReviewLoadFailed",
+                        "success": "ReviewLoaded"
                       }
                     }
                   ],
@@ -335,62 +337,7 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "file-search"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Code Review",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "gap": "md",
-                                  "direction": "vertical",
-                                  "children": [
-                                    {
-                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.",
-                                      "type": "typography",
-                                      "variant": "body"
-                                    },
-                                    {
-                                      "entity": "@entity",
-                                      "fields": [
-                                        "target"
-                                      ],
-                                      "mode": "edit",
-                                      "submitEvent": "SUBMIT_REVIEW",
-                                      "type": "form-section"
-                                    }
-                                  ],
-                                  "type": "stack"
-                                }
-                              ]
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack"
-                        }
-                      ],
-                      "appName": "Code Reviewer",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
                           "label": "Review",
@@ -399,16 +346,71 @@
                         },
                         {
                           "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
+                          "icon": "tag",
+                          "href": "/analysis"
                         },
                         {
+                          "href": "/issues",
                           "icon": "alert-triangle",
-                          "label": "Issues",
-                          "href": "/issues"
+                          "label": "Issues"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "file-search",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Code Review",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "direction": "vertical",
+                                  "children": [
+                                    {
+                                      "variant": "body",
+                                      "type": "typography",
+                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review."
+                                    },
+                                    {
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_REVIEW",
+                                      "entity": "@entity",
+                                      "type": "form-section",
+                                      "fields": [
+                                        "target"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -440,52 +442,52 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Review",
                           "href": "/review",
-                          "icon": "file-search"
+                          "icon": "file-search",
+                          "label": "Review"
                         },
                         {
+                          "icon": "tag",
                           "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
+                          "href": "/analysis"
                         },
                         {
-                          "label": "Issues",
+                          "href": "/issues",
                           "icon": "alert-triangle",
-                          "href": "/issues"
+                          "label": "Issues"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
                       "children": [
                         {
-                          "direction": "vertical",
                           "gap": "lg",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "search"
                             },
                             {
+                              "content": "Analyzing input...",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Analyzing input..."
+                              "type": "typography"
                             },
                             {
                               "type": "spinner"
                             },
                             {
-                              "type": "typography",
                               "content": "Classifying and searching for patterns",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -508,17 +510,43 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "name": "cpu",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "Generating review..."
+                            },
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Category: @entity.category",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ],
                       "navItems": [
                         {
+                          "href": "/review",
                           "icon": "file-search",
-                          "label": "Review",
-                          "href": "/review"
+                          "label": "Review"
                         },
                         {
-                          "icon": "tag",
+                          "href": "/analysis",
                           "label": "Analysis",
-                          "href": "/analysis"
+                          "icon": "tag"
                         },
                         {
                           "label": "Issues",
@@ -526,34 +554,8 @@
                           "href": "/issues"
                         }
                       ],
-                      "appName": "Code Reviewer",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "cpu",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "Generating review...",
-                              "type": "typography",
-                              "variant": "h3"
-                            },
-                            {
-                              "type": "spinner"
-                            },
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Category: @entity.category"
-                            }
-                          ],
-                          "gap": "lg",
-                          "align": "center",
-                          "direction": "vertical"
-                        }
-                      ]
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -580,55 +582,57 @@
                       "navItems": [
                         {
                           "label": "Review",
-                          "icon": "file-search",
-                          "href": "/review"
+                          "href": "/review",
+                          "icon": "file-search"
                         },
                         {
+                          "href": "/analysis",
                           "icon": "tag",
-                          "label": "Analysis",
-                          "href": "/analysis"
+                          "label": "Analysis"
                         },
                         {
-                          "href": "/issues",
+                          "label": "Issues",
                           "icon": "alert-triangle",
-                          "label": "Issues"
+                          "href": "/issues"
                         }
                       ],
-                      "appName": "Code Reviewer",
                       "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
                       "children": [
                         {
                           "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "direction": "horizontal",
                                   "align": "center",
                                   "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "check-circle",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "check-circle"
                                     },
                                     {
-                                      "content": "Review Complete",
                                       "type": "typography",
+                                      "content": "Review Complete",
                                       "variant": "h2"
                                     }
                                   ]
                                 },
                                 {
-                                  "label": "@entity.score",
-                                  "type": "badge"
+                                  "type": "badge",
+                                  "label": "@entity.score"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
                               "align": "center",
-                              "justify": "between"
+                              "justify": "between",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -636,8 +640,13 @@
                             {
                               "children": [
                                 {
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
+                                      "type": "stack",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "badge",
@@ -648,51 +657,44 @@
                                           "type": "badge"
                                         }
                                       ],
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "type": "stack"
+                                      "gap": "sm"
                                     },
                                     {
+                                      "variant": "h4",
                                       "type": "typography",
-                                      "content": "Issues",
-                                      "variant": "h4"
+                                      "content": "Issues"
                                     },
                                     {
                                       "variant": "body",
-                                      "type": "typography",
-                                      "content": "@entity.issues"
+                                      "content": "@entity.issues",
+                                      "type": "typography"
                                     },
                                     {
                                       "type": "divider"
                                     },
                                     {
+                                      "content": "Suggestions",
                                       "type": "typography",
-                                      "variant": "h4",
-                                      "content": "Suggestions"
+                                      "variant": "h4"
                                     },
                                     {
-                                      "variant": "body",
                                       "type": "typography",
-                                      "content": "@entity.suggestions"
+                                      "content": "@entity.suggestions",
+                                      "variant": "body"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "md"
+                                  ]
                                 }
                               ],
                               "type": "card"
                             },
                             {
-                              "variant": "ghost",
-                              "label": "New Review",
-                              "action": "RESET",
                               "icon": "rotate-ccw",
-                              "type": "button"
+                              "action": "RESET",
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "New Review"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         }
                       ]
                     }
@@ -737,14 +739,14 @@
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "icon": "file-search",
+                          "label": "Review",
                           "href": "/review",
-                          "label": "Review"
+                          "icon": "file-search"
                         },
                         {
-                          "href": "/analysis",
                           "icon": "tag",
-                          "label": "Analysis"
+                          "label": "Analysis",
+                          "href": "/analysis"
                         },
                         {
                           "href": "/issues",
@@ -755,56 +757,56 @@
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "file-search"
+                                  "name": "file-search",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
-                                  "content": "Code Review"
+                                  "content": "Code Review",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "card",
                               "children": [
                                 {
                                   "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "typography",
-                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.",
-                                      "variant": "body"
+                                      "variant": "body",
+                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review."
                                     },
                                     {
-                                      "type": "form-section",
                                       "submitEvent": "SUBMIT_REVIEW",
+                                      "mode": "edit",
+                                      "type": "form-section",
                                       "fields": [
                                         "target"
                                       ],
-                                      "mode": "edit",
                                       "entity": "@entity"
                                     }
-                                  ],
-                                  "direction": "vertical",
-                                  "gap": "md"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "card"
                             }
                           ],
-                          "gap": "lg"
+                          "direction": "vertical"
                         }
                       ]
                     }
@@ -1010,30 +1012,30 @@
                     {
                       "navItems": [
                         {
-                          "href": "/review",
                           "icon": "file-search",
-                          "label": "Review"
+                          "label": "Review",
+                          "href": "/review"
                         },
                         {
-                          "label": "Analysis",
+                          "icon": "tag",
                           "href": "/analysis",
-                          "icon": "tag"
+                          "label": "Analysis"
                         },
                         {
+                          "icon": "alert-triangle",
                           "href": "/issues",
-                          "label": "Issues",
-                          "icon": "alert-triangle"
+                          "label": "Issues"
                         }
                       ],
                       "type": "dashboard-layout",
                       "appName": "Code Reviewer",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
                               "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -1041,45 +1043,45 @@
                                   "name": "brain"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "RAG Pipeline",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "card",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "typography",
+                                      "variant": "body",
                                       "content": "Enter a query to retrieve context and generate a response",
-                                      "variant": "body"
+                                      "type": "typography"
                                     },
                                     {
+                                      "submitEvent": "GENERATE",
                                       "entity": "@entity",
-                                      "type": "form-section",
-                                      "mode": "edit",
                                       "fields": [
                                         "query"
                                       ],
-                                      "submitEvent": "GENERATE"
+                                      "mode": "edit",
+                                      "type": "form-section"
                                     }
                                   ],
-                                  "gap": "md",
-                                  "direction": "vertical"
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md"
                                 }
-                              ],
-                              "type": "card"
+                              ]
                             }
                           ],
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -1109,63 +1111,63 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Review",
                           "href": "/review",
-                          "icon": "file-search"
+                          "icon": "file-search",
+                          "label": "Review"
                         },
                         {
-                          "label": "Analysis",
                           "href": "/analysis",
+                          "label": "Analysis",
                           "icon": "tag"
                         },
                         {
-                          "href": "/issues",
+                          "icon": "alert-triangle",
                           "label": "Issues",
-                          "icon": "alert-triangle"
+                          "href": "/issues"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "search"
+                              "name": "search",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "Retrieving context...",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
                               "type": "spinner"
                             },
                             {
-                              "direction": "horizontal",
+                              "justify": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "label": "Recalling memories",
                                   "type": "badge"
                                 },
                                 {
-                                  "type": "badge",
-                                  "label": "Searching code"
+                                  "label": "Searching code",
+                                  "type": "badge"
                                 }
                               ],
                               "gap": "md",
-                              "type": "stack",
-                              "justify": "center"
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -1210,54 +1212,17 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "cpu"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Generating response..."
-                            },
-                            {
-                              "type": "spinner"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.memoryHits"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.searchHits"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "justify": "center"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
-                          "type": "stack"
-                        }
-                      ],
+                      "appName": "Code Reviewer",
                       "type": "dashboard-layout",
                       "navItems": [
                         {
                           "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
+                          "label": "Review",
+                          "icon": "file-search"
                         },
                         {
-                          "href": "/analysis",
                           "label": "Analysis",
+                          "href": "/analysis",
                           "icon": "tag"
                         },
                         {
@@ -1266,7 +1231,44 @@
                           "label": "Issues"
                         }
                       ],
-                      "appName": "Code Reviewer"
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "cpu",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Generating response...",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "justify": "center",
+                              "children": [
+                                {
+                                  "label": "@entity.memoryHits",
+                                  "type": "badge"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.searchHits"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -1292,29 +1294,31 @@
                     {
                       "navItems": [
                         {
+                          "label": "Review",
                           "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
+                          "icon": "file-search"
                         },
                         {
-                          "label": "Analysis",
                           "href": "/analysis",
-                          "icon": "tag"
+                          "icon": "tag",
+                          "label": "Analysis"
                         },
                         {
-                          "icon": "alert-triangle",
                           "href": "/issues",
+                          "icon": "alert-triangle",
                           "label": "Issues"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "appName": "Code Reviewer",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
@@ -1322,24 +1326,22 @@
                               "content": "RAG Pipeline Error"
                             },
                             {
+                              "message": "@entity.error",
                               "type": "alert",
-                              "variant": "error",
-                              "message": "@entity.error"
+                              "variant": "error"
                             },
                             {
-                              "label": "Try Again",
+                              "type": "button",
                               "icon": "rotate-ccw",
                               "action": "RESET",
-                              "variant": "primary",
-                              "type": "button"
+                              "label": "Try Again",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "vertical"
                         }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -1372,12 +1374,11 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
                       "navItems": [
                         {
                           "label": "Review",
-                          "icon": "file-search",
-                          "href": "/review"
+                          "href": "/review",
+                          "icon": "file-search"
                         },
                         {
                           "href": "/analysis",
@@ -1385,40 +1386,38 @@
                           "icon": "tag"
                         },
                         {
+                          "href": "/issues",
                           "icon": "alert-triangle",
-                          "label": "Issues",
-                          "href": "/issues"
+                          "label": "Issues"
                         }
                       ],
                       "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "sm",
                               "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal",
+                              "gap": "sm",
                               "justify": "between",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "check-circle"
                                     },
                                     {
-                                      "type": "typography",
+                                      "content": "RAG Complete",
                                       "variant": "h2",
-                                      "content": "RAG Complete"
+                                      "type": "typography"
                                     }
                                   ],
-                                  "type": "stack",
                                   "align": "center",
-                                  "gap": "sm"
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "variant": "ghost",
@@ -1427,43 +1426,41 @@
                                   "icon": "rotate-ccw",
                                   "type": "button"
                                 }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "cols": 2.0,
+                              "type": "simple-grid",
+                              "children": [
+                                {
+                                  "value": "@entity.memoryHits",
+                                  "icon": "brain",
+                                  "type": "stat-display",
+                                  "label": "Memory Hits"
+                                },
+                                {
+                                  "icon": "code",
+                                  "type": "stat-display",
+                                  "label": "Code Hits",
+                                  "value": "@entity.searchHits"
+                                }
                               ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "simple-grid",
                               "children": [
                                 {
-                                  "type": "stat-display",
-                                  "icon": "brain",
-                                  "value": "@entity.memoryHits",
-                                  "label": "Memory Hits"
-                                },
-                                {
-                                  "icon": "code",
-                                  "value": "@entity.searchHits",
-                                  "label": "Code Hits",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "cols": 2.0
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "direction": "vertical",
-                                  "gap": "md",
                                   "children": [
                                     {
+                                      "variant": "caption",
                                       "type": "typography",
-                                      "content": "Query",
-                                      "variant": "caption"
+                                      "content": "Query"
                                     },
                                     {
                                       "variant": "body",
@@ -1474,26 +1471,26 @@
                                       "type": "divider"
                                     },
                                     {
-                                      "variant": "caption",
                                       "type": "typography",
+                                      "variant": "caption",
                                       "content": "Response"
                                     },
                                     {
-                                      "content": "@entity.response",
+                                      "variant": "body",
                                       "type": "typography",
-                                      "variant": "body"
+                                      "content": "@entity.response"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "direction": "vertical",
+                                  "type": "stack",
+                                  "gap": "md"
                                 }
-                              ]
+                              ],
+                              "type": "card"
                             },
                             {
-                              "type": "card",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "variant": "caption",
@@ -1501,16 +1498,21 @@
                                       "content": "Retrieved Context"
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "@entity.context",
-                                      "variant": "body"
+                                      "variant": "body",
+                                      "type": "typography"
                                     }
                                   ],
-                                  "direction": "vertical"
+                                  "gap": "sm",
+                                  "direction": "vertical",
+                                  "type": "stack"
                                 }
-                              ]
+                              ],
+                              "type": "card"
                             }
                           ],
+                          "type": "stack",
+                          "gap": "lg",
                           "direction": "vertical"
                         }
                       ]
@@ -1537,56 +1539,56 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "icon": "file-search",
-                          "href": "/review",
-                          "label": "Review"
-                        },
-                        {
-                          "href": "/analysis",
-                          "label": "Analysis",
-                          "icon": "tag"
-                        },
-                        {
-                          "href": "/issues",
-                          "icon": "alert-triangle",
-                          "label": "Issues"
-                        }
-                      ],
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "alert-triangle"
                             },
                             {
-                              "content": "RAG Pipeline Error",
                               "type": "typography",
+                              "content": "RAG Pipeline Error",
                               "variant": "h2"
                             },
                             {
+                              "variant": "error",
                               "message": "@entity.error",
-                              "type": "alert",
-                              "variant": "error"
+                              "type": "alert"
                             },
                             {
                               "action": "RESET",
-                              "icon": "rotate-ccw",
                               "label": "Try Again",
                               "type": "button",
+                              "icon": "rotate-ccw",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "file-search",
+                          "label": "Review",
+                          "href": "/review"
+                        },
+                        {
+                          "href": "/analysis",
+                          "icon": "tag",
+                          "label": "Analysis"
+                        },
+                        {
+                          "label": "Issues",
+                          "icon": "alert-triangle",
+                          "href": "/issues"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -1633,25 +1635,25 @@
                       "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "lg",
-                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
+                              "gap": "sm",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "brain"
+                                  "name": "brain",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "RAG Pipeline"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -1659,48 +1661,48 @@
                             {
                               "children": [
                                 {
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "variant": "body",
-                                      "type": "typography",
-                                      "content": "Enter a query to retrieve context and generate a response"
+                                      "content": "Enter a query to retrieve context and generate a response",
+                                      "type": "typography"
                                     },
                                     {
-                                      "mode": "edit",
-                                      "submitEvent": "GENERATE",
-                                      "type": "form-section",
-                                      "entity": "@entity",
                                       "fields": [
                                         "query"
-                                      ]
+                                      ],
+                                      "mode": "edit",
+                                      "type": "form-section",
+                                      "submitEvent": "GENERATE",
+                                      "entity": "@entity"
                                     }
                                   ],
+                                  "direction": "vertical",
                                   "gap": "md",
-                                  "direction": "vertical"
+                                  "type": "stack"
                                 }
                               ],
                               "type": "card"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "vertical"
                         }
                       ],
                       "navItems": [
                         {
+                          "label": "Review",
                           "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
+                          "icon": "file-search"
                         },
                         {
+                          "href": "/analysis",
                           "icon": "tag",
-                          "label": "Analysis",
-                          "href": "/analysis"
+                          "label": "Analysis"
                         },
                         {
                           "label": "Issues",
-                          "href": "/issues",
-                          "icon": "alert-triangle"
+                          "icon": "alert-triangle",
+                          "href": "/issues"
                         }
                       ],
                       "appName": "Code Reviewer"
@@ -1802,8 +1804,8 @@
                     "ReviewRag",
                     {
                       "emit": {
-                        "success": "ReviewRagLoaded",
-                        "failure": "ReviewRagLoadFailed"
+                        "failure": "ReviewRagLoadFailed",
+                        "success": "ReviewRagLoaded"
                       }
                     }
                   ],
@@ -1811,22 +1813,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading RAG pipeline…",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading RAG pipeline…"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1840,6 +1842,86 @@
                     "render-ui",
                     "main",
                     {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "brain",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "RAG Pipeline",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "defaultActiveTab": "query",
+                              "onTabChange": "SELECT_TAB",
+                              "tabs": [
+                                {
+                                  "value": "query",
+                                  "label": "Query"
+                                },
+                                {
+                                  "value": "sources",
+                                  "label": "Sources"
+                                },
+                                {
+                                  "value": "response",
+                                  "label": "Response"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "entity": "@payload.data",
+                              "fields": [],
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "children": [
+                                    {
+                                      "variant": "h4",
+                                      "content": "@item.query",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.query"
+                                    }
+                                  ],
+                                  "gap": "sm"
+                                }
+                              ],
+                              "type": "data-grid",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer"
+                            }
+                          ]
+                        }
+                      ],
+                      "appName": "Code Reviewer",
                       "navItems": [
                         {
                           "href": "/review",
@@ -1848,96 +1930,16 @@
                         },
                         {
                           "label": "Analysis",
-                          "icon": "tag",
-                          "href": "/analysis"
+                          "href": "/analysis",
+                          "icon": "tag"
                         },
                         {
-                          "href": "/issues",
                           "icon": "alert-triangle",
-                          "label": "Issues"
+                          "label": "Issues",
+                          "href": "/issues"
                         }
                       ],
-                      "appName": "Code Reviewer",
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "RAG Pipeline"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "onTabChange": "SELECT_TAB",
-                              "defaultActiveTab": "query",
-                              "type": "tabs",
-                              "tabs": [
-                                {
-                                  "value": "query",
-                                  "label": "Query"
-                                },
-                                {
-                                  "label": "Sources",
-                                  "value": "sources"
-                                },
-                                {
-                                  "label": "Response",
-                                  "value": "response"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "className": "transition-shadow hover:shadow-md cursor-pointer",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "content": "@item.query",
-                                      "type": "typography",
-                                      "variant": "h4"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "color": "muted",
-                                      "content": "@item.query",
-                                      "variant": "caption"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "direction": "vertical"
-                                }
-                              ],
-                              "entity": "@payload.data",
-                              "fields": [],
-                              "type": "data-grid"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg"
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -1951,12 +1953,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "color": "destructive",
                           "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon"
                         },
                         {
@@ -1965,22 +1968,21 @@
                           "type": "typography"
                         },
                         {
-                          "variant": "body",
                           "color": "muted",
+                          "content": "@payload.error",
                           "type": "typography",
-                          "content": "@payload.error"
+                          "variant": "body"
                         },
                         {
-                          "label": "Retry",
                           "icon": "rotate-ccw",
                           "action": "INIT",
-                          "variant": "primary",
-                          "type": "button"
+                          "type": "button",
+                          "label": "Retry",
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2102,22 +2104,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Loading…",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "variant": "caption",
+                          "content": "Loading…"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2131,8 +2133,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
                       "navItems": [
                         {
                           "label": "Review",
@@ -2146,23 +2146,21 @@
                         },
                         {
                           "label": "Issues",
-                          "icon": "alert-triangle",
-                          "href": "/issues"
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
                         {
-                          "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
-                              "justify": "between",
+                              "gap": "md",
                               "align": "center",
                               "children": [
                                 {
-                                  "gap": "sm",
+                                  "align": "center",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -2170,43 +2168,44 @@
                                     },
                                     {
                                       "type": "typography",
-                                      "variant": "h2",
-                                      "content": "ReviewRag Manager"
+                                      "content": "ReviewRag Manager",
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center"
+                                  "gap": "sm",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "direction": "horizontal",
                                   "children": [
                                     {
+                                      "label": "Memorize",
+                                      "type": "button",
                                       "icon": "plus",
                                       "action": "MEMORIZE",
-                                      "type": "button",
-                                      "label": "Memorize",
                                       "variant": "primary"
                                     },
                                     {
                                       "variant": "secondary",
-                                      "type": "button",
                                       "action": "RECALL",
+                                      "label": "Recall",
                                       "icon": "search",
-                                      "label": "Recall"
+                                      "type": "button"
                                     },
                                     {
-                                      "action": "DECAY",
-                                      "type": "button",
-                                      "label": "Decay All",
                                       "variant": "ghost",
-                                      "icon": "clock"
+                                      "icon": "clock",
+                                      "label": "Decay All",
+                                      "type": "button",
+                                      "action": "DECAY"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "sm"
+                                  "gap": "sm",
+                                  "type": "stack"
                                 }
-                              ]
+                              ],
+                              "justify": "between",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
@@ -2215,27 +2214,27 @@
                               "type": "data-grid",
                               "fields": [
                                 {
-                                  "label": "Content",
-                                  "name": "content",
+                                  "variant": "h4",
                                   "icon": "brain",
-                                  "variant": "h4"
+                                  "name": "content",
+                                  "label": "Content"
                                 },
                                 {
-                                  "name": "category",
                                   "variant": "badge",
+                                  "name": "category",
                                   "label": "Category",
                                   "colorMap": {
                                     "error": "destructive",
-                                    "draft": "warning",
-                                    "scheduled": "warning",
-                                    "inactive": "neutral",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive",
                                     "completed": "success",
+                                    "disabled": "neutral",
                                     "pending": "warning",
                                     "done": "success",
-                                    "disabled": "neutral",
-                                    "cancelled": "destructive",
+                                    "scheduled": "warning",
                                     "active": "success",
-                                    "failed": "destructive",
+                                    "inactive": "neutral",
+                                    "draft": "warning",
                                     "archived": "neutral"
                                   }
                                 },
@@ -2245,31 +2244,34 @@
                                   "variant": "caption"
                                 }
                               ],
+                              "entity": "@payload.data",
                               "itemActions": [
                                 {
-                                  "event": "PIN",
+                                  "variant": "ghost",
                                   "label": "Pin",
+                                  "event": "PIN"
+                                },
+                                {
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
                                   "variant": "ghost"
                                 },
                                 {
-                                  "variant": "ghost",
-                                  "label": "Reinforce",
-                                  "event": "REINFORCE"
-                                },
-                                {
-                                  "variant": "danger",
+                                  "label": "Forget",
                                   "event": "FORGET",
-                                  "label": "Forget"
+                                  "variant": "danger"
                                 }
-                              ],
-                              "entity": "@payload.data"
+                              ]
                             }
                           ],
+                          "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full",
                           "gap": "lg",
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -2283,36 +2285,36 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "type": "stack",
                       "align": "center",
-                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "type": "icon",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "name": "alert-triangle"
                         },
                         {
-                          "content": "Failed to load reviewrag",
                           "variant": "h3",
+                          "content": "Failed to load reviewrag",
                           "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
-                          "variant": "body",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "variant": "body"
                         },
                         {
                           "icon": "rotate-ccw",
-                          "label": "Retry",
                           "action": "INIT",
                           "variant": "primary",
+                          "label": "Retry",
                           "type": "button"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2401,8 +2403,8 @@
                     "ReviewRag",
                     {
                       "emit": {
-                        "failure": "ReviewRagLoadFailed",
-                        "success": "ReviewRagLoaded"
+                        "success": "ReviewRagLoaded",
+                        "failure": "ReviewRagLoadFailed"
                       }
                     }
                   ],
@@ -2410,22 +2412,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2440,19 +2442,32 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "icon": "file-search",
+                          "href": "/review"
+                        },
+                        {
+                          "label": "Analysis",
+                          "icon": "tag",
+                          "href": "/analysis"
+                        },
+                        {
+                          "href": "/issues",
+                          "label": "Issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
                       "children": [
                         {
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
                           "type": "stack",
-                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "justify": "between",
-                              "gap": "md",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
+                              "justify": "between",
                               "children": [
                                 {
                                   "children": [
@@ -2466,33 +2481,36 @@
                                       "variant": "h2"
                                     }
                                   ],
+                                  "gap": "sm",
                                   "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "sm",
                                   "align": "center"
                                 },
                                 {
+                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "children": [
                                     {
+                                      "icon": "search",
                                       "action": "SEARCH",
                                       "variant": "primary",
                                       "label": "Search",
-                                      "icon": "search",
                                       "type": "button"
                                     },
                                     {
-                                      "label": "Clear",
-                                      "action": "CLEAR",
                                       "icon": "x",
+                                      "action": "CLEAR",
+                                      "variant": "ghost",
                                       "type": "button",
-                                      "variant": "ghost"
+                                      "label": "Clear"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
                                   "gap": "sm"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
@@ -2501,64 +2519,48 @@
                               "type": "data-grid",
                               "itemActions": [
                                 {
-                                  "event": "VIEW",
+                                  "variant": "ghost",
                                   "label": "View",
-                                  "variant": "ghost"
+                                  "event": "VIEW"
                                 }
                               ],
                               "fields": [
                                 {
-                                  "variant": "h4",
                                   "name": "query",
-                                  "icon": "search",
-                                  "label": "Query"
+                                  "variant": "h4",
+                                  "label": "Query",
+                                  "icon": "search"
                                 },
                                 {
-                                  "name": "language",
-                                  "colorMap": {
-                                    "scheduled": "warning",
-                                    "completed": "success",
-                                    "draft": "warning",
-                                    "error": "destructive",
-                                    "cancelled": "destructive",
-                                    "pending": "warning",
-                                    "archived": "neutral",
-                                    "disabled": "neutral",
-                                    "active": "success",
-                                    "done": "success",
-                                    "failed": "destructive",
-                                    "inactive": "neutral"
-                                  },
                                   "label": "Language",
-                                  "variant": "badge"
+                                  "name": "language",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "draft": "warning",
+                                    "done": "success",
+                                    "completed": "success",
+                                    "error": "destructive",
+                                    "pending": "warning",
+                                    "disabled": "neutral",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive",
+                                    "scheduled": "warning",
+                                    "active": "success"
+                                  }
                                 },
                                 {
+                                  "name": "resultCount",
                                   "label": "Result Count",
-                                  "variant": "caption",
-                                  "name": "resultCount"
+                                  "variant": "caption"
                                 }
                               ],
                               "entity": "@payload.data"
                             }
-                          ]
-                        }
-                      ],
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
-                        },
-                        {
-                          "icon": "tag",
-                          "label": "Analysis",
-                          "href": "/analysis"
-                        },
-                        {
-                          "icon": "alert-triangle",
-                          "href": "/issues",
-                          "label": "Issues"
+                          ],
+                          "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full"
                         }
                       ]
                     }
@@ -2574,10 +2576,10 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
                       "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -2585,25 +2587,25 @@
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Failed to load reviewrag",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
-                          "variant": "body",
                           "type": "typography",
+                          "variant": "body",
+                          "content": "@payload.error",
                           "color": "muted"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "type": "button",
+                          "action": "INIT",
                           "label": "Retry",
                           "variant": "primary",
-                          "action": "INIT"
+                          "type": "button",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2792,51 +2794,50 @@
                           "label": "Review"
                         },
                         {
-                          "label": "Analysis",
                           "icon": "tag",
+                          "label": "Analysis",
                           "href": "/analysis"
                         },
                         {
-                          "icon": "alert-triangle",
                           "label": "Issues",
-                          "href": "/issues"
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
-                      "appName": "Code Reviewer",
-                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "justify": "between",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "name": "sparkles",
                                       "type": "icon"
                                     },
                                     {
-                                      "content": "ReviewRag",
                                       "variant": "h2",
+                                      "content": "ReviewRag",
                                       "type": "typography"
                                     }
-                                  ],
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
-                                  "variant": "primary",
                                   "action": "GENERATE",
                                   "icon": "sparkles",
                                   "label": "Open",
+                                  "variant": "primary",
                                   "type": "button"
                                 }
-                              ]
+                              ],
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
@@ -2848,11 +2849,12 @@
                               "type": "empty-state"
                             }
                           ],
-                          "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2866,28 +2868,30 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "sparkles",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "sparkles"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "ReviewRag"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "badge",
@@ -2898,22 +2902,20 @@
                               "type": "badge"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
+                          "type": "form-section",
+                          "mode": "create",
                           "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "prompt"
-                          ],
-                          "submitEvent": "SAVE",
-                          "type": "form-section",
-                          "mode": "create"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2947,74 +2949,74 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
-                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/review",
+                          "label": "Review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "icon": "tag",
+                          "label": "Analysis",
+                          "href": "/analysis"
+                        },
+                        {
+                          "label": "Issues",
+                          "icon": "alert-triangle",
+                          "href": "/issues"
+                        }
+                      ],
                       "children": [
                         {
+                          "gap": "lg",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
+                                  "gap": "md",
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "sparkles",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "sparkles"
                                     },
                                     {
-                                      "variant": "h2",
+                                      "type": "typography",
                                       "content": "ReviewRag",
-                                      "type": "typography"
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "gap": "md"
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "icon": "sparkles",
                                   "type": "button",
                                   "label": "Open",
                                   "variant": "primary",
+                                  "icon": "sparkles",
                                   "action": "GENERATE"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "type": "stack",
-                              "gap": "md"
+                              "gap": "md",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "icon": "sparkles",
+                              "description": "Click Open to view details in a modal overlay.",
                               "title": "Nothing open",
                               "type": "empty-state",
-                              "description": "Click Open to view details in a modal overlay."
+                              "icon": "sparkles"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "lg"
+                          ]
                         }
                       ],
-                      "navItems": [
-                        {
-                          "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
-                        },
-                        {
-                          "label": "Analysis",
-                          "icon": "tag",
-                          "href": "/analysis"
-                        },
-                        {
-                          "label": "Issues",
-                          "href": "/issues",
-                          "icon": "alert-triangle"
-                        }
-                      ]
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -3031,8 +3033,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ReviewRagSaveFailed",
-                        "success": "ReviewRagSaved"
+                        "success": "ReviewRagSaved",
+                        "failure": "ReviewRagSaveFailed"
                       }
                     }
                   ],
@@ -3050,8 +3052,8 @@
                     "ReviewRag",
                     {
                       "emit": {
-                        "success": "ReviewRagLoaded",
-                        "failure": "ReviewRagLoadFailed"
+                        "failure": "ReviewRagLoadFailed",
+                        "success": "ReviewRagLoaded"
                       }
                     }
                   ],
@@ -3066,28 +3068,29 @@
                           "href": "/review"
                         },
                         {
+                          "icon": "tag",
                           "href": "/analysis",
-                          "label": "Analysis",
-                          "icon": "tag"
+                          "label": "Analysis"
                         },
                         {
-                          "icon": "alert-triangle",
                           "href": "/issues",
-                          "label": "Issues"
+                          "label": "Issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "appName": "Code Reviewer",
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
                                   "gap": "md",
-                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "name": "sparkles",
@@ -3099,34 +3102,33 @@
                                       "content": "ReviewRag"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "type": "stack"
                                 },
                                 {
-                                  "label": "Open",
+                                  "action": "GENERATE",
                                   "type": "button",
                                   "variant": "primary",
                                   "icon": "sparkles",
-                                  "action": "GENERATE"
+                                  "label": "Open"
                                 }
-                              ],
-                              "justify": "between",
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "title": "Nothing open",
                               "type": "empty-state",
-                              "icon": "sparkles",
-                              "description": "Click Open to view details in a modal overlay."
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay.",
+                              "icon": "sparkles"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -3369,19 +3371,35 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "href": "/review",
+                          "label": "Review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "href": "/analysis",
+                          "label": "Analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
                       "children": [
                         {
+                          "gap": "lg",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "md",
-                              "direction": "horizontal",
                               "justify": "between",
                               "children": [
                                 {
-                                  "gap": "md",
-                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "name": "tag",
@@ -3393,14 +3411,15 @@
                                       "variant": "h2"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
                                   "icon": "tag",
                                   "type": "button",
+                                  "label": "Open",
                                   "action": "CLASSIFY",
-                                  "variant": "primary",
-                                  "label": "Open"
+                                  "variant": "primary"
                                 }
                               ]
                             },
@@ -3408,34 +3427,17 @@
                               "type": "divider"
                             },
                             {
-                              "type": "empty-state",
-                              "description": "Click Open to view details in a modal overlay.",
                               "icon": "tag",
+                              "description": "Click Open to view details in a modal overlay.",
+                              "type": "empty-state",
                               "title": "Nothing open"
                             }
                           ],
-                          "gap": "lg",
                           "type": "stack",
                           "direction": "vertical"
                         }
                       ],
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "label": "Analysis",
-                          "icon": "tag",
-                          "href": "/analysis"
-                        },
-                        {
-                          "label": "Issues",
-                          "href": "/issues",
-                          "icon": "alert-triangle"
-                        }
-                      ],
+                      "appName": "Code Reviewer",
                       "type": "dashboard-layout"
                     }
                   ]
@@ -3450,47 +3452,50 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "tag"
+                              "name": "tag",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "Analysis",
-                              "type": "typography"
+                              "content": "Analysis"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "content": "Categories:",
                               "type": "typography",
+                              "content": "Categories:",
                               "variant": "caption"
                             },
                             {
-                              "type": "badge",
+                              "variant": "secondary",
                               "label": "schema",
-                              "variant": "secondary"
+                              "type": "badge"
                             },
                             {
-                              "type": "badge",
                               "label": "component",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "type": "badge"
                             },
                             {
                               "type": "badge",
-                              "label": "trait",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "label": "trait"
                             },
                             {
                               "type": "badge",
@@ -3504,26 +3509,23 @@
                             },
                             {
                               "type": "badge",
-                              "variant": "secondary",
-                              "label": "style"
+                              "label": "style",
+                              "variant": "secondary"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
-                          "submitEvent": "SAVE",
-                          "mode": "create",
                           "fields": [
                             "input"
                           ],
                           "cancelEvent": "CLOSE",
-                          "type": "form-section"
+                          "type": "form-section",
+                          "mode": "create",
+                          "submitEvent": "SAVE"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -3559,73 +3561,73 @@
                     "main",
                     {
                       "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
                       "children": [
                         {
+                          "gap": "lg",
                           "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
-                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "gap": "md",
                                   "children": [
                                     {
-                                      "name": "tag",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "tag"
                                     },
                                     {
+                                      "content": "Analysis",
                                       "type": "typography",
-                                      "variant": "h2",
-                                      "content": "Analysis"
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "direction": "horizontal",
+                                  "gap": "md"
                                 },
                                 {
-                                  "type": "button",
                                   "label": "Open",
-                                  "action": "CLASSIFY",
                                   "variant": "primary",
+                                  "action": "CLASSIFY",
+                                  "type": "button",
                                   "icon": "tag"
                                 }
                               ],
+                              "gap": "md",
                               "justify": "between",
-                              "type": "stack",
                               "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "title": "Nothing open",
                               "type": "empty-state",
-                              "description": "Click Open to view details in a modal overlay.",
-                              "icon": "tag"
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
                             }
                           ],
-                          "gap": "lg"
+                          "direction": "vertical"
                         }
                       ],
                       "navItems": [
                         {
                           "icon": "file-search",
-                          "href": "/review",
-                          "label": "Review"
+                          "label": "Review",
+                          "href": "/review"
                         },
                         {
-                          "icon": "tag",
                           "label": "Analysis",
+                          "icon": "tag",
                           "href": "/analysis"
                         },
                         {
-                          "href": "/issues",
+                          "icon": "alert-triangle",
                           "label": "Issues",
-                          "icon": "alert-triangle"
+                          "href": "/issues"
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -3670,66 +3672,17 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "tag"
-                                    },
-                                    {
-                                      "content": "Analysis",
-                                      "type": "typography",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md"
-                                },
-                                {
-                                  "variant": "primary",
-                                  "label": "Open",
-                                  "action": "CLASSIFY",
-                                  "icon": "tag",
-                                  "type": "button"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "icon": "tag",
-                              "title": "Nothing open",
-                              "type": "empty-state",
-                              "description": "Click Open to view details in a modal overlay."
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "icon": "file-search",
                           "href": "/review",
+                          "icon": "file-search",
                           "label": "Review"
                         },
                         {
-                          "label": "Analysis",
+                          "href": "/analysis",
                           "icon": "tag",
-                          "href": "/analysis"
+                          "label": "Analysis"
                         },
                         {
                           "icon": "alert-triangle",
@@ -3737,7 +3690,56 @@
                           "label": "Issues"
                         }
                       ],
-                      "appName": "Code Reviewer"
+                      "appName": "Code Reviewer",
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag"
+                                    },
+                                    {
+                                      "variant": "h2",
+                                      "type": "typography",
+                                      "content": "Analysis"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "action": "CLASSIFY",
+                                  "type": "button",
+                                  "icon": "tag",
+                                  "variant": "primary",
+                                  "label": "Open"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "description": "Click Open to view details in a modal overlay.",
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3873,7 +3875,66 @@
                     "render-ui",
                     "main",
                     {
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "align": "center",
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h2",
+                                      "content": "Analysis Result"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "label": "Dismiss",
+                                  "type": "button",
+                                  "icon": "x",
+                                  "action": "HIDE"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "message": "@entity.message",
+                              "type": "alert",
+                              "variant": "@entity.notificationType"
+                            },
+                            {
+                              "type": "toast-slot"
+                            },
+                            {
+                              "message": "@entity.message",
+                              "type": "alert",
+                              "variant": "warning"
+                            }
+                          ]
+                        }
+                      ],
                       "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
                       "navItems": [
                         {
                           "href": "/review",
@@ -3881,75 +3942,16 @@
                           "icon": "file-search"
                         },
                         {
-                          "icon": "tag",
                           "label": "Analysis",
-                          "href": "/analysis"
+                          "href": "/analysis",
+                          "icon": "tag"
                         },
                         {
                           "label": "Issues",
                           "href": "/issues",
                           "icon": "alert-triangle"
                         }
-                      ],
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "gap": "md",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "tag"
-                                    },
-                                    {
-                                      "content": "Analysis Result",
-                                      "variant": "h2",
-                                      "type": "typography"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "icon": "x",
-                                  "action": "HIDE",
-                                  "type": "button",
-                                  "label": "Dismiss",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "gap": "md",
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "@entity.notificationType",
-                              "message": "@entity.message",
-                              "type": "alert"
-                            },
-                            {
-                              "type": "toast-slot"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "warning",
-                              "message": "@entity.message"
-                            }
-                          ],
-                          "gap": "lg"
-                        }
-                      ],
-                      "appName": "Code Reviewer"
+                      ]
                     }
                   ]
                 ]
@@ -3973,40 +3975,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
                       "navItems": [
                         {
-                          "href": "/review",
                           "label": "Review",
+                          "href": "/review",
                           "icon": "file-search"
                         },
                         {
+                          "icon": "tag",
                           "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
+                          "href": "/analysis"
                         },
                         {
                           "icon": "alert-triangle",
-                          "href": "/issues",
-                          "label": "Issues"
+                          "label": "Issues",
+                          "href": "/issues"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "gap": "lg",
                           "direction": "vertical",
                           "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
-                              "align": "center",
                               "direction": "horizontal",
+                              "justify": "between",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -4014,30 +4012,33 @@
                                     },
                                     {
                                       "variant": "h2",
-                                      "type": "typography",
-                                      "content": "Analysis Result"
+                                      "content": "Analysis Result",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 },
                                 {
-                                  "type": "button",
-                                  "action": "HIDE",
-                                  "variant": "ghost",
                                   "label": "Dismiss",
-                                  "icon": "x"
+                                  "action": "HIDE",
+                                  "icon": "x",
+                                  "type": "button",
+                                  "variant": "ghost"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "justify": "between"
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "message": "@entity.message",
+                              "type": "alert",
                               "variant": "@entity.notificationType",
-                              "type": "alert"
+                              "message": "@entity.message"
                             },
                             {
                               "type": "toast-slot"
@@ -4049,7 +4050,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer"
                     }
                   ]
                 ]
@@ -4203,8 +4205,8 @@
                     "Analysis",
                     {
                       "emit": {
-                        "success": "AnalysisLoaded",
-                        "failure": "AnalysisLoadFailed"
+                        "failure": "AnalysisLoadFailed",
+                        "success": "AnalysisLoaded"
                       }
                     }
                   ],
@@ -4213,24 +4215,15 @@
                     "main",
                     {
                       "appName": "Code Reviewer",
-                      "children": [
-                        {
-                          "title": "Classifier",
-                          "description": "Classifier is ready",
-                          "type": "empty-state",
-                          "icon": "tag"
-                        }
-                      ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/review",
+                          "icon": "file-search",
                           "label": "Review",
-                          "icon": "file-search"
+                          "href": "/review"
                         },
                         {
-                          "href": "/analysis",
                           "icon": "tag",
+                          "href": "/analysis",
                           "label": "Analysis"
                         },
                         {
@@ -4238,7 +4231,16 @@
                           "icon": "alert-triangle",
                           "label": "Issues"
                         }
-                      ]
+                      ],
+                      "children": [
+                        {
+                          "type": "empty-state",
+                          "description": "Classifier is ready",
+                          "icon": "tag",
+                          "title": "Classifier"
+                        }
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -4293,8 +4295,8 @@
                     "emit",
                     "SHOW",
                     {
-                      "notificationType": "success",
-                      "message": "Input classified"
+                      "message": "Input classified",
+                      "notificationType": "success"
                     }
                   ]
                 ]
@@ -4541,8 +4543,8 @@
                     "ReviewCompletion",
                     {
                       "emit": {
-                        "success": "ReviewCompletionLoaded",
-                        "failure": "ReviewCompletionLoadFailed"
+                        "failure": "ReviewCompletionLoadFailed",
+                        "success": "ReviewCompletionLoaded"
                       }
                     }
                   ],
@@ -4550,15 +4552,16 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "Code Reviewer",
                       "navItems": [
                         {
                           "label": "Review",
-                          "icon": "file-search",
-                          "href": "/review"
+                          "href": "/review",
+                          "icon": "file-search"
                         },
                         {
-                          "label": "Analysis",
                           "href": "/analysis",
+                          "label": "Analysis",
                           "icon": "tag"
                         },
                         {
@@ -4567,55 +4570,54 @@
                           "label": "Issues"
                         }
                       ],
-                      "appName": "Code Reviewer",
                       "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
                           "children": [
                             {
-                              "justify": "between",
                               "type": "stack",
-                              "direction": "horizontal",
+                              "justify": "between",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "name": "sparkles",
                                       "type": "icon"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
+                                      "variant": "h2",
                                       "content": "ReviewCompletion"
                                     }
                                   ],
-                                  "gap": "md"
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "action": "GENERATE",
-                                  "label": "Open",
-                                  "type": "button",
                                   "variant": "primary",
-                                  "icon": "sparkles"
+                                  "icon": "sparkles",
+                                  "type": "button",
+                                  "label": "Open",
+                                  "action": "GENERATE"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "empty-state",
-                              "icon": "sparkles",
                               "description": "Click Open to view details in a modal overlay.",
-                              "title": "Nothing open"
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "type": "empty-state"
                             }
                           ],
                           "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
+                          "type": "stack"
                         }
                       ]
                     }
@@ -4632,53 +4634,53 @@
                     "modal",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "sparkles"
                             },
                             {
-                              "content": "ReviewCompletion",
                               "type": "typography",
+                              "content": "ReviewCompletion",
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "badge",
-                              "label": "@entity.provider"
+                              "label": "@entity.provider",
+                              "type": "badge"
                             },
                             {
                               "type": "badge",
                               "label": "@entity.model"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "mode": "create",
-                          "type": "form-section",
-                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "prompt"
-                          ]
+                          ],
+                          "mode": "create",
+                          "type": "form-section",
+                          "submitEvent": "SAVE"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -4703,8 +4705,8 @@
                     "ReviewCompletion",
                     {
                       "emit": {
-                        "failure": "ReviewCompletionLoadFailed",
-                        "success": "ReviewCompletionLoaded"
+                        "success": "ReviewCompletionLoaded",
+                        "failure": "ReviewCompletionLoadFailed"
                       }
                     }
                   ],
@@ -4712,37 +4714,19 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "href": "/analysis",
-                          "icon": "tag",
-                          "label": "Analysis"
-                        },
-                        {
-                          "href": "/issues",
-                          "label": "Issues",
-                          "icon": "alert-triangle"
-                        }
-                      ],
                       "type": "dashboard-layout",
                       "children": [
                         {
                           "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "md",
                               "justify": "between",
-                              "type": "stack",
                               "children": [
                                 {
                                   "gap": "md",
-                                  "direction": "horizontal",
                                   "type": "stack",
                                   "children": [
                                     {
@@ -4750,34 +4734,52 @@
                                       "name": "sparkles"
                                     },
                                     {
-                                      "content": "ReviewCompletion",
                                       "type": "typography",
+                                      "content": "ReviewCompletion",
                                       "variant": "h2"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "button",
                                   "action": "GENERATE",
                                   "variant": "primary",
+                                  "label": "Open",
                                   "icon": "sparkles",
-                                  "label": "Open"
+                                  "type": "button"
                                 }
                               ],
-                              "gap": "md"
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "empty-state",
                               "icon": "sparkles",
-                              "description": "Click Open to view details in a modal overlay.",
-                              "title": "Nothing open"
+                              "type": "empty-state",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical"
+                          ]
+                        }
+                      ],
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "href": "/review",
+                          "label": "Review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "href": "/analysis",
+                          "label": "Analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ]
                     }
@@ -4796,8 +4798,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ReviewCompletionSaveFailed",
-                        "success": "ReviewCompletionSaved"
+                        "success": "ReviewCompletionSaved",
+                        "failure": "ReviewCompletionSaveFailed"
                       }
                     }
                   ],
@@ -4824,74 +4826,74 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Code Reviewer",
                       "navItems": [
                         {
+                          "label": "Review",
                           "href": "/review",
-                          "icon": "file-search",
-                          "label": "Review"
+                          "icon": "file-search"
                         },
                         {
                           "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
+                          "icon": "tag",
+                          "href": "/analysis"
                         },
                         {
                           "label": "Issues",
-                          "href": "/issues",
-                          "icon": "alert-triangle"
+                          "icon": "alert-triangle",
+                          "href": "/issues"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "gap": "md",
+                                  "direction": "horizontal",
                                   "type": "stack",
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "name": "sparkles",
                                       "type": "icon"
                                     },
                                     {
+                                      "type": "typography",
                                       "content": "ReviewCompletion",
-                                      "variant": "h2",
-                                      "type": "typography"
+                                      "variant": "h2"
                                     }
-                                  ],
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "button",
-                                  "action": "GENERATE",
-                                  "label": "Open",
                                   "variant": "primary",
-                                  "icon": "sparkles"
+                                  "label": "Open",
+                                  "icon": "sparkles",
+                                  "action": "GENERATE"
                                 }
                               ],
-                              "justify": "between"
+                              "type": "stack",
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "description": "Click Open to view details in a modal overlay.",
-                              "type": "empty-state",
+                              "title": "Nothing open",
                               "icon": "sparkles",
-                              "title": "Nothing open"
+                              "type": "empty-state"
                             }
-                          ]
+                          ],
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "appName": "Code Reviewer",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -5001,8 +5003,8 @@
                     "ReviewCompletion",
                     {
                       "emit": {
-                        "failure": "ReviewCompletionLoadFailed",
-                        "success": "ReviewCompletionLoaded"
+                        "success": "ReviewCompletionLoaded",
+                        "failure": "ReviewCompletionLoadFailed"
                       }
                     }
                   ]
@@ -5027,35 +5029,38 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/review",
                           "label": "Review",
-                          "icon": "file-search"
+                          "icon": "file-search",
+                          "href": "/review"
                         },
                         {
-                          "icon": "tag",
                           "label": "Analysis",
-                          "href": "/analysis"
+                          "href": "/analysis",
+                          "icon": "tag"
                         },
                         {
+                          "label": "Issues",
                           "icon": "alert-triangle",
-                          "href": "/issues",
-                          "label": "Issues"
+                          "href": "/issues"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "appName": "Code Reviewer",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "gap": "md",
                                   "direction": "horizontal",
+                                  "gap": "md",
                                   "type": "stack",
                                   "align": "center",
                                   "children": [
@@ -5071,36 +5076,33 @@
                                   ]
                                 },
                                 {
-                                  "variant": "ghost",
-                                  "type": "button",
                                   "label": "Dismiss",
+                                  "action": "HIDE",
+                                  "variant": "ghost",
                                   "icon": "x",
-                                  "action": "HIDE"
+                                  "type": "button"
                                 }
-                              ],
-                              "justify": "between",
-                              "gap": "md",
-                              "align": "center"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "message": "@entity.message",
                               "type": "alert",
+                              "message": "@entity.message",
                               "variant": "@entity.notificationType"
                             },
                             {
                               "type": "toast-slot"
                             },
                             {
-                              "variant": "warning",
                               "message": "@entity.message",
-                              "type": "alert"
+                              "type": "alert",
+                              "variant": "warning"
                             }
                           ],
-                          "gap": "lg",
                           "direction": "vertical",
+                          "gap": "lg",
                           "type": "stack"
                         }
                       ]
@@ -5129,41 +5131,42 @@
                     {
                       "children": [
                         {
-                          "gap": "lg",
                           "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "md",
                               "justify": "between",
-                              "align": "center",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "align": "center",
                                   "gap": "md",
                                   "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "sparkles",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "sparkles"
                                     },
                                     {
-                                      "type": "typography",
+                                      "variant": "h2",
                                       "content": "ReviewCompletion Status",
-                                      "variant": "h2"
+                                      "type": "typography"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "align": "center"
+                                  "type": "stack"
                                 },
                                 {
-                                  "type": "button",
                                   "label": "Dismiss",
+                                  "type": "button",
+                                  "action": "HIDE",
                                   "variant": "ghost",
-                                  "icon": "x",
-                                  "action": "HIDE"
+                                  "icon": "x"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -5181,28 +5184,27 @@
                               "variant": "warning",
                               "message": "@entity.message"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
                       ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Review",
                           "icon": "file-search",
+                          "label": "Review",
                           "href": "/review"
                         },
                         {
+                          "label": "Analysis",
                           "href": "/analysis",
-                          "icon": "tag",
-                          "label": "Analysis"
+                          "icon": "tag"
                         },
                         {
                           "icon": "alert-triangle",
-                          "label": "Issues",
-                          "href": "/issues"
+                          "href": "/issues",
+                          "label": "Issues"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "appName": "Code Reviewer"
                     }
                   ]
@@ -5364,8 +5366,8 @@
                     "ReviewCompletion",
                     {
                       "emit": {
-                        "success": "ReviewCompletionLoaded",
-                        "failure": "ReviewCompletionLoadFailed"
+                        "failure": "ReviewCompletionLoadFailed",
+                        "success": "ReviewCompletionLoaded"
                       }
                     }
                   ],
@@ -5376,9 +5378,9 @@
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Review",
+                          "icon": "file-search",
                           "href": "/review",
-                          "icon": "file-search"
+                          "label": "Review"
                         },
                         {
                           "label": "Analysis",
@@ -5391,15 +5393,15 @@
                           "href": "/issues"
                         }
                       ],
+                      "appName": "Code Reviewer",
                       "children": [
                         {
                           "type": "empty-state",
-                          "title": "Completion",
                           "icon": "sparkles",
-                          "description": "Completion is ready"
+                          "description": "Completion is ready",
+                          "title": "Completion"
                         }
-                      ],
-                      "appName": "Code Reviewer"
+                      ]
                     }
                   ]
                 ]

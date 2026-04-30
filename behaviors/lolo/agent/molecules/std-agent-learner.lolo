@@ -96,10 +96,10 @@ orbital AgentLearnerOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
     }
     emits {
-      TASK_SUCCEEDED external { outcome: string, category: string }
+      TASK_SUCCEEDED -> external { outcome: string, category: string }
     }
     listens {
-      AgentLearnerLearner TASK_SUCCEEDED -> TASK_SUCCEEDED
+      AgentLearnerLearner.TASK_SUCCEEDED -> TASK_SUCCEEDED
       RECORDED { memoryId : string! }
       ANALYSIS_DONE { impact : string! }
       FAILED { error : string! }

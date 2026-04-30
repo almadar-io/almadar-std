@@ -56,10 +56,20 @@ orbital BattleStateOrbital {
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
     }
     emits {
-      LOOT_DROPPED external { itemId: string }
+      LOOT_DROPPED -> external { itemId: string }
+      BattleStateLoaded
+      BattleStateLoadFailed
+      RpgItemSaved
+      RpgItemSaveFailed
+      RpgItemUpdated
+      RpgItemUpdateFailed
+      RpgItemDeleted
+      RpgItemDeleteFailed
+      MissionUpdated
+      MissionUpdateFailed
     }
     listens {
-      * ENCOUNTER_STARTED -> START
+      WorldZoneOrbital.WorldZoneNavigation.ENCOUNTER_STARTED -> START
           BattleStateLoadFailed { error : string, code : string }
     
       RpgItemSaveFailed { error : string, code : string }
@@ -67,7 +77,6 @@ orbital BattleStateOrbital {
       RpgItemDeleteFailed { error : string, code : string }
       MissionUpdateFailed { error : string, code : string }
     }
-    emits: [BattleStateLoaded, BattleStateLoadFailed, RpgItemSaved, RpgItemSaveFailed, RpgItemUpdated, RpgItemUpdateFailed, RpgItemDeleted, RpgItemDeleteFailed, MissionUpdated, MissionUpdateFailed]
   }
   trait BattleStateCombatLog -> BattleState [interaction, collection] {
     state idle {
@@ -78,11 +87,15 @@ orbital BattleStateOrbital {
       CLEAR -> idle
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "combat-log", events: "@BattleState", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
     }
-    listens {
+emits {
+      BattleStateLoaded
+      BattleStateLoadFailed
+    }
+
+        listens {
       LOG_EVENT { data : object! }
           BattleStateLoadFailed { error : string, code : string }
     }
-    emits: [BattleStateLoaded, BattleStateLoadFailed]
   }
   page "/battle" as BattlePage -> BattleStateBattleFlow, BattleStateCombatLog
 }
@@ -118,10 +131,11 @@ orbital WorldZoneOrbital {
         (render-ui main { type: "spinner" })
     }
     emits {
-      ENCOUNTER_STARTED external { zoneId: string }
-      QUEST_ACCEPTED external { questId: string }
+      ENCOUNTER_STARTED -> external { zoneId: string }
+      QUEST_ACCEPTED -> external { questId: string }
+      WorldZoneLoaded
+      WorldZoneLoadFailed
     }
-    emits: [WorldZoneLoaded, WorldZoneLoadFailed]
     listens {
       WorldZoneLoadFailed { error : string, code : string }
     }
@@ -160,15 +174,16 @@ orbital RpgItemOrbital {
       ADD_ITEM
       USE_ITEM { id : string!, row : RpgItem }
       DROP { id : string!, row : RpgItem }
+      RpgItemLoaded
+      RpgItemLoadFailed
     }
     listens {
-      RpgItemAdd ITEM_ADDED -> INIT
-      RpgItemUse ITEM_USED -> INIT
-      RpgItemDrop CONFIRM_DROP -> INIT
-      * LOOT_DROPPED -> INIT
+      RpgItemAdd.ITEM_ADDED -> INIT
+      RpgItemUse.ITEM_USED -> INIT
+      RpgItemDrop.CONFIRM_DROP -> INIT
+      BattleStateOrbital.BattleStateBattleFlow.LOOT_DROPPED -> INIT
           RpgItemLoadFailed { error : string, code : string }
     }
-    emits: [RpgItemLoaded, RpgItemLoadFailed]
   }
   trait RpgItemAdd -> RpgItem [interaction, collection] {
     initial: closed
@@ -192,12 +207,15 @@ orbital RpgItemOrbital {
     }
     emits {
       ITEM_ADDED
+      RpgItemLoadFailed
+      RpgItemLoaded
+      RpgItemSaveFailed
+      RpgItemSaved
     }
-    emits: [RpgItemLoadFailed, RpgItemLoaded, RpgItemSaveFailed, RpgItemSaved]
     listens {
       RpgItemLoadFailed { error : string, code : string }
       SAVE { data : string }
-      RpgItemBrowse ADD_ITEM -> ADD_ITEM
+      RpgItemBrowse.ADD_ITEM -> ADD_ITEM
     }
   }
   trait RpgItemUse -> RpgItem [interaction, collection] {
@@ -222,13 +240,16 @@ orbital RpgItemOrbital {
     }
     emits {
       ITEM_USED
+      RpgItemLoadFailed
+      RpgItemLoaded
+      RpgItemUpdateFailed
+      RpgItemUpdated
     }
-    emits: [RpgItemLoadFailed, RpgItemLoaded, RpgItemUpdateFailed, RpgItemUpdated]
     listens {
       RpgItemLoadFailed { error : string, code : string }
       USE_ITEM { id : string }
       SAVE { data : string }
-      RpgItemBrowse USE_ITEM -> USE_ITEM
+      RpgItemBrowse.USE_ITEM -> USE_ITEM
     }
   }
   trait RpgItemDrop -> RpgItem [interaction, collection] {
@@ -258,12 +279,15 @@ orbital RpgItemOrbital {
     }
     emits {
       CONFIRM_DROP
+      RpgItemDeleteFailed
+      RpgItemDeleted
+      RpgItemLoadFailed
+      RpgItemLoaded
     }
-    emits: [RpgItemDeleteFailed, RpgItemDeleted, RpgItemLoadFailed, RpgItemLoaded]
     listens {
       RpgItemLoadFailed { error : string, code : string }
       DROP { id : string }
-      RpgItemBrowse DROP -> DROP
+      RpgItemBrowse.DROP -> DROP
     }
   }
   page "/inventory" -> RpgItemBrowse, RpgItemAdd, RpgItemUse, RpgItemDrop
@@ -329,12 +353,18 @@ orbital MissionOrbital {
         (fetch Mission { emit: { success: "MissionLoaded", failure: "MissionLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
-      * QUEST_ACCEPTED -> INIT
+emits {
+      MissionLoadFailed
+      MissionLoaded
+      MissionUpdateFailed
+      MissionUpdated
+    }
+
+        listens {
+      WorldZoneOrbital.WorldZoneNavigation.QUEST_ACCEPTED -> INIT
       MissionLoadFailed { error : string, code : string }
       SAVE { data : Mission }
     }
-    emits: [MissionLoadFailed, MissionLoaded, MissionUpdateFailed, MissionUpdated]
   }
   page "/quests" -> MissionTracking
 }

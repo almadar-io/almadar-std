@@ -61,12 +61,20 @@ orbital AssistantOrbital {
         (render-ui main { type: "spinner" })
     }
     emits {
-      SEND_MESSAGE internal { content: string }
-      MEMORIZE_RESPONSE internal { content: string }
-      MEMORIZE_RESPONSE external { content: string }
+      SEND_MESSAGE -> internal { content: string }
+      MEMORIZE_RESPONSE -> internal { content: string }
+      MEMORIZE_RESPONSE -> external { content: string }
+      AssistantLoaded
+      AssistantLoadFailed
+      AssistantDeleted
+      AssistantDeleteFailed
+      MemorySaved
+      MemorySaveFailed
+      ProviderConfigUpdated
+      ProviderConfigUpdateFailed
     }
     listens {
-      * PROVIDER_CHANGED -> INIT
+      ProviderConfigOrbital.ProviderManager.PROVIDER_CHANGED -> INIT
       SEND { content : string! }
           AssistantLoadFailed { error : string, code : string }
     
@@ -74,7 +82,6 @@ orbital AssistantOrbital {
       MemorySaveFailed { error : string, code : string }
       ProviderConfigUpdateFailed { error : string, code : string }
     }
-    emits: [AssistantLoaded, AssistantLoadFailed, AssistantDeleted, AssistantDeleteFailed, MemorySaved, MemorySaveFailed, ProviderConfigUpdated, ProviderConfigUpdateFailed]
   }
   trait AssistantAgent -> Assistant [interaction, collection] {
     initial: idle
@@ -110,13 +117,14 @@ orbital AssistantOrbital {
         (set @entity.tokenCount 0)
     }
     emits {
-      TOKEN_UPDATE internal { tokenCount: number }
+      TOKEN_UPDATE -> internal { tokenCount: number }
+      AssistantLoaded
+      AssistantLoadFailed
     }
     listens {
       SEND_MESSAGE { content : string! }
           AssistantLoadFailed { error : string, code : string }
     }
-    emits: [AssistantLoaded, AssistantLoadFailed]
   }
   page "/chat" as ChatPage -> AssistantConversation
 }
@@ -153,16 +161,17 @@ orbital MemoryOrbital {
       PIN { id : string!, row : Memory }
       REINFORCE { id : string!, row : Memory }
       FORGET { id : string!, row : Memory }
+      MemoryLoaded
+      MemoryLoadFailed
     }
     listens {
-      MemoryCreate MEMORIZED -> INIT
-      MemoryAgent PINNED -> INIT
-      MemoryAgent FORGOT -> INIT
-      MemoryAgent REINFORCED -> INIT
-      MemoryAgent DECAYED -> INIT
+      MemoryCreate.MEMORIZED -> INIT
+      MemoryAgent.PINNED -> INIT
+      MemoryAgent.FORGOT -> INIT
+      MemoryAgent.REINFORCED -> INIT
+      MemoryAgent.DECAYED -> INIT
           MemoryLoadFailed { error : string, code : string }
     }
-    emits: [MemoryLoaded, MemoryLoadFailed]
   }
   trait MemoryCreate -> Memory [interaction, collection] {
     initial: closed
@@ -185,12 +194,15 @@ orbital MemoryOrbital {
     }
     emits {
       MEMORIZED
+      MemoryLoadFailed
+      MemoryLoaded
+      MemorySaveFailed
+      MemorySaved
     }
-    emits: [MemoryLoadFailed, MemoryLoaded, MemorySaveFailed, MemorySaved]
     listens {
       MemoryLoadFailed { error : string, code : string }
       SAVE { data : string }
-      MemoryBrowse MEMORIZE -> MEMORIZE
+      MemoryBrowse.MEMORIZE -> MEMORIZE
     }
   }
   trait MemoryAgent -> Memory [interaction, collection] {
@@ -226,26 +238,29 @@ orbital MemoryOrbital {
         (emit DECAYED)
     }
     emits {
-      FORGOT external { id: string }
-      REINFORCED external { id: string }
-      DECAYED external { id: string }
-      PINNED external { id: string }
+      FORGOT -> external { id: string }
+      REINFORCED -> external { id: string }
+      DECAYED -> external { id: string }
+      PINNED -> external { id: string }
+      MemoryLoadFailed
+      MemoryLoaded
+      MemorySaveFailed
+      MemorySaved
     }
     listens {
-      * MEMORIZE_RESPONSE -> MEMORIZE
+      AssistantOrbital.AssistantConversation.MEMORIZE_RESPONSE -> MEMORIZE
           MemoryLoadFailed { error : string, code : string }
           DO_MEMORIZE { data : string }
           RECALL { query : string }
           PIN { id : string }
           FORGET { id : string }
           REINFORCE { id : string }
-      MemoryBrowse RECALL -> RECALL
-      MemoryBrowse DECAY -> DECAY
-      MemoryBrowse PIN -> PIN
-      MemoryBrowse REINFORCE -> REINFORCE
-      MemoryBrowse FORGET -> FORGET
+      MemoryBrowse.RECALL -> RECALL
+      MemoryBrowse.DECAY -> DECAY
+      MemoryBrowse.PIN -> PIN
+      MemoryBrowse.REINFORCE -> REINFORCE
+      MemoryBrowse.FORGET -> FORGET
     }
-    emits: [MemoryLoadFailed, MemoryLoaded, MemorySaveFailed, MemorySaved]
   }
   page "/memory" -> MemoryBrowse, MemoryCreate, MemoryAgent
 }
@@ -327,9 +342,10 @@ orbital AssistantContextOrbital {
         (set @entity.current 0)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
-    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
     emits {
       COMPACT
+      AssistantContextLoaded
+      AssistantContextLoadFailed
     }
     listens {
       AssistantContextLoadFailed { error : string, code : string }
@@ -354,8 +370,12 @@ orbital AssistantContextOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
-    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
-    listens {
+emits {
+      AssistantContextLoaded
+      AssistantContextLoadFailed
+    }
+
+        listens {
       AssistantContextLoadFailed { error : string, code : string }
       SHOW { message : string, notificationType : string }
     }
@@ -416,13 +436,14 @@ orbital AssistantContextOrbital {
         (emit UPDATE)
     }
     emits {
-      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
-      UPDATE internal { current: number, max: number }
+      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      UPDATE -> internal { current: number, max: number }
+      AssistantContextLoaded
+      AssistantContextLoadFailed
     }
-    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
     listens {
       AssistantContextLoadFailed { error : string, code : string }
-      AssistantContextMonitor COMPACT -> COMPACT
+      AssistantContextMonitor.COMPACT -> COMPACT
     }
   }
   page "/context" -> AssistantContextMonitor
@@ -467,10 +488,13 @@ orbital ProviderConfigOrbital {
     }
     emits {
       SWITCHED
-      PROVIDER_CHANGED internal { provider: string }
-      PROVIDER_CHANGED external { provider: string }
+      PROVIDER_CHANGED -> internal { provider: string }
+      PROVIDER_CHANGED -> external { provider: string }
+      ProviderConfigLoadFailed
+      ProviderConfigLoaded
+      ProviderConfigUpdateFailed
+      ProviderConfigUpdated
     }
-    emits: [ProviderConfigLoadFailed, ProviderConfigLoaded, ProviderConfigUpdateFailed, ProviderConfigUpdated]
     listens {
       ProviderConfigLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -494,8 +518,12 @@ orbital ProviderConfigOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
-    emits: [ProviderConfigLoaded, ProviderConfigLoadFailed]
-    listens {
+emits {
+      ProviderConfigLoaded
+      ProviderConfigLoadFailed
+    }
+
+        listens {
       ProviderConfigLoadFailed { error : string, code : string }
       SHOW { message : string, notificationType : string }
     }
@@ -532,14 +560,15 @@ orbital ProviderConfigOrbital {
         (emit SHOW { message: "Provider switched", notificationType: "info" })
     }
     emits {
-      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      ProviderConfigLoaded
+      ProviderConfigLoadFailed
     }
     listens {
-      ProviderManager SWITCHED -> SWITCHED
+      ProviderManager.SWITCHED -> SWITCHED
           ProviderConfigLoadFailed { error : string, code : string }
           DO_SWITCH { data : string }
     }
-    emits: [ProviderConfigLoaded, ProviderConfigLoadFailed]
   }
   page "/settings" -> ProviderManager
 }
@@ -573,11 +602,15 @@ orbital AssistantNavOrbital {
         (fetch AssistantNav { emit: { success: "AssistantNavLoaded", failure: "AssistantNavLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      AssistantNavLoaded
+      AssistantNavLoadFailed
+    }
+
+        listens {
       SELECT_TAB { tab : string }
       AssistantNavLoadFailed { error : string, code : string }
     }
-    emits: [AssistantNavLoaded, AssistantNavLoadFailed]
   }
   page "/assistant/nav" -> AssistantTabs
 }
@@ -605,8 +638,12 @@ orbital MemorySidebarOrbital {
         (render-ui drawer null)
         (fetch MemorySidebar { emit: { success: "MemorySidebarLoaded", failure: "MemorySidebarLoadFailed" } })
     }
-    emits: [MemorySidebarLoaded, MemorySidebarLoadFailed]
-    listens {
+emits {
+      MemorySidebarLoaded
+      MemorySidebarLoadFailed
+    }
+
+        listens {
       MemorySidebarLoadFailed { error : string, code : string }
     }
   }

@@ -46,12 +46,30 @@ orbital PatientOrbital {
       VIEW { id : string!, row : Patient }
       EDIT { id : string!, row : Patient }
       DELETE { id : string!, row : Patient }
+      PatientLoaded
+      PatientLoadFailed
+      PatientSaved
+      PatientSaveFailed
+      PatientUpdated
+      PatientUpdateFailed
+      PatientDeleted
+      PatientDeleteFailed
+      AppointmentSaved
+      AppointmentSaveFailed
+      AppointmentUpdated
+      AppointmentUpdateFailed
+      AppointmentDeleted
+      AppointmentDeleteFailed
+      IntakeFormSaved
+      IntakeFormSaveFailed
+      PrescriptionSaved
+      PrescriptionSaveFailed
     }
     listens {
-      PatientCreate PATIENT_CREATED -> INIT
-      PatientEdit PATIENT_UPDATED -> INIT
-      PatientDelete PATIENT_DELETED -> INIT
-      * INTAKE_COMPLETE -> INIT
+      PatientCreate.PATIENT_CREATED -> INIT
+      PatientEdit.PATIENT_UPDATED -> INIT
+      PatientDelete.PATIENT_DELETED -> INIT
+      IntakeFormOrbital.IntakeFormWizard.INTAKE_COMPLETE -> INIT
       VIEW { id : string!, row : Patient }
       EDIT { id : string!, row : Patient }
       DELETE { id : string!, row : Patient }
@@ -66,7 +84,6 @@ orbital PatientOrbital {
       IntakeFormSaveFailed { error : string, code : string }
       PrescriptionSaveFailed { error : string, code : string }
     }
-    emits: [PatientLoaded, PatientLoadFailed, PatientSaved, PatientSaveFailed, PatientUpdated, PatientUpdateFailed, PatientDeleted, PatientDeleteFailed, AppointmentSaved, AppointmentSaveFailed, AppointmentUpdated, AppointmentUpdateFailed, AppointmentDeleted, AppointmentDeleteFailed, IntakeFormSaved, IntakeFormSaveFailed, PrescriptionSaved, PrescriptionSaveFailed]
   }
   trait PatientCreate -> Patient [interaction, collection] {
     initial: closed
@@ -89,18 +106,21 @@ orbital PatientOrbital {
         (emit PATIENT_CREATED)
     }
     emits {
-      PATIENT_CREATED external { id: string }
+      PATIENT_CREATED -> external { id: string }
+      PatientLoadFailed
+      PatientLoaded
+      PatientSaveFailed
+      PatientSaved
     }
     listens {
       SAVE { data : object! }
           PatientLoadFailed { error : string, code : string }
-      PatientBrowse CREATE -> CREATE
+      PatientBrowse.CREATE -> CREATE
     }
-    emits: [PatientLoadFailed, PatientLoaded, PatientSaveFailed, PatientSaved]
   }
   trait PatientEdit -> Patient [interaction, collection] {
     listens {
-      PatientView EDIT -> EDIT
+      PatientView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -122,19 +142,24 @@ orbital PatientOrbital {
         (emit PATIENT_UPDATED)
     }
     emits {
-      PATIENT_UPDATED external { id: string }
+      PATIENT_UPDATED -> external { id: string }
+      PatientLoadFailed
+      PatientLoaded
+      PatientUpdateFailed
+      PatientUpdated
     }
     listens {
       EDIT { id : string!, row : Patient }
       SAVE { data : object! }
           PatientLoadFailed { error : string, code : string }
-      PatientBrowse EDIT -> EDIT
+      PatientBrowse.EDIT -> EDIT
     }
-    emits: [PatientLoadFailed, PatientLoaded, PatientUpdateFailed, PatientUpdated]
   }
   trait PatientView -> Patient [interaction, collection] {
     emits {
       EDIT { id : string }
+      PatientLoaded
+      PatientLoadFailed
     }
     initial: closed
     state closed {
@@ -157,9 +182,8 @@ orbital PatientOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           PatientLoadFailed { error : string, code : string }
-      PatientBrowse VIEW -> VIEW
+      PatientBrowse.VIEW -> VIEW
     }
-    emits: [PatientLoaded, PatientLoadFailed]
   }
   trait PatientDelete -> Patient [interaction, collection] {
     initial: idle
@@ -188,14 +212,17 @@ orbital PatientOrbital {
         (fetch Patient { emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
     }
     emits {
-      PATIENT_DELETED external { id: string }
+      PATIENT_DELETED -> external { id: string }
+      PatientDeleteFailed
+      PatientDeleted
+      PatientLoadFailed
+      PatientLoaded
     }
     listens {
       DELETE { id : string! }
           PatientLoadFailed { error : string, code : string }
-      PatientBrowse DELETE -> DELETE
+      PatientBrowse.DELETE -> DELETE
     }
-    emits: [PatientDeleteFailed, PatientDeleted, PatientLoadFailed, PatientLoaded]
   }
   page "/patients" as PatientsPage -> PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
 }
@@ -230,19 +257,20 @@ orbital AppointmentOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load appointment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      PRESCRIBE external { id: string }
+      PRESCRIBE -> external { id: string }
       CREATE
       VIEW { id : string!, row : Appointment }
       EDIT { id : string!, row : Appointment }
       DELETE { id : string!, row : Appointment }
+      AppointmentLoaded
+      AppointmentLoadFailed
     }
     listens {
-      AppointmentCreate APPOINTMENT_CREATED -> INIT
-      AppointmentEdit APPOINTMENT_UPDATED -> INIT
-      AppointmentDelete APPOINTMENT_DELETED -> INIT
+      AppointmentCreate.APPOINTMENT_CREATED -> INIT
+      AppointmentEdit.APPOINTMENT_UPDATED -> INIT
+      AppointmentDelete.APPOINTMENT_DELETED -> INIT
           AppointmentLoadFailed { error : string, code : string }
     }
-    emits: [AppointmentLoaded, AppointmentLoadFailed]
   }
   trait AppointmentCreate -> Appointment [interaction, collection] {
     initial: closed
@@ -266,12 +294,15 @@ orbital AppointmentOrbital {
     }
     emits {
       APPOINTMENT_CREATED
+      AppointmentLoadFailed
+      AppointmentLoaded
+      AppointmentSaveFailed
+      AppointmentSaved
     }
-    emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentSaveFailed, AppointmentSaved]
     listens {
       AppointmentLoadFailed { error : string, code : string }
       SAVE { data : string }
-      AppointmentBrowse CREATE -> CREATE
+      AppointmentBrowse.CREATE -> CREATE
     }
   }
   trait AppointmentEdit -> Appointment [interaction, collection] {
@@ -296,19 +327,24 @@ orbital AppointmentOrbital {
     }
     emits {
       APPOINTMENT_UPDATED
+      AppointmentLoadFailed
+      AppointmentLoaded
+      AppointmentUpdateFailed
+      AppointmentUpdated
     }
-    emits: [AppointmentLoadFailed, AppointmentLoaded, AppointmentUpdateFailed, AppointmentUpdated]
     listens {
-      AppointmentView EDIT -> EDIT
+      AppointmentView.EDIT -> EDIT
       AppointmentLoadFailed { error : string, code : string }
       EDIT { id : string, row : Appointment }
       SAVE { data : string }
-      AppointmentBrowse EDIT -> EDIT
+      AppointmentBrowse.EDIT -> EDIT
     }
   }
   trait AppointmentView -> Appointment [interaction, collection] {
     emits {
       EDIT { id : string }
+      AppointmentLoaded
+      AppointmentLoadFailed
     }
     initial: closed
     state closed {
@@ -327,11 +363,10 @@ orbital AppointmentOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [AppointmentLoaded, AppointmentLoadFailed]
     listens {
       AppointmentLoadFailed { error : string, code : string }
       VIEW { id : string }
-      AppointmentBrowse VIEW -> VIEW
+      AppointmentBrowse.VIEW -> VIEW
     }
   }
   trait AppointmentDelete -> Appointment [interaction, collection] {
@@ -362,12 +397,15 @@ orbital AppointmentOrbital {
     }
     emits {
       APPOINTMENT_DELETED
+      AppointmentDeleteFailed
+      AppointmentDeleted
+      AppointmentLoadFailed
+      AppointmentLoaded
     }
-    emits: [AppointmentDeleteFailed, AppointmentDeleted, AppointmentLoadFailed, AppointmentLoaded]
     listens {
       AppointmentLoadFailed { error : string, code : string }
       DELETE { id : string }
-      AppointmentBrowse DELETE -> DELETE
+      AppointmentBrowse.DELETE -> DELETE
     }
   }
   page "/appointments" -> AppointmentBrowse, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete
@@ -433,9 +471,12 @@ orbital IntakeFormOrbital {
         (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["firstName", "lastName", "dateOfBirth"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
     emits {
-      INTAKE_COMPLETE external { id: string }
+      INTAKE_COMPLETE -> external { id: string }
+      IntakeFormLoadFailed
+      IntakeFormLoaded
+      IntakeFormSaveFailed
+      IntakeFormSaved
     }
-    emits: [IntakeFormLoadFailed, IntakeFormLoaded, IntakeFormSaveFailed, IntakeFormSaved]
     listens {
       IntakeFormLoadFailed { error : string, code : string }
       COMPLETE { data : string }
@@ -472,12 +513,13 @@ orbital PrescriptionOrbital {
     emits {
       CREATE
       VIEW { id : string!, row : Prescription }
+      PrescriptionLoaded
+      PrescriptionLoadFailed
     }
     listens {
-      * PRESCRIBE -> INIT
+      AppointmentOrbital.AppointmentBrowse.PRESCRIBE -> INIT
           PrescriptionLoadFailed { error : string, code : string }
     }
-    emits: [PrescriptionLoaded, PrescriptionLoadFailed]
   }
   trait PrescriptionCreate -> Prescription [interaction, collection] {
     initial: closed
@@ -498,11 +540,17 @@ orbital PrescriptionOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [PrescriptionLoadFailed, PrescriptionLoaded, PrescriptionSaveFailed, PrescriptionSaved]
-    listens {
+emits {
+      PrescriptionLoadFailed
+      PrescriptionLoaded
+      PrescriptionSaveFailed
+      PrescriptionSaved
+    }
+
+        listens {
       PrescriptionLoadFailed { error : string, code : string }
       SAVE { data : string }
-      PrescriptionBrowse CREATE -> CREATE
+      PrescriptionBrowse.CREATE -> CREATE
     }
   }
   trait PrescriptionView -> Prescription [interaction, collection] {
@@ -523,11 +571,15 @@ orbital PrescriptionOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [PrescriptionLoaded, PrescriptionLoadFailed]
-    listens {
+emits {
+      PrescriptionLoaded
+      PrescriptionLoadFailed
+    }
+
+        listens {
       PrescriptionLoadFailed { error : string, code : string }
       VIEW { id : string }
-      PrescriptionBrowse VIEW -> VIEW
+      PrescriptionBrowse.VIEW -> VIEW
     }
   }
   page "/prescriptions" -> PrescriptionBrowse, PrescriptionCreate, PrescriptionView
@@ -566,8 +618,12 @@ orbital DashboardOrbital {
         (fetch Dashboard { emit: { success: "DashboardLoaded", failure: "DashboardLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "TotalPatients", value: "@entity.totalPatients" }, { type: "stat-display", label: "AppointmentsToday", value: "@entity.appointmentsToday" }, { type: "stat-display", label: "PendingIntakes", value: "@entity.pendingIntakes" }, { type: "stat-display", label: "ActivePrescriptions", value: "@entity.activePrescriptions" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [DashboardLoaded, DashboardLoadFailed]
-    listens {
+emits {
+      DashboardLoaded
+      DashboardLoadFailed
+    }
+
+        listens {
       DashboardLoadFailed { error : string, code : string }
     }
   }

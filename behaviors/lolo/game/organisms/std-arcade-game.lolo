@@ -44,8 +44,12 @@ orbital ArcadeStateOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
-    emits: [ArcadeStateLoaded, ArcadeStateLoadFailed]
-    listens {
+emits {
+      ArcadeStateLoaded
+      ArcadeStateLoadFailed
+    }
+
+        listens {
       ArcadeStateLoadFailed { message : string }
     }
   }
@@ -76,8 +80,12 @@ orbital ArcadeCanvasOrbital {
       STOP -> idle
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "typography", content: "800x600 @ 60fps", variant: "caption", color: "muted" }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
     }
-    emits: [ArcadeCanvasLoaded, ArcadeCanvasLoadFailed]
-    listens {
+emits {
+      ArcadeCanvasLoaded
+      ArcadeCanvasLoadFailed
+    }
+
+        listens {
       ArcadeCanvasLoadFailed { message : string }
     }
   }
@@ -115,8 +123,12 @@ orbital ArcadeScoreOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
-    emits: [ArcadeScoreLoaded, ArcadeScoreLoadFailed]
-    listens {
+emits {
+      ArcadeScoreLoaded
+      ArcadeScoreLoadFailed
+    }
+
+        listens {
       ArcadeScoreLoadFailed { message : string }
       ADD_SCORE { points : string }
       COMBO { multiplier : string }
@@ -144,8 +156,12 @@ orbital ArcadeHudOrbital {
         (fetch ArcadeHud { emit: { success: "ArcadeHudLoaded", failure: "ArcadeHudLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
     }
-    emits: [ArcadeHudLoaded, ArcadeHudLoadFailed]
-    listens {
+emits {
+      ArcadeHudLoaded
+      ArcadeHudLoadFailed
+    }
+
+        listens {
       ArcadeHudLoadFailed { message : string }
     }
   }

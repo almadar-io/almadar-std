@@ -46,12 +46,13 @@ orbital CartItemOrbital {
     emits {
       ADD_ITEM
       REQUEST_REMOVE { id : string!, row : CartItem }
+      CartItemLoaded
+      CartItemLoadFailed
     }
-    emits: [CartItemLoaded, CartItemLoadFailed]
     listens {
       CartItemLoadFailed { error : string, code : string }
-      CartItemPersistor ITEM_CREATED  -> INIT
-      CartItemPersistor ITEM_DELETED  -> INIT
+      CartItemPersistor.ITEM_CREATED  -> INIT
+      CartItemPersistor.ITEM_DELETED  -> INIT
     }
   }
 
@@ -68,7 +69,7 @@ orbital CartItemOrbital {
       OPEN: ADD_ITEM
     }
     listens {
-      CartItemCartBrowse ADD_ITEM -> ADD_ITEM
+      CartItemCartBrowse.ADD_ITEM -> ADD_ITEM
       ADD_ITEM { id : string, row : CartItem }
       SAVE { data : object! }
       ModalRecordLoadFailed { error : string, code : string }
@@ -88,7 +89,7 @@ orbital CartItemOrbital {
       CONFIRM: CONFIRM_REMOVE
     }
     listens {
-      CartItemCartBrowse REQUEST_REMOVE -> REQUEST_REMOVE
+      CartItemCartBrowse.REQUEST_REMOVE -> REQUEST_REMOVE
       REQUEST_REMOVE { id : string, row : CartItem }
       ConfirmActionLoadFailed { error : string, code : string }
     }
@@ -107,14 +108,14 @@ orbital CartItemOrbital {
         (persist delete CartItem @payload.id { emit: { success: "ITEM_DELETED" } })
     }
     emits {
-      ITEM_CREATED external { id : string }
-      ITEM_DELETED external { id : string }
+      ITEM_CREATED -> external { id : string }
+      ITEM_DELETED -> external { id : string }
     }
     listens {
       DO_CREATE { data : object! }
       DO_DELETE { id : string }
-      CartItemAddItem      SAVE           -> DO_CREATE
-      CartItemRemoveConfirm CONFIRM_REMOVE -> DO_DELETE
+      CartItemAddItem.SAVE           -> DO_CREATE
+      CartItemRemoveConfirm.CONFIRM_REMOVE -> DO_DELETE
     }
   }
 

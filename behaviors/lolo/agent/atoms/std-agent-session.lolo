@@ -49,16 +49,21 @@ orbital AgentSessionOrbital {
       FORK { id : string!, row : AgentSession }
       LABEL { id : string!, row : AgentSession }
       END { id : string!, row : AgentSession }
+      AgentSessionLoaded
+      AgentSessionLoadFailed
+      AgentSessionUpdated
+      AgentSessionUpdateFailed
+      AgentSessionSaved
+      AgentSessionSaveFailed
     }
     listens {
-      AgentSessionAgent FORKED -> INIT
-      AgentSessionLabel LABELED -> INIT
-      AgentSessionAgent ENDED -> INIT
+      AgentSessionAgent.FORKED -> INIT
+      AgentSessionLabel.LABELED -> INIT
+      AgentSessionAgent.ENDED -> INIT
       AgentSessionLoadFailed { error : string, code : string }
       AgentSessionUpdateFailed { error : string, code : string }
       AgentSessionSaveFailed { error : string, code : string }
     }
-    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionUpdated, AgentSessionUpdateFailed, AgentSessionSaved, AgentSessionSaveFailed]
   }
 
   trait AgentSessionLabel -> AgentSession [interaction, instance] {
@@ -80,14 +85,17 @@ orbital AgentSessionOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      LABELED external { id : string! }
+      LABELED -> external { id : string! }
+      AgentSessionLoaded
+      AgentSessionLoadFailed
+      AgentSessionUpdated
+      AgentSessionUpdateFailed
     }
-    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionUpdated, AgentSessionUpdateFailed]
     listens {
       LABEL { id : string!, row : AgentSession }
       SAVE { data : AgentSession }
       AgentSessionLoadFailed { error : string, code : string }
-      AgentSessionBrowse LABEL -> LABEL
+      AgentSessionBrowse.LABEL -> LABEL
     }
   }
 
@@ -129,17 +137,22 @@ orbital AgentSessionOrbital {
         (emit ENDED { sessionId: "@payload.row.id" })
     }
     emits {
-      ENDED  external { sessionId : string! }
-      FORKED external { sessionId : string! }
+      ENDED -> external { sessionId : string! }
+      FORKED -> external { sessionId : string! }
+      AgentSessionLoaded
+      AgentSessionLoadFailed
+      AgentSessionSaved
+      AgentSessionSaveFailed
+      AgentSessionUpdated
+      AgentSessionUpdateFailed
     }
-    emits: [AgentSessionLoaded, AgentSessionLoadFailed, AgentSessionSaved, AgentSessionSaveFailed, AgentSessionUpdated, AgentSessionUpdateFailed]
     listens {
       FORK { id : string!, row : AgentSession }
       END { id : string!, row : AgentSession }
       DO_LABEL { data : AgentSession }
       AgentSessionLoadFailed { error : string, code : string }
-      AgentSessionBrowse FORK -> FORK
-      AgentSessionBrowse END -> END
+      AgentSessionBrowse.FORK -> FORK
+      AgentSessionBrowse.END -> END
     }
   }
 

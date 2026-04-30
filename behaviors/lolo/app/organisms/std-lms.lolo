@@ -33,16 +33,26 @@ orbital CourseOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load course" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ENROLL external { id: string }
+      ENROLL -> external { id: string }
       CREATE
       VIEW { id : string!, row : Course }
       EDIT { id : string!, row : Course }
       DELETE { id : string!, row : Course }
+      CourseLoaded
+      CourseLoadFailed
+      CourseSaved
+      CourseSaveFailed
+      CourseUpdated
+      CourseUpdateFailed
+      CourseDeleted
+      CourseDeleteFailed
+      EnrollmentSaved
+      EnrollmentSaveFailed
     }
     listens {
-      CourseCreate COURSE_CREATED -> INIT
-      CourseEdit COURSE_UPDATED -> INIT
-      CourseDelete COURSE_DELETED -> INIT
+      CourseCreate.COURSE_CREATED -> INIT
+      CourseEdit.COURSE_UPDATED -> INIT
+      CourseDelete.COURSE_DELETED -> INIT
       VIEW { id : string!, row : Course }
       EDIT { id : string!, row : Course }
       DELETE { id : string!, row : Course }
@@ -53,7 +63,6 @@ orbital CourseOrbital {
       CourseDeleteFailed { error : string, code : string }
       EnrollmentSaveFailed { error : string, code : string }
     }
-    emits: [CourseLoaded, CourseLoadFailed, CourseSaved, CourseSaveFailed, CourseUpdated, CourseUpdateFailed, CourseDeleted, CourseDeleteFailed, EnrollmentSaved, EnrollmentSaveFailed]
   }
   trait CourseCreate -> Course [interaction, collection] {
     initial: closed
@@ -76,18 +85,21 @@ orbital CourseOrbital {
         (emit COURSE_CREATED)
     }
     emits {
-      COURSE_CREATED external { id: string }
+      COURSE_CREATED -> external { id: string }
+      CourseLoadFailed
+      CourseLoaded
+      CourseSaveFailed
+      CourseSaved
     }
     listens {
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
-      CourseBrowse CREATE -> CREATE
+      CourseBrowse.CREATE -> CREATE
     }
-    emits: [CourseLoadFailed, CourseLoaded, CourseSaveFailed, CourseSaved]
   }
   trait CourseEdit -> Course [interaction, collection] {
     listens {
-      CourseView EDIT -> EDIT
+      CourseView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -109,19 +121,24 @@ orbital CourseOrbital {
         (emit COURSE_UPDATED)
     }
     emits {
-      COURSE_UPDATED external { id: string }
+      COURSE_UPDATED -> external { id: string }
+      CourseLoadFailed
+      CourseLoaded
+      CourseUpdateFailed
+      CourseUpdated
     }
     listens {
       EDIT { id : string!, row : Course }
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
-      CourseBrowse EDIT -> EDIT
+      CourseBrowse.EDIT -> EDIT
     }
-    emits: [CourseLoadFailed, CourseLoaded, CourseUpdateFailed, CourseUpdated]
   }
   trait CourseView -> Course [interaction, collection] {
     emits {
       EDIT { id : string }
+      CourseLoaded
+      CourseLoadFailed
     }
     initial: closed
     state closed {
@@ -144,9 +161,8 @@ orbital CourseOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           CourseLoadFailed { error : string, code : string }
-      CourseBrowse VIEW -> VIEW
+      CourseBrowse.VIEW -> VIEW
     }
-    emits: [CourseLoaded, CourseLoadFailed]
   }
   trait CourseDelete -> Course [interaction, collection] {
     initial: idle
@@ -175,14 +191,17 @@ orbital CourseOrbital {
         (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
     }
     emits {
-      COURSE_DELETED external { id: string }
+      COURSE_DELETED -> external { id: string }
+      CourseDeleteFailed
+      CourseDeleted
+      CourseLoadFailed
+      CourseLoaded
     }
     listens {
       DELETE { id : string! }
           CourseLoadFailed { error : string, code : string }
-      CourseBrowse DELETE -> DELETE
+      CourseBrowse.DELETE -> DELETE
     }
-    emits: [CourseDeleteFailed, CourseDeleted, CourseLoadFailed, CourseLoaded]
   }
   page "/courses" as CoursesPage -> CourseBrowse, CourseCreate, CourseEdit, CourseView, CourseDelete
 }
@@ -236,14 +255,17 @@ orbital EnrollmentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
     emits {
-      COMPLETE_LESSON external { id: string }
+      COMPLETE_LESSON -> external { id: string }
+      EnrollmentLoadFailed
+      EnrollmentLoaded
+      EnrollmentSaveFailed
+      EnrollmentSaved
     }
     listens {
-      * ENROLL -> INIT
+      CourseOrbital.CourseBrowse.ENROLL -> INIT
           EnrollmentLoadFailed { error : string, code : string }
           COMPLETE { data : string }
     }
-    emits: [EnrollmentLoadFailed, EnrollmentLoaded, EnrollmentSaveFailed, EnrollmentSaved]
   }
   page "/enroll" -> EnrollmentWizard
 }
@@ -282,11 +304,15 @@ orbital ProgressOrbital {
         (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    listens {
-      * COMPLETE_LESSON -> INIT
+emits {
+      ProgressLoaded
+      ProgressLoadFailed
+    }
+
+        listens {
+      EnrollmentOrbital.EnrollmentWizard.COMPLETE_LESSON -> INIT
           ProgressLoadFailed { error : string, code : string }
     }
-    emits: [ProgressLoaded, ProgressLoadFailed]
   }
   page "/progress" -> ProgressDisplay
 }

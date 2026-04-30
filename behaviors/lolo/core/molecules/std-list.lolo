@@ -51,13 +51,14 @@ orbital ListItemOrbital {
       CREATE
       EDIT { id : string!, row : ListItem }
       DELETE { id : string!, row : ListItem }
+      ListItemLoaded
+      ListItemLoadFailed
     }
-    emits: [ListItemLoaded, ListItemLoadFailed]
     listens {
       ListItemLoadFailed { error : string!, code : string }
-      ListItemPersistor ITEM_CREATED -> INIT
-      ListItemPersistor ITEM_UPDATED -> INIT
-      ListItemPersistor ITEM_DELETED -> INIT
+      ListItemPersistor.ITEM_CREATED -> INIT
+      ListItemPersistor.ITEM_UPDATED -> INIT
+      ListItemPersistor.ITEM_DELETED -> INIT
     }
   }
 
@@ -76,7 +77,7 @@ orbital ListItemOrbital {
       SAVE: LIST_ITEM_CREATED
     }
     listens {
-      ListItemBrowse CREATE -> CREATE
+      ListItemBrowse.CREATE -> CREATE
       CREATE { id : string, row : ListItem }
       SAVE { data : object! }
       ModalRecordLoadFailed { error : string, code : string }
@@ -98,7 +99,7 @@ orbital ListItemOrbital {
       SAVE: LIST_ITEM_UPDATED
     }
     listens {
-      ListItemBrowse EDIT -> EDIT
+      ListItemBrowse.EDIT -> EDIT
       EDIT { id : string, row : ListItem }
       SAVE { data : object! }
       ModalRecordLoadFailed { error : string, code : string }
@@ -118,7 +119,7 @@ orbital ListItemOrbital {
       CONFIRM: CONFIRM_DELETE
     }
     listens {
-      ListItemBrowse DELETE -> DELETE
+      ListItemBrowse.DELETE -> DELETE
       DELETE { id : string, row : ListItem }
       ConfirmActionLoadFailed { error : string, code : string }
     }
@@ -139,17 +140,17 @@ orbital ListItemOrbital {
         (persist delete ListItem @payload.id { emit: { success: "ITEM_DELETED" } })
     }
     emits {
-      ITEM_CREATED external { id : string! }
-      ITEM_UPDATED external { id : string! }
-      ITEM_DELETED external { id : string! }
+      ITEM_CREATED -> external { id : string! }
+      ITEM_UPDATED -> external { id : string! }
+      ITEM_DELETED -> external { id : string! }
     }
     listens {
       DO_CREATE { data : ListItem! }
       DO_UPDATE { data : ListItem! }
       DO_DELETE { id   : string!   }
-      ListItemCreate LIST_ITEM_CREATED -> DO_CREATE
-      ListItemEdit   LIST_ITEM_UPDATED -> DO_UPDATE
-      ListItemDelete CONFIRM_DELETE    -> DO_DELETE
+      ListItemCreate.LIST_ITEM_CREATED -> DO_CREATE
+      ListItemEdit.LIST_ITEM_UPDATED -> DO_UPDATE
+      ListItemDelete.CONFIRM_DELETE    -> DO_DELETE
     }
   }
 

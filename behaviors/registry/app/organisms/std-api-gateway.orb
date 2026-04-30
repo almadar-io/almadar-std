@@ -461,8 +461,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ],
@@ -470,22 +470,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading routes…"
+                          "color": "muted",
+                          "content": "Loading routes…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -499,14 +499,21 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "API Gateway",
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -518,103 +525,96 @@
                                       "content": "Routes"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "align": "center"
+                                  "gap": "sm"
                                 },
                                 {
                                   "children": [
                                     {
+                                      "type": "button",
                                       "action": "CREATE",
-                                      "variant": "primary",
                                       "icon": "plus",
-                                      "label": "Create Route",
-                                      "type": "button"
+                                      "variant": "primary",
+                                      "label": "Create Route"
                                     }
                                   ],
-                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "gap": "sm",
-                                  "direction": "horizontal"
+                                  "type": "stack"
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center",
-                              "direction": "horizontal",
+                              "type": "stack",
                               "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "variant": "card",
+                              "entity": "@payload.data",
                               "type": "data-list",
+                              "gap": "sm",
                               "itemActions": [
                                 {
                                   "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost"
+                                  "variant": "ghost",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "label": "Edit",
                                   "event": "EDIT",
-                                  "variant": "ghost"
+                                  "variant": "ghost",
+                                  "label": "Edit"
                                 },
                                 {
-                                  "label": "Delete",
+                                  "event": "DELETE",
                                   "variant": "danger",
-                                  "event": "DELETE"
+                                  "label": "Delete"
                                 }
                               ],
-                              "variant": "card",
-                              "entity": "@payload.data",
-                              "gap": "sm",
                               "fields": [
                                 {
                                   "name": "method",
                                   "variant": "badge"
                                 },
                                 {
-                                  "icon": "git-branch",
+                                  "name": "path",
                                   "variant": "h3",
-                                  "name": "path"
+                                  "icon": "git-branch"
                                 },
                                 {
-                                  "name": "backend",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "name": "backend"
                                 },
                                 {
-                                  "format": "number",
                                   "label": "Rate Limit",
-                                  "variant": "caption",
-                                  "name": "rateLimit"
+                                  "format": "number",
+                                  "name": "rateLimit",
+                                  "variant": "caption"
                                 }
                               ]
                             }
                           ],
-                          "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical"
+                          "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/routes",
                           "label": "Routes",
+                          "href": "/routes",
                           "icon": "git-branch"
                         },
                         {
-                          "icon": "server",
                           "label": "Backends",
-                          "href": "/backends"
+                          "href": "/backends",
+                          "icon": "server"
                         },
                         {
-                          "icon": "bar-chart-2",
                           "label": "Analytics",
+                          "icon": "bar-chart-2",
                           "href": "/analytics"
                         }
-                      ]
+                      ],
+                      "appName": "API Gateway"
                     }
                   ]
                 ]
@@ -628,11 +628,13 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -640,23 +642,21 @@
                           "content": "Failed to load routes"
                         },
                         {
-                          "content": "@payload.error",
-                          "type": "typography",
                           "variant": "body",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "type": "button",
                           "label": "Retry",
                           "icon": "rotate-ccw",
                           "action": "INIT",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ],
-                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -857,8 +857,8 @@
                     "Route",
                     {
                       "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
+                        "failure": "RouteLoadFailed",
+                        "success": "RouteLoaded"
                       }
                     }
                   ],
@@ -867,41 +867,41 @@
                     "modal",
                     {
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
                               "content": "Create Route",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "form-section",
                           "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
                           "fields": [
                             "path",
                             "method",
                             "backend",
                             "rateLimit"
                           ],
-                          "type": "form-section",
-                          "mode": "create"
+                          "mode": "create",
+                          "cancelEvent": "CLOSE"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1180,8 +1180,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ],
@@ -1189,11 +1189,13 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -1204,16 +1206,12 @@
                               "content": "Edit Route",
                               "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "edit",
                           "fields": [
                             "path",
                             "method",
@@ -1221,11 +1219,13 @@
                             "rateLimit"
                           ],
                           "cancelEvent": "CLOSE",
-                          "submitEvent": "SAVE",
-                          "entity": "@payload.row"
+                          "type": "form-section",
+                          "entity": "@payload.row",
+                          "mode": "edit",
+                          "submitEvent": "SAVE"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1442,8 +1442,8 @@
                     "Route",
                     {
                       "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
+                        "failure": "RouteLoadFailed",
+                        "success": "RouteLoaded"
                       },
                       "id": "@payload.id"
                     }
@@ -1453,54 +1453,38 @@
                     "modal",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "name": "eye",
                               "type": "icon"
                             },
                             {
+                              "content": "@entity.path",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.path"
+                              "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Path"
+                              "content": "Path",
+                              "variant": "caption"
                             },
                             {
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.path"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Method"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.method",
+                              "content": "@entity.path",
                               "variant": "body"
                             }
                           ],
@@ -1509,66 +1493,82 @@
                           "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "content": "Backend",
-                              "type": "typography",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "content": "Method",
+                              "type": "typography"
                             },
                             {
                               "type": "typography",
                               "variant": "body",
-                              "content": "@entity.backend"
+                              "content": "@entity.method"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Backend",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.backend",
+                              "variant": "body",
+                              "type": "typography"
                             }
                           ]
                         },
                         {
                           "gap": "md",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Rate Limit"
+                              "content": "Rate Limit",
+                              "type": "typography"
                             },
                             {
                               "variant": "body",
                               "content": "@entity.rateLimit",
                               "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "justify": "end",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "button",
                               "variant": "primary",
-                              "icon": "edit",
+                              "label": "Edit",
                               "action": "EDIT",
-                              "label": "Edit"
+                              "type": "button",
+                              "icon": "edit"
                             },
                             {
-                              "label": "Close",
-                              "action": "CLOSE",
                               "type": "button",
-                              "variant": "ghost"
+                              "action": "CLOSE",
+                              "variant": "ghost",
+                              "label": "Close"
                             }
                           ],
-                          "direction": "horizontal",
-                          "justify": "end",
                           "gap": "sm"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1798,8 +1798,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ]
@@ -1819,34 +1819,37 @@
                     "fetch",
                     "Route",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      }
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
-                              "content": "Delete Route",
                               "type": "typography",
+                              "content": "Delete Route",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -1857,30 +1860,27 @@
                           "message": "This action cannot be undone."
                         },
                         {
-                          "gap": "sm",
-                          "justify": "end",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "type": "button",
+                              "variant": "ghost",
                               "action": "CANCEL",
-                              "variant": "ghost"
+                              "type": "button",
+                              "label": "Cancel"
                             },
                             {
-                              "icon": "check",
+                              "type": "button",
+                              "label": "Delete",
                               "action": "CONFIRM_DELETE",
                               "variant": "danger",
-                              "label": "Delete",
-                              "type": "button"
+                              "icon": "check"
                             }
                           ],
-                          "type": "stack"
+                          "justify": "end",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1897,8 +1897,8 @@
                     "@entity.pendingId",
                     {
                       "emit": {
-                        "failure": "RouteDeleteFailed",
-                        "success": "RouteDeleted"
+                        "success": "RouteDeleted",
+                        "failure": "RouteDeleteFailed"
                       }
                     }
                   ],
@@ -1919,8 +1919,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ],
@@ -1981,8 +1981,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ]
@@ -2163,8 +2163,8 @@
                     "Backend",
                     {
                       "emit": {
-                        "failure": "BackendLoadFailed",
-                        "success": "BackendLoaded"
+                        "success": "BackendLoaded",
+                        "failure": "BackendLoadFailed"
                       }
                     }
                   ],
@@ -2175,48 +2175,52 @@
                       "appName": "API Gateway",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack",
                           "children": [
                             {
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "align": "center",
                                   "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "server"
+                                      "name": "server",
+                                      "type": "icon"
                                     },
                                     {
-                                      "variant": "h2",
                                       "content": "Backend",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "variant": "h2"
                                     }
                                   ],
                                   "direction": "horizontal"
                                 },
                                 {
+                                  "status": "online",
                                   "label": "Circuit Closed",
                                   "type": "status-dot",
-                                  "status": "online",
                                   "pulse": false
                                 }
-                              ],
-                              "gap": "md",
-                              "justify": "between",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "message": "Service is healthy. All requests are being processed.",
                               "type": "alert",
-                              "variant": "success"
+                              "variant": "success",
+                              "message": "Service is healthy. All requests are being processed."
                             },
                             {
+                              "cols": 2.0,
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -2224,31 +2228,27 @@
                                   "label": "Failures"
                                 },
                                 {
-                                  "label": "Successes",
                                   "type": "stat-display",
-                                  "value": "@entity.successCount"
+                                  "value": "@entity.successCount",
+                                  "label": "Successes"
                                 }
                               ],
-                              "cols": 2.0,
                               "type": "simple-grid"
                             },
                             {
-                              "type": "meter",
                               "min": 0.0,
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount"
+                              "type": "meter",
+                              "value": "@entity.failureCount",
+                              "max": "@entity.threshold"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
+                          ]
                         }
                       ],
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "href": "/routes",
                           "label": "Routes",
+                          "href": "/routes",
                           "icon": "git-branch"
                         },
                         {
@@ -2257,9 +2257,9 @@
                           "href": "/backends"
                         },
                         {
+                          "label": "Analytics",
                           "icon": "bar-chart-2",
-                          "href": "/analytics",
-                          "label": "Analytics"
+                          "href": "/analytics"
                         }
                       ]
                     }
@@ -2279,72 +2279,73 @@
                       "navItems": [
                         {
                           "label": "Routes",
-                          "icon": "git-branch",
-                          "href": "/routes"
+                          "href": "/routes",
+                          "icon": "git-branch"
                         },
                         {
                           "icon": "server",
-                          "label": "Backends",
-                          "href": "/backends"
+                          "href": "/backends",
+                          "label": "Backends"
                         },
                         {
+                          "icon": "bar-chart-2",
                           "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
+                          "href": "/analytics"
                         }
                       ],
                       "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "lg",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "align": "center",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "name": "alert-triangle",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "alert-triangle"
                                     },
                                     {
                                       "type": "typography",
-                                      "variant": "h2",
-                                      "content": "Backend"
+                                      "content": "Backend",
+                                      "variant": "h2"
                                     }
                                   ],
+                                  "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "gap": "md"
                                 },
                                 {
-                                  "status": "critical",
-                                  "label": "Circuit Open",
                                   "type": "status-dot",
-                                  "pulse": true
+                                  "pulse": true,
+                                  "status": "critical",
+                                  "label": "Circuit Open"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "align": "center",
-                              "gap": "md",
-                              "type": "stack"
+                              ]
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
                               "variant": "error",
+                              "type": "alert",
                               "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
                             },
                             {
                               "type": "simple-grid",
-                              "cols": 2.0,
                               "children": [
                                 {
-                                  "label": "Failures",
                                   "type": "stat-display",
+                                  "label": "Failures",
                                   "value": "@entity.failureCount"
                                 },
                                 {
@@ -2352,24 +2353,23 @@
                                   "type": "stat-display",
                                   "label": "Successes"
                                 }
-                              ]
+                              ],
+                              "cols": 2.0
                             },
                             {
-                              "type": "meter",
-                              "value": "@entity.failureCount",
                               "max": "@entity.threshold",
-                              "min": 0.0
+                              "min": 0.0,
+                              "type": "meter",
+                              "value": "@entity.failureCount"
                             },
                             {
                               "action": "RESET",
-                              "icon": "rotate-ccw",
                               "type": "button",
+                              "variant": "ghost",
                               "label": "Reset",
-                              "variant": "ghost"
+                              "icon": "rotate-ccw"
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg"
+                          ]
                         }
                       ]
                     }
@@ -2385,45 +2385,40 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "API Gateway",
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "type": "stack",
                           "children": [
                             {
                               "align": "center",
+                              "type": "stack",
                               "justify": "between",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "name": "server",
                                       "type": "icon"
                                     },
                                     {
-                                      "content": "Backend",
+                                      "type": "typography",
                                       "variant": "h2",
-                                      "type": "typography"
+                                      "content": "Backend"
                                     }
                                   ],
+                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md"
+                                  "gap": "md",
+                                  "align": "center"
                                 },
                                 {
-                                  "type": "status-dot",
                                   "label": "Circuit Closed",
                                   "status": "online",
-                                  "pulse": false
+                                  "pulse": false,
+                                  "type": "status-dot"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
@@ -2434,47 +2429,52 @@
                               "message": "Service is healthy. All requests are being processed."
                             },
                             {
-                              "type": "simple-grid",
-                              "cols": 2.0,
                               "children": [
                                 {
-                                  "label": "Failures",
                                   "value": "@entity.failureCount",
-                                  "type": "stat-display"
+                                  "type": "stat-display",
+                                  "label": "Failures"
                                 },
                                 {
+                                  "value": "@entity.successCount",
                                   "type": "stat-display",
-                                  "label": "Successes",
-                                  "value": "@entity.successCount"
+                                  "label": "Successes"
                                 }
-                              ]
+                              ],
+                              "cols": 2.0,
+                              "type": "simple-grid"
                             },
                             {
-                              "value": "@entity.failureCount",
-                              "max": "@entity.threshold",
                               "min": 0.0,
-                              "type": "meter"
+                              "type": "meter",
+                              "max": "@entity.threshold",
+                              "value": "@entity.failureCount"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "type": "stack"
                         }
                       ],
                       "navItems": [
                         {
-                          "label": "Routes",
                           "href": "/routes",
+                          "label": "Routes",
                           "icon": "git-branch"
                         },
                         {
-                          "href": "/backends",
                           "icon": "server",
-                          "label": "Backends"
+                          "label": "Backends",
+                          "href": "/backends"
                         },
                         {
                           "label": "Analytics",
                           "href": "/analytics",
                           "icon": "bar-chart-2"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "API Gateway"
                     }
                   ]
                 ]
@@ -2488,90 +2488,90 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
+                              "justify": "between",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "activity"
+                                      "name": "activity",
+                                      "type": "icon"
                                     },
                                     {
                                       "type": "typography",
-                                      "content": "Backend",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "content": "Backend"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "align": "center",
-                                  "type": "stack"
+                                  "align": "center"
                                 },
                                 {
-                                  "label": "Circuit Half-Open",
                                   "type": "status-dot",
                                   "status": "warning",
+                                  "label": "Circuit Half-Open",
                                   "pulse": true
                                 }
                               ],
-                              "align": "center",
-                              "justify": "between",
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md"
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "warning",
                               "type": "alert",
+                              "variant": "warning",
                               "message": "Testing recovery. Limited requests are being allowed through."
                             },
                             {
+                              "cols": 2.0,
                               "type": "simple-grid",
                               "children": [
                                 {
                                   "type": "stat-display",
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount"
+                                  "value": "@entity.failureCount",
+                                  "label": "Failures"
                                 },
                                 {
                                   "label": "Successes",
-                                  "type": "stat-display",
-                                  "value": "@entity.successCount"
+                                  "value": "@entity.successCount",
+                                  "type": "stat-display"
                                 }
-                              ],
-                              "cols": 2.0
+                              ]
                             }
                           ],
-                          "type": "stack",
-                          "gap": "lg"
+                          "gap": "lg",
+                          "direction": "vertical"
                         }
                       ],
-                      "appName": "API Gateway",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Routes",
                           "href": "/routes",
-                          "icon": "git-branch"
+                          "icon": "git-branch",
+                          "label": "Routes"
                         },
                         {
-                          "icon": "server",
                           "href": "/backends",
-                          "label": "Backends"
+                          "label": "Backends",
+                          "icon": "server"
                         },
                         {
-                          "label": "Analytics",
                           "href": "/analytics",
-                          "icon": "bar-chart-2"
+                          "icon": "bar-chart-2",
+                          "label": "Analytics"
                         }
-                      ]
+                      ],
+                      "appName": "API Gateway"
                     }
                   ]
                 ]
@@ -2585,96 +2585,96 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "label": "Routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "href": "/backends",
-                          "label": "Backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
+                      "type": "dashboard-layout",
+                      "appName": "API Gateway",
                       "children": [
                         {
-                          "gap": "lg",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
                               "children": [
                                 {
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "server"
+                                      "name": "server",
+                                      "type": "icon"
                                     },
                                     {
-                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Backend"
+                                      "content": "Backend",
+                                      "variant": "h2"
                                     }
                                   ],
-                                  "gap": "md",
+                                  "direction": "horizontal",
                                   "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal"
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
-                                  "status": "online",
-                                  "label": "Circuit Closed",
                                   "pulse": false,
+                                  "label": "Circuit Closed",
+                                  "status": "online",
                                   "type": "status-dot"
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center",
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "type": "stack"
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "alert",
                               "message": "Service is healthy. All requests are being processed.",
+                              "type": "alert",
                               "variant": "success"
                             },
                             {
-                              "cols": 2.0,
                               "children": [
                                 {
-                                  "value": "@entity.failureCount",
+                                  "label": "Failures",
                                   "type": "stat-display",
-                                  "label": "Failures"
+                                  "value": "@entity.failureCount"
                                 },
                                 {
-                                  "value": "@entity.successCount",
                                   "type": "stat-display",
-                                  "label": "Successes"
+                                  "label": "Successes",
+                                  "value": "@entity.successCount"
                                 }
                               ],
+                              "cols": 2.0,
                               "type": "simple-grid"
                             },
                             {
-                              "value": "@entity.failureCount",
+                              "type": "meter",
                               "min": 0.0,
-                              "max": "@entity.threshold",
-                              "type": "meter"
+                              "value": "@entity.failureCount",
+                              "max": "@entity.threshold"
                             }
                           ],
+                          "direction": "vertical",
                           "type": "stack",
-                          "direction": "vertical"
+                          "gap": "lg"
                         }
                       ],
-                      "appName": "API Gateway",
-                      "type": "dashboard-layout"
+                      "navItems": [
+                        {
+                          "href": "/routes",
+                          "icon": "git-branch",
+                          "label": "Routes"
+                        },
+                        {
+                          "icon": "server",
+                          "href": "/backends",
+                          "label": "Backends"
+                        },
+                        {
+                          "icon": "bar-chart-2",
+                          "label": "Analytics",
+                          "href": "/analytics"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -2688,255 +2688,41 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "align": "center",
                               "justify": "between",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "server"
                                     },
                                     {
+                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Backend",
-                                      "variant": "h2"
+                                      "content": "Backend"
                                     }
                                   ],
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "gap": "md",
                                   "align": "center"
                                 },
                                 {
-                                  "type": "status-dot",
                                   "pulse": false,
                                   "status": "online",
-                                  "label": "Circuit Closed"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "success",
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "children": [
-                                {
-                                  "value": "@entity.failureCount",
-                                  "type": "stat-display",
-                                  "label": "Failures"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "type": "stat-display",
-                                  "value": "@entity.successCount"
-                                }
-                              ],
-                              "cols": 2.0
-                            },
-                            {
-                              "type": "meter",
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount",
-                              "min": 0.0
-                            }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "label": "Routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "icon": "server",
-                          "href": "/backends"
-                        },
-                        {
-                          "href": "/analytics",
-                          "icon": "bar-chart-2",
-                          "label": "Analytics"
-                        }
-                      ],
-                      "appName": "API Gateway"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "open",
-                "event": "FAILURE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "icon": "server",
-                          "href": "/backends"
-                        },
-                        {
-                          "icon": "bar-chart-2",
-                          "href": "/analytics",
-                          "label": "Analytics"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "align": "center",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "name": "alert-triangle",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Backend",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "status": "critical",
-                                  "label": "Circuit Open",
-                                  "type": "status-dot",
-                                  "pulse": true
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "error",
-                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
-                            },
-                            {
-                              "cols": 2.0,
-                              "type": "simple-grid",
-                              "children": [
-                                {
-                                  "value": "@entity.failureCount",
-                                  "label": "Failures",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display",
-                                  "label": "Successes"
-                                }
-                              ]
-                            },
-                            {
-                              "min": 0.0,
-                              "type": "meter",
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount"
-                            },
-                            {
-                              "action": "RESET",
-                              "type": "button",
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "justify": "between",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Backend",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "status": "online",
                                   "label": "Circuit Closed",
-                                  "type": "status-dot",
-                                  "pulse": false
+                                  "type": "status-dot"
                                 }
                               ]
                             },
@@ -2950,34 +2736,36 @@
                             },
                             {
                               "cols": 2.0,
-                              "type": "simple-grid",
                               "children": [
                                 {
+                                  "type": "stat-display",
                                   "value": "@entity.failureCount",
-                                  "label": "Failures",
-                                  "type": "stat-display"
+                                  "label": "Failures"
                                 },
                                 {
-                                  "value": "@entity.successCount",
                                   "type": "stat-display",
-                                  "label": "Successes"
+                                  "label": "Successes",
+                                  "value": "@entity.successCount"
                                 }
-                              ]
+                              ],
+                              "type": "simple-grid"
                             },
                             {
-                              "value": "@entity.failureCount",
-                              "max": "@entity.threshold",
                               "type": "meter",
-                              "min": 0.0
+                              "max": "@entity.threshold",
+                              "min": 0.0,
+                              "value": "@entity.failureCount"
                             }
                           ]
                         }
                       ],
+                      "appName": "API Gateway",
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "icon": "git-branch",
                           "href": "/routes",
-                          "label": "Routes"
+                          "label": "Routes",
+                          "icon": "git-branch"
                         },
                         {
                           "href": "/backends",
@@ -2989,8 +2777,220 @@
                           "label": "Analytics",
                           "href": "/analytics"
                         }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "halfOpen",
+                "to": "open",
+                "event": "FAILURE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "API Gateway",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle"
+                                    },
+                                    {
+                                      "content": "Backend",
+                                      "variant": "h2",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "Circuit Open",
+                                  "type": "status-dot",
+                                  "pulse": true,
+                                  "status": "critical"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "variant": "error",
+                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures.",
+                              "type": "alert"
+                            },
+                            {
+                              "type": "simple-grid",
+                              "cols": 2.0,
+                              "children": [
+                                {
+                                  "value": "@entity.failureCount",
+                                  "label": "Failures",
+                                  "type": "stat-display"
+                                },
+                                {
+                                  "value": "@entity.successCount",
+                                  "label": "Successes",
+                                  "type": "stat-display"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "meter",
+                              "min": 0.0,
+                              "max": "@entity.threshold",
+                              "value": "@entity.failureCount"
+                            },
+                            {
+                              "label": "Reset",
+                              "variant": "ghost",
+                              "action": "RESET",
+                              "icon": "rotate-ccw",
+                              "type": "button"
+                            }
+                          ]
+                        }
                       ],
-                      "appName": "API Gateway"
+                      "navItems": [
+                        {
+                          "href": "/routes",
+                          "label": "Routes",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "href": "/backends",
+                          "icon": "server",
+                          "label": "Backends"
+                        },
+                        {
+                          "label": "Analytics",
+                          "icon": "bar-chart-2",
+                          "href": "/analytics"
+                        }
+                      ],
+                      "type": "dashboard-layout"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "halfOpen",
+                "to": "closed",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "API Gateway",
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "align": "center",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "name": "server",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Backend",
+                                      "variant": "h2"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "align": "center",
+                                  "gap": "md"
+                                },
+                                {
+                                  "status": "online",
+                                  "pulse": false,
+                                  "type": "status-dot",
+                                  "label": "Circuit Closed"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "success",
+                              "message": "Service is healthy. All requests are being processed."
+                            },
+                            {
+                              "type": "simple-grid",
+                              "cols": 2.0,
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "value": "@entity.failureCount",
+                                  "label": "Failures"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Successes",
+                                  "value": "@entity.successCount"
+                                }
+                              ]
+                            },
+                            {
+                              "value": "@entity.failureCount",
+                              "max": "@entity.threshold",
+                              "min": 0.0,
+                              "type": "meter"
+                            }
+                          ],
+                          "direction": "vertical"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "label": "Routes",
+                          "icon": "git-branch",
+                          "href": "/routes"
+                        },
+                        {
+                          "icon": "server",
+                          "label": "Backends",
+                          "href": "/backends"
+                        },
+                        {
+                          "href": "/analytics",
+                          "label": "Analytics",
+                          "icon": "bar-chart-2"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -3142,8 +3142,8 @@
                     "Analytics",
                     {
                       "emit": {
-                        "failure": "AnalyticsLoadFailed",
-                        "success": "AnalyticsLoaded"
+                        "success": "AnalyticsLoaded",
+                        "failure": "AnalyticsLoadFailed"
                       }
                     }
                   ],
@@ -3151,263 +3151,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "icon": "git-branch",
-                          "label": "Routes"
-                        },
-                        {
-                          "icon": "server",
-                          "href": "/backends",
-                          "label": "Backends"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "href": "/",
-                                      "label": "Home"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "gap": "md",
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "name": "bar-chart-2",
-                                          "type": "icon"
-                                        },
-                                        {
-                                          "content": "Analytics",
-                                          "variant": "h2",
-                                          "type": "typography"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "action": "REFRESH",
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "label": "Refresh",
-                                      "variant": "secondary"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "padding": "md",
-                                  "type": "box",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "label": "TotalRequests",
-                                          "value": "@entity.totalRequests"
-                                        },
-                                        {
-                                          "value": "@entity.errorRate",
-                                          "label": "ErrorRate",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "value": "@entity.avgLatency",
-                                          "label": "AvgLatency",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "type": "typography",
-                                                  "content": "Uptime"
-                                                },
-                                                {
-                                                  "variant": "h3",
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography"
-                                                }
-                                              ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "grid",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "type": "typography",
-                                          "variant": "caption"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "gap": "md",
-                                  "cols": 2.0
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "height": 200.0,
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ],
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "width": 400.0
-                                }
-                              ],
-                              "gap": "lg",
-                              "type": "stack",
-                              "direction": "vertical"
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "LOADED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "failure": "AnalyticsLoadFailed",
-                        "success": "AnalyticsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Routes",
                           "href": "/routes",
+                          "label": "Routes",
                           "icon": "git-branch"
                         },
                         {
@@ -3417,125 +3166,126 @@
                         },
                         {
                           "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
+                          "icon": "bar-chart-2",
+                          "href": "/analytics"
                         }
                       ],
-                      "appName": "API Gateway",
                       "children": [
                         {
+                          "type": "scaled-diagram",
                           "children": [
                             {
+                              "gap": "lg",
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
+                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "href": "/",
-                                      "label": "Home"
+                                      "label": "Home",
+                                      "href": "/"
                                     },
                                     {
                                       "label": "Analytics"
                                     }
-                                  ],
-                                  "type": "breadcrumb"
+                                  ]
                                 },
                                 {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
-                                      "gap": "md",
-                                      "type": "stack",
                                       "children": [
                                         {
                                           "name": "bar-chart-2",
                                           "type": "icon"
                                         },
                                         {
-                                          "content": "Analytics",
                                           "variant": "h2",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Analytics"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "variant": "secondary",
-                                      "type": "button",
                                       "action": "REFRESH",
+                                      "type": "button",
+                                      "variant": "secondary",
                                       "icon": "refresh-cw",
                                       "label": "Refresh"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "justify": "between",
+                                  "direction": "horizontal",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "type": "box",
+                                  "padding": "md",
                                   "children": [
                                     {
                                       "cols": 3.0,
                                       "type": "simple-grid",
                                       "children": [
                                         {
-                                          "label": "TotalRequests",
+                                          "value": "@entity.totalRequests",
                                           "type": "stat-display",
-                                          "value": "@entity.totalRequests"
+                                          "label": "TotalRequests"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "value": "@entity.errorRate",
                                           "label": "ErrorRate",
-                                          "value": "@entity.errorRate"
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "label": "AvgLatency",
                                           "type": "stat-display",
+                                          "label": "AvgLatency",
                                           "value": "@entity.avgLatency"
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
                                               "type": "stack",
+                                              "direction": "vertical",
                                               "children": [
                                                 {
-                                                  "content": "Uptime",
                                                   "type": "typography",
+                                                  "content": "Uptime",
                                                   "variant": "caption"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "content": "@entity.uptime",
+                                                  "type": "typography",
                                                   "variant": "h3"
                                                 }
                                               ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
+                                              "gap": "sm"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         }
                                       ]
                                     }
-                                  ],
-                                  "padding": "md"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
                                       ],
                                       "type": "card"
@@ -3544,31 +3294,30 @@
                                       "type": "card",
                                       "children": [
                                         {
-                                          "content": "Graph View",
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "variant": "caption"
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
                                   ],
                                   "gap": "md",
-                                  "type": "grid",
                                   "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "value": 12.0,
-                                      "date": "Jan"
+                                      "date": "Jan",
+                                      "value": 12.0
                                     },
                                     {
                                       "value": 19.0,
                                       "date": "Feb"
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
@@ -3604,32 +3353,31 @@
                                       "id": "a"
                                     },
                                     {
-                                      "label": "Process",
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process"
                                     },
                                     {
-                                      "id": "c",
-                                      "label": "End"
+                                      "label": "End",
+                                      "id": "c"
                                     }
                                   ],
                                   "width": 400.0,
                                   "height": 200.0,
-                                  "type": "graph-view",
                                   "edges": [
                                     {
-                                      "target": "b",
-                                      "source": "a"
+                                      "source": "a",
+                                      "target": "b"
                                     },
                                     {
-                                      "source": "b",
-                                      "target": "c"
+                                      "target": "c",
+                                      "source": "b"
                                     }
-                                  ]
+                                  ],
+                                  "type": "graph-view"
                                 }
                               ]
                             }
-                          ],
-                          "type": "scaled-diagram"
+                          ]
                         }
                       ]
                     }
@@ -3637,9 +3385,9 @@
                 ]
               },
               {
-                "from": "displaying",
+                "from": "loading",
                 "to": "displaying",
-                "event": "INIT",
+                "event": "LOADED",
                 "effects": [
                   [
                     "fetch",
@@ -3662,16 +3410,18 @@
                           "href": "/routes"
                         },
                         {
+                          "icon": "server",
                           "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
+                          "href": "/backends"
                         },
                         {
-                          "label": "Analytics",
                           "icon": "bar-chart-2",
+                          "label": "Analytics",
                           "href": "/analytics"
                         }
                       ],
+                      "type": "dashboard-layout",
+                      "appName": "API Gateway",
                       "children": [
                         {
                           "children": [
@@ -3694,31 +3444,31 @@
                                   "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "children": [
                                         {
-                                          "name": "bar-chart-2",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "bar-chart-2"
                                         },
                                         {
-                                          "content": "Analytics",
                                           "variant": "h2",
+                                          "content": "Analytics",
                                           "type": "typography"
                                         }
                                       ],
+                                      "direction": "horizontal",
                                       "gap": "md",
-                                      "direction": "horizontal"
+                                      "type": "stack"
                                     },
                                     {
-                                      "type": "button",
-                                      "variant": "secondary",
-                                      "label": "Refresh",
                                       "action": "REFRESH",
+                                      "type": "button",
+                                      "label": "Refresh",
+                                      "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
                                   ],
-                                  "justify": "between",
-                                  "gap": "md"
+                                  "gap": "md",
+                                  "justify": "between"
                                 },
                                 {
                                   "type": "divider"
@@ -3727,25 +3477,28 @@
                                   "type": "box",
                                   "children": [
                                     {
+                                      "type": "simple-grid",
+                                      "cols": 3.0,
                                       "children": [
                                         {
-                                          "value": "@entity.totalRequests",
+                                          "label": "TotalRequests",
                                           "type": "stat-display",
-                                          "label": "TotalRequests"
+                                          "value": "@entity.totalRequests"
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "ErrorRate",
-                                          "value": "@entity.errorRate"
+                                          "value": "@entity.errorRate",
+                                          "label": "ErrorRate"
                                         },
                                         {
-                                          "label": "AvgLatency",
+                                          "type": "stat-display",
                                           "value": "@entity.avgLatency",
-                                          "type": "stat-display"
+                                          "label": "AvgLatency"
                                         },
                                         {
                                           "children": [
                                             {
+                                              "gap": "sm",
                                               "type": "stack",
                                               "children": [
                                                 {
@@ -3755,19 +3508,16 @@
                                                 },
                                                 {
                                                   "variant": "h3",
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "@entity.uptime"
                                                 }
                                               ],
-                                              "direction": "vertical",
-                                              "gap": "sm"
+                                              "direction": "vertical"
                                             }
                                           ],
                                           "type": "card"
                                         }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
+                                      ]
                                     }
                                   ],
                                   "padding": "md"
@@ -3778,32 +3528,284 @@
                                 {
                                   "type": "grid",
                                   "cols": 2.0,
+                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "content": "Chart View"
                                         }
                                       ]
                                     },
                                     {
+                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Graph View",
                                           "type": "typography",
                                           "variant": "caption"
                                         }
-                                      ],
-                                      "type": "card"
+                                      ]
                                     }
-                                  ],
-                                  "gap": "md"
+                                  ]
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "data": [
+                                    {
+                                      "date": "Jan",
+                                      "value": 12.0
+                                    },
+                                    {
+                                      "value": 19.0,
+                                      "date": "Feb"
+                                    },
+                                    {
+                                      "date": "Mar",
+                                      "value": 15.0
+                                    },
+                                    {
+                                      "value": 25.0,
+                                      "date": "Apr"
+                                    },
+                                    {
+                                      "value": 22.0,
+                                      "date": "May"
+                                    },
+                                    {
+                                      "value": 30.0,
+                                      "date": "Jun"
+                                    }
+                                  ],
+                                  "type": "line-chart"
+                                },
+                                {
+                                  "type": "chart-legend",
+                                  "items": [
+                                    {
+                                      "color": "primary",
+                                      "label": "Current"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "label": "Previous"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "edges": [
+                                    {
+                                      "target": "b",
+                                      "source": "a"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ],
+                                  "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "label": "Process",
+                                      "id": "b"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "type": "graph-view"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "lg"
+                            }
+                          ],
+                          "type": "scaled-diagram"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Analytics",
+                    {
+                      "emit": {
+                        "failure": "AnalyticsLoadFailed",
+                        "success": "AnalyticsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "navItems": [
+                        {
+                          "icon": "git-branch",
+                          "label": "Routes",
+                          "href": "/routes"
+                        },
+                        {
+                          "href": "/backends",
+                          "label": "Backends",
+                          "icon": "server"
+                        },
+                        {
+                          "label": "Analytics",
+                          "href": "/analytics",
+                          "icon": "bar-chart-2"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "children": [
+                        {
+                          "type": "scaled-diagram",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "items": [
+                                    {
+                                      "href": "/",
+                                      "label": "Home"
+                                    },
+                                    {
+                                      "label": "Analytics"
+                                    }
+                                  ],
+                                  "type": "breadcrumb"
+                                },
+                                {
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "direction": "horizontal",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "bar-chart-2"
+                                        },
+                                        {
+                                          "content": "Analytics",
+                                          "type": "typography",
+                                          "variant": "h2"
+                                        }
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md"
+                                    },
+                                    {
+                                      "icon": "refresh-cw",
+                                      "type": "button",
+                                      "variant": "secondary",
+                                      "action": "REFRESH",
+                                      "label": "Refresh"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "justify": "between"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "cols": 3.0,
+                                      "type": "simple-grid",
+                                      "children": [
+                                        {
+                                          "type": "stat-display",
+                                          "label": "TotalRequests",
+                                          "value": "@entity.totalRequests"
+                                        },
+                                        {
+                                          "label": "ErrorRate",
+                                          "value": "@entity.errorRate",
+                                          "type": "stat-display"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "AvgLatency",
+                                          "value": "@entity.avgLatency"
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "children": [
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "caption",
+                                                  "content": "Uptime"
+                                                },
+                                                {
+                                                  "content": "@entity.uptime",
+                                                  "type": "typography",
+                                                  "variant": "h3"
+                                                }
+                                              ],
+                                              "type": "stack",
+                                              "gap": "sm",
+                                              "direction": "vertical"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "grid",
+                                  "cols": 2.0,
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "content": "Chart View",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "variant": "caption",
+                                          "type": "typography",
+                                          "content": "Graph View"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
                                   "data": [
                                     {
                                       "date": "Jan",
@@ -3829,60 +3831,58 @@
                                       "date": "Jun",
                                       "value": 30.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "color": "primary",
                                       "label": "Current"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "width": 400.0,
-                                  "type": "graph-view",
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ],
+                                  "type": "chart-legend"
+                                },
+                                {
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "source": "a",
                                       "target": "b"
                                     },
                                     {
-                                      "target": "c",
-                                      "source": "b"
+                                      "source": "b",
+                                      "target": "c"
+                                    }
+                                  ],
+                                  "type": "graph-view",
+                                  "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "id": "b",
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "label": "End",
+                                      "id": "c"
                                     }
                                   ]
                                 }
                               ],
-                              "gap": "lg",
                               "direction": "vertical",
-                              "type": "stack"
+                              "gap": "lg"
                             }
-                          ],
-                          "type": "scaled-diagram"
+                          ]
                         }
                       ],
-                      "type": "dashboard-layout",
                       "appName": "API Gateway"
                     }
                   ]
@@ -3907,13 +3907,15 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "direction": "vertical",
                               "gap": "lg",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "items": [
@@ -3928,48 +3930,50 @@
                                   "type": "breadcrumb"
                                 },
                                 {
-                                  "justify": "between",
-                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "gap": "md",
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "children": [
                                         {
-                                          "name": "bar-chart-2",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "bar-chart-2"
                                         },
                                         {
-                                          "type": "typography",
                                           "variant": "h2",
-                                          "content": "Analytics"
+                                          "content": "Analytics",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md",
+                                      "type": "stack",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "variant": "secondary",
-                                      "icon": "refresh-cw",
                                       "label": "Refresh",
+                                      "type": "button",
                                       "action": "REFRESH",
-                                      "type": "button"
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw"
                                     }
                                   ],
-                                  "type": "stack",
+                                  "justify": "between",
+                                  "gap": "md",
                                   "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
                                       "cols": 3.0,
                                       "children": [
                                         {
-                                          "label": "TotalRequests",
                                           "type": "stat-display",
-                                          "value": "@entity.totalRequests"
+                                          "value": "@entity.totalRequests",
+                                          "label": "TotalRequests"
                                         },
                                         {
                                           "type": "stat-display",
@@ -3978,66 +3982,331 @@
                                         },
                                         {
                                           "value": "@entity.avgLatency",
-                                          "label": "AvgLatency",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "label": "AvgLatency"
                                         },
                                         {
+                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
+                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
+                                                  "type": "typography",
                                                   "content": "Uptime"
                                                 },
                                                 {
                                                   "variant": "h3",
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography"
+                                                  "type": "typography",
+                                                  "content": "@entity.uptime"
                                                 }
                                               ],
-                                              "direction": "vertical",
-                                              "gap": "sm"
+                                              "type": "stack",
+                                              "direction": "vertical"
                                             }
-                                          ],
-                                          "type": "card"
+                                          ]
                                         }
                                       ],
                                       "type": "simple-grid"
                                     }
-                                  ],
-                                  "type": "box",
-                                  "padding": "md"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
                                   "type": "grid",
+                                  "cols": 2.0,
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "type": "card"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "Graph View",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "type": "card"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "line-chart",
+                                  "data": [
+                                    {
+                                      "date": "Jan",
+                                      "value": 12.0
+                                    },
+                                    {
+                                      "value": 19.0,
+                                      "date": "Feb"
+                                    },
+                                    {
+                                      "value": 15.0,
+                                      "date": "Mar"
+                                    },
+                                    {
+                                      "value": 25.0,
+                                      "date": "Apr"
+                                    },
+                                    {
+                                      "value": 22.0,
+                                      "date": "May"
+                                    },
+                                    {
+                                      "date": "Jun",
+                                      "value": 30.0
+                                    }
+                                  ]
+                                },
+                                {
+                                  "items": [
+                                    {
+                                      "label": "Current",
+                                      "color": "primary"
+                                    },
+                                    {
+                                      "label": "Previous",
+                                      "color": "muted"
+                                    }
+                                  ],
+                                  "type": "chart-legend"
+                                },
+                                {
+                                  "height": 200.0,
+                                  "type": "graph-view",
+                                  "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "label": "Process",
+                                      "id": "b"
+                                    },
+                                    {
+                                      "label": "End",
+                                      "id": "c"
+                                    }
+                                  ],
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "appName": "API Gateway",
+                      "navItems": [
+                        {
+                          "label": "Routes",
+                          "href": "/routes",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Backends",
+                          "href": "/backends",
+                          "icon": "server"
+                        },
+                        {
+                          "icon": "bar-chart-2",
+                          "label": "Analytics",
+                          "href": "/analytics"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "refreshing",
+                "to": "displaying",
+                "event": "REFRESHED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Analytics",
+                    {
+                      "emit": {
+                        "failure": "AnalyticsLoadFailed",
+                        "success": "AnalyticsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "API Gateway",
+                      "navItems": [
+                        {
+                          "href": "/routes",
+                          "label": "Routes",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "icon": "server",
+                          "label": "Backends",
+                          "href": "/backends"
+                        },
+                        {
+                          "href": "/analytics",
+                          "icon": "bar-chart-2",
+                          "label": "Analytics"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "lg",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "breadcrumb",
+                                  "items": [
+                                    {
+                                      "label": "Home",
+                                      "href": "/"
+                                    },
+                                    {
+                                      "label": "Analytics"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "justify": "between",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "gap": "md",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "bar-chart-2"
+                                        },
+                                        {
+                                          "variant": "h2",
+                                          "type": "typography",
+                                          "content": "Analytics"
+                                        }
+                                      ],
+                                      "direction": "horizontal"
+                                    },
+                                    {
+                                      "label": "Refresh",
+                                      "action": "REFRESH",
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw",
+                                      "type": "button"
+                                    }
+                                  ],
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "type": "stack"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "padding": "md",
+                                  "type": "box",
+                                  "children": [
+                                    {
+                                      "type": "simple-grid",
+                                      "cols": 3.0,
+                                      "children": [
+                                        {
+                                          "value": "@entity.totalRequests",
+                                          "type": "stat-display",
+                                          "label": "TotalRequests"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "ErrorRate",
+                                          "value": "@entity.errorRate"
+                                        },
+                                        {
+                                          "type": "stat-display",
+                                          "label": "AvgLatency",
+                                          "value": "@entity.avgLatency"
+                                        },
+                                        {
+                                          "type": "card",
+                                          "children": [
+                                            {
+                                              "gap": "sm",
+                                              "children": [
+                                                {
+                                                  "content": "Uptime",
+                                                  "type": "typography",
+                                                  "variant": "caption"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "content": "@entity.uptime",
+                                                  "variant": "h3"
+                                                }
+                                              ],
+                                              "type": "stack",
+                                              "direction": "vertical"
+                                            }
+                                          ]
                                         }
                                       ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "Chart View",
+                                          "variant": "caption",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "content": "Graph View",
-                                          "variant": "caption"
+                                          "variant": "caption",
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
                                   ],
+                                  "type": "grid",
+                                  "gap": "md",
                                   "cols": 2.0
                                 },
                                 {
@@ -4052,8 +4321,8 @@
                                       "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
@@ -4083,10 +4352,11 @@
                                   ]
                                 },
                                 {
+                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
                                       "label": "Process",
@@ -4095,299 +4365,29 @@
                                     {
                                       "label": "End",
                                       "id": "c"
+                                    }
+                                  ],
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ],
                                   "width": 400.0,
-                                  "height": 200.0,
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "type": "graph-view"
+                                  "height": 200.0
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
                           "type": "scaled-diagram"
-                        }
-                      ],
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "icon": "git-branch",
-                          "label": "Routes"
-                        },
-                        {
-                          "icon": "server",
-                          "label": "Backends",
-                          "href": "/backends"
-                        },
-                        {
-                          "label": "Analytics",
-                          "icon": "bar-chart-2",
-                          "href": "/analytics"
                         }
                       ],
                       "type": "dashboard-layout"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "refreshing",
-                "to": "displaying",
-                "event": "REFRESHED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "failure": "AnalyticsLoadFailed",
-                        "success": "AnalyticsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "icon": "git-branch",
-                          "label": "Routes"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "gap": "md",
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "bar-chart-2"
-                                        },
-                                        {
-                                          "content": "Analytics",
-                                          "variant": "h2",
-                                          "type": "typography"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "variant": "secondary",
-                                      "action": "REFRESH",
-                                      "label": "Refresh"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "label": "TotalRequests",
-                                          "value": "@entity.totalRequests",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "value": "@entity.errorRate",
-                                          "type": "stat-display",
-                                          "label": "ErrorRate"
-                                        },
-                                        {
-                                          "value": "@entity.avgLatency",
-                                          "label": "AvgLatency",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "children": [
-                                                {
-                                                  "content": "Uptime",
-                                                  "variant": "caption",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.uptime"
-                                                }
-                                              ],
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        }
-                                      ],
-                                      "type": "simple-grid"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "type": "typography",
-                                          "variant": "caption"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Graph View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "width": 400.0
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ]
                     }
                   ]
                 ]

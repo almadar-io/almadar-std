@@ -37,12 +37,16 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent { emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      CalendarEventLoaded
+      CalendarEventLoadFailed
+    }
+
+        listens {
       SELECT_DAY  { date : string! }
       SELECT_SLOT { time : string! }
       CalendarEventLoadFailed { error : string, code : string }
     }
-    emits: [CalendarEventLoaded, CalendarEventLoadFailed]
   }
   page "/calendarevents/calendar" as CalendarEventCalendarPage -> CalendarEventCalendar
 }

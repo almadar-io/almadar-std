@@ -34,11 +34,19 @@ orbital RouteOrbital {
       VIEW { id : string!, row : Route }
       EDIT { id : string!, row : Route }
       DELETE { id : string!, row : Route }
+      RouteLoaded
+      RouteLoadFailed
+      RouteSaved
+      RouteSaveFailed
+      RouteUpdated
+      RouteUpdateFailed
+      RouteDeleted
+      RouteDeleteFailed
     }
     listens {
-      RouteCreate ROUTE_CREATED -> INIT
-      RouteEdit ROUTE_UPDATED -> INIT
-      RouteDelete ROUTE_DELETED -> INIT
+      RouteCreate.ROUTE_CREATED -> INIT
+      RouteEdit.ROUTE_UPDATED -> INIT
+      RouteDelete.ROUTE_DELETED -> INIT
       VIEW { id : string!, row : Route }
       EDIT { id : string!, row : Route }
       DELETE { id : string!, row : Route }
@@ -48,7 +56,6 @@ orbital RouteOrbital {
       RouteUpdateFailed { error : string, code : string }
       RouteDeleteFailed { error : string, code : string }
     }
-    emits: [RouteLoaded, RouteLoadFailed, RouteSaved, RouteSaveFailed, RouteUpdated, RouteUpdateFailed, RouteDeleted, RouteDeleteFailed]
   }
   trait RouteCreate -> Route [interaction, collection] {
     initial: closed
@@ -71,18 +78,21 @@ orbital RouteOrbital {
         (emit ROUTE_CREATED)
     }
     emits {
-      ROUTE_CREATED external { id: string }
+      ROUTE_CREATED -> external { id: string }
+      RouteLoadFailed
+      RouteLoaded
+      RouteSaveFailed
+      RouteSaved
     }
     listens {
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
-      RouteBrowse CREATE -> CREATE
+      RouteBrowse.CREATE -> CREATE
     }
-    emits: [RouteLoadFailed, RouteLoaded, RouteSaveFailed, RouteSaved]
   }
   trait RouteEdit -> Route [interaction, collection] {
     listens {
-      RouteView EDIT -> EDIT
+      RouteView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -104,19 +114,24 @@ orbital RouteOrbital {
         (emit ROUTE_UPDATED)
     }
     emits {
-      ROUTE_UPDATED external { id: string }
+      ROUTE_UPDATED -> external { id: string }
+      RouteLoadFailed
+      RouteLoaded
+      RouteUpdateFailed
+      RouteUpdated
     }
     listens {
       EDIT { id : string!, row : Route }
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
-      RouteBrowse EDIT -> EDIT
+      RouteBrowse.EDIT -> EDIT
     }
-    emits: [RouteLoadFailed, RouteLoaded, RouteUpdateFailed, RouteUpdated]
   }
   trait RouteView -> Route [interaction, collection] {
     emits {
       EDIT { id : string }
+      RouteLoaded
+      RouteLoadFailed
     }
     initial: closed
     state closed {
@@ -140,9 +155,8 @@ orbital RouteOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           RouteLoadFailed { error : string, code : string }
-      RouteBrowse VIEW -> VIEW
+      RouteBrowse.VIEW -> VIEW
     }
-    emits: [RouteLoaded, RouteLoadFailed]
   }
   trait RouteDelete -> Route [interaction, collection] {
     initial: idle
@@ -171,14 +185,17 @@ orbital RouteOrbital {
         (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
     }
     emits {
-      ROUTE_DELETED external { id: string }
+      ROUTE_DELETED -> external { id: string }
+      RouteDeleteFailed
+      RouteDeleted
+      RouteLoadFailed
+      RouteLoaded
     }
     listens {
       DELETE { id : string! }
           RouteLoadFailed { error : string, code : string }
-      RouteBrowse DELETE -> DELETE
+      RouteBrowse.DELETE -> DELETE
     }
-    emits: [RouteDeleteFailed, RouteDeleted, RouteLoadFailed, RouteLoaded]
   }
   page "/routes" as RoutesPage -> RouteBrowse, RouteCreate, RouteEdit, RouteView, RouteDelete
 }
@@ -221,8 +238,12 @@ orbital BackendOrbital {
       RESET -> closed
         (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
     }
-    emits: [BackendLoaded, BackendLoadFailed]
-    listens {
+emits {
+      BackendLoaded
+      BackendLoadFailed
+    }
+
+        listens {
       BackendLoadFailed { error : string, code : string }
     }
   }
@@ -262,8 +283,12 @@ orbital AnalyticsOrbital {
         (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [AnalyticsLoaded, AnalyticsLoadFailed]
-    listens {
+emits {
+      AnalyticsLoaded
+      AnalyticsLoadFailed
+    }
+
+        listens {
       AnalyticsLoadFailed { error : string, code : string }
     }
   }

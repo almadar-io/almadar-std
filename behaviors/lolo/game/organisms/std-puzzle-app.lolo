@@ -51,8 +51,12 @@ orbital PuzzleLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "game-menu", title: "Puzzle Challenge", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] }] })
     }
-    emits: [PuzzleLevelLoaded, PuzzleLevelLoadFailed]
-    listens {
+emits {
+      PuzzleLevelLoaded
+      PuzzleLevelLoadFailed
+    }
+
+        listens {
       PuzzleLevelLoadFailed { message : string }
     }
   }
@@ -73,12 +77,16 @@ orbital PuzzleLevelOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
-    listens {
+emits {
+      PuzzleLevelLoaded
+      PuzzleLevelLoadFailed
+    }
+
+        listens {
       ADD_SCORE { points : number! }
       COMBO { multiplier : number! }
           PuzzleLevelLoadFailed { message : string }
     }
-    emits: [PuzzleLevelLoaded, PuzzleLevelLoadFailed]
   }
   page "/puzzle" as PuzzlePage -> PuzzleLevelPuzzleFlow, PuzzleLevelPuzzleScore
 }
@@ -114,8 +122,12 @@ orbital PuzzleScoreOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
-    emits: [PuzzleScoreLoaded, PuzzleScoreLoadFailed]
-    listens {
+emits {
+      PuzzleScoreLoaded
+      PuzzleScoreLoadFailed
+    }
+
+        listens {
       PuzzleScoreLoadFailed { message : string }
       ADD_SCORE { points : string }
       COMBO { multiplier : string }

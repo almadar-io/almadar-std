@@ -70,8 +70,16 @@ orbital AgentConversationOrbital {
         (fetch AgentConversation { emit: { success: "AgentConversationLoaded", failure: "AgentConversationLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    emits: [AgentConversationLoaded, AgentConversationLoadFailed, AgentConversationSaved, AgentConversationSaveFailed, AgentConversationDeleted, AgentConversationDeleteFailed]
-    listens {
+emits {
+      AgentConversationLoaded
+      AgentConversationLoadFailed
+      AgentConversationSaved
+      AgentConversationSaveFailed
+      AgentConversationDeleted
+      AgentConversationDeleteFailed
+    }
+
+        listens {
       SEND { content : string! }
       AgentConversationLoadFailed { error : string, code : string }
       AgentConversationSaveFailed { error : string, code : string }
@@ -101,9 +109,10 @@ orbital AgentConversationOrbital {
       CLEAR -> idle
     }
     emits {
-      TOKEN_UPDATE internal { tokenCount : number! }
+      TOKEN_UPDATE -> internal { tokenCount : number! }
+      AgentConversationLoaded
+      AgentConversationLoadFailed
     }
-    emits: [AgentConversationLoaded, AgentConversationLoadFailed]
     listens {
       SEND_MESSAGE { content : string! }
       TOKEN_UPDATE { tokenCount : number! }

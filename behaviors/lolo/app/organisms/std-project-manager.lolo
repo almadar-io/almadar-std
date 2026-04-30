@@ -43,12 +43,26 @@ orbital TaskOrbital {
       VIEW { id : string!, row : Task }
       EDIT { id : string!, row : Task }
       DELETE { id : string!, row : Task }
+      TaskLoaded
+      TaskLoadFailed
+      TaskSaved
+      TaskSaveFailed
+      TaskUpdated
+      TaskUpdateFailed
+      TaskDeleted
+      TaskDeleteFailed
+      SprintSaved
+      SprintSaveFailed
+      SprintUpdated
+      SprintUpdateFailed
+      SprintDeleted
+      SprintDeleteFailed
     }
     listens {
-      TaskCreate TASK_CREATED -> INIT
-      TaskEdit TASK_UPDATED -> INIT
-      TaskDelete TASK_DELETED -> INIT
-      * ASSIGN_TASK -> INIT
+      TaskCreate.TASK_CREATED -> INIT
+      TaskEdit.TASK_UPDATED -> INIT
+      TaskDelete.TASK_DELETED -> INIT
+      SprintOrbital.SprintBrowse.ASSIGN_TASK -> INIT
       VIEW { id : string!, row : Task }
       EDIT { id : string!, row : Task }
       DELETE { id : string!, row : Task }
@@ -61,7 +75,6 @@ orbital TaskOrbital {
       SprintUpdateFailed { error : string, code : string }
       SprintDeleteFailed { error : string, code : string }
     }
-    emits: [TaskLoaded, TaskLoadFailed, TaskSaved, TaskSaveFailed, TaskUpdated, TaskUpdateFailed, TaskDeleted, TaskDeleteFailed, SprintSaved, SprintSaveFailed, SprintUpdated, SprintUpdateFailed, SprintDeleted, SprintDeleteFailed]
   }
   trait TaskCreate -> Task [interaction, collection] {
     initial: closed
@@ -84,18 +97,21 @@ orbital TaskOrbital {
         (emit TASK_CREATED)
     }
     emits {
-      TASK_CREATED external { id: string }
+      TASK_CREATED -> external { id: string }
+      TaskLoadFailed
+      TaskLoaded
+      TaskSaveFailed
+      TaskSaved
     }
     listens {
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
-      TaskBrowse CREATE -> CREATE
+      TaskBrowse.CREATE -> CREATE
     }
-    emits: [TaskLoadFailed, TaskLoaded, TaskSaveFailed, TaskSaved]
   }
   trait TaskEdit -> Task [interaction, collection] {
     listens {
-      TaskView EDIT -> EDIT
+      TaskView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -117,19 +133,24 @@ orbital TaskOrbital {
         (emit TASK_UPDATED)
     }
     emits {
-      TASK_UPDATED external { id: string }
+      TASK_UPDATED -> external { id: string }
+      TaskLoadFailed
+      TaskLoaded
+      TaskUpdateFailed
+      TaskUpdated
     }
     listens {
       EDIT { id : string!, row : Task }
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
-      TaskBrowse EDIT -> EDIT
+      TaskBrowse.EDIT -> EDIT
     }
-    emits: [TaskLoadFailed, TaskLoaded, TaskUpdateFailed, TaskUpdated]
   }
   trait TaskView -> Task [interaction, collection] {
     emits {
       EDIT { id : string }
+      TaskLoaded
+      TaskLoadFailed
     }
     initial: closed
     state closed {
@@ -152,9 +173,8 @@ orbital TaskOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           TaskLoadFailed { error : string, code : string }
-      TaskBrowse VIEW -> VIEW
+      TaskBrowse.VIEW -> VIEW
     }
-    emits: [TaskLoaded, TaskLoadFailed]
   }
   trait TaskDelete -> Task [interaction, collection] {
     initial: idle
@@ -183,14 +203,17 @@ orbital TaskOrbital {
         (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
     }
     emits {
-      TASK_DELETED external { id: string }
+      TASK_DELETED -> external { id: string }
+      TaskDeleteFailed
+      TaskDeleted
+      TaskLoadFailed
+      TaskLoaded
     }
     listens {
       DELETE { id : string! }
           TaskLoadFailed { error : string, code : string }
-      TaskBrowse DELETE -> DELETE
+      TaskBrowse.DELETE -> DELETE
     }
-    emits: [TaskDeleteFailed, TaskDeleted, TaskLoadFailed, TaskLoaded]
   }
   page "/tasks" as TasksPage -> TaskBrowse, TaskCreate, TaskEdit, TaskView, TaskDelete
 }
@@ -225,20 +248,21 @@ orbital SprintOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load sprint" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ASSIGN_TASK external { id: string }
-      COMPLETE_SPRINT external { id: string }
+      ASSIGN_TASK -> external { id: string }
+      COMPLETE_SPRINT -> external { id: string }
       CREATE
       VIEW { id : string!, row : Sprint }
       EDIT { id : string!, row : Sprint }
       DELETE { id : string!, row : Sprint }
+      SprintLoaded
+      SprintLoadFailed
     }
     listens {
-      SprintCreate SPRINT_CREATED -> INIT
-      SprintEdit SPRINT_UPDATED -> INIT
-      SprintDelete SPRINT_DELETED -> INIT
+      SprintCreate.SPRINT_CREATED -> INIT
+      SprintEdit.SPRINT_UPDATED -> INIT
+      SprintDelete.SPRINT_DELETED -> INIT
           SprintLoadFailed { error : string, code : string }
     }
-    emits: [SprintLoaded, SprintLoadFailed]
   }
   trait SprintCreate -> Sprint [interaction, collection] {
     initial: closed
@@ -262,12 +286,15 @@ orbital SprintOrbital {
     }
     emits {
       SPRINT_CREATED
+      SprintLoadFailed
+      SprintLoaded
+      SprintSaveFailed
+      SprintSaved
     }
-    emits: [SprintLoadFailed, SprintLoaded, SprintSaveFailed, SprintSaved]
     listens {
       SprintLoadFailed { error : string, code : string }
       SAVE { data : string }
-      SprintBrowse CREATE -> CREATE
+      SprintBrowse.CREATE -> CREATE
     }
   }
   trait SprintEdit -> Sprint [interaction, collection] {
@@ -292,19 +319,24 @@ orbital SprintOrbital {
     }
     emits {
       SPRINT_UPDATED
+      SprintLoadFailed
+      SprintLoaded
+      SprintUpdateFailed
+      SprintUpdated
     }
-    emits: [SprintLoadFailed, SprintLoaded, SprintUpdateFailed, SprintUpdated]
     listens {
-      SprintView EDIT -> EDIT
+      SprintView.EDIT -> EDIT
       SprintLoadFailed { error : string, code : string }
       EDIT { id : string, row : Sprint }
       SAVE { data : string }
-      SprintBrowse EDIT -> EDIT
+      SprintBrowse.EDIT -> EDIT
     }
   }
   trait SprintView -> Sprint [interaction, collection] {
     emits {
       EDIT { id : string }
+      SprintLoaded
+      SprintLoadFailed
     }
     initial: closed
     state closed {
@@ -323,11 +355,10 @@ orbital SprintOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [SprintLoaded, SprintLoadFailed]
     listens {
       SprintLoadFailed { error : string, code : string }
       VIEW { id : string }
-      SprintBrowse VIEW -> VIEW
+      SprintBrowse.VIEW -> VIEW
     }
   }
   trait SprintDelete -> Sprint [interaction, collection] {
@@ -358,12 +389,15 @@ orbital SprintOrbital {
     }
     emits {
       SPRINT_DELETED
+      SprintDeleteFailed
+      SprintDeleted
+      SprintLoadFailed
+      SprintLoaded
     }
-    emits: [SprintDeleteFailed, SprintDeleted, SprintLoadFailed, SprintLoaded]
     listens {
       SprintLoadFailed { error : string, code : string }
       DELETE { id : string }
-      SprintBrowse DELETE -> DELETE
+      SprintBrowse.DELETE -> DELETE
     }
   }
   page "/sprints" -> SprintBrowse, SprintCreate, SprintEdit, SprintView, SprintDelete
@@ -403,11 +437,15 @@ orbital BurndownOrbital {
         (fetch Burndown { emit: { success: "BurndownLoaded", failure: "BurndownLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 5, children: [{ type: "stat-display", label: "TotalPoints", value: "@entity.totalPoints" }, { type: "stat-display", label: "CompletedPoints", value: "@entity.completedPoints" }, { type: "stat-display", label: "RemainingPoints", value: "@entity.remainingPoints" }, { type: "stat-display", label: "Velocity", value: "@entity.velocity" }, { type: "stat-display", label: "DaysRemaining", value: "@entity.daysRemaining" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    listens {
-      * COMPLETE_SPRINT -> INIT
+emits {
+      BurndownLoaded
+      BurndownLoadFailed
+    }
+
+        listens {
+      SprintOrbital.SprintBrowse.COMPLETE_SPRINT -> INIT
           BurndownLoadFailed { error : string, code : string }
     }
-    emits: [BurndownLoaded, BurndownLoadFailed]
   }
   page "/burndown" -> BurndownDisplay
 }

@@ -54,7 +54,12 @@ orbital AgentProviderOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", action: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SWITCHED external { id: string }
+      SWITCHED -> external { id: string }
+      AgentProviderLoaded
+      AgentProviderLoadFailed
+      AgentProviderRowLoaded
+      AgentProviderUpdated
+      AgentProviderUpdateFailed
     }
     listens {
       SAVE { data : object! }
@@ -62,7 +67,6 @@ orbital AgentProviderOrbital {
 
       AgentProviderUpdateFailed { error : string, code : string }
     }
-    emits: [AgentProviderLoaded, AgentProviderLoadFailed, AgentProviderRowLoaded, AgentProviderUpdated, AgentProviderUpdateFailed]
   }
   trait AgentProviderNotification -> AgentProvider [interaction, instance] {
     initial: hidden
@@ -82,11 +86,15 @@ orbital AgentProviderOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
-    listens {
+emits {
+      AgentProviderLoaded
+      AgentProviderLoadFailed
+    }
+
+        listens {
       SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
           AgentProviderLoadFailed { message : string }
     }
-    emits: [AgentProviderLoaded, AgentProviderLoadFailed]
   }
   trait AgentProviderAgent -> AgentProvider [interaction, instance] {
     initial: idle
@@ -120,14 +128,15 @@ orbital AgentProviderOrbital {
         (emit SHOW { message: "Provider switched", notificationType: "info" })
     }
     emits {
-      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      AgentProviderLoaded
+      AgentProviderLoadFailed
     }
     listens {
-      AgentProviderModal SWITCHED -> SWITCHED
+      AgentProviderModal.SWITCHED -> SWITCHED
       DO_SWITCH { data : object! }
           AgentProviderLoadFailed { message : string }
     }
-    emits: [AgentProviderLoaded, AgentProviderLoadFailed]
   }
   page "/agentproviders" as AgentProviderPage -> AgentProviderModal, AgentProviderNotification, AgentProviderAgent
 }

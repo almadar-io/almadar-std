@@ -68,12 +68,18 @@ orbital QuestLogOrbital {
         (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      QuestLogLoaded
+      QuestLogLoadFailed
+      QuestLogUpdated
+      QuestLogUpdateFailed
+    }
+
+        listens {
       ACCEPT   { id : string!, row : QuestLog }
       QuestLogLoadFailed { error : string, code : string }
       QuestLogUpdateFailed { error : string, code : string }
     }
-    emits: [QuestLogLoaded, QuestLogLoadFailed, QuestLogUpdated, QuestLogUpdateFailed]
   }
   page "/questlogs" as QuestLogPage -> QuestLogTracking
 }

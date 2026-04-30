@@ -35,11 +35,15 @@ orbital DialogueNodeOrbital {
         (fetch DialogueNode { emit: { success: "DialogueNodeLoaded", failure: "DialogueNodeLoadFailed" } })
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
     }
-    listens {
+emits {
+      DialogueNodeLoaded
+      DialogueNodeLoadFailed
+    }
+
+        listens {
       CHOICE { choiceId : string! }
           DialogueNodeLoadFailed { message : string }
     }
-    emits: [DialogueNodeLoaded, DialogueNodeLoadFailed]
   }
   page "/dialoguenodes" as DialogueNodeDialoguePage -> DialogueNodeDialogue
 }

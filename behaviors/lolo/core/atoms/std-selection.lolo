@@ -45,12 +45,16 @@ orbital SelectableItemOrbital {
         (fetch SelectableItem { emit: { success: "SelectableItemLoaded", failure: "SelectableItemLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      SelectableItemLoaded
+      SelectableItemLoadFailed
+    }
+
+        listens {
       SELECT { id : string! }
       CONFIRM_SELECTION { id : string! }
       SelectableItemLoadFailed { error : string, code : string }
     }
-    emits: [SelectableItemLoaded, SelectableItemLoadFailed]
   }
   page "/selectableitems/selection" as SelectableItemSelectionPage -> SelectableItemSelection
 }

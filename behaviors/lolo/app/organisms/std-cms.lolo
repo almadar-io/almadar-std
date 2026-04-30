@@ -40,17 +40,33 @@ orbital ArticleOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load article" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      PUBLISH external { id: string }
-      CATEGORIZE external { id: string }
+      PUBLISH -> external { id: string }
+      CATEGORIZE -> external { id: string }
       CREATE
       VIEW { id : string!, row : Article }
       EDIT { id : string!, row : Article }
       DELETE { id : string!, row : Article }
+      ArticleLoaded
+      ArticleLoadFailed
+      ArticleSaved
+      ArticleSaveFailed
+      ArticleUpdated
+      ArticleUpdateFailed
+      ArticleDeleted
+      ArticleDeleteFailed
+      MediaAssetSaved
+      MediaAssetSaveFailed
+      CategorySaved
+      CategorySaveFailed
+      CategoryUpdated
+      CategoryUpdateFailed
+      CategoryDeleted
+      CategoryDeleteFailed
     }
     listens {
-      ArticleCreate ARTICLE_CREATED -> INIT
-      ArticleEdit ARTICLE_UPDATED -> INIT
-      ArticleDelete ARTICLE_DELETED -> INIT
+      ArticleCreate.ARTICLE_CREATED -> INIT
+      ArticleEdit.ARTICLE_UPDATED -> INIT
+      ArticleDelete.ARTICLE_DELETED -> INIT
       VIEW { id : string!, row : Article }
       EDIT { id : string!, row : Article }
       DELETE { id : string!, row : Article }
@@ -64,7 +80,6 @@ orbital ArticleOrbital {
       CategoryUpdateFailed { error : string, code : string }
       CategoryDeleteFailed { error : string, code : string }
     }
-    emits: [ArticleLoaded, ArticleLoadFailed, ArticleSaved, ArticleSaveFailed, ArticleUpdated, ArticleUpdateFailed, ArticleDeleted, ArticleDeleteFailed, MediaAssetSaved, MediaAssetSaveFailed, CategorySaved, CategorySaveFailed, CategoryUpdated, CategoryUpdateFailed, CategoryDeleted, CategoryDeleteFailed]
   }
   trait ArticleCreate -> Article [interaction, collection] {
     initial: closed
@@ -87,18 +102,21 @@ orbital ArticleOrbital {
         (emit ARTICLE_CREATED)
     }
     emits {
-      ARTICLE_CREATED external { id: string }
+      ARTICLE_CREATED -> external { id: string }
+      ArticleLoadFailed
+      ArticleLoaded
+      ArticleSaveFailed
+      ArticleSaved
     }
     listens {
       SAVE { data : object! }
           ArticleLoadFailed { error : string, code : string }
-      ArticleBrowse CREATE -> CREATE
+      ArticleBrowse.CREATE -> CREATE
     }
-    emits: [ArticleLoadFailed, ArticleLoaded, ArticleSaveFailed, ArticleSaved]
   }
   trait ArticleEdit -> Article [interaction, collection] {
     listens {
-      ArticleView EDIT -> EDIT
+      ArticleView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -120,19 +138,24 @@ orbital ArticleOrbital {
         (emit ARTICLE_UPDATED)
     }
     emits {
-      ARTICLE_UPDATED external { id: string }
+      ARTICLE_UPDATED -> external { id: string }
+      ArticleLoadFailed
+      ArticleLoaded
+      ArticleUpdateFailed
+      ArticleUpdated
     }
     listens {
       EDIT { id : string!, row : Article }
       SAVE { data : object! }
           ArticleLoadFailed { error : string, code : string }
-      ArticleBrowse EDIT -> EDIT
+      ArticleBrowse.EDIT -> EDIT
     }
-    emits: [ArticleLoadFailed, ArticleLoaded, ArticleUpdateFailed, ArticleUpdated]
   }
   trait ArticleView -> Article [interaction, collection] {
     emits {
       EDIT { id : string }
+      ArticleLoaded
+      ArticleLoadFailed
     }
     initial: closed
     state closed {
@@ -155,9 +178,8 @@ orbital ArticleOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ArticleLoadFailed { error : string, code : string }
-      ArticleBrowse VIEW -> VIEW
+      ArticleBrowse.VIEW -> VIEW
     }
-    emits: [ArticleLoaded, ArticleLoadFailed]
   }
   trait ArticleDelete -> Article [interaction, collection] {
     initial: idle
@@ -186,14 +208,17 @@ orbital ArticleOrbital {
         (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
     }
     emits {
-      ARTICLE_DELETED external { id: string }
+      ARTICLE_DELETED -> external { id: string }
+      ArticleDeleteFailed
+      ArticleDeleted
+      ArticleLoadFailed
+      ArticleLoaded
     }
     listens {
       DELETE { id : string! }
           ArticleLoadFailed { error : string, code : string }
-      ArticleBrowse DELETE -> DELETE
+      ArticleBrowse.DELETE -> DELETE
     }
-    emits: [ArticleDeleteFailed, ArticleDeleted, ArticleLoadFailed, ArticleLoaded]
   }
   page "/articles" as ArticlesPage -> ArticleBrowse, ArticleCreate, ArticleEdit, ArticleView, ArticleDelete
 }
@@ -225,12 +250,13 @@ orbital MediaAssetOrbital {
     emits {
       CREATE
       VIEW { id : string!, row : MediaAsset }
+      MediaAssetLoaded
+      MediaAssetLoadFailed
     }
     listens {
-      * PUBLISH -> INIT
+      ArticleOrbital.ArticleBrowse.PUBLISH -> INIT
           MediaAssetLoadFailed { error : string, code : string }
     }
-    emits: [MediaAssetLoaded, MediaAssetLoadFailed]
   }
   trait MediaAssetCreate -> MediaAsset [interaction, collection] {
     initial: closed
@@ -251,11 +277,17 @@ orbital MediaAssetOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [MediaAssetLoadFailed, MediaAssetLoaded, MediaAssetSaveFailed, MediaAssetSaved]
-    listens {
+emits {
+      MediaAssetLoadFailed
+      MediaAssetLoaded
+      MediaAssetSaveFailed
+      MediaAssetSaved
+    }
+
+        listens {
       MediaAssetLoadFailed { error : string, code : string }
       SAVE { data : string }
-      MediaAssetBrowse CREATE -> CREATE
+      MediaAssetBrowse.CREATE -> CREATE
     }
   }
   trait MediaAssetView -> MediaAsset [interaction, collection] {
@@ -276,11 +308,15 @@ orbital MediaAssetOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [MediaAssetLoaded, MediaAssetLoadFailed]
-    listens {
+emits {
+      MediaAssetLoaded
+      MediaAssetLoadFailed
+    }
+
+        listens {
       MediaAssetLoadFailed { error : string, code : string }
       VIEW { id : string }
-      MediaAssetBrowse VIEW -> VIEW
+      MediaAssetBrowse.VIEW -> VIEW
     }
   }
   page "/media" -> MediaAssetBrowse, MediaAssetCreate, MediaAssetView
@@ -319,15 +355,16 @@ orbital CategoryOrbital {
       VIEW { id : string!, row : Category }
       EDIT { id : string!, row : Category }
       DELETE { id : string!, row : Category }
+      CategoryLoaded
+      CategoryLoadFailed
     }
     listens {
-      CategoryCreate CATEGORY_CREATED -> INIT
-      CategoryEdit CATEGORY_UPDATED -> INIT
-      CategoryDelete CATEGORY_DELETED -> INIT
-      * CATEGORIZE -> INIT
+      CategoryCreate.CATEGORY_CREATED -> INIT
+      CategoryEdit.CATEGORY_UPDATED -> INIT
+      CategoryDelete.CATEGORY_DELETED -> INIT
+      ArticleOrbital.ArticleBrowse.CATEGORIZE -> INIT
           CategoryLoadFailed { error : string, code : string }
     }
-    emits: [CategoryLoaded, CategoryLoadFailed]
   }
   trait CategoryCreate -> Category [interaction, collection] {
     initial: closed
@@ -351,12 +388,15 @@ orbital CategoryOrbital {
     }
     emits {
       CATEGORY_CREATED
+      CategoryLoadFailed
+      CategoryLoaded
+      CategorySaveFailed
+      CategorySaved
     }
-    emits: [CategoryLoadFailed, CategoryLoaded, CategorySaveFailed, CategorySaved]
     listens {
       CategoryLoadFailed { error : string, code : string }
       SAVE { data : string }
-      CategoryBrowse CREATE -> CREATE
+      CategoryBrowse.CREATE -> CREATE
     }
   }
   trait CategoryEdit -> Category [interaction, collection] {
@@ -381,19 +421,24 @@ orbital CategoryOrbital {
     }
     emits {
       CATEGORY_UPDATED
+      CategoryLoadFailed
+      CategoryLoaded
+      CategoryUpdateFailed
+      CategoryUpdated
     }
-    emits: [CategoryLoadFailed, CategoryLoaded, CategoryUpdateFailed, CategoryUpdated]
     listens {
-      CategoryView EDIT -> EDIT
+      CategoryView.EDIT -> EDIT
       CategoryLoadFailed { error : string, code : string }
       EDIT { id : string, row : Category }
       SAVE { data : string }
-      CategoryBrowse EDIT -> EDIT
+      CategoryBrowse.EDIT -> EDIT
     }
   }
   trait CategoryView -> Category [interaction, collection] {
     emits {
       EDIT { id : string }
+      CategoryLoaded
+      CategoryLoadFailed
     }
     initial: closed
     state closed {
@@ -412,11 +457,10 @@ orbital CategoryOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [CategoryLoaded, CategoryLoadFailed]
     listens {
       CategoryLoadFailed { error : string, code : string }
       VIEW { id : string }
-      CategoryBrowse VIEW -> VIEW
+      CategoryBrowse.VIEW -> VIEW
     }
   }
   trait CategoryDelete -> Category [interaction, collection] {
@@ -447,12 +491,15 @@ orbital CategoryOrbital {
     }
     emits {
       CATEGORY_DELETED
+      CategoryDeleteFailed
+      CategoryDeleted
+      CategoryLoadFailed
+      CategoryLoaded
     }
-    emits: [CategoryDeleteFailed, CategoryDeleted, CategoryLoadFailed, CategoryLoaded]
     listens {
       CategoryLoadFailed { error : string, code : string }
       DELETE { id : string }
-      CategoryBrowse DELETE -> DELETE
+      CategoryBrowse.DELETE -> DELETE
     }
   }
   page "/categories" -> CategoryBrowse, CategoryCreate, CategoryEdit, CategoryView, CategoryDelete

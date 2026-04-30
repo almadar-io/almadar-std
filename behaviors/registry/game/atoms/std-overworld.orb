@@ -151,8 +151,8 @@
                     "WorldRegion",
                     {
                       "emit": {
-                        "success": "WorldRegionLoaded",
-                        "failure": "WorldRegionLoadFailed"
+                        "failure": "WorldRegionLoadFailed",
+                        "success": "WorldRegionLoaded"
                       }
                     }
                   ],
@@ -160,22 +160,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading map…"
+                          "content": "Loading map…",
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -189,49 +189,55 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between",
                           "children": [
                             {
                               "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "map",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "map"
                                 },
                                 {
-                                  "content": "World Map",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "World Map"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "status": "online",
-                              "label": "Exploring",
                               "type": "status-dot",
-                              "pulse": false
+                              "pulse": false,
+                              "label": "Exploring",
+                              "status": "online"
                             }
-                          ]
+                          ],
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "height": "200px",
                           "type": "map-view",
+                          "height": "200px",
                           "zoom": 10.0,
                           "markers": []
                         },
                         {
+                          "itemActions": [
+                            {
+                              "event": "TRAVEL",
+                              "label": "Travel"
+                            }
+                          ],
+                          "fields": [],
                           "entity": "@payload.data",
                           "type": "data-grid",
                           "renderItem": [
@@ -239,11 +245,20 @@
                             "item",
                             {
                               "type": "stack",
+                              "gap": "sm",
+                              "direction": "vertical",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "between",
+                                  "align": "center",
                                   "children": [
                                     {
+                                      "type": "stack",
                                       "direction": "horizontal",
+                                      "align": "center",
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "name": "map-pin",
@@ -254,40 +269,25 @@
                                           "variant": "h4",
                                           "content": "@item.name"
                                         }
-                                      ],
-                                      "align": "center",
-                                      "type": "stack",
-                                      "gap": "sm"
+                                      ]
                                     },
                                     {
                                       "label": "@item.description",
                                       "type": "badge"
                                     }
-                                  ],
-                                  "justify": "between",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "type": "stack"
+                                  ]
                                 },
                                 {
-                                  "content": "@item.status",
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "content": "@item.status"
                                 }
-                              ],
-                              "gap": "sm",
-                              "direction": "vertical"
-                            }
-                          ],
-                          "fields": [],
-                          "itemActions": [
-                            {
-                              "label": "Travel",
-                              "event": "TRAVEL"
+                              ]
                             }
                           ]
                         }
                       ],
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -302,36 +302,36 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Failed to load map",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted",
                           "content": "@payload.error"
                         },
                         {
                           "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "type": "button",
+                          "variant": "primary",
                           "label": "Retry",
-                          "variant": "primary"
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -345,24 +345,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "gap": "md",
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "name": "loader",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "Traveling..."
+                              "content": "Traveling...",
+                              "variant": "h2"
                             }
                           ]
                         },
@@ -371,10 +370,11 @@
                         },
                         {
                           "variant": "body",
-                          "type": "typography",
-                          "content": "Traveling to the destination region."
+                          "content": "Traveling to the destination region.",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -389,8 +389,8 @@
                     "WorldRegion",
                     {
                       "emit": {
-                        "failure": "WorldRegionLoadFailed",
-                        "success": "WorldRegionLoaded"
+                        "success": "WorldRegionLoaded",
+                        "failure": "WorldRegionLoadFailed"
                       }
                     }
                   ],

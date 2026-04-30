@@ -34,11 +34,15 @@ orbital TabContentOrbital {
         (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      TabContentLoaded
+      TabContentLoadFailed
+    }
+
+        listens {
       SELECT_TAB { tab : string! }
       TabContentLoadFailed { error : string, code : string }
     }
-    emits: [TabContentLoaded, TabContentLoadFailed]
   }
   page "/tabcontents" as TabContentTabsPage -> TabContentTabs
 }

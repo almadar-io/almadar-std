@@ -36,11 +36,21 @@ orbital TransactionOrbital {
       VIEW { id : string!, row : Transaction }
       EDIT { id : string!, row : Transaction }
       DELETE { id : string!, row : Transaction }
+      TransactionLoaded
+      TransactionLoadFailed
+      TransactionSaved
+      TransactionSaveFailed
+      TransactionUpdated
+      TransactionUpdateFailed
+      TransactionDeleted
+      TransactionDeleteFailed
+      FinanceReportSaved
+      FinanceReportSaveFailed
     }
     listens {
-      TransactionCreate TRANSACTION_CREATED -> INIT
-      TransactionEdit TRANSACTION_UPDATED -> INIT
-      TransactionDelete TRANSACTION_DELETED -> INIT
+      TransactionCreate.TRANSACTION_CREATED -> INIT
+      TransactionEdit.TRANSACTION_UPDATED -> INIT
+      TransactionDelete.TRANSACTION_DELETED -> INIT
       VIEW { id : string!, row : Transaction }
       EDIT { id : string!, row : Transaction }
       DELETE { id : string!, row : Transaction }
@@ -51,7 +61,6 @@ orbital TransactionOrbital {
       TransactionDeleteFailed { error : string, code : string }
       FinanceReportSaveFailed { error : string, code : string }
     }
-    emits: [TransactionLoaded, TransactionLoadFailed, TransactionSaved, TransactionSaveFailed, TransactionUpdated, TransactionUpdateFailed, TransactionDeleted, TransactionDeleteFailed, FinanceReportSaved, FinanceReportSaveFailed]
   }
   trait TransactionCreate -> Transaction [interaction, collection] {
     initial: closed
@@ -74,18 +83,21 @@ orbital TransactionOrbital {
         (emit TRANSACTION_CREATED)
     }
     emits {
-      TRANSACTION_CREATED external { id: string }
+      TRANSACTION_CREATED -> external { id: string }
+      TransactionLoadFailed
+      TransactionLoaded
+      TransactionSaveFailed
+      TransactionSaved
     }
     listens {
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse CREATE -> CREATE
+      TransactionBrowse.CREATE -> CREATE
     }
-    emits: [TransactionLoadFailed, TransactionLoaded, TransactionSaveFailed, TransactionSaved]
   }
   trait TransactionEdit -> Transaction [interaction, collection] {
     listens {
-      TransactionView EDIT -> EDIT
+      TransactionView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -107,19 +119,24 @@ orbital TransactionOrbital {
         (emit TRANSACTION_UPDATED)
     }
     emits {
-      TRANSACTION_UPDATED external { id: string }
+      TRANSACTION_UPDATED -> external { id: string }
+      TransactionLoadFailed
+      TransactionLoaded
+      TransactionUpdateFailed
+      TransactionUpdated
     }
     listens {
       EDIT { id : string!, row : Transaction }
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse EDIT -> EDIT
+      TransactionBrowse.EDIT -> EDIT
     }
-    emits: [TransactionLoadFailed, TransactionLoaded, TransactionUpdateFailed, TransactionUpdated]
   }
   trait TransactionView -> Transaction [interaction, collection] {
     emits {
       EDIT { id : string }
+      TransactionLoaded
+      TransactionLoadFailed
     }
     initial: closed
     state closed {
@@ -143,9 +160,8 @@ orbital TransactionOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse VIEW -> VIEW
+      TransactionBrowse.VIEW -> VIEW
     }
-    emits: [TransactionLoaded, TransactionLoadFailed]
   }
   trait TransactionDelete -> Transaction [interaction, collection] {
     initial: idle
@@ -174,14 +190,17 @@ orbital TransactionOrbital {
         (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
     }
     emits {
-      TRANSACTION_DELETED external { id: string }
+      TRANSACTION_DELETED -> external { id: string }
+      TransactionDeleteFailed
+      TransactionDeleted
+      TransactionLoadFailed
+      TransactionLoaded
     }
     listens {
       DELETE { id : string! }
           TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse DELETE -> DELETE
+      TransactionBrowse.DELETE -> DELETE
     }
-    emits: [TransactionDeleteFailed, TransactionDeleted, TransactionLoadFailed, TransactionLoaded]
   }
   page "/transactions" as TransactionsPage -> TransactionBrowse, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete
 }
@@ -219,8 +238,12 @@ orbital FinanceSummaryOrbital {
         (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [FinanceSummaryLoaded, FinanceSummaryLoadFailed]
-    listens {
+emits {
+      FinanceSummaryLoaded
+      FinanceSummaryLoadFailed
+    }
+
+        listens {
       FinanceSummaryLoadFailed { error : string, code : string }
     }
   }
@@ -252,11 +275,12 @@ orbital FinanceReportOrbital {
     emits {
       CREATE
       VIEW { id : string!, row : FinanceReport }
+      FinanceReportLoaded
+      FinanceReportLoadFailed
     }
     listens {
           FinanceReportLoadFailed { error : string, code : string }
     }
-    emits: [FinanceReportLoaded, FinanceReportLoadFailed]
   }
   trait FinanceReportCreate -> FinanceReport [interaction, collection] {
     initial: closed
@@ -278,11 +302,17 @@ orbital FinanceReportOrbital {
         (render-ui main { type: "box" })
     }
 
-    emits: [FinanceReportLoadFailed, FinanceReportLoaded, FinanceReportSaveFailed, FinanceReportSaved]
-    listens {
+emits {
+      FinanceReportLoadFailed
+      FinanceReportLoaded
+      FinanceReportSaveFailed
+      FinanceReportSaved
+    }
+
+        listens {
       FinanceReportLoadFailed { error : string, code : string }
       SAVE { data : string }
-      FinanceReportBrowse CREATE -> CREATE
+      FinanceReportBrowse.CREATE -> CREATE
     }
   }
   trait FinanceReportView -> FinanceReport [interaction, collection] {
@@ -304,11 +334,15 @@ orbital FinanceReportOrbital {
         (render-ui main { type: "box" })
     }
 
-    emits: [FinanceReportLoaded, FinanceReportLoadFailed]
-    listens {
+emits {
+      FinanceReportLoaded
+      FinanceReportLoadFailed
+    }
+
+        listens {
       FinanceReportLoadFailed { error : string, code : string }
       VIEW { id : string }
-      FinanceReportBrowse VIEW -> VIEW
+      FinanceReportBrowse.VIEW -> VIEW
     }
   }
   page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView

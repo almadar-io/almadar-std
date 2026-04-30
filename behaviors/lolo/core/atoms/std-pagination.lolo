@@ -34,11 +34,15 @@ orbital PagedItemOrbital {
         (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      PagedItemLoaded
+      PagedItemLoadFailed
+    }
+
+        listens {
       PAGE { page : number!, pageSize : number! }
       PagedItemLoadFailed { error : string, code : string }
     }
-    emits: [PagedItemLoaded, PagedItemLoadFailed]
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination
 }

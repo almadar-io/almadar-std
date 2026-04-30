@@ -57,10 +57,14 @@ orbital AgentStepProgressOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] })
     }
-    listens {
+emits {
+      AgentStepProgressLoaded
+      AgentStepProgressLoadFailed
+    }
+
+        listens {
       AgentStepProgressLoadFailed { message : string }
     }
-    emits: [AgentStepProgressLoaded, AgentStepProgressLoadFailed]
   }
   page "/agentstepprogresss" as AgentStepProgressPage -> AgentStepProgressProgress
 }

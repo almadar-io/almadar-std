@@ -179,7 +179,9 @@
               "event": "ENCOUNTER_STARTED",
               "triggers": "START",
               "source": {
-                "kind": "any"
+                "kind": "orbital",
+                "orbital": "WorldZoneOrbital",
+                "trait": "WorldZoneNavigation"
               }
             }
           ],
@@ -372,8 +374,8 @@
                     "BattleState",
                     {
                       "emit": {
-                        "failure": "BattleStateLoadFailed",
-                        "success": "BattleStateLoaded"
+                        "success": "BattleStateLoaded",
+                        "failure": "BattleStateLoadFailed"
                       }
                     }
                   ],
@@ -381,19 +383,19 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "RPG Game",
                       "showTopBar": true,
+                      "appName": "RPG Game",
                       "type": "game-shell",
                       "children": [
                         {
-                          "title": "Battle Arena",
                           "subtitle": "Turn-Based Strategy",
+                          "title": "Battle Arena",
                           "type": "game-menu",
                           "menuItems": [
                             {
-                              "variant": "primary",
+                              "event": "START",
                               "label": "Start Battle",
-                              "event": "START"
+                              "variant": "primary"
                             }
                           ]
                         }
@@ -407,199 +409,6 @@
                 "to": "playing",
                 "event": "START",
                 "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "RPG Game",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "type": "game-hud",
-                          "stats": [
-                            {
-                              "value": "@entity.turn",
-                              "label": "Turn"
-                            },
-                            {
-                              "value": "@entity.score",
-                              "label": "Score"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE"
-              },
-              {
-                "from": "playing",
-                "to": "playing",
-                "event": "END_TURN",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.turn",
-                    [
-                      "+",
-                      "@entity.turn",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "appName": "RPG Game",
-                      "children": [
-                        {
-                          "stats": [
-                            {
-                              "value": "@entity.turn",
-                              "label": "Turn"
-                            },
-                            {
-                              "label": "Score",
-                              "value": "@entity.score"
-                            }
-                          ],
-                          "type": "game-hud"
-                        }
-                      ],
-                      "showTopBar": true,
-                      "type": "game-shell"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "paused",
-                "event": "PAUSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "title": "Paused",
-                      "type": "game-menu",
-                      "menuItems": [
-                        {
-                          "event": "RESUME",
-                          "variant": "primary",
-                          "label": "Resume"
-                        },
-                        {
-                          "label": "Quit",
-                          "variant": "ghost",
-                          "event": "RESTART"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "RPG Game",
-                      "children": [
-                        {
-                          "menuItems": [
-                            {
-                              "variant": "primary",
-                              "label": "Play Again",
-                              "event": "RESTART"
-                            },
-                            {
-                              "variant": "secondary",
-                              "label": "Main Menu",
-                              "event": "RESTART"
-                            }
-                          ],
-                          "stats": [
-                            {
-                              "value": "@entity.turn",
-                              "label": "Turns"
-                            },
-                            {
-                              "value": "@entity.score",
-                              "label": "Score"
-                            }
-                          ],
-                          "type": "game-over-screen",
-                          "title": "Battle Over"
-                        }
-                      ],
-                      "showTopBar": true
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE"
-              },
-              {
-                "from": "paused",
-                "to": "playing",
-                "event": "RESUME",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "showTopBar": true,
-                      "appName": "RPG Game",
-                      "children": [
-                        {
-                          "type": "game-hud",
-                          "stats": [
-                            {
-                              "label": "Turn",
-                              "value": "@entity.turn"
-                            },
-                            {
-                              "label": "Score",
-                              "value": "@entity.score"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "paused",
-                "to": "playing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
                   [
                     "render-ui",
                     "main",
@@ -627,6 +436,199 @@
                 ]
               },
               {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "playing",
+                "to": "playing",
+                "event": "END_TURN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.turn",
+                    [
+                      "+",
+                      "@entity.turn",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-shell",
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "value": "@entity.turn",
+                              "label": "Turn"
+                            },
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ],
+                          "type": "game-hud"
+                        }
+                      ],
+                      "appName": "RPG Game",
+                      "showTopBar": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "playing",
+                "to": "paused",
+                "event": "PAUSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "title": "Paused",
+                      "menuItems": [
+                        {
+                          "event": "RESUME",
+                          "label": "Resume",
+                          "variant": "primary"
+                        },
+                        {
+                          "event": "RESTART",
+                          "label": "Quit",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "game-menu"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "menuItems": [
+                            {
+                              "variant": "primary",
+                              "label": "Play Again",
+                              "event": "RESTART"
+                            },
+                            {
+                              "event": "RESTART",
+                              "variant": "secondary",
+                              "label": "Main Menu"
+                            }
+                          ],
+                          "stats": [
+                            {
+                              "label": "Turns",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "value": "@entity.score",
+                              "label": "Score"
+                            }
+                          ],
+                          "title": "Battle Over",
+                          "type": "game-over-screen"
+                        }
+                      ],
+                      "type": "game-shell",
+                      "appName": "RPG Game",
+                      "showTopBar": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "paused",
+                "to": "playing",
+                "event": "RESUME",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "type": "game-hud",
+                          "stats": [
+                            {
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "game-shell",
+                      "appName": "RPG Game"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "playing",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "type": "game-hud",
+                          "stats": [
+                            {
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "value": "@entity.score",
+                              "label": "Score"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "game-shell",
+                      "appName": "RPG Game"
+                    }
+                  ]
+                ]
+              },
+              {
                 "from": "paused",
                 "to": "menu",
                 "event": "RESTART",
@@ -642,21 +644,21 @@
                     {
                       "children": [
                         {
-                          "subtitle": "Turn-Based Strategy",
                           "type": "game-menu",
+                          "subtitle": "Turn-Based Strategy",
                           "menuItems": [
                             {
-                              "variant": "primary",
                               "event": "START",
+                              "variant": "primary",
                               "label": "Start Battle"
                             }
                           ],
                           "title": "Battle Arena"
                         }
                       ],
+                      "showTopBar": true,
                       "type": "game-shell",
-                      "appName": "RPG Game",
-                      "showTopBar": true
+                      "appName": "RPG Game"
                     }
                   ]
                 ]
@@ -670,21 +672,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
                       "appName": "RPG Game",
                       "showTopBar": true,
-                      "type": "game-shell",
                       "children": [
                         {
-                          "title": "Battle Arena",
-                          "type": "game-menu",
                           "menuItems": [
                             {
-                              "label": "Start Battle",
                               "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Start Battle"
                             }
                           ],
-                          "subtitle": "Turn-Based Strategy"
+                          "subtitle": "Turn-Based Strategy",
+                          "type": "game-menu",
+                          "title": "Battle Arena"
                         }
                       ]
                     }
@@ -806,19 +808,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "RPG Game",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "showTimestamps": true,
-                          "events": "@BattleState",
-                          "type": "combat-log",
+                          "autoScroll": true,
                           "title": "Combat Log",
+                          "events": "@BattleState",
                           "maxVisible": 10.0,
-                          "autoScroll": true
+                          "showTimestamps": true,
+                          "type": "combat-log"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "appName": "RPG Game"
                     }
                   ]
                 ]
@@ -832,19 +834,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "RPG Game",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
-                          "events": "@BattleState",
-                          "maxVisible": 10.0,
-                          "showTimestamps": true,
                           "autoScroll": true,
                           "type": "combat-log",
+                          "maxVisible": 10.0,
+                          "events": "@BattleState",
+                          "showTimestamps": true,
                           "title": "Combat Log"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1022,8 +1024,8 @@
                     "WorldZone",
                     {
                       "emit": {
-                        "success": "WorldZoneLoaded",
-                        "failure": "WorldZoneLoadFailed"
+                        "failure": "WorldZoneLoadFailed",
+                        "success": "WorldZoneLoaded"
                       }
                     }
                   ],
@@ -1031,21 +1033,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading map…",
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "content": "Loading map…",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -1060,39 +1062,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
                               "children": [
                                 {
-                                  "gap": "md",
-                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "map"
                                     },
                                     {
-                                      "content": "World Map",
                                       "variant": "h2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "World Map"
                                     }
                                   ],
-                                  "type": "stack"
+                                  "direction": "horizontal",
+                                  "gap": "md"
                                 },
                                 {
-                                  "label": "Exploring",
-                                  "pulse": false,
+                                  "status": "online",
                                   "type": "status-dot",
-                                  "status": "online"
+                                  "pulse": false,
+                                  "label": "Exploring"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "justify": "between"
                             },
                             {
                               "type": "divider"
@@ -1100,24 +1103,25 @@
                             {
                               "markers": [],
                               "height": "200px",
-                              "type": "map-view",
-                              "zoom": 10.0
+                              "zoom": 10.0,
+                              "type": "map-view"
                             },
                             {
+                              "fields": [],
+                              "entity": "@payload.data",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "gap": "sm",
+                                  "direction": "vertical",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "align": "center",
                                       "type": "stack",
+                                      "direction": "horizontal",
                                       "justify": "between",
                                       "children": [
                                         {
-                                          "gap": "sm",
-                                          "align": "center",
                                           "type": "stack",
                                           "direction": "horizontal",
                                           "children": [
@@ -1126,47 +1130,45 @@
                                               "type": "icon"
                                             },
                                             {
-                                              "variant": "h4",
                                               "content": "@item.name",
+                                              "variant": "h4",
                                               "type": "typography"
                                             }
-                                          ]
+                                          ],
+                                          "align": "center",
+                                          "gap": "sm"
                                         },
                                         {
                                           "label": "@item.description",
                                           "type": "badge"
                                         }
                                       ],
-                                      "direction": "horizontal"
+                                      "align": "center"
                                     },
                                     {
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "@item.level"
+                                      "content": "@item.level",
+                                      "variant": "caption"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "direction": "vertical"
+                                  "gap": "sm"
                                 }
                               ],
-                              "entity": "@payload.data",
                               "itemActions": [
                                 {
                                   "event": "TRAVEL",
                                   "label": "Travel"
                                 }
                               ],
-                              "fields": [],
                               "type": "data-grid"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack",
                           "gap": "lg"
                         }
                       ],
-                      "showTopBar": true,
-                      "appName": "RPG Game"
+                      "appName": "RPG Game",
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1180,13 +1182,15 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -1196,20 +1200,18 @@
                         {
                           "variant": "body",
                           "type": "typography",
-                          "content": "@payload.error",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "action": "INIT",
                           "variant": "primary",
-                          "icon": "rotate-ccw",
                           "type": "button",
-                          "label": "Retry"
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "action": "INIT"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1223,43 +1225,43 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "RPG Game",
                       "type": "game-shell",
+                      "showTopBar": true,
+                      "appName": "RPG Game",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
+                          "direction": "vertical",
                           "gap": "lg",
+                          "align": "center",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
                                   "name": "loader",
                                   "type": "icon"
                                 },
                                 {
+                                  "content": "Traveling...",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Traveling..."
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
                               "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "variant": "body",
                               "content": "Traveling to the destination worldzone.",
+                              "variant": "body",
                               "type": "typography"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         }
-                      ],
-                      "showTopBar": true
+                      ]
                     }
                   ]
                 ]
@@ -1274,8 +1276,8 @@
                     "WorldZone",
                     {
                       "emit": {
-                        "failure": "WorldZoneLoadFailed",
-                        "success": "WorldZoneLoaded"
+                        "success": "WorldZoneLoaded",
+                        "failure": "WorldZoneLoadFailed"
                       }
                     }
                   ],
@@ -1480,7 +1482,9 @@
               "event": "LOOT_DROPPED",
               "triggers": "INIT",
               "source": {
-                "kind": "any"
+                "kind": "orbital",
+                "orbital": "BattleStateOrbital",
+                "trait": "BattleStateBattleFlow"
               }
             }
           ],
@@ -1544,8 +1548,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ],
@@ -1553,22 +1557,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
+                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1582,51 +1586,50 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "RPG Game",
+                      "type": "game-shell",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "justify": "between",
                               "gap": "md",
+                              "justify": "between",
                               "align": "center",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "briefcase"
+                                      "name": "briefcase",
+                                      "type": "icon"
                                     },
                                     {
+                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Inventory",
-                                      "variant": "h2"
+                                      "content": "Inventory"
                                     }
                                   ],
-                                  "align": "center"
+                                  "direction": "horizontal",
+                                  "gap": "sm"
                                 },
                                 {
-                                  "direction": "horizontal",
-                                  "type": "stack",
                                   "gap": "sm",
+                                  "type": "stack",
                                   "children": [
                                     {
+                                      "action": "ADD_ITEM",
+                                      "label": "Add RpgItem",
                                       "variant": "primary",
                                       "icon": "plus",
-                                      "type": "button",
-                                      "label": "Add RpgItem",
-                                      "action": "ADD_ITEM"
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -1634,8 +1637,8 @@
                             {
                               "itemActions": [
                                 {
-                                  "label": "Use",
                                   "variant": "ghost",
+                                  "label": "Use",
                                   "event": "USE_ITEM"
                                 },
                                 {
@@ -1644,48 +1647,49 @@
                                   "variant": "danger"
                                 }
                               ],
+                              "type": "data-grid",
+                              "entity": "@payload.data",
                               "fields": [
                                 {
-                                  "icon": "briefcase",
                                   "label": "Name",
+                                  "icon": "briefcase",
                                   "name": "name",
                                   "variant": "h4"
                                 },
                                 {
                                   "name": "type",
-                                  "label": "Type",
-                                  "variant": "badge",
                                   "colorMap": {
+                                    "failed": "destructive",
+                                    "disabled": "neutral",
                                     "active": "success",
-                                    "completed": "success",
-                                    "draft": "warning",
-                                    "done": "success",
                                     "pending": "warning",
-                                    "error": "destructive",
+                                    "scheduled": "warning",
                                     "archived": "neutral",
                                     "cancelled": "destructive",
-                                    "disabled": "neutral",
-                                    "failed": "destructive",
-                                    "scheduled": "warning",
-                                    "inactive": "neutral"
-                                  }
+                                    "error": "destructive",
+                                    "done": "success",
+                                    "draft": "warning",
+                                    "inactive": "neutral",
+                                    "completed": "success"
+                                  },
+                                  "label": "Type",
+                                  "variant": "badge"
                                 },
                                 {
+                                  "label": "Quantity",
                                   "variant": "caption",
-                                  "name": "quantity",
-                                  "label": "Quantity"
+                                  "name": "quantity"
                                 }
-                              ],
-                              "entity": "@payload.data",
-                              "type": "data-grid"
+                              ]
                             }
                           ],
+                          "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
                           "gap": "lg"
                         }
                       ],
-                      "showTopBar": true,
-                      "type": "game-shell",
-                      "appName": "RPG Game"
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1699,34 +1703,34 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
+                      "align": "center",
                       "direction": "vertical",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
+                          "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load rpgitem"
+                          "content": "Failed to load rpgitem",
+                          "variant": "h3"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
+                          "variant": "body",
                           "content": "@payload.error",
-                          "variant": "body"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
+                          "icon": "rotate-ccw",
                           "type": "button",
                           "action": "INIT",
-                          "icon": "rotate-ccw"
+                          "label": "Retry",
+                          "variant": "primary"
                         }
                       ]
                     }
@@ -1903,8 +1907,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ]
@@ -1920,8 +1924,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ],
@@ -1929,7 +1933,6 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
                       "children": [
                         {
                           "type": "stack",
@@ -1942,8 +1945,8 @@
                             },
                             {
                               "type": "typography",
-                              "content": "Add RpgItem",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "Add RpgItem"
                             }
                           ]
                         },
@@ -1951,20 +1954,21 @@
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
-                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "name",
                             "type",
                             "quantity",
                             "rarity"
                           ],
-                          "submitEvent": "SAVE",
-                          "type": "form-section"
+                          "mode": "create",
+                          "cancelEvent": "CLOSE"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2005,8 +2009,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "RpgItemSaved",
-                        "failure": "RpgItemSaveFailed"
+                        "failure": "RpgItemSaveFailed",
+                        "success": "RpgItemSaved"
                       }
                     }
                   ],
@@ -2204,8 +2208,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ]
@@ -2220,36 +2224,35 @@
                     "fetch",
                     "RpgItem",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "success": "RpgItemLoaded",
-                        "failure": "RpgItemLoadFailed"
-                      },
-                      "id": "@payload.id"
+                        "failure": "RpgItemLoadFailed",
+                        "success": "RpgItemLoaded"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "zap",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "zap"
                             },
                             {
-                              "type": "typography",
                               "content": "Use RpgItem",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -2260,29 +2263,30 @@
                           "type": "typography"
                         },
                         {
-                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Cancel",
+                              "action": "CLOSE",
                               "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE"
+                              "label": "Cancel"
                             },
                             {
-                              "icon": "check",
-                              "type": "button",
                               "label": "Confirm Use",
+                              "type": "button",
                               "variant": "primary",
+                              "icon": "check",
                               "action": "SAVE"
                             }
                           ],
-                          "type": "stack",
                           "justify": "center",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2323,8 +2327,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "RpgItemUpdateFailed",
-                        "success": "RpgItemUpdated"
+                        "success": "RpgItemUpdated",
+                        "failure": "RpgItemUpdateFailed"
                       }
                     }
                   ],
@@ -2516,8 +2520,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ]
@@ -2537,68 +2541,68 @@
                     "fetch",
                     "RpgItem",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "success": "RpgItemLoaded",
-                        "failure": "RpgItemLoadFailed"
-                      }
+                        "failure": "RpgItemLoadFailed",
+                        "success": "RpgItemLoaded"
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "alert-triangle",
                               "type": "icon"
                             },
                             {
-                              "content": "Drop RpgItem",
                               "variant": "h3",
+                              "content": "Drop RpgItem",
                               "type": "typography"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
+                          "variant": "error",
                           "message": "Are you sure you want to drop this rpgitem?",
-                          "variant": "error"
+                          "type": "alert"
                         },
                         {
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "variant": "ghost",
-                              "action": "CANCEL"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Drop",
-                              "type": "button",
-                              "icon": "check",
-                              "action": "CONFIRM_DROP"
-                            }
-                          ],
                           "direction": "horizontal",
                           "justify": "end",
+                          "gap": "sm",
                           "type": "stack",
-                          "gap": "sm"
+                          "children": [
+                            {
+                              "label": "Cancel",
+                              "variant": "ghost",
+                              "action": "CANCEL",
+                              "type": "button"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Drop",
+                              "action": "CONFIRM_DROP",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2637,8 +2641,8 @@
                     "RpgItem",
                     {
                       "emit": {
-                        "failure": "RpgItemLoadFailed",
-                        "success": "RpgItemLoaded"
+                        "success": "RpgItemLoaded",
+                        "failure": "RpgItemLoadFailed"
                       }
                     }
                   ]
@@ -2820,7 +2824,9 @@
               "event": "QUEST_ACCEPTED",
               "triggers": "INIT",
               "source": {
-                "kind": "any"
+                "kind": "orbital",
+                "orbital": "WorldZoneOrbital",
+                "trait": "WorldZoneNavigation"
               }
             }
           ],
@@ -2958,11 +2964,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -2973,7 +2978,8 @@
                           "variant": "caption",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2987,9 +2993,7 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "RPG Game",
-                      "showTopBar": true,
                       "children": [
                         {
                           "direction": "vertical",
@@ -2997,92 +3001,94 @@
                           "children": [
                             {
                               "direction": "horizontal",
-                              "type": "stack",
-                              "justify": "between",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
                                       "name": "flag"
                                     },
                                     {
-                                      "content": "Missions Board",
                                       "variant": "h2",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "Missions Board"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack"
+                                  "gap": "md"
                                 }
-                              ]
+                              ],
+                              "justify": "between",
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "data-list",
                               "entity": "@payload.data",
+                              "groupBy": "status",
                               "itemActions": [
                                 {
                                   "label": "Accept",
                                   "event": "ACCEPT"
                                 }
                               ],
-                              "type": "data-list",
+                              "fields": [],
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
                                   "children": [
                                     {
+                                      "type": "stack",
+                                      "align": "center",
+                                      "justify": "between",
                                       "children": [
                                         {
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "align": "center",
                                           "children": [
                                             {
                                               "name": "flag",
                                               "type": "icon"
                                             },
                                             {
-                                              "type": "typography",
                                               "content": "@item.title",
-                                              "variant": "h4"
+                                              "variant": "h4",
+                                              "type": "typography"
                                             }
-                                          ],
-                                          "direction": "horizontal",
-                                          "type": "stack",
-                                          "gap": "sm",
-                                          "align": "center"
+                                          ]
                                         },
                                         {
-                                          "type": "badge",
-                                          "label": "@item.description"
+                                          "label": "@item.description",
+                                          "type": "badge"
                                         }
                                       ],
-                                      "direction": "horizontal",
-                                      "align": "center",
-                                      "type": "stack",
-                                      "justify": "between"
+                                      "direction": "horizontal"
                                     },
                                     {
                                       "type": "typography",
                                       "variant": "caption",
                                       "content": "@item.status"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "vertical",
+                                  "type": "stack",
+                                  "gap": "sm"
                                 }
-                              ],
-                              "fields": [],
-                              "groupBy": "status"
+                              ]
                             }
                           ],
                           "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -3096,36 +3102,36 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
+                          "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "content": "Failed to load missions",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
-                          "content": "@payload.error",
                           "color": "muted",
                           "type": "typography",
+                          "content": "@payload.error",
                           "variant": "body"
                         },
                         {
-                          "type": "button",
+                          "label": "Retry",
                           "action": "INIT",
-                          "variant": "primary",
+                          "type": "button",
                           "icon": "rotate-ccw",
-                          "label": "Retry"
+                          "variant": "primary"
                         }
                       ],
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3139,54 +3145,54 @@
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "vertical",
-                          "align": "center",
                           "gap": "lg",
                           "children": [
                             {
-                              "variant": "h2",
+                              "content": "Quest Active",
                               "type": "typography",
-                              "content": "Quest Active"
+                              "variant": "h2"
                             },
                             {
                               "type": "progress-bar",
-                              "value": 50.0,
-                              "showPercentage": true
+                              "showPercentage": true,
+                              "value": 50.0
                             },
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "primary",
                                   "label": "Progress",
-                                  "action": "PROGRESS",
-                                  "type": "button"
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "action": "PROGRESS"
                                 },
                                 {
-                                  "variant": "success",
-                                  "type": "button",
                                   "action": "COMPLETE",
-                                  "label": "Complete"
+                                  "type": "button",
+                                  "label": "Complete",
+                                  "variant": "success"
                                 },
                                 {
                                   "action": "FAIL",
-                                  "type": "button",
                                   "label": "Fail",
+                                  "type": "button",
                                   "variant": "danger"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
+                              "direction": "horizontal"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         }
                       ],
-                      "type": "game-shell",
                       "appName": "RPG Game",
-                      "showTopBar": true
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -3200,17 +3206,18 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "trending-up"
+                              "name": "trending-up",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -3225,18 +3232,17 @@
                         {
                           "entity": "@entity",
                           "submitEvent": "SAVE",
-                          "mode": "edit",
-                          "type": "form-section",
                           "cancelEvent": "CANCEL",
                           "fields": [
                             "title",
                             "description",
                             "status",
                             "reward"
-                          ]
+                          ],
+                          "type": "form-section",
+                          "mode": "edit"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -3250,31 +3256,30 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "RPG Game",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "check-circle"
+                              "name": "check-circle",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "Quest Complete",
+                              "variant": "h2",
                               "type": "typography"
                             },
                             {
-                              "type": "alert",
                               "variant": "success",
-                              "message": "Congratulations! The quest has been completed."
+                              "message": "Congratulations! The quest has been completed.",
+                              "type": "alert"
                             },
                             {
                               "type": "button",
-                              "label": "View Quests",
-                              "icon": "arrow-left",
+                              "action": "RESET",
                               "variant": "primary",
-                              "action": "RESET"
+                              "label": "View Quests",
+                              "icon": "arrow-left"
                             }
                           ],
                           "type": "stack",
@@ -3283,7 +3288,8 @@
                           "align": "center"
                         }
                       ],
-                      "type": "game-shell"
+                      "showTopBar": true,
+                      "appName": "RPG Game"
                     }
                   ]
                 ]
@@ -3297,12 +3303,13 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "RPG Game",
                       "showTopBar": true,
-                      "type": "game-shell",
                       "children": [
                         {
+                          "direction": "vertical",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "lg",
                           "children": [
                             {
                               "type": "icon",
@@ -3314,23 +3321,22 @@
                               "content": "Quest Failed"
                             },
                             {
-                              "variant": "error",
                               "type": "alert",
-                              "message": "The quest was not completed. You can try again."
+                              "message": "The quest was not completed. You can try again.",
+                              "variant": "error"
                             },
                             {
-                              "label": "View Quests",
-                              "action": "RESET",
-                              "variant": "primary",
                               "icon": "arrow-left",
-                              "type": "button"
+                              "type": "button",
+                              "action": "RESET",
+                              "label": "View Quests",
+                              "variant": "primary"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "RPG Game"
                     }
                   ]
                 ]
@@ -3347,8 +3353,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "MissionUpdateFailed",
-                        "success": "MissionUpdated"
+                        "success": "MissionUpdated",
+                        "failure": "MissionUpdateFailed"
                       }
                     }
                   ],
@@ -3362,8 +3368,8 @@
                     "Mission",
                     {
                       "emit": {
-                        "failure": "MissionLoadFailed",
-                        "success": "MissionLoaded"
+                        "success": "MissionLoaded",
+                        "failure": "MissionLoadFailed"
                       }
                     }
                   ],
@@ -3391,8 +3397,8 @@
                     "Mission",
                     {
                       "emit": {
-                        "failure": "MissionLoadFailed",
-                        "success": "MissionLoaded"
+                        "success": "MissionLoaded",
+                        "failure": "MissionLoadFailed"
                       }
                     }
                   ],
@@ -3420,8 +3426,8 @@
                     "Mission",
                     {
                       "emit": {
-                        "success": "MissionLoaded",
-                        "failure": "MissionLoadFailed"
+                        "failure": "MissionLoadFailed",
+                        "success": "MissionLoaded"
                       }
                     }
                   ],
@@ -3444,8 +3450,8 @@
                     "Mission",
                     {
                       "emit": {
-                        "failure": "MissionLoadFailed",
-                        "success": "MissionLoaded"
+                        "success": "MissionLoaded",
+                        "failure": "MissionLoadFailed"
                       }
                     }
                   ],
@@ -3468,8 +3474,8 @@
                     "Mission",
                     {
                       "emit": {
-                        "success": "MissionLoaded",
-                        "failure": "MissionLoadFailed"
+                        "failure": "MissionLoadFailed",
+                        "success": "MissionLoaded"
                       }
                     }
                   ],

@@ -39,16 +39,32 @@ orbital EmployeeOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load employee" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ONBOARD external { id: string }
+      ONBOARD -> external { id: string }
       CREATE
       VIEW { id : string!, row : Employee }
       EDIT { id : string!, row : Employee }
       DELETE { id : string!, row : Employee }
+      EmployeeLoaded
+      EmployeeLoadFailed
+      EmployeeSaved
+      EmployeeSaveFailed
+      EmployeeUpdated
+      EmployeeUpdateFailed
+      EmployeeDeleted
+      EmployeeDeleteFailed
+      OnboardingSaved
+      OnboardingSaveFailed
+      TimeOffSaved
+      TimeOffSaveFailed
+      TimeOffUpdated
+      TimeOffUpdateFailed
+      TimeOffDeleted
+      TimeOffDeleteFailed
     }
     listens {
-      EmployeeCreate EMPLOYEE_CREATED -> INIT
-      EmployeeEdit EMPLOYEE_UPDATED -> INIT
-      EmployeeDelete EMPLOYEE_DELETED -> INIT
+      EmployeeCreate.EMPLOYEE_CREATED -> INIT
+      EmployeeEdit.EMPLOYEE_UPDATED -> INIT
+      EmployeeDelete.EMPLOYEE_DELETED -> INIT
       VIEW { id : string!, row : Employee }
       EDIT { id : string!, row : Employee }
       DELETE { id : string!, row : Employee }
@@ -62,7 +78,6 @@ orbital EmployeeOrbital {
       TimeOffUpdateFailed { error : string, code : string }
       TimeOffDeleteFailed { error : string, code : string }
     }
-    emits: [EmployeeLoaded, EmployeeLoadFailed, EmployeeSaved, EmployeeSaveFailed, EmployeeUpdated, EmployeeUpdateFailed, EmployeeDeleted, EmployeeDeleteFailed, OnboardingSaved, OnboardingSaveFailed, TimeOffSaved, TimeOffSaveFailed, TimeOffUpdated, TimeOffUpdateFailed, TimeOffDeleted, TimeOffDeleteFailed]
   }
   trait EmployeeCreate -> Employee [interaction, collection] {
     initial: closed
@@ -85,18 +100,21 @@ orbital EmployeeOrbital {
         (emit EMPLOYEE_CREATED)
     }
     emits {
-      EMPLOYEE_CREATED external { id: string }
+      EMPLOYEE_CREATED -> external { id: string }
+      EmployeeLoadFailed
+      EmployeeLoaded
+      EmployeeSaveFailed
+      EmployeeSaved
     }
     listens {
       SAVE { data : object! }
           EmployeeLoadFailed { error : string, code : string }
-      EmployeeBrowse CREATE -> CREATE
+      EmployeeBrowse.CREATE -> CREATE
     }
-    emits: [EmployeeLoadFailed, EmployeeLoaded, EmployeeSaveFailed, EmployeeSaved]
   }
   trait EmployeeEdit -> Employee [interaction, collection] {
     listens {
-      EmployeeView EDIT -> EDIT
+      EmployeeView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -118,19 +136,24 @@ orbital EmployeeOrbital {
         (emit EMPLOYEE_UPDATED)
     }
     emits {
-      EMPLOYEE_UPDATED external { id: string }
+      EMPLOYEE_UPDATED -> external { id: string }
+      EmployeeLoadFailed
+      EmployeeLoaded
+      EmployeeUpdateFailed
+      EmployeeUpdated
     }
     listens {
       EDIT { id : string!, row : Employee }
       SAVE { data : object! }
           EmployeeLoadFailed { error : string, code : string }
-      EmployeeBrowse EDIT -> EDIT
+      EmployeeBrowse.EDIT -> EDIT
     }
-    emits: [EmployeeLoadFailed, EmployeeLoaded, EmployeeUpdateFailed, EmployeeUpdated]
   }
   trait EmployeeView -> Employee [interaction, collection] {
     emits {
       EDIT { id : string }
+      EmployeeLoaded
+      EmployeeLoadFailed
     }
     initial: closed
     state closed {
@@ -153,9 +176,8 @@ orbital EmployeeOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           EmployeeLoadFailed { error : string, code : string }
-      EmployeeBrowse VIEW -> VIEW
+      EmployeeBrowse.VIEW -> VIEW
     }
-    emits: [EmployeeLoaded, EmployeeLoadFailed]
   }
   trait EmployeeDelete -> Employee [interaction, collection] {
     initial: idle
@@ -184,14 +206,17 @@ orbital EmployeeOrbital {
         (fetch Employee { emit: { success: "EmployeeLoaded", failure: "EmployeeLoadFailed" } })
     }
     emits {
-      EMPLOYEE_DELETED external { id: string }
+      EMPLOYEE_DELETED -> external { id: string }
+      EmployeeDeleteFailed
+      EmployeeDeleted
+      EmployeeLoadFailed
+      EmployeeLoaded
     }
     listens {
       DELETE { id : string! }
           EmployeeLoadFailed { error : string, code : string }
-      EmployeeBrowse DELETE -> DELETE
+      EmployeeBrowse.DELETE -> DELETE
     }
-    emits: [EmployeeDeleteFailed, EmployeeDeleted, EmployeeLoadFailed, EmployeeLoaded]
   }
   page "/employees" as EmployeesPage -> EmployeeBrowse, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete
 }
@@ -252,12 +277,18 @@ orbital OnboardingOrbital {
         (fetch Onboarding { emit: { success: "OnboardingLoaded", failure: "OnboardingLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Employee Details", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["employeeName", "department"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
-    listens {
-      * ONBOARD -> INIT
+emits {
+      OnboardingLoadFailed
+      OnboardingLoaded
+      OnboardingSaveFailed
+      OnboardingSaved
+    }
+
+        listens {
+      EmployeeOrbital.EmployeeBrowse.ONBOARD -> INIT
           OnboardingLoadFailed { error : string, code : string }
           COMPLETE { data : string }
     }
-    emits: [OnboardingLoadFailed, OnboardingLoaded, OnboardingSaveFailed, OnboardingSaved]
   }
   page "/onboarding" -> OnboardingWizard
 }
@@ -291,19 +322,20 @@ orbital TimeOffOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load timeoff" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      APPROVE_LEAVE external { id: string }
+      APPROVE_LEAVE -> external { id: string }
       CREATE
       VIEW { id : string!, row : TimeOff }
       EDIT { id : string!, row : TimeOff }
       DELETE { id : string!, row : TimeOff }
+      TimeOffLoaded
+      TimeOffLoadFailed
     }
     listens {
-      TimeOffCreate TIME_OFF_CREATED -> INIT
-      TimeOffEdit TIME_OFF_UPDATED -> INIT
-      TimeOffDelete TIME_OFF_DELETED -> INIT
+      TimeOffCreate.TIME_OFF_CREATED -> INIT
+      TimeOffEdit.TIME_OFF_UPDATED -> INIT
+      TimeOffDelete.TIME_OFF_DELETED -> INIT
           TimeOffLoadFailed { error : string, code : string }
     }
-    emits: [TimeOffLoaded, TimeOffLoadFailed]
   }
   trait TimeOffCreate -> TimeOff [interaction, collection] {
     initial: closed
@@ -327,12 +359,15 @@ orbital TimeOffOrbital {
     }
     emits {
       TIME_OFF_CREATED
+      TimeOffLoadFailed
+      TimeOffLoaded
+      TimeOffSaveFailed
+      TimeOffSaved
     }
-    emits: [TimeOffLoadFailed, TimeOffLoaded, TimeOffSaveFailed, TimeOffSaved]
     listens {
       TimeOffLoadFailed { error : string, code : string }
       SAVE { data : string }
-      TimeOffBrowse CREATE -> CREATE
+      TimeOffBrowse.CREATE -> CREATE
     }
   }
   trait TimeOffEdit -> TimeOff [interaction, collection] {
@@ -357,19 +392,24 @@ orbital TimeOffOrbital {
     }
     emits {
       TIME_OFF_UPDATED
+      TimeOffLoadFailed
+      TimeOffLoaded
+      TimeOffUpdateFailed
+      TimeOffUpdated
     }
-    emits: [TimeOffLoadFailed, TimeOffLoaded, TimeOffUpdateFailed, TimeOffUpdated]
     listens {
-      TimeOffView EDIT -> EDIT
+      TimeOffView.EDIT -> EDIT
       TimeOffLoadFailed { error : string, code : string }
       EDIT { id : string, row : TimeOff }
       SAVE { data : string }
-      TimeOffBrowse EDIT -> EDIT
+      TimeOffBrowse.EDIT -> EDIT
     }
   }
   trait TimeOffView -> TimeOff [interaction, collection] {
     emits {
       EDIT { id : string }
+      TimeOffLoaded
+      TimeOffLoadFailed
     }
     initial: closed
     state closed {
@@ -388,11 +428,10 @@ orbital TimeOffOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [TimeOffLoaded, TimeOffLoadFailed]
     listens {
       TimeOffLoadFailed { error : string, code : string }
       VIEW { id : string }
-      TimeOffBrowse VIEW -> VIEW
+      TimeOffBrowse.VIEW -> VIEW
     }
   }
   trait TimeOffDelete -> TimeOff [interaction, collection] {
@@ -423,12 +462,15 @@ orbital TimeOffOrbital {
     }
     emits {
       TIME_OFF_DELETED
+      TimeOffDeleteFailed
+      TimeOffDeleted
+      TimeOffLoadFailed
+      TimeOffLoaded
     }
-    emits: [TimeOffDeleteFailed, TimeOffDeleted, TimeOffLoadFailed, TimeOffLoaded]
     listens {
       TimeOffLoadFailed { error : string, code : string }
       DELETE { id : string }
-      TimeOffBrowse DELETE -> DELETE
+      TimeOffBrowse.DELETE -> DELETE
     }
   }
   page "/timeoff" -> TimeOffBrowse, TimeOffCreate, TimeOffEdit, TimeOffView, TimeOffDelete
@@ -468,11 +510,15 @@ orbital OrgChartOrbital {
         (fetch OrgChart { emit: { success: "OrgChartLoaded", failure: "OrgChartLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: "@entity.totalEmployees" }, { type: "stat-display", label: "Departments", value: "@entity.departments" }, { type: "stat-display", label: "OpenPositions", value: "@entity.openPositions" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: "@entity.avgTenure" }] }] }, { type: "stat-display", label: "Headcount", value: "@entity.headcount" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    listens {
-      * APPROVE_LEAVE -> INIT
+emits {
+      OrgChartLoaded
+      OrgChartLoadFailed
+    }
+
+        listens {
+      TimeOffOrbital.TimeOffBrowse.APPROVE_LEAVE -> INIT
           OrgChartLoadFailed { error : string, code : string }
     }
-    emits: [OrgChartLoaded, OrgChartLoadFailed]
   }
   page "/org-chart" -> OrgChartDisplay
 }

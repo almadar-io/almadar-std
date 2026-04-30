@@ -56,8 +56,18 @@ orbital PlatLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
-    emits: [PlatLevelLoaded, PlatLevelLoadFailed, CollectibleSaved, CollectibleSaveFailed, CollectibleUpdated, CollectibleUpdateFailed, CollectibleDeleted, CollectibleDeleteFailed]
-    listens {
+emits {
+      PlatLevelLoaded
+      PlatLevelLoadFailed
+      CollectibleSaved
+      CollectibleSaveFailed
+      CollectibleUpdated
+      CollectibleUpdateFailed
+      CollectibleDeleted
+      CollectibleDeleteFailed
+    }
+
+        listens {
       PlatLevelLoadFailed { error : string, code : string }
     
       CollectibleSaveFailed { error : string, code : string }
@@ -80,8 +90,12 @@ orbital PlatLevelOrbital {
       STOP -> idle
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
     }
-    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
-    listens {
+emits {
+      PlatLevelLoaded
+      PlatLevelLoadFailed
+    }
+
+        listens {
       PlatLevelLoadFailed { error : string, code : string }
     }
   }
@@ -119,8 +133,12 @@ orbital PlatScoreOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
-    emits: [PlatScoreLoaded, PlatScoreLoadFailed]
-    listens {
+emits {
+      PlatScoreLoaded
+      PlatScoreLoadFailed
+    }
+
+        listens {
       PlatScoreLoadFailed { error : string, code : string }
       ADD_SCORE { points : string }
       COMBO { multiplier : string }
@@ -160,14 +178,15 @@ orbital CollectibleOrbital {
       ADD_ITEM
       USE_ITEM { id : string!, row : Collectible }
       DROP { id : string!, row : Collectible }
+      CollectibleLoaded
+      CollectibleLoadFailed
     }
     listens {
-      CollectibleAdd ITEM_ADDED -> INIT
-      CollectibleUse ITEM_USED -> INIT
-      CollectibleDrop CONFIRM_DROP -> INIT
+      CollectibleAdd.ITEM_ADDED -> INIT
+      CollectibleUse.ITEM_USED -> INIT
+      CollectibleDrop.CONFIRM_DROP -> INIT
           CollectibleLoadFailed { error : string, code : string }
     }
-    emits: [CollectibleLoaded, CollectibleLoadFailed]
   }
   trait CollectibleAdd -> Collectible [interaction, collection] {
     initial: closed
@@ -191,12 +210,15 @@ orbital CollectibleOrbital {
     }
     emits {
       ITEM_ADDED
+      CollectibleLoadFailed
+      CollectibleLoaded
+      CollectibleSaveFailed
+      CollectibleSaved
     }
-    emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleSaveFailed, CollectibleSaved]
     listens {
       CollectibleLoadFailed { error : string, code : string }
       SAVE { data : string }
-      CollectibleBrowse ADD_ITEM -> ADD_ITEM
+      CollectibleBrowse.ADD_ITEM -> ADD_ITEM
     }
   }
   trait CollectibleUse -> Collectible [interaction, collection] {
@@ -221,13 +243,16 @@ orbital CollectibleOrbital {
     }
     emits {
       ITEM_USED
+      CollectibleLoadFailed
+      CollectibleLoaded
+      CollectibleUpdateFailed
+      CollectibleUpdated
     }
-    emits: [CollectibleLoadFailed, CollectibleLoaded, CollectibleUpdateFailed, CollectibleUpdated]
     listens {
       CollectibleLoadFailed { error : string, code : string }
       USE_ITEM { id : string }
       SAVE { data : string }
-      CollectibleBrowse USE_ITEM -> USE_ITEM
+      CollectibleBrowse.USE_ITEM -> USE_ITEM
     }
   }
   trait CollectibleDrop -> Collectible [interaction, collection] {
@@ -257,12 +282,15 @@ orbital CollectibleOrbital {
     }
     emits {
       CONFIRM_DROP
+      CollectibleDeleteFailed
+      CollectibleDeleted
+      CollectibleLoadFailed
+      CollectibleLoaded
     }
-    emits: [CollectibleDeleteFailed, CollectibleDeleted, CollectibleLoadFailed, CollectibleLoaded]
     listens {
       CollectibleLoadFailed { error : string, code : string }
       DROP { id : string }
-      CollectibleBrowse DROP -> DROP
+      CollectibleBrowse.DROP -> DROP
     }
   }
   page "/collectibles" -> CollectibleBrowse, CollectibleAdd, CollectibleUse, CollectibleDrop

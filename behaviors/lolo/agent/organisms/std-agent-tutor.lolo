@@ -60,8 +60,16 @@ orbital TutorSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Tutor", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "What topic would you like to learn about? The tutor will assess your level and guide you through it.", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "START_SESSION", fields: ["topic"] }] }] }] }] })
     }
     emits {
-      ASSESSMENT_DONE internal { level: string }
-      ASSESSMENT_DONE external { level: string }
+      ASSESSMENT_DONE -> internal { level: string }
+      ASSESSMENT_DONE -> external { level: string }
+      TutorSessionLoaded
+      TutorSessionLoadFailed
+      TutorChatDeleted
+      TutorChatDeleteFailed
+      ConceptSaved
+      ConceptSaveFailed
+      StudentAssessmentSaved
+      StudentAssessmentSaveFailed
     }
     listens {
       START_SESSION { topic : string! }
@@ -71,7 +79,6 @@ orbital TutorSessionOrbital {
       ConceptSaveFailed { error : string, code : string }
       StudentAssessmentSaveFailed { error : string, code : string }
     }
-    emits: [TutorSessionLoaded, TutorSessionLoadFailed, TutorChatDeleted, TutorChatDeleteFailed, ConceptSaved, ConceptSaveFailed, StudentAssessmentSaved, StudentAssessmentSaveFailed]
   }
   page "/teach" as TeachPage -> TeachingSession
 }
@@ -123,15 +130,16 @@ orbital QuizQuestionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Waiting for a quiz to start...", variant: "body" }] }] })
     }
     emits {
-      QUIZ_GRADED internal { correct: boolean }
-      QUIZ_GRADED external { correct: boolean }
+      QUIZ_GRADED -> internal { correct: boolean }
+      QUIZ_GRADED -> external { correct: boolean }
+      QuizQuestionLoaded
+      QuizQuestionLoadFailed
     }
     listens {
-      * ASSESSMENT_DONE -> GENERATE_QUESTION
+      TutorSessionOrbital.TeachingSession.ASSESSMENT_DONE -> GENERATE_QUESTION
           QuizQuestionLoadFailed { error : string, code : string }
           SUBMIT_ANSWER { studentAnswer : string }
     }
-    emits: [QuizQuestionLoaded, QuizQuestionLoadFailed]
   }
   page "/quiz" -> QuizEngine
 }
@@ -184,9 +192,12 @@ orbital TutorChatOrbital {
         (render-ui main { type: "spinner" })
     }
     emits {
-      SEND_MESSAGE internal { content: string }
+      SEND_MESSAGE -> internal { content: string }
+      TutorChatDeleteFailed
+      TutorChatDeleted
+      TutorChatLoadFailed
+      TutorChatLoaded
     }
-    emits: [TutorChatDeleteFailed, TutorChatDeleted, TutorChatLoadFailed, TutorChatLoaded]
     listens {
       TutorChatLoadFailed { error : string, code : string }
       SEND { content : string }
@@ -226,9 +237,10 @@ orbital TutorChatOrbital {
         (set @entity.tokenCount 0)
     }
     emits {
-      TOKEN_UPDATE internal { tokenCount: number }
+      TOKEN_UPDATE -> internal { tokenCount: number }
+      TutorChatLoaded
+      TutorChatLoadFailed
     }
-    emits: [TutorChatLoaded, TutorChatLoadFailed]
     listens {
       TutorChatLoadFailed { error : string, code : string }
       SEND_MESSAGE { content : string }
@@ -269,16 +281,17 @@ orbital ConceptOrbital {
       PIN { id : string!, row : Concept }
       REINFORCE { id : string!, row : Concept }
       FORGET { id : string!, row : Concept }
+      ConceptLoaded
+      ConceptLoadFailed
     }
     listens {
-      ConceptCreate MEMORIZED -> INIT
-      ConceptAgent PINNED -> INIT
-      ConceptAgent FORGOT -> INIT
-      ConceptAgent REINFORCED -> INIT
-      ConceptAgent DECAYED -> INIT
+      ConceptCreate.MEMORIZED -> INIT
+      ConceptAgent.PINNED -> INIT
+      ConceptAgent.FORGOT -> INIT
+      ConceptAgent.REINFORCED -> INIT
+      ConceptAgent.DECAYED -> INIT
           ConceptLoadFailed { error : string, code : string }
     }
-    emits: [ConceptLoaded, ConceptLoadFailed]
   }
   trait ConceptCreate -> Concept [interaction, collection] {
     initial: closed
@@ -301,12 +314,15 @@ orbital ConceptOrbital {
     }
     emits {
       MEMORIZED
+      ConceptLoadFailed
+      ConceptLoaded
+      ConceptSaveFailed
+      ConceptSaved
     }
-    emits: [ConceptLoadFailed, ConceptLoaded, ConceptSaveFailed, ConceptSaved]
     listens {
       ConceptLoadFailed { error : string, code : string }
       SAVE { data : string }
-      ConceptBrowse MEMORIZE -> MEMORIZE
+      ConceptBrowse.MEMORIZE -> MEMORIZE
     }
   }
   trait ConceptAgent -> Concept [interaction, collection] {
@@ -342,26 +358,29 @@ orbital ConceptOrbital {
         (emit DECAYED)
     }
     emits {
-      FORGOT external { id: string }
-      REINFORCED external { id: string }
-      DECAYED external { id: string }
-      PINNED external { id: string }
+      FORGOT -> external { id: string }
+      REINFORCED -> external { id: string }
+      DECAYED -> external { id: string }
+      PINNED -> external { id: string }
+      ConceptLoadFailed
+      ConceptLoaded
+      ConceptSaveFailed
+      ConceptSaved
     }
     listens {
-      * QUIZ_GRADED -> REINFORCE
+      QuizQuestionOrbital.QuizEngine.QUIZ_GRADED -> REINFORCE
           ConceptLoadFailed { error : string, code : string }
           DO_MEMORIZE { data : string }
           RECALL { query : string }
           PIN { id : string }
           FORGET { id : string }
           REINFORCE { id : string }
-      ConceptBrowse RECALL -> RECALL
-      ConceptBrowse DECAY -> DECAY
-      ConceptBrowse PIN -> PIN
-      ConceptBrowse REINFORCE -> REINFORCE
-      ConceptBrowse FORGET -> FORGET
+      ConceptBrowse.RECALL -> RECALL
+      ConceptBrowse.DECAY -> DECAY
+      ConceptBrowse.PIN -> PIN
+      ConceptBrowse.REINFORCE -> REINFORCE
+      ConceptBrowse.FORGET -> FORGET
     }
-    emits: [ConceptLoadFailed, ConceptLoaded, ConceptSaveFailed, ConceptSaved]
   }
   page "/concepts" -> ConceptBrowse, ConceptCreate, ConceptAgent
 }
@@ -404,8 +423,11 @@ orbital StudentAssessmentOrbital {
     }
     emits {
       CLASSIFIED
+      StudentAssessmentLoadFailed
+      StudentAssessmentLoaded
+      StudentAssessmentSaveFailed
+      StudentAssessmentSaved
     }
-    emits: [StudentAssessmentLoadFailed, StudentAssessmentLoaded, StudentAssessmentSaveFailed, StudentAssessmentSaved]
     listens {
       StudentAssessmentLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -429,8 +451,12 @@ orbital StudentAssessmentOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
-    emits: [StudentAssessmentLoaded, StudentAssessmentLoadFailed]
-    listens {
+emits {
+      StudentAssessmentLoaded
+      StudentAssessmentLoadFailed
+    }
+
+        listens {
       StudentAssessmentLoadFailed { error : string, code : string }
       SHOW { message : string, notificationType : string }
     }
@@ -458,14 +484,15 @@ orbital StudentAssessmentOrbital {
         (set @entity.confidence 0)
     }
     emits {
-      SHOW internal { category: string, confidence: number }
+      SHOW -> internal { category: string, confidence: number }
+      StudentAssessmentLoaded
+      StudentAssessmentLoadFailed
     }
     listens {
-      LevelClassifier CLASSIFIED -> CLASSIFIED
+      LevelClassifier.CLASSIFIED -> CLASSIFIED
           StudentAssessmentLoadFailed { error : string, code : string }
           DO_CLASSIFY { data : string }
     }
-    emits: [StudentAssessmentLoaded, StudentAssessmentLoadFailed]
   }
   page "/assessment" -> LevelClassifier
 }

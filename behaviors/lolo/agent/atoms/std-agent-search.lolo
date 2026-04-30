@@ -41,13 +41,14 @@ orbital AgentSearchOrbital {
     emits {
       SEARCH
       CLEAR
+      AgentSearchLoaded
+      AgentSearchLoadFailed
     }
     listens {
-      AgentSearchAgent SEARCHED -> INIT
+      AgentSearchAgent.SEARCHED -> INIT
       VIEW { id : string!, row : AgentSearch }
       AgentSearchLoadFailed { error : string, code : string }
     }
-    emits: [AgentSearchLoaded, AgentSearchLoadFailed]
   }
 
   trait AgentSearchAgent -> AgentSearch [interaction, collection] {
@@ -70,14 +71,15 @@ orbital AgentSearchOrbital {
       CLEAR -> idle
     }
     emits {
-      SEARCHED external { query : string!, resultCount : number }
+      SEARCHED -> external { query : string!, resultCount : number }
+      AgentSearchLoaded
+      AgentSearchLoadFailed
     }
-    emits: [AgentSearchLoaded, AgentSearchLoadFailed]
     listens {
       SEARCH { query : string!, language : string }
       AgentSearchLoadFailed { error : string, code : string }
-      AgentSearchBrowse SEARCH -> SEARCH
-      AgentSearchBrowse CLEAR -> CLEAR
+      AgentSearchBrowse.SEARCH -> SEARCH
+      AgentSearchBrowse.CLEAR -> CLEAR
     }
   }
 

@@ -85,12 +85,13 @@ orbital AgentContextWindowOrbital {
     }
     emits {
       COMPACT
+      AgentContextWindowLoaded
+      AgentContextWindowLoadFailed
     }
     listens {
       UPDATE { current : number! }
           AgentContextWindowLoadFailed { message : string }
     }
-    emits: [AgentContextWindowLoaded, AgentContextWindowLoadFailed]
   }
   trait AgentContextWindowNotification -> AgentContextWindow [interaction, instance] {
     initial: hidden
@@ -110,11 +111,15 @@ orbital AgentContextWindowOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
-    listens {
+emits {
+      AgentContextWindowLoaded
+      AgentContextWindowLoadFailed
+    }
+
+        listens {
       SHOW { message : string!, notificationType : "info" | "success" | "warning" | "error" }
           AgentContextWindowLoadFailed { message : string }
     }
-    emits: [AgentContextWindowLoaded, AgentContextWindowLoadFailed]
   }
   trait AgentContextWindowAgent -> AgentContextWindow [interaction, instance] {
     initial: normal
@@ -172,13 +177,14 @@ orbital AgentContextWindowOrbital {
         (emit UPDATE { current: @entity.tokenCount, max: @entity.maxTokens })
     }
     emits {
-      SHOW internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
-      UPDATE internal { current: number, max: number }
+      SHOW -> internal { message: string!, notificationType: "info" | "success" | "warning" | "error" }
+      UPDATE -> internal { current: number, max: number }
+      AgentContextWindowLoaded
+      AgentContextWindowLoadFailed
     }
-    emits: [AgentContextWindowLoaded, AgentContextWindowLoadFailed]
     listens {
       AgentContextWindowLoadFailed { message : string }
-      AgentContextWindowGauge COMPACT -> COMPACT
+      AgentContextWindowGauge.COMPACT -> COMPACT
     }
   }
   page "/agentcontextwindows" as AgentContextWindowPage -> AgentContextWindowGauge, AgentContextWindowNotification, AgentContextWindowAgent

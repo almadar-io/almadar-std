@@ -41,8 +41,18 @@ orbital SensorReadingOrbital {
         (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [SensorReadingLoaded, SensorReadingLoadFailed, DeviceSaved, DeviceSaveFailed, DeviceUpdated, DeviceUpdateFailed, DeviceDeleted, DeviceDeleteFailed]
-    listens {
+emits {
+      SensorReadingLoaded
+      SensorReadingLoadFailed
+      DeviceSaved
+      DeviceSaveFailed
+      DeviceUpdated
+      DeviceUpdateFailed
+      DeviceDeleted
+      DeviceDeleteFailed
+    }
+
+        listens {
       SensorReadingLoadFailed { error : string, code : string }
     
       DeviceSaveFailed { error : string, code : string }
@@ -85,14 +95,15 @@ orbital DeviceOrbital {
       VIEW { id : string!, row : Device }
       EDIT { id : string!, row : Device }
       DELETE { id : string!, row : Device }
+      DeviceLoaded
+      DeviceLoadFailed
     }
     listens {
-      DeviceCreate DEVICE_CREATED -> INIT
-      DeviceEdit DEVICE_UPDATED -> INIT
-      DeviceDelete DEVICE_DELETED -> INIT
+      DeviceCreate.DEVICE_CREATED -> INIT
+      DeviceEdit.DEVICE_UPDATED -> INIT
+      DeviceDelete.DEVICE_DELETED -> INIT
           DeviceLoadFailed { error : string, code : string }
     }
-    emits: [DeviceLoaded, DeviceLoadFailed]
   }
   trait DeviceCreate -> Device [interaction, collection] {
     initial: closed
@@ -116,12 +127,15 @@ orbital DeviceOrbital {
     }
     emits {
       DEVICE_CREATED
+      DeviceLoadFailed
+      DeviceLoaded
+      DeviceSaveFailed
+      DeviceSaved
     }
-    emits: [DeviceLoadFailed, DeviceLoaded, DeviceSaveFailed, DeviceSaved]
     listens {
       DeviceLoadFailed { error : string, code : string }
       SAVE { data : string }
-      DeviceBrowse CREATE -> CREATE
+      DeviceBrowse.CREATE -> CREATE
     }
   }
   trait DeviceEdit -> Device [interaction, collection] {
@@ -146,19 +160,24 @@ orbital DeviceOrbital {
     }
     emits {
       DEVICE_UPDATED
+      DeviceLoadFailed
+      DeviceLoaded
+      DeviceUpdateFailed
+      DeviceUpdated
     }
-    emits: [DeviceLoadFailed, DeviceLoaded, DeviceUpdateFailed, DeviceUpdated]
     listens {
-      DeviceView EDIT -> EDIT
+      DeviceView.EDIT -> EDIT
       DeviceLoadFailed { error : string, code : string }
       EDIT { id : string, row : Device }
       SAVE { data : string }
-      DeviceBrowse EDIT -> EDIT
+      DeviceBrowse.EDIT -> EDIT
     }
   }
   trait DeviceView -> Device [interaction, collection] {
     emits {
       EDIT { id : string }
+      DeviceLoaded
+      DeviceLoadFailed
     }
     initial: closed
     state closed {
@@ -178,11 +197,10 @@ orbital DeviceOrbital {
         (render-ui main { type: "box" })
     }
 
-    emits: [DeviceLoaded, DeviceLoadFailed]
     listens {
       DeviceLoadFailed { error : string, code : string }
       VIEW { id : string }
-      DeviceBrowse VIEW -> VIEW
+      DeviceBrowse.VIEW -> VIEW
     }
   }
   trait DeviceDelete -> Device [interaction, collection] {
@@ -213,12 +231,15 @@ orbital DeviceOrbital {
     }
     emits {
       DEVICE_DELETED
+      DeviceDeleteFailed
+      DeviceDeleted
+      DeviceLoadFailed
+      DeviceLoaded
     }
-    emits: [DeviceDeleteFailed, DeviceDeleted, DeviceLoadFailed, DeviceLoaded]
     listens {
       DeviceLoadFailed { error : string, code : string }
       DELETE { id : string }
-      DeviceBrowse DELETE -> DELETE
+      DeviceBrowse.DELETE -> DELETE
     }
   }
   page "/devices" -> DeviceBrowse, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete
@@ -262,8 +283,12 @@ orbital DeviceAlertOrbital {
       RESET -> closed
         (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
     }
-    emits: [DeviceAlertLoaded, DeviceAlertLoadFailed]
-    listens {
+emits {
+      DeviceAlertLoaded
+      DeviceAlertLoadFailed
+    }
+
+        listens {
       DeviceAlertLoadFailed { error : string, code : string }
     }
   }

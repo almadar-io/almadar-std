@@ -108,10 +108,20 @@ orbital BuildPlanOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map"}, { type: "typography", content: "Task Planner", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to plan", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "PLAN", fields: ["task"] }] }] }] }] })
     }
     emits {
-      PLAN_READY external
+      PLAN_READY -> external { id : string }
+      BuildTaskLoaded
+      BuildTaskLoadFailed
+      BuildPlanSaved
+      BuildPlanSaveFailed
+      BuildLoopSaved
+      BuildLoopSaveFailed
+      BuildFixSaved
+      BuildFixSaveFailed
+      BuildSessionUpdated
+      BuildSessionUpdateFailed
     }
     listens {
-      BuildPlanner PLAN_READY -> INIT
+      BuildPlanner.PLAN_READY -> INIT
       CLASSIFIED { category : string! }
       MEMORIES_LOADED { memories : string!, count : number! }
       PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
@@ -122,7 +132,6 @@ orbital BuildPlanOrbital {
       BuildFixSaveFailed { error : string, code : string }
       BuildSessionUpdateFailed { error : string, code : string }
     }
-    emits: [BuildTaskLoaded, BuildTaskLoadFailed, BuildPlanSaved, BuildPlanSaveFailed, BuildLoopSaved, BuildLoopSaveFailed, BuildFixSaved, BuildFixSaveFailed, BuildSessionUpdated, BuildSessionUpdateFailed]
   }
   trait PlannerTaskInput -> BuildPlan [interaction, collection] {
     initial: closed
@@ -141,11 +150,15 @@ orbital BuildPlanOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    listens {
+emits {
+      BuildPlanLoaded
+      BuildPlanLoadFailed
+    }
+
+        listens {
       PLAN { data : object! }
           BuildPlanLoadFailed { error : string, code : string }
     }
-    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
   trait PlannerClassifierFlow -> BuildPlan [interaction, collection] {
     initial: closed
@@ -170,14 +183,17 @@ orbital BuildPlanOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      CLASSIFIED internal
+      SAVE -> internal
+      CLASSIFIED -> internal
+      BuildPlanLoadFailed
+      BuildPlanLoaded
+      BuildPlanSaveFailed
+      BuildPlanSaved
     }
     listens {
       SAVE { data : object! }
           BuildPlanLoadFailed { error : string, code : string }
     }
-    emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
   trait PlannerCompletionFlow -> BuildPlan [interaction, collection] {
     initial: closed
@@ -202,14 +218,17 @@ orbital BuildPlanOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      GENERATED internal
+      SAVE -> internal
+      GENERATED -> internal
+      BuildPlanLoadFailed
+      BuildPlanLoaded
+      BuildPlanSaveFailed
+      BuildPlanSaved
     }
     listens {
       SAVE { data : object! }
           BuildPlanLoadFailed { error : string, code : string }
     }
-    emits: [BuildPlanLoadFailed, BuildPlanLoaded, BuildPlanSaveFailed, BuildPlanSaved]
   }
   trait PlannerMemoryLifecycle -> BuildPlan [interaction, collection] {
     state browsing {
@@ -221,13 +240,17 @@ orbital BuildPlanOrbital {
       BuildPlanLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load buildplan" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
-    listens {
+emits {
+      BuildPlanLoaded
+      BuildPlanLoadFailed
+    }
+
+        listens {
       PIN { id : string!, row : BuildPlan }
       REINFORCE { id : string!, row : BuildPlan }
       FORGET { id : string!, row : BuildPlan }
           BuildPlanLoadFailed { error : string, code : string }
     }
-    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
   page "/plan" as PlanPage -> BuildPlanner
 }
@@ -343,19 +366,19 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] }] })
     }
     emits {
-      TOOL_LOOP_DONE external { schema: string }
+      TOOL_LOOP_DONE -> external { schema: string }
       RESET
     }
     listens {
-      * PLAN_READY -> EXECUTE
+      BuildPlanOrbital.BuildPlanner.PLAN_READY -> EXECUTE
           TOOL_RESULT { output : string }
           CHECK_PASSED { result : string }
           CHECK_NEEDS_MORE { toolName : string, toolArgs : string }
           MAX_ITERATIONS { error : string }
           PLAN_GENERATED { plan : string, toolName : string, toolArgs : string }
           FAILED { error : string }
-      ToolLoopStepProgress RESET -> RESET
-      ToolLoopContextMonitor RESET -> RESET
+      ToolLoopStepProgress.RESET -> RESET
+      ToolLoopContextMonitor.RESET -> RESET
     }
   }
   trait ToolLoopStepProgress -> BuildLoop [interaction, collection] {
@@ -401,14 +424,15 @@ orbital BuildLoopOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
     }
-    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
     emits {
       RESET
+      BuildLoopLoaded
+      BuildLoopLoadFailed
     }
     listens {
       BuildLoopLoadFailed { error : string, code : string }
-      SchemaBuilder RESET -> RESET
-      ToolLoopContextMonitor RESET -> RESET
+      SchemaBuilder.RESET -> RESET
+      ToolLoopContextMonitor.RESET -> RESET
     }
   }
   trait ToolLoopCompletionFlow -> BuildLoop [interaction, collection] {
@@ -434,10 +458,13 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      GENERATED internal
+      SAVE -> internal
+      GENERATED -> internal
+      BuildLoopLoadFailed
+      BuildLoopLoaded
+      BuildLoopSaveFailed
+      BuildLoopSaved
     }
-    emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
       BuildLoopLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -466,10 +493,13 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      INVOKED internal
+      SAVE -> internal
+      INVOKED -> internal
+      BuildLoopLoadFailed
+      BuildLoopLoaded
+      BuildLoopSaveFailed
+      BuildLoopSaved
     }
-    emits: [BuildLoopLoadFailed, BuildLoopLoaded, BuildLoopSaveFailed, BuildLoopSaved]
     listens {
       BuildLoopLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -537,15 +567,16 @@ orbital BuildLoopOrbital {
         (set @entity.current 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
-    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
     emits {
       RESET
+      BuildLoopLoaded
+      BuildLoopLoadFailed
     }
     listens {
       BuildLoopLoadFailed { error : string, code : string }
       UPDATE { current : string }
-      SchemaBuilder RESET -> RESET
-      ToolLoopStepProgress RESET -> RESET
+      SchemaBuilder.RESET -> RESET
+      ToolLoopStepProgress.RESET -> RESET
     }
   }
   page "/build" -> SchemaBuilder
@@ -654,19 +685,19 @@ orbital BuildFixOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] }] })
     }
     emits {
-      FIX_SUCCEEDED external { target: string }
-      FIX_FAILED external { target: string, error: string }
+      FIX_SUCCEEDED -> external { target: string }
+      FIX_FAILED -> external { target: string, error: string }
       RESET
     }
     listens {
-      FixLoop FIX_SUCCEEDED -> INIT
-      FixLoop FIX_FAILED -> INIT
-      * TOOL_LOOP_DONE -> FIX
+      FixLoop.FIX_SUCCEEDED -> INIT
+      FixLoop.FIX_FAILED -> INIT
+      BuildLoopOrbital.SchemaBuilder.TOOL_LOOP_DONE -> FIX
           VALIDATION_ERRORS { errors : string, count : string }
           EXCEEDED_ATTEMPTS { error : string }
           FIX_GENERATED { fix : string }
           FAILED { error : string }
-      FixLoopStepProgress RESET -> RESET
+      FixLoopStepProgress.RESET -> RESET
     }
   }
   trait FixLoopStepProgress -> BuildFix [interaction, collection] {
@@ -712,13 +743,14 @@ orbital BuildFixOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
     }
-    emits: [BuildFixLoaded, BuildFixLoadFailed]
     emits {
       RESET
+      BuildFixLoaded
+      BuildFixLoadFailed
     }
     listens {
       BuildFixLoadFailed { error : string, code : string }
-      FixLoop RESET -> RESET
+      FixLoop.RESET -> RESET
     }
   }
   trait FixLoopErrorsBrowse -> BuildFix [interaction, collection] {
@@ -731,8 +763,12 @@ orbital BuildFixOrbital {
       BuildFixLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load buildfix" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
-    emits: [BuildFixLoaded, BuildFixLoadFailed]
-    listens {
+emits {
+      BuildFixLoaded
+      BuildFixLoadFailed
+    }
+
+        listens {
       BuildFixLoadFailed { error : string, code : string }
     }
   }
@@ -759,11 +795,14 @@ orbital BuildFixOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      INVOKED internal
+      SAVE -> internal
+      INVOKED -> internal
       INVOKE
+      BuildFixLoadFailed
+      BuildFixLoaded
+      BuildFixSaveFailed
+      BuildFixSaved
     }
-    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -792,11 +831,14 @@ orbital BuildFixOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", action: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      INVOKED internal
+      SAVE -> internal
+      INVOKED -> internal
       INVOKE
+      BuildFixLoadFailed
+      BuildFixLoaded
+      BuildFixSaveFailed
+      BuildFixSaved
     }
-    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -825,10 +867,13 @@ orbital BuildFixOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE internal
-      GENERATED internal
+      SAVE -> internal
+      GENERATED -> internal
+      BuildFixLoadFailed
+      BuildFixLoaded
+      BuildFixSaveFailed
+      BuildFixSaved
     }
-    emits: [BuildFixLoadFailed, BuildFixLoaded, BuildFixSaveFailed, BuildFixSaved]
     listens {
       BuildFixLoadFailed { error : string, code : string }
       SAVE { data : string }
@@ -864,14 +909,15 @@ orbital BuildSessionOrbital {
       FORK
       LABEL
       END
+      BuildSessionLoaded
+      BuildSessionLoadFailed
     }
     listens {
-      BuildSessionAgent FORKED -> INIT
-      BuildSessionLabel LABELED -> INIT
-      BuildSessionAgent ENDED -> INIT
+      BuildSessionAgent.FORKED -> INIT
+      BuildSessionLabel.LABELED -> INIT
+      BuildSessionAgent.ENDED -> INIT
           BuildSessionLoadFailed { error : string, code : string }
     }
-    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
   }
   trait BuildSessionLabel -> BuildSession [interaction, collection] {
     initial: closed
@@ -895,12 +941,15 @@ orbital BuildSessionOrbital {
     }
     emits {
       LABELED
+      BuildSessionLoadFailed
+      BuildSessionLoaded
+      BuildSessionUpdateFailed
+      BuildSessionUpdated
     }
-    emits: [BuildSessionLoadFailed, BuildSessionLoaded, BuildSessionUpdateFailed, BuildSessionUpdated]
     listens {
       BuildSessionLoadFailed { error : string, code : string }
       SAVE { data : string }
-      BuildSessionManager LABEL -> LABEL
+      BuildSessionManager.LABEL -> LABEL
     }
   }
   trait BuildSessionAgent -> BuildSession [interaction, collection] {
@@ -951,18 +1000,19 @@ orbital BuildSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" }] })
     }
     emits {
-      ENDED external { sessionId: string }
-      FORKED external { sessionId: string }
+      ENDED -> external { sessionId: string }
+      FORKED -> external { sessionId: string }
+      BuildSessionLoaded
+      BuildSessionLoadFailed
     }
     listens {
-      BuildSessionAgent ENDED -> INIT
-      BuildSessionAgent FORKED -> INIT
+      BuildSessionAgent.ENDED -> INIT
+      BuildSessionAgent.FORKED -> INIT
           BuildSessionLoadFailed { error : string, code : string }
           DO_LABEL { data : string }
-      BuildSessionManager FORK -> FORK
-      BuildSessionManager END -> END
+      BuildSessionManager.FORK -> FORK
+      BuildSessionManager.END -> END
     }
-    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
   }
   page "/session" -> BuildSessionManager
 }

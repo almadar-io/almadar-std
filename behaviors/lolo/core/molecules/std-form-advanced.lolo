@@ -37,13 +37,19 @@ orbital FormEntryOrbital {
         (fetch FormEntry { emit: { success: "FormEntryLoaded", failure: "FormEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "FormEntry Form", variant: "h2" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SUBMIT", cancelEvent: "INIT", fields: [{ name: "name", label: "Name" }, { name: "description", label: "Description" }, { name: "status", label: "Status", type: "enum", values: ["active", "inactive", "pending"] }, { name: "notes", label: "Notes", type: "textarea" }, { name: "age", label: "Age", type: "number" }, { name: "isActive", label: "Is Active", type: "boolean" }, { name: "birthDate", label: "Birth Date", type: "date" }, { name: "priority", label: "Priority", type: "enum", values: ["low", "medium", "high", "critical"] }, { name: "categoryId", label: "Category ID", type: "relation", relation: { entity: "FormEntry", cardinality: "many-to-one" } }] }] })
     }
-    listens {
+emits {
+      FormEntryLoaded
+      FormEntryLoadFailed
+      FormEntrySaved
+      FormEntrySaveFailed
+    }
+
+        listens {
       SUBMIT { data : object! }
           FormEntryLoadFailed { message : string }
     
       FormEntrySaveFailed { error : string, code : string }
     }
-    emits: [FormEntryLoaded, FormEntryLoadFailed, FormEntrySaved, FormEntrySaveFailed]
   }
   page "/formentrys/form" as FormEntryFormPage -> FormEntryFormAdvanced
 }

@@ -28,9 +28,15 @@ orbital PostOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load post" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      COMMENT external { id: string }
+      COMMENT -> external { id: string }
       CREATE
       VIEW { id : string!, row : Post }
+      PostLoaded
+      PostLoadFailed
+      PostSaved
+      PostSaveFailed
+      CommentSaved
+      CommentSaveFailed
     }
     listens {
       VIEW { id : string!, row : Post }
@@ -39,7 +45,6 @@ orbital PostOrbital {
       PostSaveFailed { error : string, code : string }
       CommentSaveFailed { error : string, code : string }
     }
-    emits: [PostLoaded, PostLoadFailed, PostSaved, PostSaveFailed, CommentSaved, CommentSaveFailed]
   }
   trait PostCreate -> Post [interaction, collection] {
     initial: closed
@@ -60,12 +65,18 @@ orbital PostOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    listens {
+emits {
+      PostLoadFailed
+      PostLoaded
+      PostSaveFailed
+      PostSaved
+    }
+
+        listens {
       SAVE { data : object! }
           PostLoadFailed { error : string, code : string }
-      PostBrowse CREATE -> CREATE
+      PostBrowse.CREATE -> CREATE
     }
-    emits: [PostLoadFailed, PostLoaded, PostSaveFailed, PostSaved]
   }
   trait PostView -> Post [interaction, collection] {
     initial: closed
@@ -85,13 +96,17 @@ orbital PostOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    listens {
+emits {
+      PostLoaded
+      PostLoadFailed
+    }
+
+        listens {
       VIEW { id : string! }
       SAVE { data : object! }
           PostLoadFailed { error : string, code : string }
-      PostBrowse VIEW -> VIEW
+      PostBrowse.VIEW -> VIEW
     }
-    emits: [PostLoaded, PostLoadFailed]
   }
   page "/feed" as FeedPage -> PostBrowse, PostCreate, PostView
 }
@@ -121,13 +136,14 @@ orbital CommentOrbital {
     emits {
       COMPOSE
       VIEW { id : string!, row : Comment }
+      CommentLoaded
+      CommentLoadFailed
     }
     listens {
-      CommentCompose SEND -> INIT
-      * COMMENT -> INIT
+      CommentCompose.SEND -> INIT
+      PostOrbital.PostBrowse.COMMENT -> INIT
           CommentLoadFailed { error : string, code : string }
     }
-    emits: [CommentLoaded, CommentLoadFailed]
   }
   trait CommentCompose -> Comment [interaction, collection] {
     initial: closed
@@ -149,12 +165,15 @@ orbital CommentOrbital {
     }
     emits {
       SEND
+      CommentLoadFailed
+      CommentLoaded
+      CommentSaveFailed
+      CommentSaved
     }
-    emits: [CommentLoadFailed, CommentLoaded, CommentSaveFailed, CommentSaved]
     listens {
       CommentLoadFailed { error : string, code : string }
       SEND { data : string }
-      CommentBrowse COMPOSE -> COMPOSE
+      CommentBrowse.COMPOSE -> COMPOSE
     }
   }
   trait CommentView -> Comment [interaction, collection] {
@@ -175,11 +194,15 @@ orbital CommentOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [CommentLoaded, CommentLoadFailed]
-    listens {
+emits {
+      CommentLoaded
+      CommentLoadFailed
+    }
+
+        listens {
       CommentLoadFailed { error : string, code : string }
       VIEW { id : string }
-      CommentBrowse VIEW -> VIEW
+      CommentBrowse.VIEW -> VIEW
     }
   }
   page "/messages" -> CommentBrowse, CommentCompose, CommentView

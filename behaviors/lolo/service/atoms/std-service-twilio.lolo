@@ -55,14 +55,20 @@ orbital ServiceTwilioOrbital {
         (set @entity.sendStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
     }
-    listens {
+emits {
+      ServiceTwilioLoaded
+      ServiceTwilioLoadFailed
+      ServiceTwilioTwilioCompleted
+      ServiceTwilioTwilioFailed
+    }
+
+        listens {
       SENT { messageSid : string }
       FAILED { error : string! }
           ServiceTwilioLoadFailed { message : string }
     
       ServiceTwilioTwilioFailed { error : string, code : string }
     }
-    emits: [ServiceTwilioLoaded, ServiceTwilioLoadFailed, ServiceTwilioTwilioCompleted, ServiceTwilioTwilioFailed]
   }
   page "/servicetwilios" as ServiceTwilioPage -> ServiceTwilioTwilio
 }

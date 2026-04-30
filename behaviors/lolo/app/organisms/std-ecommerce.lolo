@@ -44,16 +44,36 @@ orbital ProductOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load product" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ADD_TO_CART external { id: string }
+      ADD_TO_CART -> external { id: string }
       CREATE
       VIEW { id : string!, row : Product }
       EDIT { id : string!, row : Product }
       DELETE { id : string!, row : Product }
+      ProductLoaded
+      ProductLoadFailed
+      ProductSaved
+      ProductSaveFailed
+      ProductUpdated
+      ProductUpdateFailed
+      ProductDeleted
+      ProductDeleteFailed
+      CartItemSaved
+      CartItemSaveFailed
+      CartItemDeleted
+      CartItemDeleteFailed
+      CheckoutSaved
+      CheckoutSaveFailed
+      OrderRecordSaved
+      OrderRecordSaveFailed
+      OrderRecordUpdated
+      OrderRecordUpdateFailed
+      OrderRecordDeleted
+      OrderRecordDeleteFailed
     }
     listens {
-      ProductCreate PRODUCT_CREATED -> INIT
-      ProductEdit PRODUCT_UPDATED -> INIT
-      ProductDelete PRODUCT_DELETED -> INIT
+      ProductCreate.PRODUCT_CREATED -> INIT
+      ProductEdit.PRODUCT_UPDATED -> INIT
+      ProductDelete.PRODUCT_DELETED -> INIT
       VIEW { id : string!, row : Product }
       EDIT { id : string!, row : Product }
       DELETE { id : string!, row : Product }
@@ -69,7 +89,6 @@ orbital ProductOrbital {
       OrderRecordUpdateFailed { error : string, code : string }
       OrderRecordDeleteFailed { error : string, code : string }
     }
-    emits: [ProductLoaded, ProductLoadFailed, ProductSaved, ProductSaveFailed, ProductUpdated, ProductUpdateFailed, ProductDeleted, ProductDeleteFailed, CartItemSaved, CartItemSaveFailed, CartItemDeleted, CartItemDeleteFailed, CheckoutSaved, CheckoutSaveFailed, OrderRecordSaved, OrderRecordSaveFailed, OrderRecordUpdated, OrderRecordUpdateFailed, OrderRecordDeleted, OrderRecordDeleteFailed]
   }
   trait ProductCreate -> Product [interaction, collection] {
     initial: closed
@@ -92,18 +111,21 @@ orbital ProductOrbital {
         (emit PRODUCT_CREATED)
     }
     emits {
-      PRODUCT_CREATED external { id: string }
+      PRODUCT_CREATED -> external { id: string }
+      ProductLoadFailed
+      ProductLoaded
+      ProductSaveFailed
+      ProductSaved
     }
     listens {
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse CREATE -> CREATE
+      ProductBrowse.CREATE -> CREATE
     }
-    emits: [ProductLoadFailed, ProductLoaded, ProductSaveFailed, ProductSaved]
   }
   trait ProductEdit -> Product [interaction, collection] {
     listens {
-      ProductView EDIT -> EDIT
+      ProductView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -125,19 +147,24 @@ orbital ProductOrbital {
         (emit PRODUCT_UPDATED)
     }
     emits {
-      PRODUCT_UPDATED external { id: string }
+      PRODUCT_UPDATED -> external { id: string }
+      ProductLoadFailed
+      ProductLoaded
+      ProductUpdateFailed
+      ProductUpdated
     }
     listens {
       EDIT { id : string!, row : Product }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse EDIT -> EDIT
+      ProductBrowse.EDIT -> EDIT
     }
-    emits: [ProductLoadFailed, ProductLoaded, ProductUpdateFailed, ProductUpdated]
   }
   trait ProductView -> Product [interaction, collection] {
     emits {
       EDIT { id : string }
+      ProductLoaded
+      ProductLoadFailed
     }
     initial: closed
     state closed {
@@ -160,9 +187,8 @@ orbital ProductOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse VIEW -> VIEW
+      ProductBrowse.VIEW -> VIEW
     }
-    emits: [ProductLoaded, ProductLoadFailed]
   }
   trait ProductDelete -> Product [interaction, collection] {
     initial: idle
@@ -191,14 +217,17 @@ orbital ProductOrbital {
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
     }
     emits {
-      PRODUCT_DELETED external { id: string }
+      PRODUCT_DELETED -> external { id: string }
+      ProductDeleteFailed
+      ProductDeleted
+      ProductLoadFailed
+      ProductLoaded
     }
     listens {
       DELETE { id : string! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse DELETE -> DELETE
+      ProductBrowse.DELETE -> DELETE
     }
-    emits: [ProductDeleteFailed, ProductDeleted, ProductLoadFailed, ProductLoaded]
   }
   page "/products" as ProductsPage -> ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
 }
@@ -242,15 +271,16 @@ orbital CartItemOrbital {
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Order Confirmed", variant: "h2" }, { type: "typography", content: "Your order has been placed successfully.", variant: "body" }, { type: "button", label: "Continue Shopping", action: "INIT", variant: "primary" }] }] })
     }
     emits {
-      CHECKOUT_STARTED external { id: string }
+      CHECKOUT_STARTED -> external { id: string }
       ADD_ITEM
       REQUEST_REMOVE { id : string!, row : CartItem }
+      CartItemLoaded
+      CartItemLoadFailed
     }
     listens {
-      * ADD_TO_CART -> INIT
+      ProductOrbital.ProductBrowse.ADD_TO_CART -> INIT
           CartItemLoadFailed { error : string, code : string }
     }
-    emits: [CartItemLoaded, CartItemLoadFailed]
   }
   trait CartItemAddItem -> CartItem [interaction, collection] {
     initial: closed
@@ -271,11 +301,17 @@ orbital CartItemOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [CartItemLoadFailed, CartItemLoaded, CartItemSaveFailed, CartItemSaved]
-    listens {
+emits {
+      CartItemLoadFailed
+      CartItemLoaded
+      CartItemSaveFailed
+      CartItemSaved
+    }
+
+        listens {
       CartItemLoadFailed { error : string, code : string }
       SAVE { data : string }
-      CartItemCartBrowse ADD_ITEM -> ADD_ITEM
+      CartItemCartBrowse.ADD_ITEM -> ADD_ITEM
     }
   }
   trait CartItemRemoveConfirm -> CartItem [interaction, collection] {
@@ -303,11 +339,17 @@ orbital CartItemOrbital {
         (render-ui main { type: "box" })
         (fetch CartItem { emit: { success: "CartItemLoaded", failure: "CartItemLoadFailed" } })
     }
-    emits: [CartItemDeleteFailed, CartItemDeleted, CartItemLoadFailed, CartItemLoaded]
-    listens {
+emits {
+      CartItemDeleteFailed
+      CartItemDeleted
+      CartItemLoadFailed
+      CartItemLoaded
+    }
+
+        listens {
       CartItemLoadFailed { error : string, code : string }
       REQUEST_REMOVE { id : string }
-      CartItemCartBrowse REQUEST_REMOVE -> REQUEST_REMOVE
+      CartItemCartBrowse.REQUEST_REMOVE -> REQUEST_REMOVE
     }
   }
   page "/cart" -> CartItemCartBrowse, CartItemAddItem
@@ -371,14 +413,17 @@ orbital CheckoutOrbital {
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
     emits {
-      ORDER_PLACED external { id: string }
+      ORDER_PLACED -> external { id: string }
+      CheckoutLoadFailed
+      CheckoutLoaded
+      CheckoutSaveFailed
+      CheckoutSaved
     }
     listens {
-      * CHECKOUT_STARTED -> INIT
+      CartItemOrbital.CartItemCartBrowse.CHECKOUT_STARTED -> INIT
           CheckoutLoadFailed { error : string, code : string }
           COMPLETE { data : string }
     }
-    emits: [CheckoutLoadFailed, CheckoutLoaded, CheckoutSaveFailed, CheckoutSaved]
   }
   page "/checkout" -> CheckoutWizard
 }
@@ -417,15 +462,16 @@ orbital OrderRecordOrbital {
       VIEW { id : string!, row : OrderRecord }
       EDIT { id : string!, row : OrderRecord }
       DELETE { id : string!, row : OrderRecord }
+      OrderRecordLoaded
+      OrderRecordLoadFailed
     }
     listens {
-      OrderRecordCreate ORDER_RECORD_CREATED -> INIT
-      OrderRecordEdit ORDER_RECORD_UPDATED -> INIT
-      OrderRecordDelete ORDER_RECORD_DELETED -> INIT
-      * ORDER_PLACED -> INIT
+      OrderRecordCreate.ORDER_RECORD_CREATED -> INIT
+      OrderRecordEdit.ORDER_RECORD_UPDATED -> INIT
+      OrderRecordDelete.ORDER_RECORD_DELETED -> INIT
+      CheckoutOrbital.CheckoutWizard.ORDER_PLACED -> INIT
           OrderRecordLoadFailed { error : string, code : string }
     }
-    emits: [OrderRecordLoaded, OrderRecordLoadFailed]
   }
   trait OrderRecordCreate -> OrderRecord [interaction, collection] {
     initial: closed
@@ -449,12 +495,15 @@ orbital OrderRecordOrbital {
     }
     emits {
       ORDER_RECORD_CREATED
+      OrderRecordLoadFailed
+      OrderRecordLoaded
+      OrderRecordSaveFailed
+      OrderRecordSaved
     }
-    emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordSaveFailed, OrderRecordSaved]
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       SAVE { data : string }
-      OrderRecordBrowse CREATE -> CREATE
+      OrderRecordBrowse.CREATE -> CREATE
     }
   }
   trait OrderRecordEdit -> OrderRecord [interaction, collection] {
@@ -479,19 +528,24 @@ orbital OrderRecordOrbital {
     }
     emits {
       ORDER_RECORD_UPDATED
+      OrderRecordLoadFailed
+      OrderRecordLoaded
+      OrderRecordUpdateFailed
+      OrderRecordUpdated
     }
-    emits: [OrderRecordLoadFailed, OrderRecordLoaded, OrderRecordUpdateFailed, OrderRecordUpdated]
     listens {
-      OrderRecordView EDIT -> EDIT
+      OrderRecordView.EDIT -> EDIT
       OrderRecordLoadFailed { error : string, code : string }
       EDIT { id : string, row : OrderRecord }
       SAVE { data : string }
-      OrderRecordBrowse EDIT -> EDIT
+      OrderRecordBrowse.EDIT -> EDIT
     }
   }
   trait OrderRecordView -> OrderRecord [interaction, collection] {
     emits {
       EDIT { id : string }
+      OrderRecordLoaded
+      OrderRecordLoadFailed
     }
     initial: closed
     state closed {
@@ -510,11 +564,10 @@ orbital OrderRecordOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits: [OrderRecordLoaded, OrderRecordLoadFailed]
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       VIEW { id : string }
-      OrderRecordBrowse VIEW -> VIEW
+      OrderRecordBrowse.VIEW -> VIEW
     }
   }
   trait OrderRecordDelete -> OrderRecord [interaction, collection] {
@@ -545,12 +598,15 @@ orbital OrderRecordOrbital {
     }
     emits {
       ORDER_RECORD_DELETED
+      OrderRecordDeleteFailed
+      OrderRecordDeleted
+      OrderRecordLoadFailed
+      OrderRecordLoaded
     }
-    emits: [OrderRecordDeleteFailed, OrderRecordDeleted, OrderRecordLoadFailed, OrderRecordLoaded]
     listens {
       OrderRecordLoadFailed { error : string, code : string }
       DELETE { id : string }
-      OrderRecordBrowse DELETE -> DELETE
+      OrderRecordBrowse.DELETE -> DELETE
     }
   }
   page "/orders" -> OrderRecordBrowse, OrderRecordCreate, OrderRecordEdit, OrderRecordView, OrderRecordDelete

@@ -36,11 +36,21 @@ orbital BuildOrbital {
       VIEW { id : string!, row : Build }
       EDIT { id : string!, row : Build }
       DELETE { id : string!, row : Build }
+      BuildLoaded
+      BuildLoadFailed
+      BuildSaved
+      BuildSaveFailed
+      BuildUpdated
+      BuildUpdateFailed
+      BuildDeleted
+      BuildDeleteFailed
+      DeploymentSaved
+      DeploymentSaveFailed
     }
     listens {
-      BuildCreate BUILD_CREATED -> INIT
-      BuildEdit BUILD_UPDATED -> INIT
-      BuildDelete BUILD_DELETED -> INIT
+      BuildCreate.BUILD_CREATED -> INIT
+      BuildEdit.BUILD_UPDATED -> INIT
+      BuildDelete.BUILD_DELETED -> INIT
       VIEW { id : string!, row : Build }
       EDIT { id : string!, row : Build }
       DELETE { id : string!, row : Build }
@@ -51,7 +61,6 @@ orbital BuildOrbital {
       BuildDeleteFailed { error : string, code : string }
       DeploymentSaveFailed { error : string, code : string }
     }
-    emits: [BuildLoaded, BuildLoadFailed, BuildSaved, BuildSaveFailed, BuildUpdated, BuildUpdateFailed, BuildDeleted, BuildDeleteFailed, DeploymentSaved, DeploymentSaveFailed]
   }
   trait BuildCreate -> Build [interaction, collection] {
     initial: closed
@@ -74,18 +83,21 @@ orbital BuildOrbital {
         (emit BUILD_CREATED)
     }
     emits {
-      BUILD_CREATED external { id: string }
+      BUILD_CREATED -> external { id: string }
+      BuildLoadFailed
+      BuildLoaded
+      BuildSaveFailed
+      BuildSaved
     }
     listens {
       SAVE { data : object! }
           BuildLoadFailed { error : string, code : string }
-      BuildBrowse CREATE -> CREATE
+      BuildBrowse.CREATE -> CREATE
     }
-    emits: [BuildLoadFailed, BuildLoaded, BuildSaveFailed, BuildSaved]
   }
   trait BuildEdit -> Build [interaction, collection] {
     listens {
-      BuildView EDIT -> EDIT
+      BuildView.EDIT -> EDIT
     }
     initial: closed
     state closed {
@@ -107,19 +119,24 @@ orbital BuildOrbital {
         (emit BUILD_UPDATED)
     }
     emits {
-      BUILD_UPDATED external { id: string }
+      BUILD_UPDATED -> external { id: string }
+      BuildLoadFailed
+      BuildLoaded
+      BuildUpdateFailed
+      BuildUpdated
     }
     listens {
       EDIT { id : string!, row : Build }
       SAVE { data : object! }
           BuildLoadFailed { error : string, code : string }
-      BuildBrowse EDIT -> EDIT
+      BuildBrowse.EDIT -> EDIT
     }
-    emits: [BuildLoadFailed, BuildLoaded, BuildUpdateFailed, BuildUpdated]
   }
   trait BuildView -> Build [interaction, collection] {
     emits {
       EDIT { id : string }
+      BuildLoaded
+      BuildLoadFailed
     }
     initial: closed
     state closed {
@@ -143,9 +160,8 @@ orbital BuildOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           BuildLoadFailed { error : string, code : string }
-      BuildBrowse VIEW -> VIEW
+      BuildBrowse.VIEW -> VIEW
     }
-    emits: [BuildLoaded, BuildLoadFailed]
   }
   trait BuildDelete -> Build [interaction, collection] {
     initial: idle
@@ -174,14 +190,17 @@ orbital BuildOrbital {
         (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
     }
     emits {
-      BUILD_DELETED external { id: string }
+      BUILD_DELETED -> external { id: string }
+      BuildDeleteFailed
+      BuildDeleted
+      BuildLoadFailed
+      BuildLoaded
     }
     listens {
       DELETE { id : string! }
           BuildLoadFailed { error : string, code : string }
-      BuildBrowse DELETE -> DELETE
+      BuildBrowse.DELETE -> DELETE
     }
-    emits: [BuildDeleteFailed, BuildDeleted, BuildLoadFailed, BuildLoaded]
   }
   page "/builds" as BuildsPage -> BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
 }
@@ -219,8 +238,12 @@ orbital StageOrbital {
         (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [StageLoaded, StageLoadFailed]
-    listens {
+emits {
+      StageLoaded
+      StageLoadFailed
+    }
+
+        listens {
       StageLoadFailed { error : string, code : string }
     }
   }
@@ -265,8 +288,14 @@ orbital DeploymentOrbital {
       RETRY -> loading
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Deploying...", message: "Processing deployment..." }, { type: "skeleton", variant: "text" }] }] })
     }
-    emits: [DeploymentLoadFailed, DeploymentLoaded, DeploymentSaveFailed, DeploymentSaved]
-    listens {
+emits {
+      DeploymentLoadFailed
+      DeploymentLoaded
+      DeploymentSaveFailed
+      DeploymentSaved
+    }
+
+        listens {
       DeploymentLoadFailed { error : string, code : string }
       LOADED { data : string }
     }

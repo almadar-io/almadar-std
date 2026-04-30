@@ -40,8 +40,12 @@ orbital ServiceNodeOrbital {
       RESET -> closed
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
-    emits: [ServiceNodeLoaded, ServiceNodeLoadFailed]
-    listens {
+emits {
+      ServiceNodeLoaded
+      ServiceNodeLoadFailed
+    }
+
+        listens {
       ServiceNodeLoadFailed { message : string }
     }
   }

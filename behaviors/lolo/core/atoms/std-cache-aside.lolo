@@ -55,12 +55,18 @@ orbital CacheEntryOrbital {
         (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
-    listens {
+emits {
+      CacheEntryLoaded
+      CacheEntryLoadFailed
+      CacheEntryUpdated
+      CacheEntryUpdateFailed
+    }
+
+        listens {
       CACHED                 { data : CacheEntry }
       CacheEntryLoadFailed   { error : string, code : string }
       CacheEntryUpdateFailed { error : string, code : string }
     }
-    emits: [CacheEntryLoaded, CacheEntryLoadFailed, CacheEntryUpdated, CacheEntryUpdateFailed]
   }
   page "/cacheentrys" as CacheEntryPage -> CacheEntryCacheManager
 }

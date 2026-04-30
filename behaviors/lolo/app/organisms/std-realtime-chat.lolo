@@ -33,9 +33,19 @@ orbital ChatMessageOrbital {
     emits {
       COMPOSE
       VIEW { id : string!, row : ChatMessage }
+      ChatMessageLoaded
+      ChatMessageLoadFailed
+      ChatMessageSaved
+      ChatMessageSaveFailed
+      ChannelSaved
+      ChannelSaveFailed
+      ChannelUpdated
+      ChannelUpdateFailed
+      ChannelDeleted
+      ChannelDeleteFailed
     }
     listens {
-      ChatMessageCompose SEND -> INIT
+      ChatMessageCompose.SEND -> INIT
       VIEW { id : string!, row : ChatMessage }
           ChatMessageLoadFailed { error : string, code : string }
     
@@ -44,7 +54,6 @@ orbital ChatMessageOrbital {
       ChannelUpdateFailed { error : string, code : string }
       ChannelDeleteFailed { error : string, code : string }
     }
-    emits: [ChatMessageLoaded, ChatMessageLoadFailed, ChatMessageSaved, ChatMessageSaveFailed, ChannelSaved, ChannelSaveFailed, ChannelUpdated, ChannelUpdateFailed, ChannelDeleted, ChannelDeleteFailed]
   }
   trait ChatMessageCompose -> ChatMessage [interaction, collection] {
     initial: closed
@@ -66,17 +75,22 @@ orbital ChatMessageOrbital {
     }
     emits {
       SEND
+      ChatMessageLoadFailed
+      ChatMessageLoaded
+      ChatMessageSaveFailed
+      ChatMessageSaved
     }
     listens {
       SEND { data : object! }
           ChatMessageLoadFailed { error : string, code : string }
-      ChatMessageBrowse COMPOSE -> COMPOSE
+      ChatMessageBrowse.COMPOSE -> COMPOSE
     }
-    emits: [ChatMessageLoadFailed, ChatMessageLoaded, ChatMessageSaveFailed, ChatMessageSaved]
   }
   trait ChatMessageView -> ChatMessage [interaction, collection] {
     emits {
       EDIT { id : string }
+      ChatMessageLoaded
+      ChatMessageLoadFailed
     }
     initial: closed
     state closed {
@@ -100,9 +114,8 @@ orbital ChatMessageOrbital {
       VIEW { id : string! }
       SAVE { data : object! }
           ChatMessageLoadFailed { error : string, code : string }
-      ChatMessageBrowse VIEW -> VIEW
+      ChatMessageBrowse.VIEW -> VIEW
     }
-    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
   page "/chat" as ChatPage -> ChatMessageBrowse, ChatMessageCompose, ChatMessageView
 }
@@ -139,14 +152,15 @@ orbital ChannelOrbital {
       VIEW { id : string!, row : Channel }
       EDIT { id : string!, row : Channel }
       DELETE { id : string!, row : Channel }
+      ChannelLoaded
+      ChannelLoadFailed
     }
     listens {
-      ChannelCreate CHANNEL_CREATED -> INIT
-      ChannelEdit CHANNEL_UPDATED -> INIT
-      ChannelDelete CHANNEL_DELETED -> INIT
+      ChannelCreate.CHANNEL_CREATED -> INIT
+      ChannelEdit.CHANNEL_UPDATED -> INIT
+      ChannelDelete.CHANNEL_DELETED -> INIT
           ChannelLoadFailed { error : string, code : string }
     }
-    emits: [ChannelLoaded, ChannelLoadFailed]
   }
   trait ChannelCreate -> Channel [interaction, collection] {
     initial: closed
@@ -170,12 +184,15 @@ orbital ChannelOrbital {
     }
     emits {
       CHANNEL_CREATED
+      ChannelLoadFailed
+      ChannelLoaded
+      ChannelSaveFailed
+      ChannelSaved
     }
-    emits: [ChannelLoadFailed, ChannelLoaded, ChannelSaveFailed, ChannelSaved]
     listens {
       ChannelLoadFailed { error : string, code : string }
       SAVE { data : string }
-      ChannelBrowse CREATE -> CREATE
+      ChannelBrowse.CREATE -> CREATE
     }
   }
   trait ChannelEdit -> Channel [interaction, collection] {
@@ -200,19 +217,24 @@ orbital ChannelOrbital {
     }
     emits {
       CHANNEL_UPDATED
+      ChannelLoadFailed
+      ChannelLoaded
+      ChannelUpdateFailed
+      ChannelUpdated
     }
-    emits: [ChannelLoadFailed, ChannelLoaded, ChannelUpdateFailed, ChannelUpdated]
     listens {
-      ChannelView EDIT -> EDIT
+      ChannelView.EDIT -> EDIT
       ChannelLoadFailed { error : string, code : string }
       EDIT { id : string, row : Channel }
       SAVE { data : string }
-      ChannelBrowse EDIT -> EDIT
+      ChannelBrowse.EDIT -> EDIT
     }
   }
   trait ChannelView -> Channel [interaction, collection] {
     emits {
       EDIT { id : string }
+      ChannelLoaded
+      ChannelLoadFailed
     }
     initial: closed
     state closed {
@@ -232,11 +254,10 @@ orbital ChannelOrbital {
         (render-ui main { type: "box" })
     }
 
-    emits: [ChannelLoaded, ChannelLoadFailed]
     listens {
       ChannelLoadFailed { error : string, code : string }
       VIEW { id : string }
-      ChannelBrowse VIEW -> VIEW
+      ChannelBrowse.VIEW -> VIEW
     }
   }
   trait ChannelDelete -> Channel [interaction, collection] {
@@ -267,12 +288,15 @@ orbital ChannelOrbital {
     }
     emits {
       CHANNEL_DELETED
+      ChannelDeleteFailed
+      ChannelDeleted
+      ChannelLoadFailed
+      ChannelLoaded
     }
-    emits: [ChannelDeleteFailed, ChannelDeleted, ChannelLoadFailed, ChannelLoaded]
     listens {
       ChannelLoadFailed { error : string, code : string }
       DELETE { id : string }
-      ChannelBrowse DELETE -> DELETE
+      ChannelBrowse.DELETE -> DELETE
     }
   }
   page "/channels" -> ChannelBrowse, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete
@@ -311,8 +335,12 @@ orbital OnlineUserOrbital {
         (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    emits: [OnlineUserLoaded, OnlineUserLoadFailed]
-    listens {
+emits {
+      OnlineUserLoaded
+      OnlineUserLoadFailed
+    }
+
+        listens {
       OnlineUserLoadFailed { error : string, code : string }
     }
   }
