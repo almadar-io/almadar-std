@@ -142,8 +142,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "failure": "SearchResultLoadFailed",
-                        "success": "SearchResultLoaded"
+                        "success": "SearchResultLoaded",
+                        "failure": "SearchResultLoadFailed"
                       }
                     }
                   ],
@@ -151,42 +151,42 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "name": "search",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
+                              "type": "typography",
                               "content": "Search SearchResults",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "search-input",
+                          "placeholder": "Search...",
                           "event": "SEARCH",
-                          "placeholder": "Search..."
+                          "type": "search-input"
                         },
                         {
                           "description": "Type a query to search across searchresults.",
-                          "title": "Search to find results",
                           "icon": "search",
+                          "title": "Search to find results",
                           "type": "empty-state"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -210,27 +210,27 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "className": "py-8",
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
                           "content": [
                             "str/concat",
                             "Searching for \"",
                             "@payload.query",
                             "\"…"
-                          ],
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -244,68 +244,68 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "search"
+                                  "name": "search",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Results",
-                                  "variant": "h2"
+                                  "content": "Results"
                                 }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "variant": "ghost",
-                              "icon": "x",
                               "label": "Clear",
+                              "icon": "x",
                               "action": "CLEAR",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "ghost"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": [],
                           "entity": "@payload.data",
                           "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "@item.name",
+                                  "variant": "h4",
                                   "type": "typography",
-                                  "variant": "h4"
+                                  "content": "@item.name"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ],
-                          "fields": []
+                          ]
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -319,7 +319,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -327,28 +330,25 @@
                           "type": "icon"
                         },
                         {
-                          "content": "Search failed",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "Search failed"
                         },
                         {
+                          "content": "@payload.error",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "@payload.error"
+                          "color": "muted"
                         },
                         {
+                          "type": "button",
                           "variant": "ghost",
-                          "label": "Retry",
-                          "action": "SEARCH",
                           "icon": "rotate-ccw",
-                          "type": "button"
+                          "label": "Retry",
+                          "action": "SEARCH"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-8"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -363,8 +363,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "failure": "SearchResultLoadFailed",
-                        "success": "SearchResultLoaded"
+                        "success": "SearchResultLoaded",
+                        "failure": "SearchResultLoadFailed"
                       }
                     }
                   ],
@@ -411,8 +411,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
+                        "failure": "SearchResultLoadFailed",
+                        "success": "SearchResultLoaded"
                       }
                     }
                   ],
@@ -420,42 +420,42 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "search"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Search SearchResults",
-                              "variant": "h2"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "search-input",
                           "placeholder": "Search...",
-                          "event": "SEARCH"
+                          "event": "SEARCH",
+                          "type": "search-input"
                         },
                         {
                           "type": "empty-state",
-                          "description": "Type a query to search across searchresults.",
                           "icon": "search",
+                          "description": "Type a query to search across searchresults.",
                           "title": "Search to find results"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]

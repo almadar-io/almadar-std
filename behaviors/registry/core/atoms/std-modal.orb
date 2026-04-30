@@ -44,6 +44,19 @@
           "linkedEntity": "ModalRecord",
           "emits": [
             {
+              "event": "SAVE",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CLOSE"
+            },
+            {
               "event": "ModalRecordLoadFailed",
               "scope": "internal",
               "payloadSchema": [
@@ -148,8 +161,8 @@
                     "ModalRecord",
                     {
                       "emit": {
-                        "success": "ModalRecordLoaded",
-                        "failure": "ModalRecordLoadFailed"
+                        "failure": "ModalRecordLoadFailed",
+                        "success": "ModalRecordLoaded"
                       }
                     }
                   ]
@@ -178,38 +191,38 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "@config.title",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "@payload.row",
-                          "cancelEvent": "CLOSE",
-                          "fields": "@config.fields",
                           "type": "form-section",
                           "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": "@config.fields",
                           "mode": "@config.mode"
                         }
                       ],
                       "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
