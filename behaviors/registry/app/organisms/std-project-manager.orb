@@ -522,22 +522,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading…",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -551,16 +551,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "dashboard-layout",
                       "navItems": [
                         {
+                          "href": "/tasks",
                           "icon": "check-square",
-                          "label": "Tasks",
-                          "href": "/tasks"
+                          "label": "Tasks"
                         },
                         {
                           "href": "/sprints",
-                          "label": "Sprints",
-                          "icon": "zap"
+                          "icon": "zap",
+                          "label": "Sprints"
                         },
                         {
                           "icon": "layout-list",
@@ -568,24 +569,16 @@
                           "href": "/burndown"
                         }
                       ],
-                      "appName": "ProjectManagerApp",
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "className": "max-w-5xl mx-auto w-full",
-                          "gap": "lg",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
                               "justify": "between",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -593,24 +586,28 @@
                                     },
                                     {
                                       "content": "Tasks",
-                                      "type": "typography",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "type": "typography"
                                     }
-                                  ]
-                                },
-                                {
+                                  ],
+                                  "align": "center",
                                   "direction": "horizontal",
                                   "gap": "sm",
-                                  "type": "stack",
+                                  "type": "stack"
+                                },
+                                {
                                   "children": [
                                     {
-                                      "icon": "plus",
+                                      "action": "CREATE",
                                       "label": "Create Task",
                                       "type": "button",
                                       "variant": "primary",
-                                      "action": "CREATE"
+                                      "icon": "plus"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm"
                                 }
                               ],
                               "align": "center"
@@ -619,26 +616,61 @@
                               "type": "divider"
                             },
                             {
-                              "cols": 1.0,
+                              "type": "simple-grid",
                               "children": [
                                 {
-                                  "value": "@payload.data.length",
                                   "icon": "check-square",
+                                  "value": "@payload.data.length",
                                   "label": "Total Tasks",
                                   "type": "stat-display"
                                 }
                               ],
-                              "type": "simple-grid"
+                              "cols": 1.0
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "gap": "md",
+                              "entity": "@payload.data",
+                              "fields": [
+                                {
+                                  "variant": "h3",
+                                  "name": "title",
+                                  "icon": "check-square"
+                                },
+                                {
+                                  "name": "priority",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "variant": "badge",
+                                  "name": "status"
+                                },
+                                {
+                                  "name": "assignee",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "storyPoints",
+                                  "label": "Points",
+                                  "format": "number",
+                                  "variant": "body"
+                                },
+                                {
+                                  "label": "Due",
+                                  "format": "date",
+                                  "name": "dueDate",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "type": "data-grid",
+                              "cols": 2.0,
                               "itemActions": [
                                 {
                                   "variant": "ghost",
-                                  "event": "VIEW",
-                                  "label": "View"
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
                                   "variant": "ghost",
@@ -646,53 +678,20 @@
                                   "label": "Edit"
                                 },
                                 {
-                                  "event": "DELETE",
                                   "label": "Delete",
+                                  "event": "DELETE",
                                   "variant": "danger"
                                 }
-                              ],
-                              "columns": [
-                                {
-                                  "icon": "check-square",
-                                  "name": "title",
-                                  "variant": "h3"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "variant": "body",
-                                  "name": "assignee"
-                                },
-                                {
-                                  "format": "number",
-                                  "label": "Points",
-                                  "variant": "body",
-                                  "name": "storyPoints"
-                                },
-                                {
-                                  "format": "date",
-                                  "name": "dueDate",
-                                  "variant": "caption",
-                                  "label": "Due"
-                                }
-                              ],
-                              "fields": [],
-                              "entity": "@payload.data",
-                              "gap": "md",
-                              "type": "data-grid",
-                              "cols": 2.0
+                              ]
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "gap": "lg",
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "appName": "ProjectManagerApp"
                     }
                   ]
                 ]
@@ -706,11 +705,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "color": "destructive",
@@ -718,24 +712,29 @@
                           "name": "alert-triangle"
                         },
                         {
+                          "variant": "h3",
                           "type": "typography",
-                          "content": "Failed to load task",
-                          "variant": "h3"
+                          "content": "Failed to load task"
                         },
                         {
+                          "type": "typography",
+                          "color": "muted",
                           "variant": "body",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "@payload.error"
                         },
                         {
+                          "variant": "primary",
+                          "action": "INIT",
                           "label": "Retry",
                           "type": "button",
-                          "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -934,22 +933,21 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle"
+                              "name": "plus-circle",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "Create Task"
+                              "content": "Create Task",
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal"
@@ -958,6 +956,9 @@
                           "type": "divider"
                         },
                         {
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "title",
                             "description",
@@ -967,12 +968,10 @@
                             "storyPoints",
                             "dueDate"
                           ],
-                          "mode": "create",
-                          "type": "form-section",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE"
+                          "mode": "create"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1215,8 +1214,8 @@
                     "Task",
                     {
                       "emit": {
-                        "success": "TaskLoaded",
-                        "failure": "TaskLoadFailed"
+                        "failure": "TaskLoadFailed",
+                        "success": "TaskLoaded"
                       }
                     }
                   ]
@@ -1233,8 +1232,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "TaskLoadFailed",
-                        "success": "TaskLoaded"
+                        "success": "TaskLoaded",
+                        "failure": "TaskLoadFailed"
                       }
                     }
                   ],
@@ -1242,34 +1241,34 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "edit"
                             },
                             {
+                              "content": "Edit Task",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Edit Task"
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CLOSE",
                           "mode": "edit",
                           "entity": "@payload.row",
                           "type": "form-section",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "title",
                             "description",
@@ -1278,10 +1277,10 @@
                             "status",
                             "storyPoints",
                             "dueDate"
-                          ],
-                          "submitEvent": "SAVE"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1322,8 +1321,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "TaskUpdateFailed",
-                        "success": "TaskUpdated"
+                        "success": "TaskUpdated",
+                        "failure": "TaskUpdateFailed"
                       }
                     }
                   ],
@@ -1458,8 +1457,8 @@
                     "Task",
                     {
                       "emit": {
-                        "failure": "TaskLoadFailed",
-                        "success": "TaskLoaded"
+                        "success": "TaskLoaded",
+                        "failure": "TaskLoadFailed"
                       }
                     }
                   ]
@@ -1474,11 +1473,11 @@
                     "fetch",
                     "Task",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "TaskLoaded",
                         "failure": "TaskLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
@@ -1486,23 +1485,21 @@
                     "modal",
                     {
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "eye",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.title",
-                              "variant": "h3"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1511,59 +1508,57 @@
                         },
                         {
                           "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
-                              "content": "Title",
-                              "variant": "caption"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.title",
-                              "variant": "body"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Description"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.description",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
                               "type": "typography",
-                              "content": "Assignee",
-                              "variant": "caption"
+                              "content": "Title"
                             },
                             {
-                              "content": "@entity.assignee",
+                              "content": "@entity.title",
                               "variant": "body",
                               "type": "typography"
                             }
                           ]
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.description",
+                              "variant": "body"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Assignee"
+                            },
+                            {
+                              "content": "@entity.assignee",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "direction": "horizontal",
                           "children": [
                             {
                               "content": "Priority",
@@ -1571,16 +1566,15 @@
                               "variant": "caption"
                             },
                             {
-                              "content": "@entity.priority",
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "@entity.priority"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
@@ -1588,71 +1582,76 @@
                               "content": "Status"
                             },
                             {
+                              "content": "@entity.status",
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.status"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "content": "Story Points",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.storyPoints",
                               "type": "typography"
                             }
                           ],
                           "gap": "md",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
-                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "content": "Due Date",
                               "type": "typography",
+                              "variant": "caption",
+                              "content": "Story Points"
+                            },
+                            {
+                              "content": "@entity.storyPoints",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Due Date",
                               "variant": "caption"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.dueDate",
                               "variant": "body",
-                              "content": "@entity.dueDate"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "justify": "end",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
                               "variant": "primary",
                               "label": "Edit",
-                              "action": "EDIT",
-                              "icon": "edit"
+                              "icon": "edit",
+                              "type": "button",
+                              "action": "EDIT"
                             },
                             {
-                              "label": "Close",
-                              "type": "button",
                               "action": "CLOSE",
+                              "type": "button",
+                              "label": "Close",
                               "variant": "ghost"
                             }
                           ],
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "justify": "end"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1872,8 +1871,8 @@
                     "Task",
                     {
                       "emit": {
-                        "failure": "TaskLoadFailed",
-                        "success": "TaskLoaded"
+                        "success": "TaskLoaded",
+                        "failure": "TaskLoadFailed"
                       }
                     }
                   ]
@@ -1895,8 +1894,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "TaskLoadFailed",
-                        "success": "TaskLoaded"
+                        "success": "TaskLoaded",
+                        "failure": "TaskLoadFailed"
                       }
                     }
                   ],
@@ -1904,13 +1903,14 @@
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
@@ -1919,8 +1919,8 @@
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Delete Task"
+                              "content": "Delete Task",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1928,33 +1928,32 @@
                           "type": "divider"
                         },
                         {
+                          "type": "alert",
                           "message": "This action cannot be undone.",
-                          "variant": "error",
-                          "type": "alert"
+                          "variant": "error"
                         },
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "end",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "type": "button",
                               "variant": "ghost",
-                              "action": "CANCEL"
+                              "label": "Cancel",
+                              "action": "CANCEL",
+                              "type": "button"
                             },
                             {
+                              "icon": "check",
                               "action": "CONFIRM_DELETE",
                               "label": "Delete",
                               "type": "button",
-                              "variant": "danger",
-                              "icon": "check"
+                              "variant": "danger"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "justify": "end"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1971,8 +1970,8 @@
                     "@entity.pendingId",
                     {
                       "emit": {
-                        "success": "TaskDeleted",
-                        "failure": "TaskDeleteFailed"
+                        "failure": "TaskDeleteFailed",
+                        "success": "TaskDeleted"
                       }
                     }
                   ],
@@ -1993,8 +1992,8 @@
                     "Task",
                     {
                       "emit": {
-                        "success": "TaskLoaded",
-                        "failure": "TaskLoadFailed"
+                        "failure": "TaskLoadFailed",
+                        "success": "TaskLoaded"
                       }
                     }
                   ],
@@ -2288,22 +2287,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
+                          "content": "Loading…",
                           "type": "typography",
-                          "content": "Loading…"
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -2319,35 +2318,31 @@
                     {
                       "navItems": [
                         {
+                          "label": "Tasks",
                           "icon": "check-square",
-                          "href": "/tasks",
-                          "label": "Tasks"
+                          "href": "/tasks"
                         },
                         {
-                          "icon": "zap",
                           "label": "Sprints",
+                          "icon": "zap",
                           "href": "/sprints"
                         },
                         {
-                          "label": "Burndown",
                           "icon": "layout-list",
+                          "label": "Burndown",
                           "href": "/burndown"
                         }
                       ],
                       "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
                               "gap": "md",
-                              "justify": "between",
                               "children": [
                                 {
-                                  "align": "center",
                                   "gap": "sm",
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "children": [
                                     {
@@ -2359,40 +2354,46 @@
                                       "variant": "h2",
                                       "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center",
+                                  "type": "stack"
                                 },
                                 {
-                                  "gap": "sm",
                                   "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "button",
                                       "icon": "plus",
-                                      "label": "Create Sprint",
+                                      "type": "button",
+                                      "variant": "primary",
                                       "action": "CREATE",
-                                      "variant": "primary"
+                                      "label": "Create Sprint"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "gap": "sm"
                                 }
                               ],
                               "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
                               "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "data-grid",
+                              "cols": 2.0,
                               "itemActions": [
                                 {
-                                  "event": "VIEW",
+                                  "variant": "ghost",
                                   "label": "View",
-                                  "variant": "ghost"
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "label": "Edit",
                                   "variant": "ghost",
-                                  "event": "EDIT"
+                                  "event": "EDIT",
+                                  "label": "Edit"
                                 },
                                 {
                                   "label": "Delete",
@@ -2400,14 +2401,11 @@
                                   "event": "DELETE"
                                 }
                               ],
-                              "gap": "md",
-                              "cols": 2.0,
                               "entity": "@payload.data",
-                              "fields": [],
-                              "columns": [
+                              "fields": [
                                 {
-                                  "icon": "zap",
                                   "variant": "h3",
+                                  "icon": "zap",
                                   "name": "name"
                                 },
                                 {
@@ -2415,37 +2413,37 @@
                                   "variant": "badge"
                                 },
                                 {
-                                  "variant": "body",
-                                  "name": "goal"
+                                  "name": "goal",
+                                  "variant": "body"
                                 },
                                 {
-                                  "format": "date",
-                                  "variant": "caption",
                                   "name": "startDate",
+                                  "variant": "caption",
+                                  "format": "date",
                                   "label": "Start"
                                 },
                                 {
-                                  "variant": "caption",
                                   "name": "endDate",
                                   "label": "End",
+                                  "variant": "caption",
                                   "format": "date"
                                 },
                                 {
-                                  "label": "Tasks",
                                   "name": "taskCount",
-                                  "format": "number",
-                                  "variant": "body"
+                                  "label": "Tasks",
+                                  "variant": "body",
+                                  "format": "number"
                                 }
                               ],
-                              "type": "data-grid"
+                              "gap": "md"
                             }
                           ],
-                          "gap": "lg",
                           "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "direction": "vertical",
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "appName": "ProjectManagerApp"
                     }
                   ]
                 ]
@@ -2460,7 +2458,7 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -2468,27 +2466,27 @@
                           "color": "destructive"
                         },
                         {
+                          "variant": "h3",
                           "content": "Failed to load sprint",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "variant": "body",
-                          "content": "@payload.error"
+                          "content": "@payload.error",
+                          "type": "typography"
                         },
                         {
-                          "label": "Retry",
-                          "action": "INIT",
+                          "type": "button",
                           "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "type": "button"
+                          "action": "INIT",
+                          "label": "Retry",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "align": "center",
                       "direction": "vertical",
-                      "gap": "md"
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -2653,8 +2651,8 @@
                     "Sprint",
                     {
                       "emit": {
-                        "success": "SprintLoaded",
-                        "failure": "SprintLoadFailed"
+                        "failure": "SprintLoadFailed",
+                        "success": "SprintLoaded"
                       }
                     }
                   ]
@@ -2679,11 +2677,8 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
@@ -2692,17 +2687,17 @@
                             },
                             {
                               "content": "Create Sprint",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "create",
                           "fields": [
                             "name",
                             "startDate",
@@ -2711,12 +2706,15 @@
                             "status",
                             "taskCount"
                           ],
+                          "mode": "create",
+                          "type": "form-section",
                           "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2978,31 +2976,31 @@
                     "modal",
                     {
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "Edit Sprint"
+                              "content": "Edit Sprint",
+                              "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.row",
-                          "submitEvent": "SAVE",
                           "type": "form-section",
+                          "submitEvent": "SAVE",
+                          "entity": "@payload.row",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
@@ -3015,7 +3013,7 @@
                           "mode": "edit"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -3056,8 +3054,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "SprintUpdated",
-                        "failure": "SprintUpdateFailed"
+                        "failure": "SprintUpdateFailed",
+                        "success": "SprintUpdated"
                       }
                     }
                   ],
@@ -3184,8 +3182,8 @@
                     "Sprint",
                     {
                       "emit": {
-                        "failure": "SprintLoadFailed",
-                        "success": "SprintLoaded"
+                        "success": "SprintLoaded",
+                        "failure": "SprintLoadFailed"
                       }
                     }
                   ]
@@ -3202,8 +3200,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "SprintLoadFailed",
-                        "success": "SprintLoaded"
+                        "success": "SprintLoaded",
+                        "failure": "SprintLoadFailed"
                       }
                     }
                   ],
@@ -3213,21 +3211,20 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@entity.name"
+                              "content": "@entity.name",
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal"
@@ -3236,16 +3233,50 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
-                              "content": "Name",
+                              "variant": "caption",
                               "type": "typography",
+                              "content": "Name"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "content": "Start Date",
+                              "variant": "caption",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.startDate"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "End Date",
                               "variant": "caption"
                             },
                             {
-                              "content": "@entity.name",
+                              "content": "@entity.endDate",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -3253,48 +3284,31 @@
                           "direction": "horizontal"
                         },
                         {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Start Date"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.startDate",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "content": "End Date",
+                              "content": "Goal",
                               "variant": "caption",
                               "type": "typography"
                             },
                             {
+                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.endDate",
-                              "type": "typography"
+                              "content": "@entity.goal"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "children": [
                             {
+                              "content": "Status",
                               "type": "typography",
-                              "content": "Goal",
                               "variant": "caption"
                             },
                             {
-                              "content": "@entity.goal",
+                              "content": "@entity.status",
                               "type": "typography",
                               "variant": "body"
                             }
@@ -3304,25 +3318,7 @@
                           "type": "stack"
                         },
                         {
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Status",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.status"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
@@ -3330,38 +3326,40 @@
                               "content": "Task Count"
                             },
                             {
-                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.taskCount"
+                              "content": "@entity.taskCount",
+                              "variant": "body"
                             }
                           ],
-                          "gap": "md"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "justify": "end",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "edit",
-                              "type": "button",
                               "label": "Edit",
                               "action": "EDIT",
-                              "variant": "primary"
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "edit"
                             },
                             {
-                              "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE",
-                              "label": "Close"
+                              "type": "button",
+                              "label": "Close",
+                              "action": "CLOSE"
                             }
-                          ],
-                          "gap": "sm",
-                          "justify": "end"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -3573,8 +3571,8 @@
                     "Sprint",
                     {
                       "emit": {
-                        "success": "SprintLoaded",
-                        "failure": "SprintLoadFailed"
+                        "failure": "SprintLoadFailed",
+                        "success": "SprintLoaded"
                       }
                     }
                   ]
@@ -3596,8 +3594,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "SprintLoadFailed",
-                        "success": "SprintLoaded"
+                        "success": "SprintLoaded",
+                        "failure": "SprintLoadFailed"
                       }
                     }
                   ],
@@ -3605,56 +3603,56 @@
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
-                              "type": "typography",
                               "content": "Delete Sprint",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "This action cannot be undone.",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "This action cannot be undone."
                         },
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "justify": "end",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "variant": "ghost",
                               "type": "button",
-                              "action": "CANCEL"
+                              "label": "Cancel",
+                              "action": "CANCEL",
+                              "variant": "ghost"
                             },
                             {
-                              "icon": "check",
                               "type": "button",
                               "label": "Delete",
-                              "action": "CONFIRM_DELETE",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "icon": "check",
+                              "action": "CONFIRM_DELETE"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -3672,8 +3670,8 @@
                     "@entity.pendingId",
                     {
                       "emit": {
-                        "failure": "SprintDeleteFailed",
-                        "success": "SprintDeleted"
+                        "success": "SprintDeleted",
+                        "failure": "SprintDeleteFailed"
                       }
                     }
                   ],
@@ -3694,8 +3692,8 @@
                     "Sprint",
                     {
                       "emit": {
-                        "success": "SprintLoaded",
-                        "failure": "SprintLoadFailed"
+                        "failure": "SprintLoadFailed",
+                        "success": "SprintLoaded"
                       }
                     }
                   ],
@@ -3727,8 +3725,8 @@
                     "Sprint",
                     {
                       "emit": {
-                        "failure": "SprintLoadFailed",
-                        "success": "SprintLoaded"
+                        "success": "SprintLoaded",
+                        "failure": "SprintLoadFailed"
                       }
                     }
                   ]
@@ -3933,8 +3931,8 @@
                     "Burndown",
                     {
                       "emit": {
-                        "failure": "BurndownLoadFailed",
-                        "success": "BurndownLoaded"
+                        "success": "BurndownLoaded",
+                        "failure": "BurndownLoadFailed"
                       }
                     }
                   ],
@@ -3942,27 +3940,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/tasks",
-                          "icon": "check-square",
-                          "label": "Tasks"
-                        },
-                        {
-                          "icon": "zap",
-                          "href": "/sprints",
-                          "label": "Sprints"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "appName": "ProjectManagerApp",
+                      "type": "dashboard-layout",
                       "children": [
                         {
+                          "type": "scaled-diagram",
                           "children": [
                             {
                               "type": "stack",
@@ -3982,34 +3964,34 @@
                                   ]
                                 },
                                 {
+                                  "justify": "between",
+                                  "type": "stack",
+                                  "gap": "md",
                                   "children": [
                                     {
+                                      "gap": "md",
                                       "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "name": "trending-down",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "trending-down"
                                         },
                                         {
-                                          "variant": "h2",
                                           "content": "Burndown Chart",
+                                          "variant": "h2",
                                           "type": "typography"
                                         }
                                       ]
                                     },
                                     {
-                                      "icon": "refresh-cw",
-                                      "type": "button",
-                                      "action": "REFRESH",
                                       "variant": "secondary",
-                                      "label": "Refresh"
+                                      "type": "button",
+                                      "label": "Refresh",
+                                      "icon": "refresh-cw",
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "justify": "between",
-                                  "gap": "md",
                                   "direction": "horizontal"
                                 },
                                 {
@@ -4017,7 +3999,6 @@
                                 },
                                 {
                                   "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "children": [
@@ -4037,9 +4018,9 @@
                                           "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Velocity",
-                                          "value": "@entity.velocity"
+                                          "value": "@entity.velocity",
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "stat-display",
@@ -4050,59 +4031,60 @@
                                       "type": "simple-grid",
                                       "cols": 5.0
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
                                   "cols": 2.0,
+                                  "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Chart View",
                                           "type": "typography",
                                           "variant": "caption"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
                                       ],
                                       "type": "card"
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "variant": "caption",
+                                          "content": "Graph View",
+                                          "type": "typography"
+                                        }
+                                      ]
                                     }
-                                  ],
-                                  "type": "grid"
+                                  ]
                                 },
                                 {
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19.0
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
-                                      "value": 15.0,
-                                      "date": "Mar"
+                                      "date": "Mar",
+                                      "value": 15.0
                                     },
                                     {
                                       "value": 25.0,
                                       "date": "Apr"
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
                                       "value": 30.0,
@@ -4112,51 +4094,67 @@
                                   "type": "line-chart"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
-                                  "width": 400.0,
-                                  "height": 200.0,
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
                                       "label": "Process",
                                       "id": "b"
                                     },
                                     {
-                                      "label": "End",
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
+                                  "width": 400.0,
+                                  "type": "graph-view",
+                                  "height": 200.0,
                                   "edges": [
                                     {
-                                      "target": "b",
-                                      "source": "a"
+                                      "source": "a",
+                                      "target": "b"
                                     },
                                     {
-                                      "target": "c",
-                                      "source": "b"
+                                      "source": "b",
+                                      "target": "c"
                                     }
                                   ]
                                 }
                               ]
                             }
-                          ],
-                          "type": "scaled-diagram"
+                          ]
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "check-square",
+                          "label": "Tasks",
+                          "href": "/tasks"
+                        },
+                        {
+                          "href": "/sprints",
+                          "label": "Sprints",
+                          "icon": "zap"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "label": "Burndown",
+                          "href": "/burndown"
                         }
                       ]
                     }
@@ -4182,17 +4180,18 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "ProjectManagerApp",
                       "type": "dashboard-layout",
                       "navItems": [
                         {
-                          "label": "Tasks",
+                          "href": "/tasks",
                           "icon": "check-square",
-                          "href": "/tasks"
+                          "label": "Tasks"
                         },
                         {
+                          "label": "Sprints",
                           "icon": "zap",
-                          "href": "/sprints",
-                          "label": "Sprints"
+                          "href": "/sprints"
                         },
                         {
                           "label": "Burndown",
@@ -4200,14 +4199,13 @@
                           "href": "/burndown"
                         }
                       ],
-                      "appName": "ProjectManagerApp",
                       "children": [
                         {
                           "children": [
                             {
-                              "gap": "lg",
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
+                              "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -4222,89 +4220,90 @@
                                   ]
                                 },
                                 {
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "direction": "horizontal",
                                   "children": [
                                     {
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "name": "trending-down",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "name": "trending-down"
                                         },
                                         {
                                           "type": "typography",
-                                          "variant": "h2",
-                                          "content": "Burndown Chart"
+                                          "content": "Burndown Chart",
+                                          "variant": "h2"
                                         }
                                       ],
-                                      "type": "stack",
                                       "direction": "horizontal",
                                       "gap": "md"
                                     },
                                     {
-                                      "action": "REFRESH",
-                                      "variant": "secondary",
                                       "type": "button",
                                       "label": "Refresh",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "action": "REFRESH",
+                                      "variant": "secondary"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "between",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "padding": "md",
-                                  "type": "box",
                                   "children": [
                                     {
+                                      "type": "simple-grid",
                                       "cols": 5.0,
                                       "children": [
                                         {
                                           "label": "TotalPoints",
-                                          "value": "@entity.totalPoints",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "value": "@entity.totalPoints"
                                         },
                                         {
-                                          "value": "@entity.completedPoints",
                                           "label": "CompletedPoints",
+                                          "value": "@entity.completedPoints",
                                           "type": "stat-display"
                                         },
                                         {
                                           "label": "RemainingPoints",
-                                          "type": "stat-display",
-                                          "value": "@entity.remainingPoints"
+                                          "value": "@entity.remainingPoints",
+                                          "type": "stat-display"
                                         },
                                         {
+                                          "label": "Velocity",
                                           "value": "@entity.velocity",
-                                          "type": "stat-display",
-                                          "label": "Velocity"
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "DaysRemaining",
-                                          "value": "@entity.daysRemaining"
+                                          "value": "@entity.daysRemaining",
+                                          "type": "stat-display"
                                         }
-                                      ],
-                                      "type": "simple-grid"
+                                      ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "cols": 2.0,
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "variant": "caption",
                                           "content": "Chart View",
-                                          "type": "typography",
-                                          "variant": "caption"
+                                          "type": "typography"
                                         }
                                       ]
                                     },
@@ -4313,14 +4312,13 @@
                                       "children": [
                                         {
                                           "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
+                                          "type": "typography",
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
                                   ],
-                                  "gap": "md",
-                                  "type": "grid"
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
@@ -4330,24 +4328,24 @@
                                       "date": "Jan"
                                     },
                                     {
-                                      "value": 19.0,
-                                      "date": "Feb"
+                                      "date": "Feb",
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
                                       "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
                                   ]
                                 },
@@ -4359,15 +4357,22 @@
                                       "label": "Current"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "height": 200.0,
-                                  "width": 400.0,
+                                  "edges": [
+                                    {
+                                      "source": "a",
+                                      "target": "b"
+                                    },
+                                    {
+                                      "target": "c",
+                                      "source": "b"
+                                    }
+                                  ],
                                   "nodes": [
                                     {
                                       "id": "a",
@@ -4378,20 +4383,13 @@
                                       "id": "b"
                                     },
                                     {
-                                      "label": "End",
-                                      "id": "c"
+                                      "id": "c",
+                                      "label": "End"
                                     }
                                   ],
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ]
+                                  "height": 200.0,
+                                  "type": "graph-view",
+                                  "width": 400.0
                                 }
                               ]
                             }
@@ -4422,31 +4420,30 @@
                     "render-ui",
                     "main",
                     {
+                      "appName": "ProjectManagerApp",
                       "navItems": [
                         {
+                          "href": "/tasks",
                           "icon": "check-square",
-                          "label": "Tasks",
-                          "href": "/tasks"
+                          "label": "Tasks"
                         },
                         {
-                          "label": "Sprints",
                           "href": "/sprints",
-                          "icon": "zap"
+                          "icon": "zap",
+                          "label": "Sprints"
                         },
                         {
-                          "label": "Burndown",
                           "href": "/burndown",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Burndown"
                         }
                       ],
                       "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "gap": "lg",
                               "type": "stack",
                               "children": [
                                 {
@@ -4464,33 +4461,33 @@
                                 {
                                   "children": [
                                     {
-                                      "gap": "md",
-                                      "direction": "horizontal",
                                       "type": "stack",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "trending-down"
+                                          "name": "trending-down",
+                                          "type": "icon"
                                         },
                                         {
-                                          "content": "Burndown Chart",
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "variant": "h2"
+                                          "content": "Burndown Chart"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "action": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw",
                                       "type": "button",
-                                      "label": "Refresh"
+                                      "label": "Refresh",
+                                      "icon": "refresh-cw",
+                                      "action": "REFRESH"
                                     }
                                   ],
+                                  "justify": "between",
                                   "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "between"
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
@@ -4498,22 +4495,21 @@
                                 {
                                   "children": [
                                     {
-                                      "type": "simple-grid",
                                       "cols": 5.0,
                                       "children": [
                                         {
-                                          "label": "TotalPoints",
                                           "type": "stat-display",
+                                          "label": "TotalPoints",
                                           "value": "@entity.totalPoints"
                                         },
                                         {
+                                          "label": "CompletedPoints",
                                           "value": "@entity.completedPoints",
-                                          "type": "stat-display",
-                                          "label": "CompletedPoints"
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "value": "@entity.remainingPoints",
                                           "type": "stat-display",
+                                          "value": "@entity.remainingPoints",
                                           "label": "RemainingPoints"
                                         },
                                         {
@@ -4523,93 +4519,93 @@
                                         },
                                         {
                                           "label": "DaysRemaining",
-                                          "value": "@entity.daysRemaining",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "value": "@entity.daysRemaining"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
                                   ],
-                                  "padding": "md",
-                                  "type": "box"
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "content": "Chart View",
                                           "variant": "caption",
                                           "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "variant": "caption",
                                           "type": "typography",
-                                          "content": "Graph View",
-                                          "variant": "caption"
+                                          "content": "Graph View"
                                         }
                                       ]
                                     }
                                   ],
-                                  "type": "grid",
-                                  "cols": 2.0,
-                                  "gap": "md"
+                                  "cols": 2.0
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
-                                      "value": 12.0,
-                                      "date": "Jan"
+                                      "date": "Jan",
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
                                       "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "value": 25.0,
-                                      "date": "Apr"
+                                      "date": "Apr",
+                                      "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22.0
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "value": 30.0,
                                       "date": "Jun"
                                     }
-                                  ]
+                                  ],
+                                  "type": "line-chart"
                                 },
                                 {
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ],
                                   "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
                                       "id": "b",
@@ -4622,19 +4618,21 @@
                                   ],
                                   "edges": [
                                     {
-                                      "source": "a",
-                                      "target": "b"
+                                      "target": "b",
+                                      "source": "a"
                                     },
                                     {
-                                      "source": "b",
-                                      "target": "c"
+                                      "target": "c",
+                                      "source": "b"
                                     }
                                   ],
+                                  "width": 400.0,
                                   "height": 200.0,
-                                  "width": 400.0
+                                  "type": "graph-view"
                                 }
                               ],
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
                           ]
                         }
@@ -4653,8 +4651,8 @@
                     "Burndown",
                     {
                       "emit": {
-                        "success": "BurndownLoaded",
-                        "failure": "BurndownLoadFailed"
+                        "failure": "BurndownLoadFailed",
+                        "success": "BurndownLoaded"
                       }
                     }
                   ],
@@ -4663,31 +4661,28 @@
                     "main",
                     {
                       "type": "dashboard-layout",
+                      "appName": "ProjectManagerApp",
                       "navItems": [
                         {
+                          "icon": "check-square",
                           "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
+                          "href": "/tasks"
                         },
                         {
+                          "icon": "zap",
                           "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
+                          "href": "/sprints"
                         },
                         {
-                          "label": "Burndown",
                           "icon": "layout-list",
+                          "label": "Burndown",
                           "href": "/burndown"
                         }
                       ],
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "lg",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "items": [
@@ -4702,59 +4697,60 @@
                                   "type": "breadcrumb"
                                 },
                                 {
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "gap": "md",
-                                      "direction": "horizontal",
-                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "icon",
                                           "name": "trending-down"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Burndown Chart",
-                                          "variant": "h2"
+                                          "content": "Burndown Chart"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack",
+                                      "gap": "md"
                                     },
                                     {
+                                      "label": "Refresh",
+                                      "icon": "refresh-cw",
                                       "variant": "secondary",
                                       "type": "button",
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
-                                      "icon": "refresh-cw"
+                                      "action": "REFRESH"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "md",
                                   "direction": "horizontal",
+                                  "gap": "md",
                                   "justify": "between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
                                       "cols": 5.0,
                                       "children": [
                                         {
-                                          "label": "TotalPoints",
+                                          "value": "@entity.totalPoints",
                                           "type": "stat-display",
-                                          "value": "@entity.totalPoints"
+                                          "label": "TotalPoints"
                                         },
                                         {
-                                          "label": "CompletedPoints",
                                           "type": "stat-display",
+                                          "label": "CompletedPoints",
                                           "value": "@entity.completedPoints"
                                         },
                                         {
-                                          "label": "RemainingPoints",
                                           "value": "@entity.remainingPoints",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "label": "RemainingPoints"
                                         },
                                         {
                                           "value": "@entity.velocity",
@@ -4763,28 +4759,25 @@
                                         },
                                         {
                                           "label": "DaysRemaining",
-                                          "value": "@entity.daysRemaining",
-                                          "type": "stat-display"
+                                          "type": "stat-display",
+                                          "value": "@entity.daysRemaining"
                                         }
                                       ]
                                     }
                                   ],
-                                  "padding": "md",
                                   "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "cols": 2.0,
-                                  "type": "grid",
                                   "children": [
                                     {
                                       "children": [
                                         {
+                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View",
-                                          "type": "typography"
+                                          "content": "Chart View"
                                         }
                                       ],
                                       "type": "card"
@@ -4792,15 +4785,17 @@
                                     {
                                       "children": [
                                         {
-                                          "content": "Graph View",
                                           "variant": "caption",
+                                          "content": "Graph View",
                                           "type": "typography"
                                         }
                                       ],
                                       "type": "card"
                                     }
                                   ],
-                                  "gap": "md"
+                                  "type": "grid",
+                                  "gap": "md",
+                                  "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
@@ -4818,8 +4813,8 @@
                                       "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25.0
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "value": 22.0,
@@ -4832,53 +4827,56 @@
                                   ]
                                 },
                                 {
+                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ],
-                                  "type": "chart-legend"
+                                  ]
                                 },
                                 {
-                                  "type": "graph-view",
                                   "edges": [
                                     {
                                       "target": "b",
                                       "source": "a"
                                     },
                                     {
-                                      "source": "b",
-                                      "target": "c"
+                                      "target": "c",
+                                      "source": "b"
                                     }
                                   ],
+                                  "width": 400.0,
                                   "height": 200.0,
+                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "label": "Start",
-                                      "id": "a"
+                                      "id": "a",
+                                      "label": "Start"
                                     },
                                     {
-                                      "label": "Process",
-                                      "id": "b"
+                                      "id": "b",
+                                      "label": "Process"
                                     },
                                     {
                                       "id": "c",
                                       "label": "End"
                                     }
-                                  ],
-                                  "width": 400.0
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ],
-                      "appName": "ProjectManagerApp"
+                      ]
                     }
                   ]
                 ]
@@ -4902,39 +4900,37 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "ProjectManagerApp",
                       "navItems": [
                         {
-                          "href": "/tasks",
                           "icon": "check-square",
-                          "label": "Tasks"
+                          "label": "Tasks",
+                          "href": "/tasks"
                         },
                         {
                           "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
+                          "icon": "zap",
+                          "href": "/sprints"
                         },
                         {
                           "label": "Burndown",
-                          "icon": "layout-list",
-                          "href": "/burndown"
+                          "href": "/burndown",
+                          "icon": "layout-list"
                         }
                       ],
                       "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "gap": "lg",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "href": "/",
-                                      "label": "Home"
+                                      "label": "Home",
+                                      "href": "/"
                                     },
                                     {
                                       "label": "Burndown Chart"
@@ -4942,12 +4938,14 @@
                                   ]
                                 },
                                 {
+                                  "gap": "md",
+                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "justify": "between",
                                   "children": [
                                     {
-                                      "gap": "md",
                                       "direction": "horizontal",
-                                      "type": "stack",
+                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -4958,19 +4956,17 @@
                                           "content": "Burndown Chart",
                                           "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack"
                                     },
                                     {
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH",
                                       "label": "Refresh",
-                                      "variant": "secondary"
+                                      "type": "button",
+                                      "action": "REFRESH",
+                                      "variant": "secondary",
+                                      "icon": "refresh-cw"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md"
+                                  ]
                                 },
                                 {
                                   "type": "divider"
@@ -4979,33 +4975,33 @@
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "cols": 5.0,
                                       "type": "simple-grid",
+                                      "cols": 5.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
-                                          "label": "TotalPoints",
-                                          "value": "@entity.totalPoints"
+                                          "value": "@entity.totalPoints",
+                                          "label": "TotalPoints"
                                         },
                                         {
-                                          "type": "stat-display",
+                                          "value": "@entity.completedPoints",
                                           "label": "CompletedPoints",
-                                          "value": "@entity.completedPoints"
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "RemainingPoints",
-                                          "value": "@entity.remainingPoints"
+                                          "value": "@entity.remainingPoints",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "value": "@entity.velocity",
+                                          "label": "Velocity",
                                           "type": "stat-display",
-                                          "label": "Velocity"
+                                          "value": "@entity.velocity"
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "DaysRemaining",
-                                          "value": "@entity.daysRemaining"
+                                          "value": "@entity.daysRemaining",
+                                          "label": "DaysRemaining"
                                         }
                                       ]
                                     }
@@ -5016,14 +5012,14 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "variant": "caption",
-                                          "type": "typography",
-                                          "content": "Chart View"
+                                          "type": "typography"
                                         }
                                       ],
                                       "type": "card"
@@ -5032,74 +5028,59 @@
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Graph View"
                                         }
                                       ]
                                     }
                                   ],
-                                  "cols": 2.0,
-                                  "type": "grid"
+                                  "gap": "md",
+                                  "cols": 2.0
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12.0
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19.0
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15.0
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
                                       "value": 25.0
                                     },
                                     {
-                                      "value": 22.0,
-                                      "date": "May"
+                                      "date": "May",
+                                      "value": 22.0
                                     },
                                     {
-                                      "value": 30.0,
-                                      "date": "Jun"
+                                      "date": "Jun",
+                                      "value": 30.0
                                     }
                                   ]
                                 },
                                 {
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "color": "muted",
-                                      "label": "Previous"
+                                      "label": "Previous",
+                                      "color": "muted"
                                     }
                                   ],
                                   "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ],
                                   "edges": [
                                     {
                                       "target": "b",
@@ -5110,15 +5091,32 @@
                                       "target": "c"
                                     }
                                   ],
+                                  "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "label": "Start",
+                                      "id": "a"
+                                    },
+                                    {
+                                      "id": "b",
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "label": "End"
+                                    }
+                                  ],
                                   "height": 200.0,
-                                  "width": 400.0
+                                  "type": "graph-view"
                                 }
                               ],
-                              "direction": "vertical"
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "ProjectManagerApp"
                     }
                   ]
                 ]
