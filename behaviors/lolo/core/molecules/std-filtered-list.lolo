@@ -49,5 +49,11 @@ orbital FilteredListItemOrbital {
     }
 }
 
-  page "/filtered-list" as FilteredList -> FilteredListLayout
+  ;; All 5 traits page-bound so each gets a useTraitStateMachine hook on
+  ;; the client. Without binding the atoms, their state machines never
+  ;; advance past `loading` because no client subscriber re-POSTs the
+  ;; success events (BrowseItemLoaded, FilterTargetLoaded, ...) that
+  ;; come back from the server in `emittedEvents[]`. See
+  ;; docs/Almadar_Std_Verification.md gap #19.B.
+  page "/filtered-list" as FilteredList -> FilteredListLayout, FilteredItemSearch, FilteredItemFilter, FilteredItemBrowse, FilteredItemPagination
 }
