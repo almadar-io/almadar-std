@@ -1,7 +1,7 @@
 {
   "name": "std-filtered-list",
   "version": "1.0.0",
-  "description": "std-filtered-list as a Function",
+  "description": "std-filtered-list — molecule composing slim Search/Filter/Browse/Pagination atoms",
   "orbitals": [
     {
       "name": "FilteredListItemOrbital",
@@ -51,22 +51,90 @@
         {
           "ref": "Search.traits.SearchResultSearch",
           "name": "FilteredItemSearch",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "config": {
+            "placeholder": "Search filtered items…",
+            "event": "SEARCH"
+          }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "FilteredItemFilter",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "config": {
+            "filters": [
+              {
+                "options": [
+                  "active",
+                  "inactive",
+                  "pending"
+                ],
+                "field": "status",
+                "label": "Status",
+                "filterType": "select"
+              }
+            ],
+            "event": "FILTER"
+          }
         },
         {
           "ref": "Browse.traits.BrowseItemBrowse",
           "name": "FilteredItemBrowse",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "config": {
+            "fields": [
+              {
+                "label": "Name",
+                "name": "name",
+                "variant": "h4"
+              },
+              {
+                "variant": "caption",
+                "name": "description",
+                "label": "Description"
+              },
+              {
+                "label": "Status",
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SearchResultLoaded",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemSearch"
+              }
+            },
+            {
+              "event": "FilterTargetLoaded",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemFilter"
+              }
+            },
+            {
+              "event": "PagedItemLoaded",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemPagination"
+              }
+            }
+          ]
         },
         {
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "config": {
+            "event": "PAGE",
+            "totalPages": 10.0
+          }
         },
         {
           "name": "FilteredListLayout",
@@ -155,23 +223,43 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full",
                       "gap": "md",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
+                          "children": [
+                            {
+                              "name": "list",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Filtered List",
+                              "variant": "h2"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
                           "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

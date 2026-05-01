@@ -1,7 +1,7 @@
 {
   "name": "std-browse",
   "version": "1.0.0",
-  "description": "std-browse as a Function",
+  "description": "std-browse as a Function — single primitive: data-grid",
   "orbitals": [
     {
       "name": "BrowseItemOrbital",
@@ -135,22 +135,8 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Loading BrowseItems…",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ],
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "type": "stack"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -164,82 +150,16 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "list"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "BrowseItems"
-                                }
-                              ]
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "fields": [
-                            {
-                              "label": "Name",
-                              "name": "name",
-                              "icon": "list",
-                              "variant": "h4"
-                            },
-                            {
-                              "label": "Description",
-                              "name": "description",
-                              "variant": "badge",
-                              "colorMap": {
-                                "failed": "destructive",
-                                "disabled": "neutral",
-                                "active": "success",
-                                "done": "success",
-                                "draft": "warning",
-                                "pending": "warning",
-                                "inactive": "neutral",
-                                "scheduled": "warning",
-                                "archived": "neutral",
-                                "error": "destructive",
-                                "completed": "success",
-                                "cancelled": "destructive"
-                              }
-                            },
-                            {
-                              "label": "Status",
-                              "name": "status",
-                              "variant": "caption"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
-                        },
-                        {
-                          "type": "floating-action-button",
-                          "action": "INIT",
-                          "icon": "plus"
+                          "type": "data-grid",
+                          "pageSize": "@config.pageSize",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -253,36 +173,10 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "children": [
-                        {
-                          "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "Failed to load BrowseItems",
-                          "variant": "h3",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
-                        },
-                        {
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "type": "button",
-                          "action": "INIT",
-                          "variant": "primary"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      "variant": "caption",
+                      "content": "@payload.error",
+                      "type": "typography",
+                      "color": "error"
                     }
                   ]
                 ]
@@ -297,8 +191,8 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       }
                     }
                   ],
@@ -306,22 +200,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "content": "Refreshing…",
-                          "type": "typography",
-                          "color": "muted"
-                        }
-                      ],
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "direction": "vertical"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -345,27 +225,23 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Retrying…",
-                          "color": "muted"
-                        }
-                      ]
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "fields": {
+              "type": "object",
+              "default": []
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0
+            }
           },
           "scope": "collection"
         }

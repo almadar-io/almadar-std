@@ -1,16 +1,14 @@
 app std-filtered-list "1.0.0"
-"std-filtered-list as a Function"
+"std-filtered-list — molecule composing slim Search/Filter/Browse/Pagination atoms"
 ;;
-;; Intra-frame composition via @trait.X: Search + Filter + Browse + Pagination
-;; stacked in one main slot. The LayoutTrait owns the render-ui tree; each
-;; imported atom keeps its own state machine and renders independently into
-;; its per-trait frame, which the layout picks up via @trait.<Name> in the
-;; children: array.
-;;
-;; Inter-frame wiring (authored on trait references via listens:)
-;;   Search.SearchResultLoaded    -> FilteredItemBrowse.REFRESH
-;;   Filter.FilterTargetLoaded    -> FilteredItemBrowse.REFRESH
-;;   Browse.BrowseItemLoaded      -> FilteredItemPagination.RESET
+;; Layout owns the page chrome (single h2 page-title, divider). Each
+;; trait reference passes config: { ... } so the slim atoms know what
+;; to render. Browse is the data hub: its listens block (added at the
+;; molecule call-site, not on the atom) wires Search SEARCH / Filter
+;; FILTER / Pagination PAGE → REFETCH so Browse refetches the list
+;; when any sibling intent fires. This is the "shared state across
+;; siblings" composition — atoms emit user-intent events, Browse owns
+;; the resulting list, the molecule wires the bridge.
 
 orbital FilteredListItemOrbital {
   uses Search     from "std/behaviors/std-search"
@@ -27,21 +25,47 @@ orbital FilteredListItemOrbital {
   type FilteredListItemLoaded = Event { data : [FilteredListItem] }
   type FilteredListItemLoadFailed = Event { error : string, code : string }
 
-  trait FilteredItemSearch = Search.traits.SearchResultSearch -> FilteredListItem {}
+  trait FilteredItemSearch = Search.traits.SearchResultSearch -> FilteredListItem {
+    config: {
+      placeholder: "Search filtered items…",
+      event: "SEARCH"
+    }
+  }
 
-  trait FilteredItemFilter = Filter.traits.FilterTargetFilter -> FilteredListItem {}
+  trait FilteredItemFilter = Filter.traits.FilterTargetFilter -> FilteredListItem {
+    config: {
+      filters: [{ field: "status", label: "Status", options: ["active", "inactive", "pending"], filterType: "select" }],
+      event: "FILTER"
+    }
+  }
 
   trait FilteredItemBrowse = Browse.traits.BrowseItemBrowse -> FilteredListItem {
+    config: {
+      fields: [
+        { name: "name",        label: "Name",        variant: "h4" },
+        { name: "description", label: "Description", variant: "caption" },
+        { name: "status",      label: "Status",      variant: "badge" }
+      ]
+    }
+    listens {
+      FilteredItemSearch.SearchResultLoaded     -> INIT
+      FilteredItemFilter.FilterTargetLoaded     -> INIT
+      FilteredItemPagination.PagedItemLoaded    -> INIT
+    }
   }
 
   trait FilteredItemPagination = Pagination.traits.PagedItemPagination -> FilteredListItem {
+    config: {
+      totalPages: 10,
+      event: "PAGE"
+    }
   }
 
   trait FilteredListLayout -> FilteredListItem [interaction, collection] {
     state composing {
       INIT -> composing
         (fetch FilteredListItem { emit: { success: "FilteredListItemLoaded", failure: "FilteredListItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: ["@trait.FilteredItemSearch", "@trait.FilteredItemFilter"] }, "@trait.FilteredItemBrowse", "@trait.FilteredItemPagination"] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", variant: "h2", content: "Filtered List" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: ["@trait.FilteredItemSearch", "@trait.FilteredItemFilter"] }, "@trait.FilteredItemBrowse", "@trait.FilteredItemPagination"] })
     }
     emits {
       FilteredListItemLoadFailed

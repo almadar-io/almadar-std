@@ -1,7 +1,7 @@
 {
   "name": "std-pagination",
   "version": "1.0.0",
-  "description": "std-pagination as a Function",
+  "description": "std-pagination as a Function — single primitive: pagination + infinite-scroll-sentinel",
   "orbitals": [
     {
       "name": "PagedItemOrbital",
@@ -151,22 +151,8 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Loading…",
-                          "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
-                        }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -180,71 +166,21 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "sm",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "align": "center",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "list"
-                                },
-                                {
-                                  "content": "PagedItems",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack"
-                            }
-                          ],
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "fields": [
-                            {
-                              "variant": "h4",
-                              "name": "name",
-                              "label": "Name"
-                            },
-                            {
-                              "name": "description",
-                              "variant": "caption",
-                              "label": "Description"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
-                          "entity": "@payload.data"
-                        },
-                        {
-                          "showPageSize": false,
-                          "onPageChange": "PAGE",
-                          "totalPages": 10.0,
+                          "totalPages": "@config.totalPages",
                           "type": "pagination",
-                          "currentPage": 1.0
+                          "currentPage": 1.0,
+                          "showPageSize": false,
+                          "onPageChange": "@config.event"
                         },
                         {
-                          "loadMoreEvent": "PAGE",
+                          "loadMoreEvent": "@config.event",
                           "type": "infinite-scroll-sentinel"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
@@ -260,35 +196,34 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
+                      "gap": "xs",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "color": "destructive"
-                        },
-                        {
-                          "content": "Failed to load",
-                          "variant": "h3",
-                          "type": "typography"
+                          "children": [
+                            {
+                              "onPageChange": "@config.event",
+                              "type": "pagination",
+                              "showPageSize": false,
+                              "totalPages": "@config.totalPages",
+                              "currentPage": 1.0
+                            },
+                            {
+                              "type": "infinite-scroll-sentinel",
+                              "loadMoreEvent": "@config.event"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "typography",
-                          "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
-                        },
-                        {
-                          "variant": "primary",
-                          "type": "button",
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "label": "Retry"
+                          "content": "@payload.error",
+                          "color": "error",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -303,8 +238,8 @@
                     "PagedItem",
                     {
                       "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
+                        "success": "PagedItemLoaded",
+                        "failure": "PagedItemLoadFailed"
                       }
                     }
                   ],
@@ -312,7 +247,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "showPageSize": false,
+                              "type": "pagination",
+                              "totalPages": "@config.totalPages",
+                              "onPageChange": "@config.event",
+                              "currentPage": 1.0
+                            },
+                            {
+                              "type": "infinite-scroll-sentinel",
+                              "loadMoreEvent": "@config.event"
+                            }
+                          ]
+                        },
+                        {
+                          "size": "sm",
+                          "type": "spinner"
+                        }
+                      ],
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -336,12 +298,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "event": {
+              "type": "string",
+              "default": "PAGE"
+            },
+            "totalPages": {
+              "type": "number",
+              "default": 10.0
+            }
           },
           "scope": "collection"
         }
