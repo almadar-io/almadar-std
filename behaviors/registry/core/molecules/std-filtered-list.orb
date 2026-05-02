@@ -68,14 +68,14 @@
           "config": {
             "filters": [
               {
-                "label": "Status",
+                "filterType": "select",
+                "field": "status",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "field": "status",
-                "filterType": "select"
+                "label": "Status"
               }
             ],
             "event": "FILTER"
@@ -88,19 +88,19 @@
           "config": {
             "fields": [
               {
-                "variant": "h4",
+                "name": "name",
                 "label": "Name",
-                "name": "name"
+                "variant": "h4"
               },
               {
+                "name": "description",
                 "label": "Description",
-                "variant": "caption",
-                "name": "description"
+                "variant": "caption"
               },
               {
+                "name": "status",
                 "label": "Status",
-                "variant": "badge",
-                "name": "status"
+                "variant": "badge"
               }
             ]
           },
@@ -120,14 +120,6 @@
                 "kind": "trait",
                 "trait": "FilteredItemFilter"
               }
-            },
-            {
-              "event": "PAGE",
-              "triggers": "REFETCH_PAGE",
-              "source": {
-                "kind": "trait",
-                "trait": "FilteredItemPagination"
-              }
             }
           ]
         },
@@ -135,10 +127,19 @@
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
           "config": {
-            "totalPages": 10.0,
-            "pageSize": 10.0,
-            "event": "PAGE"
-          }
+            "event": "PAGE",
+            "pageSize": 10.0
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemBrowse"
+              }
+            }
+          ]
         },
         {
           "name": "FilteredListLayout",
@@ -227,26 +228,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "align": "center",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "list",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "list"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "Filtered List"
+                              "content": "Filtered List",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -257,13 +257,14 @@
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]

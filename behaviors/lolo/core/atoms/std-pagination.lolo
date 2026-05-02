@@ -1,38 +1,43 @@
 app std-pagination "1.0.0"
 "std-pagination as a Function — single primitive: pagination control.
-The atom's own PagedItem entity is the UI-state container — every PAGE
-transition persists currentPage / pageSize. Visual reflection of
-@entity.currentPage on the pagination control needs pattern-registry +
-UI component support for a `currentPage` binding-prop (gap #21.G.3 +
-#21.H follow-ups)."
+The Pagination UI component emits `{page}` for page changes; the atom's
+PAGE event payload matches that shape. ITEMS_LOADED accepts an upstream
+data-loaded event payload `{data : [object]}` and derives totalPages =
+ceil(len(data) / pageSize). Molecules wire e.g.
+`FilteredItemBrowse.BrowseItemLoaded -> ITEMS_LOADED` to keep the
+pagination control in lockstep with the data hub. The PagedItem entity
+persists currentPage and the derived totalPages so reads from
+@entity.totalPages reflect the latest row count."
 
 orbital PagedItemOrbital {
   entity PagedItem [runtime] {
     id          : string!
-    currentPage : number
-    pageSize    : number
+    currentPage : number = 1
+    totalPages  : number = 1
   }
 
   trait PagedItemPagination -> PagedItem [interaction, instance] {
     initial: idle
     config {
-      totalPages : number = 1
-      pageSize   : number = 10
-      event      : string = "PAGE"
+      pageSize : number = 10
+      event    : string = "PAGE"
     }
     state idle {
       INIT -> idle
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
       PAGE -> idle
         (set @entity.currentPage @payload.page)
-        (set @entity.pageSize @payload.pageSize)
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+      ITEMS_LOADED -> idle
+        (set @entity.totalPages (math/ceil (/ (array/len @payload.data) @config.pageSize)))
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
     }
     emits {
-      PAGE { page : number!, pageSize : number! }
+      PAGE { page : number! }
     }
     listens {
-      PAGE { page : number!, pageSize : number! }
+      PAGE { page : number! }
+      ITEMS_LOADED { data : [object] }
     }
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination

@@ -24,7 +24,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @payload.data, fields: "@config.fields", pageSize: "@config.pageSize" }] })
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.pageSize" }] })
       BrowseItemLoadFailed -> error
         (render-ui main { type: "typography", variant: "caption", color: "error", content: "@payload.error" })
     }
@@ -32,15 +32,18 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
-      REFETCH_QUERY -> loading
-        (fetch BrowseItem { filter: (str/includes (object/get @entity "name") @payload.query), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      REFETCH_FILTER -> loading
-        (fetch BrowseItem { filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      REFETCH_PAGE -> loading
-        (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+      ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
+      ;; with a spinner. Replacing during search-as-you-type unmounts the
+      ;; grid every keystroke and causes a visible flicker. The fetch fires
+      ;; in the background; when BrowseItemLoaded arrives we render the
+      ;; grid with the new rows (handler below), so React reconciles the
+      ;; data-grid in place instead of unmounting it.
+      REFETCH_QUERY -> browsing
+        (fetch BrowseItem { filter: (or (= @payload.searchTerm "") (str/includes (object/get @entity "name") @payload.searchTerm)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+      REFETCH_FILTER -> browsing
+        (fetch BrowseItem { filter: (or (= @payload.value "") (= (object/get @entity @payload.field) @payload.value)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+      BrowseItemLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.pageSize" }] })
     }
     state error {
       INIT -> loading
@@ -53,9 +56,8 @@ emits {
     }
 
         listens {
-      REFETCH_QUERY { query : string! }
+      REFETCH_QUERY { searchTerm : string! }
       REFETCH_FILTER { field : string!, value : string! }
-      REFETCH_PAGE { page : number!, pageSize : number! }
       BrowseItemLoadFailed { error : string, code : string }
     }
   }

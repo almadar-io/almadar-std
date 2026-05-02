@@ -30,8 +30,10 @@ orbital FilteredListItemOrbital {
   ;; Search / Filter / Pagination. Browse alone rebinds because Browse owns
   ;; the rows. The auxiliary entities surface in the inline phase via
   ;; `auxiliaryEntities`, register persistence at runtime, and let
-  ;; `(set @entity.query @payload.query)` persist user input across
-  ;; transitions.
+  ;; `(set @entity.searchTerm @payload.searchTerm)` persist user input
+  ;; across transitions. Pagination listens for BrowseItemLoaded to
+  ;; derive totalPages from the live row count instead of a hardcoded
+  ;; config value.
   trait FilteredItemSearch = Search.traits.SearchResultSearch {
     config: {
       placeholder: "Search filtered items…",
@@ -54,18 +56,23 @@ orbital FilteredListItemOrbital {
         { name: "status",      label: "Status",      variant: "badge" }
       ]
     }
+    ;; PAGE is intentionally not wired to REFETCH_PAGE: pagination is
+    ;; visual-only (data-grid paginates client-side via pageSize); routing
+    ;; PAGE through Browse would create a cycle with Pagination's
+    ;; ITEMS_LOADED listener and serve no real refetch purpose.
     listens {
-      FilteredItemSearch.SEARCH      -> REFETCH_QUERY
-      FilteredItemFilter.FILTER      -> REFETCH_FILTER
-      FilteredItemPagination.PAGE    -> REFETCH_PAGE
+      FilteredItemSearch.SEARCH -> REFETCH_QUERY
+      FilteredItemFilter.FILTER -> REFETCH_FILTER
     }
   }
 
   trait FilteredItemPagination = Pagination.traits.PagedItemPagination {
     config: {
-      totalPages: 10,
       pageSize: 10,
       event: "PAGE"
+    }
+    listens {
+      FilteredItemBrowse.BrowseItemLoaded -> ITEMS_LOADED
     }
   }
 

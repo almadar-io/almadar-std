@@ -1,16 +1,14 @@
 app std-search "1.0.0"
 "std-search as a Function — single primitive: search-input. The atom's
-own SearchResult entity is the UI-state container — every SEARCH
-transition persists @payload.query into @entity.query. Cross-trait
-listeners subscribe to UI:Orbital.Trait.SEARCH for routing to data
-atoms. Visual reflection of @entity.query on the input (search-input
-`value` prop) is a follow-up that needs pattern registry + UI
-component support."
+own SearchResult entity is the UI-state container — SEARCH persists
+@payload.searchTerm (matching the SearchInput component's emit shape)
+into @entity.searchTerm. Cross-trait listeners route the same payload
+field to data atoms (Browse REFETCH_QUERY)."
 
 orbital SearchResultOrbital {
   entity SearchResult [runtime] {
-    id    : string!
-    query : string
+    id         : string!
+    searchTerm : string
   }
 
   trait SearchResultSearch -> SearchResult [interaction, instance] {
@@ -23,14 +21,14 @@ orbital SearchResultOrbital {
       INIT -> idle
         (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
       SEARCH -> idle
-        (set @entity.query @payload.query)
+        (set @entity.searchTerm @payload.searchTerm)
         (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
     }
     emits {
-      SEARCH { query : string! }
+      SEARCH { searchTerm : string! }
     }
     listens {
-      SEARCH { query : string! }
+      SEARCH { searchTerm : string! }
     }
   }
   page "/searchresults/search" as SearchResultSearchPage -> SearchResultSearch

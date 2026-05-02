@@ -1,7 +1,7 @@
 {
   "name": "std-pagination",
   "version": "1.0.0",
-  "description": "std-pagination as a Function — single primitive: pagination control.\nThe atom's own PagedItem entity is the UI-state container — every PAGE\ntransition persists currentPage / pageSize. Visual reflection of\n@entity.currentPage on the pagination control needs pattern-registry +\nUI component support for a `currentPage` binding-prop (gap #21.G.3 +\n#21.H follow-ups).",
+  "description": "std-pagination as a Function — single primitive: pagination control.\nThe Pagination UI component emits `{page}` for page changes; the atom's\nPAGE event payload matches that shape. ITEMS_LOADED accepts an upstream\ndata-loaded event payload `{data : [object]}` and derives totalPages =\nceil(len(data) / pageSize). Molecules wire e.g.\n`FilteredItemBrowse.BrowseItemLoaded -> ITEMS_LOADED` to keep the\npagination control in lockstep with the data hub. The PagedItem entity\npersists currentPage and the derived totalPages so reads from\n@entity.totalPages reflect the latest row count.",
   "orbitals": [
     {
       "name": "PagedItemOrbital",
@@ -16,11 +16,13 @@
           },
           {
             "name": "currentPage",
-            "type": "number"
+            "type": "number",
+            "default": 1.0
           },
           {
-            "name": "pageSize",
-            "type": "number"
+            "name": "totalPages",
+            "type": "number",
+            "default": 1.0
           }
         ]
       },
@@ -35,11 +37,6 @@
               "payloadSchema": [
                 {
                   "name": "page",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "pageSize",
                   "type": "number",
                   "required": true
                 }
@@ -66,11 +63,16 @@
                     "name": "page",
                     "type": "number",
                     "required": true
-                  },
+                  }
+                ]
+              },
+              {
+                "key": "ITEMS_LOADED",
+                "name": "Items Loaded",
+                "payloadSchema": [
                   {
-                    "name": "pageSize",
-                    "type": "number",
-                    "required": true
+                    "name": "data",
+                    "type": "[object]"
                   }
                 ]
               }
@@ -85,10 +87,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "pagination",
+                      "totalPages": "@entity.totalPages",
                       "currentPage": 1.0,
+                      "type": "pagination",
                       "onPageChange": "@config.event",
-                      "totalPages": "@config.totalPages",
                       "showPageSize": false
                     }
                   ]
@@ -105,19 +107,47 @@
                     "@payload.page"
                   ],
                   [
+                    "render-ui",
+                    "main",
+                    {
+                      "totalPages": "@entity.totalPages",
+                      "onPageChange": "@config.event",
+                      "type": "pagination",
+                      "currentPage": 1.0,
+                      "showPageSize": false
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ITEMS_LOADED",
+                "effects": [
+                  [
                     "set",
-                    "@entity.pageSize",
-                    "@payload.pageSize"
+                    "@entity.totalPages",
+                    [
+                      "math/ceil",
+                      [
+                        "/",
+                        [
+                          "array/len",
+                          "@payload.data"
+                        ],
+                        "@config.pageSize"
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "showPageSize": false,
                       "type": "pagination",
-                      "totalPages": "@config.totalPages",
-                      "onPageChange": "@config.event",
                       "currentPage": 1.0,
-                      "showPageSize": false
+                      "totalPages": "@entity.totalPages",
+                      "onPageChange": "@config.event"
                     }
                   ]
                 ]
@@ -132,10 +162,6 @@
             "pageSize": {
               "type": "number",
               "default": 10.0
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 1.0
             }
           },
           "scope": "instance"
