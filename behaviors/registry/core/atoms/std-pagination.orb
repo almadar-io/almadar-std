@@ -1,7 +1,7 @@
 {
   "name": "std-pagination",
   "version": "1.0.0",
-  "description": "std-pagination as a Function — single primitive: pagination + infinite-scroll-sentinel",
+  "description": "std-pagination as a Function — single primitive: pagination control.\nThe atom's own PagedItem entity is the UI-state container — every PAGE\ntransition persists currentPage / pageSize. Visual reflection of\n@entity.currentPage on the pagination control needs pattern-registry +\nUI component support for a `currentPage` binding-prop (gap #21.G.3 +\n#21.H follow-ups).",
   "orbitals": [
     {
       "name": "PagedItemOrbital",
@@ -15,27 +15,12 @@
             "required": true
           },
           {
-            "name": "name",
-            "type": "string",
-            "required": true
+            "name": "currentPage",
+            "type": "number"
           },
           {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "type": "string",
-            "default": "active",
-            "values": [
-              "active",
-              "inactive",
-              "pending"
-            ]
-          },
-          {
-            "name": "createdAt",
-            "type": "string"
+            "name": "pageSize",
+            "type": "number"
           }
         ]
       },
@@ -59,75 +44,19 @@
                   "required": true
                 }
               ]
-            },
-            {
-              "event": "PagedItemLoaded",
-              "description": "Fired when PagedItem finishes loading; payload.data holds the page",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[PagedItem]"
-                }
-              ]
-            },
-            {
-              "event": "PagedItemLoadFailed",
-              "description": "Fired when PagedItem fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "idle"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "PagedItemLoaded",
-                "name": "PagedItem loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[PagedItem]"
-                  }
-                ]
-              },
-              {
-                "key": "PagedItemLoadFailed",
-                "name": "PagedItem load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "PAGE",
@@ -148,41 +77,16 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "PagedItem",
-                    {
-                      "emit": {
-                        "success": "PagedItemLoaded",
-                        "failure": "PagedItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "idle",
-                "event": "PagedItemLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "currentPage": 1.0,
                       "type": "pagination",
+                      "currentPage": 1.0,
                       "onPageChange": "@config.event",
                       "totalPages": "@config.totalPages",
                       "showPageSize": false
@@ -191,97 +95,29 @@
                 ]
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "PagedItemLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "showPageSize": false,
-                          "currentPage": 1.0,
-                          "totalPages": "@config.totalPages",
-                          "onPageChange": "@config.event",
-                          "type": "pagination"
-                        },
-                        {
-                          "color": "error",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "idle",
-                "to": "loading",
+                "to": "idle",
                 "event": "PAGE",
                 "effects": [
                   [
-                    "fetch",
-                    "PagedItem",
-                    {
-                      "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
-                      }
-                    }
+                    "set",
+                    "@entity.currentPage",
+                    "@payload.page"
+                  ],
+                  [
+                    "set",
+                    "@entity.pageSize",
+                    "@payload.pageSize"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "totalPages": "@config.totalPages",
-                          "type": "pagination",
-                          "showPageSize": false,
-                          "currentPage": 1.0,
-                          "onPageChange": "@config.event"
-                        },
-                        {
-                          "type": "spinner",
-                          "size": "sm"
-                        }
-                      ],
-                      "gap": "sm"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "PagedItem",
-                    {
-                      "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "pagination",
+                      "totalPages": "@config.totalPages",
+                      "onPageChange": "@config.event",
+                      "currentPage": 1.0,
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -289,16 +125,20 @@
             ]
           },
           "config": {
-            "totalPages": {
-              "type": "number",
-              "default": 10.0
-            },
             "event": {
               "type": "string",
               "default": "PAGE"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 10.0
+            },
+            "totalPages": {
+              "type": "number",
+              "default": 1.0
             }
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [

@@ -1,7 +1,7 @@
 {
   "name": "std-filter",
   "version": "1.0.0",
-  "description": "std-filter as a Function — single primitive: filter-group",
+  "description": "std-filter as a Function — single primitive: filter-group. The atom's\nown FilterTarget entity is the UI-state container — every FILTER\ntransition persists field/value into the entity. Visual reflection of\nthe persisted value (filter-group `value` prop) is a follow-up that\nneeds the pattern registry + UI component to accept a `value` prop;\nthe persistence side is done.",
   "orbitals": [
     {
       "name": "FilterTargetOrbital",
@@ -15,26 +15,11 @@
             "required": true
           },
           {
-            "name": "name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "description",
+            "name": "field",
             "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
-            "default": "active",
-            "values": [
-              "active",
-              "inactive",
-              "pending"
-            ]
-          },
-          {
-            "name": "createdAt",
+            "name": "value",
             "type": "string"
           }
         ]
@@ -61,73 +46,20 @@
               ]
             },
             {
-              "event": "FilterTargetLoaded",
-              "description": "Fired when FilterTarget finishes loading; payload.data holds the filtered list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[FilterTarget]"
-                }
-              ]
-            },
-            {
-              "event": "FilterTargetLoadFailed",
-              "description": "Fired when FilterTarget fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
+              "event": "CLEAR_FILTERS"
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "browsing"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "FilterTargetLoaded",
-                "name": "FilterTarget loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[FilterTarget]"
-                  }
-                ]
-              },
-              {
-                "key": "FilterTargetLoadFailed",
-                "name": "FilterTarget load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "FILTER",
@@ -152,181 +84,74 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "FilterTarget",
-                    {
-                      "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
-                    }
+                    {}
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "browsing",
-                "event": "FilterTargetLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "filter-group",
+                      "filters": "@config.filters",
                       "entity": "FilterTarget",
-                      "filters": "@config.filters"
+                      "type": "filter-group"
                     }
                   ]
                 ]
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "FilterTargetLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "filters": "@config.filters",
-                          "entity": "FilterTarget",
-                          "type": "filter-group"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "error",
-                          "content": "@payload.error"
-                        }
-                      ],
-                      "gap": "xs",
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "FILTER",
                 "effects": [
                   [
-                    "fetch",
-                    "FilterTarget",
-                    {
-                      "filter": [
-                        "=",
-                        [
-                          "object/get",
-                          "@entity",
-                          "@payload.field"
-                        ],
-                        "@payload.value"
-                      ],
-                      "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
-                    }
+                    "set",
+                    "@entity.field",
+                    "@payload.field"
+                  ],
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "filters": "@config.filters",
-                          "type": "filter-group",
-                          "entity": "FilterTarget"
-                        },
-                        {
-                          "type": "spinner",
-                          "size": "sm"
-                        }
-                      ],
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "align": "center"
+                      "entity": "FilterTarget",
+                      "filters": "@config.filters",
+                      "type": "filter-group"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "CLEAR_FILTERS",
                 "effects": [
                   [
-                    "fetch",
-                    "FilterTarget",
-                    {
-                      "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
-                    }
+                    "set",
+                    "@entity.field",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.value",
+                    ""
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "filter-group",
-                          "entity": "FilterTarget",
-                          "filters": "@config.filters"
-                        },
-                        {
-                          "type": "spinner",
-                          "size": "sm"
-                        }
-                      ],
-                      "gap": "sm",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "FilterTarget",
-                    {
-                      "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "sm"
+                      "entity": "FilterTarget",
+                      "type": "filter-group",
+                      "filters": "@config.filters"
                     }
                   ]
                 ]
@@ -334,16 +159,16 @@
             ]
           },
           "config": {
-            "filters": {
-              "type": "[object]",
-              "default": []
-            },
             "event": {
               "type": "string",
               "default": "FILTER"
+            },
+            "filters": {
+              "type": "[object]",
+              "default": []
             }
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [

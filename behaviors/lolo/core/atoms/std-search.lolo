@@ -1,62 +1,36 @@
 app std-search "1.0.0"
-"std-search as a Function — single primitive: search-input"
+"std-search as a Function — single primitive: search-input. The atom's
+own SearchResult entity is the UI-state container — every SEARCH
+transition persists @payload.query into @entity.query. Cross-trait
+listeners subscribe to UI:Orbital.Trait.SEARCH for routing to data
+atoms. Visual reflection of @entity.query on the input (search-input
+`value` prop) is a follow-up that needs pattern registry + UI
+component support."
 
 orbital SearchResultOrbital {
   entity SearchResult [runtime] {
-    id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    id    : string!
+    query : string
   }
 
-  type SearchResultLoaded     = Event { data : [SearchResult] } "Fired when SearchResult collection finishes loading"
-  type SearchResultLoadFailed = Event { error : string, code : string } "Fired when SearchResult collection fails to load"
-
-  trait SearchResultSearch -> SearchResult [interaction, collection] {
+  trait SearchResultSearch -> SearchResult [interaction, instance] {
     initial: idle
     config {
       placeholder : string = "Search…"
-      event : string = "SEARCH"
+      event       : string = "SEARCH"
     }
     state idle {
       INIT -> idle
-        (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
         (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
-      SEARCH -> loading
-        (fetch SearchResult { filter: (str/includes (object/get @entity "name") @payload.query), emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
-    }
-    state loading {
-      SearchResultLoaded -> searching
-        (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
-      SearchResultLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "typography", variant: "caption", color: "error", content: "@payload.error" }] })
-      SEARCH -> loading
-        (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
-    }
-    state searching {
-      SEARCH -> loading
-        (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
-      CLEAR -> idle
+      SEARCH -> idle
+        (set @entity.query @payload.query)
         (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
     }
-    state error {
-      SEARCH -> loading
-        (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
-    }
-emits {
+    emits {
       SEARCH { query : string! }
-      SearchResultLoaded
-      SearchResultLoadFailed
     }
-
-        listens {
+    listens {
       SEARCH { query : string! }
-      SearchResultLoadFailed { error : string, code : string }
     }
   }
   page "/searchresults/search" as SearchResultSearchPage -> SearchResultSearch

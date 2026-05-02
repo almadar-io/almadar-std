@@ -25,14 +25,21 @@ orbital FilteredListItemOrbital {
   type FilteredListItemLoaded = Event { data : [FilteredListItem] }
   type FilteredListItemLoadFailed = Event { error : string, code : string }
 
-  trait FilteredItemSearch = Search.traits.SearchResultSearch -> FilteredListItem {
+  ;; Gap #22 — atoms keep their own entity (SearchResult / FilterTarget /
+  ;; PagedItem) as UI-state containers. NO `-> FilteredListItem` rebind on
+  ;; Search / Filter / Pagination. Browse alone rebinds because Browse owns
+  ;; the rows. The auxiliary entities surface in the inline phase via
+  ;; `auxiliaryEntities`, register persistence at runtime, and let
+  ;; `(set @entity.query @payload.query)` persist user input across
+  ;; transitions.
+  trait FilteredItemSearch = Search.traits.SearchResultSearch {
     config: {
       placeholder: "Search filtered items…",
       event: "SEARCH"
     }
   }
 
-  trait FilteredItemFilter = Filter.traits.FilterTargetFilter -> FilteredListItem {
+  trait FilteredItemFilter = Filter.traits.FilterTargetFilter {
     config: {
       filters: [{ field: "status", label: "Status", options: ["active", "inactive", "pending"], filterType: "select" }],
       event: "FILTER"
@@ -54,9 +61,10 @@ orbital FilteredListItemOrbital {
     }
   }
 
-  trait FilteredItemPagination = Pagination.traits.PagedItemPagination -> FilteredListItem {
+  trait FilteredItemPagination = Pagination.traits.PagedItemPagination {
     config: {
       totalPages: 10,
+      pageSize: 10,
       event: "PAGE"
     }
   }

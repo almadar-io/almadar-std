@@ -1,7 +1,7 @@
 {
   "name": "std-search",
   "version": "1.0.0",
-  "description": "std-search as a Function — single primitive: search-input",
+  "description": "std-search as a Function — single primitive: search-input. The atom's\nown SearchResult entity is the UI-state container — every SEARCH\ntransition persists @payload.query into @entity.query. Cross-trait\nlisteners subscribe to UI:Orbital.Trait.SEARCH for routing to data\natoms. Visual reflection of @entity.query on the input (search-input\n`value` prop) is a follow-up that needs pattern registry + UI\ncomponent support.",
   "orbitals": [
     {
       "name": "SearchResultOrbital",
@@ -11,28 +11,11 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
             "type": "string",
-            "default": "active",
-            "values": [
-              "active",
-              "inactive",
-              "pending"
-            ]
+            "required": true
           },
           {
-            "name": "createdAt",
+            "name": "query",
             "type": "string"
           }
         ]
@@ -52,32 +35,6 @@
                   "required": true
                 }
               ]
-            },
-            {
-              "event": "SearchResultLoaded",
-              "description": "Fired when SearchResult collection finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[SearchResult]"
-                }
-              ]
-            },
-            {
-              "event": "SearchResultLoadFailed",
-              "description": "Fired when SearchResult collection fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -85,15 +42,6 @@
               {
                 "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "loading"
-              },
-              {
-                "name": "searching"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
@@ -111,34 +59,6 @@
                     "required": true
                   }
                 ]
-              },
-              {
-                "key": "SearchResultLoaded",
-                "name": "SearchResult loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[SearchResult]"
-                  }
-                ]
-              },
-              {
-                "key": "SearchResultLoadFailed",
-                "name": "SearchResult load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLEAR",
-                "name": "Clear"
               }
             ],
             "transitions": [
@@ -148,244 +68,33 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "SearchResult",
-                    {
-                      "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "event": "@config.event",
+                      "type": "search-input",
                       "placeholder": "@config.placeholder",
-                      "type": "search-input"
+                      "event": "@config.event"
                     }
                   ]
                 ]
               },
               {
                 "from": "idle",
-                "to": "loading",
-                "event": "SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "SearchResult",
-                    {
-                      "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
-                      },
-                      "filter": [
-                        "str/includes",
-                        [
-                          "object/get",
-                          "@entity",
-                          "name"
-                        ],
-                        "@payload.query"
-                      ]
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "placeholder": "@config.placeholder",
-                          "type": "search-input",
-                          "event": "@config.event"
-                        },
-                        {
-                          "size": "sm",
-                          "type": "spinner"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "searching",
-                "event": "SearchResultLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "placeholder": "@config.placeholder",
-                      "event": "@config.event",
-                      "type": "search-input"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "SearchResultLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "event": "@config.event",
-                          "type": "search-input",
-                          "placeholder": "@config.placeholder"
-                        },
-                        {
-                          "color": "error",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "xs"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "loading",
-                "event": "SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "SearchResult",
-                    {
-                      "emit": {
-                        "failure": "SearchResultLoadFailed",
-                        "success": "SearchResultLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "align": "center",
-                      "children": [
-                        {
-                          "placeholder": "@config.placeholder",
-                          "type": "search-input",
-                          "event": "@config.event"
-                        },
-                        {
-                          "size": "sm",
-                          "type": "spinner"
-                        }
-                      ],
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "searching",
-                "to": "loading",
-                "event": "SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "SearchResult",
-                    {
-                      "emit": {
-                        "failure": "SearchResultLoadFailed",
-                        "success": "SearchResultLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "event": "@config.event",
-                          "placeholder": "@config.placeholder",
-                          "type": "search-input"
-                        },
-                        {
-                          "size": "sm",
-                          "type": "spinner"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "searching",
                 "to": "idle",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "placeholder": "@config.placeholder",
-                      "event": "@config.event",
-                      "type": "search-input"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
                 "event": "SEARCH",
                 "effects": [
                   [
-                    "fetch",
-                    "SearchResult",
-                    {
-                      "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
-                      }
-                    }
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
-                      "align": "center",
-                      "children": [
-                        {
-                          "placeholder": "@config.placeholder",
-                          "type": "search-input",
-                          "event": "@config.event"
-                        },
-                        {
-                          "size": "sm",
-                          "type": "spinner"
-                        }
-                      ]
+                      "event": "@config.event",
+                      "type": "search-input",
+                      "placeholder": "@config.placeholder"
                     }
                   ]
                 ]
@@ -402,7 +111,7 @@
               "default": "SEARCH"
             }
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [

@@ -1,52 +1,38 @@
 app std-pagination "1.0.0"
-"std-pagination as a Function — single primitive: pagination + infinite-scroll-sentinel"
+"std-pagination as a Function — single primitive: pagination control.
+The atom's own PagedItem entity is the UI-state container — every PAGE
+transition persists currentPage / pageSize. Visual reflection of
+@entity.currentPage on the pagination control needs pattern-registry +
+UI component support for a `currentPage` binding-prop (gap #21.G.3 +
+#21.H follow-ups)."
 
 orbital PagedItemOrbital {
   entity PagedItem [runtime] {
     id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
-    createdAt   : string
+    currentPage : number
+    pageSize    : number
   }
 
-  type PagedItemLoaded     = Event { data : [PagedItem] }        "Fired when PagedItem finishes loading; payload.data holds the page"
-  type PagedItemLoadFailed = Event { error : string, code : string } "Fired when PagedItem fails to load"
-
-  trait PagedItemPagination -> PagedItem [interaction, collection] {
-    initial: loading
+  trait PagedItemPagination -> PagedItem [interaction, instance] {
+    initial: idle
     config {
-      totalPages : number = 10
-      event : string = "PAGE"
-    }
-    state loading {
-      INIT -> loading
-        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      PagedItemLoaded -> idle
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
-      PagedItemLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "typography", variant: "caption", color: "error", content: "@payload.error" }] })
+      totalPages : number = 1
+      pageSize   : number = 10
+      event      : string = "PAGE"
     }
     state idle {
-      PAGE -> loading
-        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "spinner", size: "sm" }] })
+      INIT -> idle
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
+      PAGE -> idle
+        (set @entity.currentPage @payload.page)
+        (set @entity.pageSize @payload.pageSize)
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
     }
-    state error {
-      INIT -> loading
-        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-emits {
+    emits {
       PAGE { page : number!, pageSize : number! }
-      PagedItemLoaded
-      PagedItemLoadFailed
     }
-
-        listens {
+    listens {
       PAGE { page : number!, pageSize : number! }
-      PagedItemLoadFailed { error : string, code : string }
     }
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination

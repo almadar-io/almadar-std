@@ -1,55 +1,43 @@
 app std-filter "1.0.0"
-"std-filter as a Function — single primitive: filter-group"
+"std-filter as a Function — single primitive: filter-group. The atom's
+own FilterTarget entity is the UI-state container — every FILTER
+transition persists field/value into the entity. Visual reflection of
+the persisted value (filter-group `value` prop) is a follow-up that
+needs the pattern registry + UI component to accept a `value` prop;
+the persistence side is done."
 
 orbital FilterTargetOrbital {
   entity FilterTarget [runtime] {
-    id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
-    createdAt   : string
+    id    : string!
+    field : string
+    value : string
   }
 
-  type FilterTargetLoaded     = Event { data : [FilterTarget] }        "Fired when FilterTarget finishes loading; payload.data holds the filtered list"
-  type FilterTargetLoadFailed = Event { error : string, code : string } "Fired when FilterTarget fails to load"
-
-  trait FilterTargetFilter -> FilterTarget [interaction, collection] {
-    initial: loading
+  trait FilterTargetFilter -> FilterTarget [interaction, instance] {
+    initial: idle
     config {
       filters : [object] = []
-      event : string = "FILTER"
+      event   : string   = "FILTER"
     }
-    state loading {
-      INIT -> loading
-        (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      FilterTargetLoaded -> browsing
+    state idle {
+      INIT -> idle
+        (fetch FilterTarget {})
         (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
-      FilterTargetLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "filter-group", entity: FilterTarget, filters: "@config.filters" }, { type: "typography", variant: "caption", color: "error", content: "@payload.error" }] })
+      FILTER -> idle
+        (set @entity.field @payload.field)
+        (set @entity.value @payload.value)
+        (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
+      CLEAR_FILTERS -> idle
+        (set @entity.field "")
+        (set @entity.value "")
+        (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
     }
-    state browsing {
-      FILTER -> loading
-        (fetch FilterTarget { filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "filter-group", entity: FilterTarget, filters: "@config.filters" }, { type: "spinner", size: "sm" }] })
-      CLEAR_FILTERS -> loading
-        (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "filter-group", entity: FilterTarget, filters: "@config.filters" }, { type: "spinner", size: "sm" }] })
+    emits {
+      FILTER         { field : string!, value : string! }
+      CLEAR_FILTERS
     }
-    state error {
-      INIT -> loading
-        (fetch FilterTarget { emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-    }
-emits {
+    listens {
       FILTER { field : string!, value : string! }
-      FilterTargetLoaded
-      FilterTargetLoadFailed
-    }
-
-        listens {
-      FILTER { field : string!, value : string! }
-      FilterTargetLoadFailed { error : string, code : string }
     }
   }
   page "/filtertargets" as FilterTargetFilterPage -> FilterTargetFilter
