@@ -30,7 +30,6 @@ orbital FilterTargetOrbital {
     }
     state browsing {
       FILTER -> loading
-        (emit FILTER { field: @payload.field, value: @payload.value })
         (fetch FilterTarget { filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "FilterTargetLoaded", failure: "FilterTargetLoadFailed" } })
         (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "filter-group", entity: FilterTarget, filters: "@config.filters" }, { type: "spinner", size: "sm" }] })
       CLEAR_FILTERS -> loading

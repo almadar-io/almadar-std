@@ -166,8 +166,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -181,9 +181,9 @@
                     "render-ui",
                     "main",
                     {
-                      "onPageChange": "@config.event",
                       "currentPage": 1.0,
                       "type": "pagination",
+                      "onPageChange": "@config.event",
                       "totalPages": "@config.totalPages",
                       "showPageSize": false
                     }
@@ -199,24 +199,24 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "pagination",
-                          "currentPage": 1.0,
-                          "onPageChange": "@config.event",
-                          "totalPages": "@config.totalPages",
-                          "showPageSize": false
-                        },
-                        {
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "color": "error",
-                          "variant": "caption"
-                        }
-                      ],
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "xs",
-                      "direction": "vertical"
+                      "children": [
+                        {
+                          "showPageSize": false,
+                          "currentPage": 1.0,
+                          "totalPages": "@config.totalPages",
+                          "onPageChange": "@config.event",
+                          "type": "pagination"
+                        },
+                        {
+                          "color": "error",
+                          "content": "@payload.error",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -226,14 +226,6 @@
                 "to": "loading",
                 "event": "PAGE",
                 "effects": [
-                  [
-                    "emit",
-                    "PAGE",
-                    {
-                      "pageSize": "@payload.pageSize",
-                      "page": "@payload.page"
-                    }
-                  ],
                   [
                     "fetch",
                     "PagedItem",
@@ -248,23 +240,23 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
                       "direction": "horizontal",
-                      "gap": "sm",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
+                          "totalPages": "@config.totalPages",
                           "type": "pagination",
-                          "onPageChange": "@config.event",
                           "showPageSize": false,
                           "currentPage": 1.0,
-                          "totalPages": "@config.totalPages"
+                          "onPageChange": "@config.event"
                         },
                         {
-                          "size": "sm",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "sm"
                     }
                   ]
                 ]
@@ -279,8 +271,8 @@
                     "PagedItem",
                     {
                       "emit": {
-                        "success": "PagedItemLoaded",
-                        "failure": "PagedItemLoadFailed"
+                        "failure": "PagedItemLoadFailed",
+                        "success": "PagedItemLoaded"
                       }
                     }
                   ],
