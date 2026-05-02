@@ -32,7 +32,13 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
-      REFETCH -> loading
+      REFETCH_QUERY -> loading
+        (fetch BrowseItem { filter: (str/includes (object/get @entity "name") @payload.query), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      REFETCH_FILTER -> loading
+        (fetch BrowseItem { filter: (= (object/get @entity @payload.field) @payload.value), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      REFETCH_PAGE -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
@@ -47,7 +53,9 @@ emits {
     }
 
         listens {
-      REFETCH { query : string, field : string, value : string, page : number, pageSize : number }
+      REFETCH_QUERY { query : string! }
+      REFETCH_FILTER { field : string!, value : string! }
+      REFETCH_PAGE { page : number!, pageSize : number! }
       BrowseItemLoadFailed { error : string, code : string }
     }
   }

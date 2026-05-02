@@ -59,8 +59,8 @@
           "name": "FilteredItemSearch",
           "linkedEntity": "FilteredListItem",
           "config": {
-            "event": "SEARCH",
-            "placeholder": "Search filtered items…"
+            "placeholder": "Search filtered items…",
+            "event": "SEARCH"
           }
         },
         {
@@ -68,19 +68,19 @@
           "name": "FilteredItemFilter",
           "linkedEntity": "FilteredListItem",
           "config": {
+            "event": "FILTER",
             "filters": [
               {
+                "label": "Status",
                 "filterType": "select",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "field": "status",
-                "label": "Status"
+                "field": "status"
               }
-            ],
-            "event": "FILTER"
+            ]
           }
         },
         {
@@ -90,14 +90,14 @@
           "config": {
             "fields": [
               {
-                "label": "Name",
                 "name": "name",
+                "label": "Name",
                 "variant": "h4"
               },
               {
-                "variant": "caption",
+                "name": "description",
                 "label": "Description",
-                "name": "description"
+                "variant": "caption"
               },
               {
                 "name": "status",
@@ -109,7 +109,7 @@
           "listens": [
             {
               "event": "SEARCH",
-              "triggers": "REFETCH",
+              "triggers": "REFETCH_QUERY",
               "source": {
                 "kind": "trait",
                 "trait": "FilteredItemSearch"
@@ -117,7 +117,7 @@
             },
             {
               "event": "FILTER",
-              "triggers": "REFETCH",
+              "triggers": "REFETCH_FILTER",
               "source": {
                 "kind": "trait",
                 "trait": "FilteredItemFilter"
@@ -125,7 +125,7 @@
             },
             {
               "event": "PAGE",
-              "triggers": "REFETCH",
+              "triggers": "REFETCH_PAGE",
               "source": {
                 "kind": "trait",
                 "trait": "FilteredItemPagination"
@@ -220,8 +220,8 @@
                     "FilteredListItem",
                     {
                       "emit": {
-                        "failure": "FilteredListItemLoadFailed",
-                        "success": "FilteredListItemLoaded"
+                        "success": "FilteredListItemLoaded",
+                        "failure": "FilteredListItemLoadFailed"
                       }
                     }
                   ],
@@ -230,41 +230,41 @@
                     "main",
                     {
                       "gap": "md",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "list",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Filtered List",
+                              "type": "typography",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full",
                       "type": "stack"
                     }
                   ]

@@ -115,28 +115,45 @@
                 ]
               },
               {
-                "key": "REFETCH",
-                "name": "Refetch",
+                "key": "REFETCH_QUERY",
+                "name": "Refetch Query",
                 "payloadSchema": [
                   {
                     "name": "query",
-                    "type": "string"
-                  },
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REFETCH_FILTER",
+                "name": "Refetch Filter",
+                "payloadSchema": [
                   {
                     "name": "field",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                   },
                   {
                     "name": "value",
-                    "type": "string"
-                  },
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REFETCH_PAGE",
+                "name": "Refetch Page",
+                "payloadSchema": [
                   {
                     "name": "page",
-                    "type": "number"
+                    "type": "number",
+                    "required": true
                   },
                   {
                     "name": "pageSize",
-                    "type": "number"
+                    "type": "number",
+                    "required": true
                   }
                 ]
               }
@@ -161,8 +178,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -176,16 +193,16 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "entity": "@payload.data",
+                          "pageSize": "@config.pageSize",
                           "fields": "@config.fields",
                           "type": "data-grid",
-                          "pageSize": "@config.pageSize"
+                          "entity": "@payload.data"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -199,10 +216,10 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "caption",
-                      "content": "@payload.error",
+                      "color": "error",
                       "type": "typography",
-                      "color": "error"
+                      "content": "@payload.error",
+                      "variant": "caption"
                     }
                   ]
                 ]
@@ -235,7 +252,75 @@
               {
                 "from": "browsing",
                 "to": "loading",
-                "event": "REFETCH",
+                "event": "REFETCH_QUERY",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "filter": [
+                        "str/includes",
+                        [
+                          "object/get",
+                          "@entity",
+                          "name"
+                        ],
+                        "@payload.query"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "REFETCH_FILTER",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "@payload.field"
+                        ],
+                        "@payload.value"
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "REFETCH_PAGE",
                 "effects": [
                   [
                     "fetch",
@@ -251,8 +336,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -285,13 +370,13 @@
             ]
           },
           "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 0.0
-            },
             "fields": {
               "type": "[object]",
               "default": []
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0
             }
           },
           "scope": "collection"
