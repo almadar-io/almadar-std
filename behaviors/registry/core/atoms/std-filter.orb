@@ -46,6 +46,21 @@
           "linkedEntity": "FilterTarget",
           "emits": [
             {
+              "event": "FILTER",
+              "payloadSchema": [
+                {
+                  "name": "field",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "value",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "FilterTargetLoaded",
               "description": "Fired when FilterTarget finishes loading; payload.data holds the filtered list",
               "scope": "internal",
@@ -155,8 +170,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -170,8 +185,8 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "FilterTarget",
                       "type": "filter-group",
+                      "entity": "FilterTarget",
                       "filters": "@config.filters"
                     }
                   ]
@@ -187,21 +202,21 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "filters": "@config.filters",
                           "type": "filter-group",
-                          "entity": "FilterTarget",
-                          "filters": "@config.filters"
+                          "entity": "FilterTarget"
                         },
                         {
                           "content": "@payload.error",
-                          "color": "error",
                           "type": "typography",
+                          "color": "error",
                           "variant": "caption"
                         }
                       ],
-                      "gap": "xs",
-                      "direction": "vertical"
+                      "gap": "xs"
                     }
                   ]
                 ]
@@ -212,9 +227,21 @@
                 "event": "FILTER",
                 "effects": [
                   [
+                    "emit",
+                    "FILTER",
+                    {
+                      "value": "@payload.value",
+                      "field": "@payload.field"
+                    }
+                  ],
+                  [
                     "fetch",
                     "FilterTarget",
                     {
+                      "emit": {
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
+                      },
                       "filter": [
                         "=",
                         [
@@ -223,30 +250,26 @@
                           "@payload.field"
                         ],
                         "@payload.value"
-                      ],
-                      "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
-                      }
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "horizontal",
                       "type": "stack",
-                      "align": "center",
+                      "direction": "horizontal",
                       "gap": "sm",
+                      "align": "center",
                       "children": [
                         {
+                          "type": "filter-group",
                           "filters": "@config.filters",
-                          "entity": "FilterTarget",
-                          "type": "filter-group"
+                          "entity": "FilterTarget"
                         },
                         {
-                          "size": "sm",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "sm"
                         }
                       ]
                     }
@@ -263,8 +286,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "success": "FilterTargetLoaded",
-                        "failure": "FilterTargetLoadFailed"
+                        "failure": "FilterTargetLoadFailed",
+                        "success": "FilterTargetLoaded"
                       }
                     }
                   ],
@@ -272,8 +295,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "sm",
                       "children": [
                         {
                           "filters": "@config.filters",
@@ -285,8 +306,10 @@
                           "type": "spinner"
                         }
                       ],
-                      "align": "center",
-                      "direction": "horizontal"
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -301,8 +324,8 @@
                     "FilterTarget",
                     {
                       "emit": {
-                        "failure": "FilterTargetLoadFailed",
-                        "success": "FilterTargetLoaded"
+                        "success": "FilterTargetLoaded",
+                        "failure": "FilterTargetLoadFailed"
                       }
                     }
                   ],
@@ -310,8 +333,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

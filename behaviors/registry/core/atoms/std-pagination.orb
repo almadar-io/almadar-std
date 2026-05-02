@@ -46,6 +46,21 @@
           "linkedEntity": "PagedItem",
           "emits": [
             {
+              "event": "PAGE",
+              "payloadSchema": [
+                {
+                  "name": "page",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "pageSize",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "PagedItemLoaded",
               "description": "Fired when PagedItem finishes loading; payload.data holds the page",
               "scope": "internal",
@@ -142,8 +157,8 @@
                     "PagedItem",
                     {
                       "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
+                        "success": "PagedItemLoaded",
+                        "failure": "PagedItemLoadFailed"
                       }
                     }
                   ],
@@ -167,10 +182,10 @@
                     "main",
                     {
                       "onPageChange": "@config.event",
-                      "totalPages": "@config.totalPages",
+                      "currentPage": 1.0,
                       "type": "pagination",
-                      "showPageSize": false,
-                      "currentPage": 1.0
+                      "totalPages": "@config.totalPages",
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -186,22 +201,22 @@
                     {
                       "children": [
                         {
-                          "showPageSize": false,
-                          "currentPage": 1.0,
                           "type": "pagination",
+                          "currentPage": 1.0,
                           "onPageChange": "@config.event",
-                          "totalPages": "@config.totalPages"
+                          "totalPages": "@config.totalPages",
+                          "showPageSize": false
                         },
                         {
-                          "type": "typography",
                           "content": "@payload.error",
-                          "variant": "caption",
-                          "color": "error"
+                          "type": "typography",
+                          "color": "error",
+                          "variant": "caption"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "xs"
+                      "gap": "xs",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -211,6 +226,14 @@
                 "to": "loading",
                 "event": "PAGE",
                 "effects": [
+                  [
+                    "emit",
+                    "PAGE",
+                    {
+                      "pageSize": "@payload.pageSize",
+                      "page": "@payload.page"
+                    }
+                  ],
                   [
                     "fetch",
                     "PagedItem",
@@ -225,17 +248,17 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "type": "stack",
                       "direction": "horizontal",
                       "gap": "sm",
-                      "align": "center",
                       "children": [
                         {
-                          "currentPage": 1.0,
-                          "onPageChange": "@config.event",
-                          "totalPages": "@config.totalPages",
                           "type": "pagination",
-                          "showPageSize": false
+                          "onPageChange": "@config.event",
+                          "showPageSize": false,
+                          "currentPage": 1.0,
+                          "totalPages": "@config.totalPages"
                         },
                         {
                           "size": "sm",

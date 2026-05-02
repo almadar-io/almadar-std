@@ -113,6 +113,32 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "REFETCH",
+                "name": "Refetch",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  },
+                  {
+                    "name": "field",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "string"
+                  },
+                  {
+                    "name": "page",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pageSize",
+                    "type": "number"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -152,10 +178,10 @@
                     {
                       "children": [
                         {
+                          "entity": "@payload.data",
                           "fields": "@config.fields",
                           "type": "data-grid",
-                          "pageSize": "@config.pageSize",
-                          "entity": "@payload.data"
+                          "pageSize": "@config.pageSize"
                         }
                       ],
                       "type": "stack",
@@ -174,9 +200,9 @@
                     "main",
                     {
                       "variant": "caption",
-                      "color": "error",
                       "content": "@payload.error",
-                      "type": "typography"
+                      "type": "typography",
+                      "color": "error"
                     }
                   ]
                 ]
@@ -185,6 +211,31 @@
                 "from": "browsing",
                 "to": "loading",
                 "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "REFETCH",
                 "effects": [
                   [
                     "fetch",
@@ -216,8 +267,8 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       }
                     }
                   ],

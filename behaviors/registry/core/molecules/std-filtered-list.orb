@@ -70,13 +70,13 @@
           "config": {
             "filters": [
               {
+                "filterType": "select",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
                 ],
                 "field": "status",
-                "filterType": "select",
                 "label": "Status"
               }
             ],
@@ -91,12 +91,12 @@
             "fields": [
               {
                 "label": "Name",
-                "variant": "h4",
-                "name": "name"
+                "name": "name",
+                "variant": "h4"
               },
               {
-                "label": "Description",
                 "variant": "caption",
+                "label": "Description",
                 "name": "description"
               },
               {
@@ -105,7 +105,33 @@
                 "variant": "badge"
               }
             ]
-          }
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemFilter"
+              }
+            },
+            {
+              "event": "PAGE",
+              "triggers": "REFETCH",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemPagination"
+              }
+            }
+          ]
         },
         {
           "ref": "Pagination.traits.PagedItemPagination",
@@ -194,8 +220,8 @@
                     "FilteredListItem",
                     {
                       "emit": {
-                        "success": "FilteredListItemLoaded",
-                        "failure": "FilteredListItemLoadFailed"
+                        "failure": "FilteredListItemLoadFailed",
+                        "success": "FilteredListItemLoaded"
                       }
                     }
                   ],
@@ -203,43 +229,43 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "list"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Filtered List",
-                              "type": "typography"
-                            }
-                          ],
+                          "type": "stack",
+                          "align": "center",
                           "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          "children": [
+                            {
+                              "name": "list",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Filtered List",
+                              "variant": "h2"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
+                      "direction": "vertical",
                       "className": "max-w-5xl mx-auto w-full",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]

@@ -32,6 +32,9 @@ orbital BrowseItemOrbital {
       INIT -> loading
         (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
+      REFETCH -> loading
+        (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     state error {
       INIT -> loading
@@ -44,6 +47,7 @@ emits {
     }
 
         listens {
+      REFETCH { query : string, field : string, value : string, page : number, pageSize : number }
       BrowseItemLoadFailed { error : string, code : string }
     }
   }

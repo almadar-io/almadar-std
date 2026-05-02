@@ -44,6 +44,16 @@
           "linkedEntity": "SearchResult",
           "emits": [
             {
+              "event": "SEARCH",
+              "payloadSchema": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "SearchResultLoaded",
               "description": "Fired when SearchResult collection finishes loading",
               "scope": "internal",
@@ -151,9 +161,9 @@
                     "render-ui",
                     "main",
                     {
-                      "event": "@config.event",
                       "placeholder": "@config.placeholder",
-                      "type": "search-input"
+                      "type": "search-input",
+                      "event": "@config.event"
                     }
                   ]
                 ]
@@ -164,12 +174,19 @@
                 "event": "SEARCH",
                 "effects": [
                   [
+                    "emit",
+                    "SEARCH",
+                    {
+                      "query": "@payload.query"
+                    }
+                  ],
+                  [
                     "fetch",
                     "SearchResult",
                     {
                       "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
+                        "failure": "SearchResultLoadFailed",
+                        "success": "SearchResultLoaded"
                       }
                     }
                   ],
@@ -177,21 +194,21 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
+                          "placeholder": "@config.placeholder",
                           "type": "search-input",
-                          "event": "@config.event",
-                          "placeholder": "@config.placeholder"
+                          "event": "@config.event"
                         },
                         {
-                          "size": "sm",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "sm"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "horizontal",
                       "gap": "sm",
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "horizontal"
                     }
                   ]
                 ]
@@ -205,8 +222,8 @@
                     "render-ui",
                     "main",
                     {
-                      "event": "@config.event",
                       "placeholder": "@config.placeholder",
+                      "event": "@config.event",
                       "type": "search-input"
                     }
                   ]
@@ -223,20 +240,20 @@
                     {
                       "gap": "xs",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "event": "@config.event",
                           "placeholder": "@config.placeholder",
+                          "event": "@config.event",
                           "type": "search-input"
                         },
                         {
-                          "content": "@payload.error",
-                          "type": "typography",
                           "color": "error",
+                          "type": "typography",
+                          "content": "@payload.error",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -251,8 +268,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
+                        "failure": "SearchResultLoadFailed",
+                        "success": "SearchResultLoaded"
                       }
                     }
                   ],
@@ -260,21 +277,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center",
+                      "gap": "sm",
                       "children": [
                         {
-                          "placeholder": "@config.placeholder",
                           "type": "search-input",
+                          "placeholder": "@config.placeholder",
                           "event": "@config.event"
                         },
                         {
                           "type": "spinner",
                           "size": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "sm",
-                      "align": "center",
-                      "direction": "horizontal"
+                      ]
                     }
                   ]
                 ]
@@ -289,8 +306,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
+                        "failure": "SearchResultLoadFailed",
+                        "success": "SearchResultLoaded"
                       }
                     }
                   ],
@@ -310,9 +327,9 @@
                         }
                       ],
                       "direction": "horizontal",
-                      "gap": "sm",
                       "type": "stack",
-                      "align": "center"
+                      "align": "center",
+                      "gap": "sm"
                     }
                   ]
                 ]
@@ -343,8 +360,8 @@
                     "SearchResult",
                     {
                       "emit": {
-                        "success": "SearchResultLoaded",
-                        "failure": "SearchResultLoadFailed"
+                        "failure": "SearchResultLoadFailed",
+                        "success": "SearchResultLoaded"
                       }
                     }
                   ],
@@ -352,21 +369,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "sm",
                       "direction": "horizontal",
+                      "align": "center",
                       "children": [
                         {
                           "placeholder": "@config.placeholder",
-                          "event": "@config.event",
-                          "type": "search-input"
+                          "type": "search-input",
+                          "event": "@config.event"
                         },
                         {
                           "type": "spinner",
                           "size": "sm"
                         }
-                      ],
-                      "gap": "sm",
-                      "align": "center",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]

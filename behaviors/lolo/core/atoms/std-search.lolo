@@ -24,6 +24,7 @@ orbital SearchResultOrbital {
         (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
         (render-ui main { type: "search-input", placeholder: "@config.placeholder", event: "@config.event" })
       SEARCH -> loading
+        (emit SEARCH { query: @payload.query })
         (fetch SearchResult { emit: { success: "SearchResultLoaded", failure: "SearchResultLoadFailed" } })
         (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
     }
@@ -49,6 +50,7 @@ orbital SearchResultOrbital {
         (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "spinner", size: "sm" }] })
     }
 emits {
+      SEARCH { query : string! }
       SearchResultLoaded
       SearchResultLoadFailed
     }
