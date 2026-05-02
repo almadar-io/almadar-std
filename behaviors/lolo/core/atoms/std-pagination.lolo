@@ -24,14 +24,14 @@ orbital PagedItemOrbital {
         (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       PagedItemLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "@config.event" }] })
+        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false })
       PagedItemLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "@config.event" }] }, { type: "typography", variant: "caption", color: "error", content: "@payload.error" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "typography", variant: "caption", color: "error", content: "@payload.error" }] })
     }
     state idle {
       PAGE -> loading
         (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "@config.event" }] }, { type: "spinner", size: "sm" }] })
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "pagination", currentPage: 1, totalPages: "@config.totalPages", onPageChange: "@config.event", showPageSize: false }, { type: "spinner", size: "sm" }] })
     }
     state error {
       INIT -> loading
