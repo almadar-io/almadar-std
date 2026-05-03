@@ -25,7 +25,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
       BrowseItemLoadFailed -> error
         (render-ui main { type: "typography", variant: "caption", color: "error", content: "@payload.error" })
     }
@@ -46,7 +46,7 @@ orbital BrowseItemOrbital {
       REFETCH_PAGE -> browsing
         (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
     }
     state error {
       INIT -> loading

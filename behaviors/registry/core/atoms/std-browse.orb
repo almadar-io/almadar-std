@@ -171,6 +171,73 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "BrowseItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "entity": "@payload.data",
+                          "pageSize": "@config.displayPageSize",
+                          "type": "data-grid",
+                          "fields": "@config.fields"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "BrowseItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "content": "@payload.error",
+                      "color": "error",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
                       "offset": 0.0,
                       "limit": "@config.pageSize",
                       "emit": {
@@ -190,73 +257,6 @@
                 ]
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "BrowseItemLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "pageSize": "@config.displayPageSize",
-                          "type": "data-grid",
-                          "fields": "@config.fields",
-                          "entity": "@entity"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "BrowseItemLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "color": "error",
-                      "variant": "caption",
-                      "content": "@payload.error",
-                      "type": "typography"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BrowseItem",
-                    {
-                      "limit": "@config.pageSize",
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
-                      "offset": 0.0
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "sm"
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "browsing",
                 "to": "browsing",
                 "event": "REFETCH_QUERY",
@@ -265,6 +265,10 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "filter": [
                         "or",
                         [
@@ -281,11 +285,7 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ],
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -299,6 +299,10 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "filter": [
                         "or",
                         [
@@ -315,11 +319,7 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -333,11 +333,6 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      },
-                      "limit": "@config.pageSize",
                       "offset": [
                         "*",
                         [
@@ -346,7 +341,12 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ]
+                      ],
+                      "limit": "@config.pageSize",
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
                     }
                   ]
                 ]
@@ -360,16 +360,16 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "data-grid",
-                          "entity": "@entity",
+                          "entity": "@payload.data",
                           "fields": "@config.fields",
+                          "type": "data-grid",
                           "pageSize": "@config.displayPageSize"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -383,11 +383,11 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
                       },
-                      "offset": 0.0,
                       "limit": "@config.pageSize"
                     }
                   ],
@@ -395,8 +395,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
