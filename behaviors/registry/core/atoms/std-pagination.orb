@@ -41,6 +41,15 @@
                   "required": true
                 }
               ]
+            },
+            {
+              "event": "PagedItemLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[PagedItem]"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -54,6 +63,16 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "PagedItemLoaded",
+                "name": "PagedItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[PagedItem]"
+                  }
+                ]
               },
               {
                 "key": "PAGE",
@@ -90,17 +109,39 @@
                   [
                     "fetch",
                     "PagedItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "PagedItemLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "totalPages": "@entity.totalPages",
-                      "showPageSize": false,
-                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
                       "type": "pagination",
-                      "pageChangeEvent": "@config.event"
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages",
+                      "currentPage": "@entity.currentPage"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "PagedItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "pagination",
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
+                      "totalPages": "@entity.totalPages",
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -119,11 +160,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "pagination",
-                      "showPageSize": false,
-                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
                       "totalPages": "@entity.totalPages",
-                      "pageChangeEvent": "@config.event"
+                      "type": "pagination",
+                      "currentPage": "@entity.currentPage",
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -149,11 +190,11 @@
                     "render-ui",
                     "main",
                     {
+                      "pageChangeEvent": "@config.event",
                       "totalPages": "@entity.totalPages",
                       "showPageSize": false,
-                      "type": "pagination",
-                      "pageChangeEvent": "@config.event",
-                      "currentPage": "@entity.currentPage"
+                      "currentPage": "@entity.currentPage",
+                      "type": "pagination"
                     }
                   ]
                 ]
@@ -161,13 +202,13 @@
             ]
           },
           "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 10.0
-            },
             "event": {
               "type": "string",
               "default": "PAGE"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 10.0
             }
           },
           "scope": "instance"

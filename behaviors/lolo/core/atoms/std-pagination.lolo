@@ -16,6 +16,8 @@ orbital PagedItemOrbital {
     totalPages  : number = 1
   }
 
+  type PagedItemLoaded = Event { data : [PagedItem] } "Fired after the PagedItem entity is fetched on INIT; carries the seeded instance(s) so client-side @entity.currentPage / .totalPages bindings resolve before any user interaction."
+
   trait PagedItemPagination -> PagedItem [interaction, instance] {
     initial: idle
     config {
@@ -24,7 +26,9 @@ orbital PagedItemOrbital {
     }
     state idle {
       INIT -> idle
-        (fetch PagedItem {})
+        (fetch PagedItem { emit: { success: "PagedItemLoaded" } })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
+      PagedItemLoaded -> idle
         (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
       PAGE -> idle
         (set @entity.currentPage @payload.page)
@@ -34,11 +38,13 @@ orbital PagedItemOrbital {
         (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
     }
     emits {
-      PAGE { page : number! }
+      PAGE          { page : number! }
+      PagedItemLoaded { data : [PagedItem] }
     }
     listens {
       PAGE { page : number! }
       ITEMS_LOADED { data : [object], totalCount : number }
+      PagedItemLoaded { data : [PagedItem] }
     }
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination
