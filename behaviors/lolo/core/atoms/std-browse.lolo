@@ -40,9 +40,9 @@ orbital BrowseItemOrbital {
       ;; grid with the new rows (handler below), so React reconciles the
       ;; data-grid in place instead of unmounting it.
       REFETCH_QUERY -> browsing
-        (fetch BrowseItem { filter: (or (= @payload.searchTerm "") (str/includes (object/get @entity "name") @payload.searchTerm)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (fetch BrowseItem { offset: 0, limit: @config.pageSize, filter: (or (= @payload.searchTerm "") (str/includes (object/get @entity "name") @payload.searchTerm)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       REFETCH_FILTER -> browsing
-        (fetch BrowseItem { filter: (or (= @payload.value "") (= (object/get @entity @payload.field) @payload.value)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (fetch BrowseItem { offset: 0, limit: @config.pageSize, filter: (or (= @payload.value "") (= (object/get @entity @payload.field) @payload.value)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       REFETCH_PAGE -> browsing
         (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       BrowseItemLoaded -> browsing
