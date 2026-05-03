@@ -10,7 +10,7 @@ orbital BrowseItemOrbital {
     createdAt   : string
   }
 
-  type BrowseItemLoaded     = Event { data : [BrowseItem] }        "Fired when the BrowseItem collection finishes loading; payload.data holds the list"
+  type BrowseItemLoaded     = Event { data : [BrowseItem], totalCount : number } "Fired when the BrowseItem collection finishes loading; payload.data holds the (possibly paginated) slice and totalCount holds the unsliced filter total. totalCount is optional so compiled-path emitters that haven't been migrated yet still validate"
   type BrowseItemLoadFailed = Event { error : string, code : string } "Fired when the BrowseItem collection fails to load"
 
   trait BrowseItemBrowse -> BrowseItem [interaction, collection] {
@@ -42,6 +42,8 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { filter: (or (= @payload.searchTerm "") (str/includes (object/get @entity "name") @payload.searchTerm)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       REFETCH_FILTER -> browsing
         (fetch BrowseItem { filter: (or (= @payload.value "") (= (object/get @entity @payload.field) @payload.value)), emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+      REFETCH_PAGE -> browsing
+        (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       BrowseItemLoaded -> browsing
         (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.pageSize" }] })
     }
@@ -58,6 +60,7 @@ emits {
         listens {
       REFETCH_QUERY { searchTerm : string! }
       REFETCH_FILTER { field : string!, value : string! }
+      REFETCH_PAGE { page : number! }
       BrowseItemLoadFailed { error : string, code : string }
     }
   }

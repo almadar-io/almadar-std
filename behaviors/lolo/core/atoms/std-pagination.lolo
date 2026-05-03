@@ -24,20 +24,20 @@ orbital PagedItemOrbital {
     }
     state idle {
       INIT -> idle
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
       PAGE -> idle
         (set @entity.currentPage @payload.page)
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
       ITEMS_LOADED -> idle
-        (set @entity.totalPages (math/ceil (/ (array/len @payload.data) @config.pageSize)))
-        (render-ui main { type: "pagination", currentPage: 1, totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (set @entity.totalPages (math/ceil (/ (or @payload.totalCount (array/len @payload.data)) @config.pageSize)))
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
     }
     emits {
       PAGE { page : number! }
     }
     listens {
       PAGE { page : number! }
-      ITEMS_LOADED { data : [object] }
+      ITEMS_LOADED { data : [object], totalCount : number }
     }
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination

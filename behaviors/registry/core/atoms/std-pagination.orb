@@ -73,6 +73,10 @@
                   {
                     "name": "data",
                     "type": "[object]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
                   }
                 ]
               }
@@ -88,10 +92,10 @@
                     "main",
                     {
                       "totalPages": "@entity.totalPages",
-                      "currentPage": 1.0,
-                      "type": "pagination",
                       "onPageChange": "@config.event",
-                      "showPageSize": false
+                      "showPageSize": false,
+                      "currentPage": "@entity.currentPage",
+                      "type": "pagination"
                     }
                   ]
                 ]
@@ -110,11 +114,11 @@
                     "render-ui",
                     "main",
                     {
+                      "showPageSize": false,
                       "totalPages": "@entity.totalPages",
-                      "onPageChange": "@config.event",
+                      "currentPage": "@entity.currentPage",
                       "type": "pagination",
-                      "currentPage": 1.0,
-                      "showPageSize": false
+                      "onPageChange": "@config.event"
                     }
                   ]
                 ]
@@ -132,8 +136,12 @@
                       [
                         "/",
                         [
-                          "array/len",
-                          "@payload.data"
+                          "or",
+                          "@payload.totalCount",
+                          [
+                            "array/len",
+                            "@payload.data"
+                          ]
                         ],
                         "@config.pageSize"
                       ]
@@ -143,11 +151,11 @@
                     "render-ui",
                     "main",
                     {
-                      "showPageSize": false,
                       "type": "pagination",
-                      "currentPage": 1.0,
-                      "totalPages": "@entity.totalPages",
-                      "onPageChange": "@config.event"
+                      "onPageChange": "@config.event",
+                      "currentPage": "@entity.currentPage",
+                      "showPageSize": false,
+                      "totalPages": "@entity.totalPages"
                     }
                   ]
                 ]

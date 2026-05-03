@@ -50,25 +50,30 @@ orbital FilteredListItemOrbital {
 
   trait FilteredItemBrowse = Browse.traits.BrowseItemBrowse -> FilteredListItem {
     config: {
+      pageSize: 3,
       fields: [
         { name: "name",        label: "Name",        variant: "h4" },
         { name: "description", label: "Description", variant: "caption" },
         { name: "status",      label: "Status",      variant: "badge" }
       ]
     }
-    ;; PAGE is intentionally not wired to REFETCH_PAGE: pagination is
-    ;; visual-only (data-grid paginates client-side via pageSize); routing
-    ;; PAGE through Browse would create a cycle with Pagination's
-    ;; ITEMS_LOADED listener and serve no real refetch purpose.
+    ;; Server-side pagination: Pagination's PAGE drives Browse to refetch
+    ;; with offset/limit derived from @payload.page and @config.pageSize.
+    ;; The fetch result includes totalCount (pre-pagination filter total)
+    ;; which propagates through BrowseItemLoaded so Pagination computes
+    ;; totalPages without a separate count round-trip. To switch back to
+    ;; visual-only pagination, drop the PAGE wire and the data-grid will
+    ;; slice client-side using its own pageSize prop.
     listens {
       FilteredItemSearch.SEARCH -> REFETCH_QUERY
       FilteredItemFilter.FILTER -> REFETCH_FILTER
+      FilteredItemPagination.PAGE -> REFETCH_PAGE
     }
   }
 
   trait FilteredItemPagination = Pagination.traits.PagedItemPagination {
     config: {
-      pageSize: 10,
+      pageSize: 3,
       event: "PAGE"
     }
     listens {

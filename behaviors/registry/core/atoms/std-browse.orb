@@ -47,12 +47,16 @@
           "emits": [
             {
               "event": "BrowseItemLoaded",
-              "description": "Fired when the BrowseItem collection finishes loading; payload.data holds the list",
+              "description": "Fired when the BrowseItem collection finishes loading; payload.data holds the (possibly paginated) slice and totalCount holds the unsliced filter total. totalCount is optional so compiled-path emitters that haven't been migrated yet still validate",
               "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[BrowseItem]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
                 }
               ]
             },
@@ -97,6 +101,10 @@
                   {
                     "name": "data",
                     "type": "[BrowseItem]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
                   }
                 ]
               },
@@ -140,6 +148,17 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "REFETCH_PAGE",
+                "name": "Refetch Page",
+                "payloadSchema": [
+                  {
+                    "name": "page",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -162,8 +181,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -178,15 +197,15 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "data-grid",
                           "pageSize": "@config.pageSize",
                           "fields": "@config.fields",
-                          "type": "data-grid",
                           "entity": "@entity"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -201,9 +220,9 @@
                     "main",
                     {
                       "type": "typography",
-                      "content": "@payload.error",
                       "variant": "caption",
-                      "color": "error"
+                      "color": "error",
+                      "content": "@payload.error"
                     }
                   ]
                 ]
@@ -218,8 +237,8 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       }
                     }
                   ],
@@ -276,6 +295,10 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
                       "filter": [
                         "or",
                         [
@@ -292,11 +315,34 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "REFETCH_PAGE",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": [
+                        "*",
+                        [
+                          "-",
+                          "@payload.page",
+                          1.0
+                        ],
+                        "@config.pageSize"
+                      ],
+                      "limit": "@config.pageSize"
                     }
                   ]
                 ]
@@ -312,10 +358,10 @@
                     {
                       "children": [
                         {
-                          "type": "data-grid",
                           "entity": "@entity",
-                          "fields": "@config.fields",
-                          "pageSize": "@config.pageSize"
+                          "pageSize": "@config.pageSize",
+                          "type": "data-grid",
+                          "fields": "@config.fields"
                         }
                       ],
                       "direction": "vertical",
@@ -334,8 +380,8 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       }
                     }
                   ],
@@ -352,13 +398,13 @@
             ]
           },
           "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 0.0
-            },
             "fields": {
               "type": "[object]",
               "default": []
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0
             }
           },
           "scope": "collection"

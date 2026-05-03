@@ -68,14 +68,14 @@
           "config": {
             "filters": [
               {
-                "filterType": "select",
                 "field": "status",
+                "label": "Status",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "label": "Status"
+                "filterType": "select"
               }
             ],
             "event": "FILTER"
@@ -86,11 +86,12 @@
           "name": "FilteredItemBrowse",
           "linkedEntity": "FilteredListItem",
           "config": {
+            "pageSize": 3.0,
             "fields": [
               {
-                "name": "name",
                 "label": "Name",
-                "variant": "h4"
+                "variant": "h4",
+                "name": "name"
               },
               {
                 "name": "description",
@@ -120,6 +121,14 @@
                 "kind": "trait",
                 "trait": "FilteredItemFilter"
               }
+            },
+            {
+              "event": "PAGE",
+              "triggers": "REFETCH_PAGE",
+              "source": {
+                "kind": "trait",
+                "trait": "FilteredItemPagination"
+              }
             }
           ]
         },
@@ -127,8 +136,8 @@
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
           "config": {
-            "event": "PAGE",
-            "pageSize": 10.0
+            "pageSize": 3.0,
+            "event": "PAGE"
           },
           "listens": [
             {
@@ -228,43 +237,43 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
-                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "list"
+                              "name": "list",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Filtered List",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
