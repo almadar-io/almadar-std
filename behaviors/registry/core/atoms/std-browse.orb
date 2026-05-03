@@ -171,9 +171,11 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       }
                     }
                   ],
@@ -181,8 +183,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -196,16 +198,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "fields": "@config.fields",
-                          "type": "data-grid",
                           "pageSize": "@config.displayPageSize",
+                          "type": "data-grid",
+                          "fields": "@config.fields",
                           "entity": "@entity"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -219,10 +221,10 @@
                     "render-ui",
                     "main",
                     {
+                      "color": "error",
                       "variant": "caption",
                       "content": "@payload.error",
-                      "type": "typography",
-                      "color": "error"
+                      "type": "typography"
                     }
                   ]
                 ]
@@ -236,10 +238,12 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      }
+                      },
+                      "offset": 0.0
                     }
                   ],
                   [
@@ -313,8 +317,8 @@
                         ]
                       ],
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       }
                     }
                   ]
@@ -329,6 +333,11 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "limit": "@config.pageSize",
                       "offset": [
                         "*",
                         [
@@ -337,12 +346,7 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ],
-                      "limit": "@config.pageSize",
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -356,16 +360,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "pageSize": "@config.displayPageSize",
-                          "entity": "@entity",
                           "type": "data-grid",
-                          "fields": "@config.fields"
+                          "entity": "@entity",
+                          "fields": "@config.fields",
+                          "pageSize": "@config.displayPageSize"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -382,7 +386,9 @@
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      }
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
@@ -398,15 +404,15 @@
             ]
           },
           "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 0.0
-            },
             "fields": {
               "type": "[object]",
               "default": []
             },
             "displayPageSize": {
+              "type": "number",
+              "default": 0.0
+            },
+            "pageSize": {
               "type": "number",
               "default": 0.0
             }

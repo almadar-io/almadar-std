@@ -22,7 +22,7 @@ orbital BrowseItemOrbital {
     }
     state loading {
       INIT -> loading
-        (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       BrowseItemLoaded -> browsing
         (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: @entity, fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
@@ -31,7 +31,7 @@ orbital BrowseItemOrbital {
     }
     state browsing {
       INIT -> loading
-        (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ;; REFETCH_* stays in `browsing` and DOES NOT replace the data-grid
       ;; with a spinner. Replacing during search-as-you-type unmounts the
@@ -50,7 +50,7 @@ orbital BrowseItemOrbital {
     }
     state error {
       INIT -> loading
-        (fetch BrowseItem { emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
+        (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
 emits {
