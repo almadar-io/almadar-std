@@ -1,4 +1,4 @@
-app std-stats "1.0.0"
+app std-stats "2.0.0"
 "std-stats — embeddable analytics-card atom. Drop into a dashboard
 molecule alongside std-browse / std-search / std-filter; wire its
 ITEMS_LOADED listener to the upstream collection's success emit, then
@@ -7,22 +7,32 @@ show.
 
 Aggregation runs in the lolo state machine (no custom React component
 beyond stat-display): the ITEMS_LOADED transition uses array/map over
-@config.metrics with a chained `if` to dispatch each metric to the
-right reducer (array/len | array/sum | array/avg | array/min |
-array/max), and the resulting cards array drops into a data-list
-whose renderItem maps each card to a stat-display pattern. The atom
-owns its own auxiliary entity (StatsItem) for UI state — explicit-
-binding rule applies: every @entity.X is set explicitly via
-(set @entity.X ...) on each transition.
+@config.metrics, applies the per-metric `filter` predicate to
+@payload.data, then dispatches the chosen aggregation kind. Cards
+drop into a data-list whose renderItem maps each card to a
+stat-display pattern. The atom owns an auxiliary entity (StatsItem)
+for UI state — explicit-binding rule applies: every @entity.X is set
+explicitly via (set @entity.X ...) on each transition.
 
-Each entry in `metrics` is `{ aggregation, field, label, icon,
-format, variant, max }` where:
-- aggregation ∈ count|sum|avg|min|max (default count)
-- field is the numeric entity field for sum/avg/min/max
-- label is the card title (required)
-- icon, format (number|currency|percent), variant
-  (default|primary|success|warning|error|info), max are pass-through
-  to the stat-display render."
+Each entry in `metrics` (all but `label` optional):
+- label       string!                          card title
+- aggregation count|sum|avg|min|max  default count   what to compute
+- field       string                           numeric entity field for sum/avg/min/max
+- filter      SExpression                      row predicate (e.g. [\"=\", \"@item.status\", \"active\"])
+                                               Drops rows that don't match BEFORE aggregation.
+                                               Omitted = all rows.
+- format      number|currency|percent default number   value formatting
+- variant     default|primary|success|warning|error|info   color
+- icon        string                                       lucide icon name
+- prefix      string                                       prepended to displayed value (e.g. \"≈ \")
+- suffix      string                                       appended (e.g. \" /mo\", \" ms\")
+- max         number                                       optional denominator. >0 renders \"value / max\".
+- target      number                                       optional progress target. >0 renders a progress bar.
+- trend       number                                       signed delta vs previous period. >0 ↑ green, <0 ↓ red.
+
+For dynamic max/target/trend (computed against @payload.data),
+schema authors today must precompute and pass literal numbers; an
+SExpression-evaluating slot is a future extension."
 
 orbital StatsItemOrbital {
   type StatCard = {
@@ -31,7 +41,11 @@ orbital StatsItemOrbital {
     icon    : string
     format  : "number" | "currency" | "percent"
     variant : "default" | "primary" | "success" | "warning" | "error" | "info"
+    prefix  : string
+    suffix  : string
     max     : number
+    target  : number
+    trend   : number
   }
 
   entity StatsItem [runtime] {
@@ -55,18 +69,22 @@ orbital StatsItemOrbital {
           icon:    (object/get @metric "icon" ""),
           format:  (object/get @metric "format" "number"),
           variant: (object/get @metric "variant" "default"),
+          prefix:  (object/get @metric "prefix" ""),
+          suffix:  (object/get @metric "suffix" ""),
           max:     (object/get @metric "max" 0),
+          target:  (object/get @metric "target" 0),
+          trend:   (object/get @metric "trend" 0),
           value:   (if (= (object/get @metric "aggregation" "count") "sum")
-                       (array/sum @payload.data (object/get @metric "field" ""))
+                       (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
                        (if (= (object/get @metric "aggregation" "count") "avg")
-                           (array/avg @payload.data (object/get @metric "field" ""))
+                           (array/avg (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
                            (if (= (object/get @metric "aggregation" "count") "min")
-                               (array/min @payload.data (object/get @metric "field" ""))
+                               (array/min (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
                                (if (= (object/get @metric "aggregation" "count") "max")
-                                   (array/max @payload.data (object/get @metric "field" ""))
-                                   (array/len @payload.data)))))
+                                   (array/max (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                                   (array/len (array/filter @payload.data (object/get @metric "filter" true)))))))
         }]))
-        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max" }] })
+        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend" }] })
     }
     listens {
       ITEMS_LOADED { data : [object], totalCount : number }
