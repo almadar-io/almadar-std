@@ -24,13 +24,13 @@ orbital PagedItemOrbital {
     }
     state idle {
       INIT -> idle
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
       PAGE -> idle
         (set @entity.currentPage @payload.page)
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
       ITEMS_LOADED -> idle
         (set @entity.totalPages (math/ceil (/ @payload.totalCount @config.pageSize)))
-        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", onPageChange: "@config.event", showPageSize: false })
+        (render-ui main { type: "pagination", currentPage: "@entity.currentPage", totalPages: "@entity.totalPages", pageChangeEvent: "@config.event", showPageSize: false })
     }
     emits {
       PAGE { page : number! }
