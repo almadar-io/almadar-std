@@ -1,0 +1,76 @@
+app std-stats "1.0.0"
+"std-stats — embeddable analytics-card atom. Drop into a dashboard
+molecule alongside std-browse / std-search / std-filter; wire its
+ITEMS_LOADED listener to the upstream collection's success emit, then
+configure `metrics` per call-site to declare WHICH aggregations to
+show.
+
+Aggregation runs in the lolo state machine (no custom React component
+beyond stat-display): the ITEMS_LOADED transition uses array/map over
+@config.metrics with a chained `if` to dispatch each metric to the
+right reducer (array/len | array/sum | array/avg | array/min |
+array/max), and the resulting cards array drops into a data-list
+whose renderItem maps each card to a stat-display pattern. The atom
+owns its own auxiliary entity (StatsItem) for UI state — explicit-
+binding rule applies: every @entity.X is set explicitly via
+(set @entity.X ...) on each transition.
+
+Each entry in `metrics` is `{ aggregation, field, label, icon,
+format, variant, max }` where:
+- aggregation ∈ count|sum|avg|min|max (default count)
+- field is the numeric entity field for sum/avg/min/max
+- label is the card title (required)
+- icon, format (number|currency|percent), variant
+  (default|primary|success|warning|error|info), max are pass-through
+  to the stat-display render."
+
+orbital StatsItemOrbital {
+  type StatCard = {
+    label   : string!
+    value   : number
+    icon    : string
+    format  : "number" | "currency" | "percent"
+    variant : "default" | "primary" | "success" | "warning" | "error" | "info"
+    max     : number
+  }
+
+  entity StatsItem [runtime] {
+    id    : string!
+    cards : [StatCard] = []
+  }
+
+  trait StatsItemStats -> StatsItem [interaction, instance] {
+    initial: idle
+    config {
+      metrics : [object] = []
+      title   : string = ""
+    }
+    state idle {
+      INIT -> idle
+        (set @entity.cards [])
+        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max" }] })
+      ITEMS_LOADED -> idle
+        (set @entity.cards (array/map @config.metrics ["fn", "metric", {
+          label:   (object/get @metric "label"),
+          icon:    (object/get @metric "icon" ""),
+          format:  (object/get @metric "format" "number"),
+          variant: (object/get @metric "variant" "default"),
+          max:     (object/get @metric "max" 0),
+          value:   (if (= (object/get @metric "aggregation" "count") "sum")
+                       (array/sum @payload.data (object/get @metric "field" ""))
+                       (if (= (object/get @metric "aggregation" "count") "avg")
+                           (array/avg @payload.data (object/get @metric "field" ""))
+                           (if (= (object/get @metric "aggregation" "count") "min")
+                               (array/min @payload.data (object/get @metric "field" ""))
+                               (if (= (object/get @metric "aggregation" "count") "max")
+                                   (array/max @payload.data (object/get @metric "field" ""))
+                                   (array/len @payload.data)))))
+        }]))
+        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max" }] })
+    }
+    listens {
+      ITEMS_LOADED { data : [object], totalCount : number }
+    }
+  }
+  page "/statsitems" as StatsItemStatsPage -> StatsItemStats
+}

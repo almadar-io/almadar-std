@@ -1,0 +1,354 @@
+{
+  "name": "std-dashboard",
+  "version": "1.0.0",
+  "description": "std-dashboard — molecule composing std-stats + std-graphs + std-browse\ninto a typical dashboard view: stat cards across the top, two charts\nin the middle, data list at the bottom. Browse is the data hub — it\nfetches the rows, emits BrowseItemLoaded; Stats and Graphs both listen\nfor it via cross-trait `Browse.BrowseItemLoaded -> ITEMS_LOADED`. All\nthree atoms render into the layout's `main` slot via `@trait.X`\nplacement.",
+  "orbitals": [
+    {
+      "name": "DashboardItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "DashboardItem",
+        "collection": "dashboarditems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "units",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "DashboardSummary",
+          "config": {
+            "title": "Summary",
+            "metrics": [
+              {
+                "variant": "primary",
+                "aggregation": "count",
+                "icon": "list",
+                "format": "number",
+                "label": "Total Items"
+              },
+              {
+                "variant": "success",
+                "icon": "check-circle",
+                "format": "number",
+                "aggregation": "count",
+                "label": "Active"
+              },
+              {
+                "format": "currency",
+                "variant": "info",
+                "aggregation": "sum",
+                "field": "amount",
+                "icon": "dollar-sign",
+                "label": "Total Revenue"
+              },
+              {
+                "variant": "default",
+                "icon": "trending-up",
+                "label": "Avg Units",
+                "field": "units",
+                "format": "number",
+                "aggregation": "avg"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "DashboardItemBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "DashboardCategoryChart",
+          "config": {
+            "subtitle": "Count across categories",
+            "chartType": "bar",
+            "height": 280.0,
+            "title": "Items by Category",
+            "categoryField": "category",
+            "aggregation": "count",
+            "showLegend": false
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "DashboardItemBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "DashboardStatusChart",
+          "config": {
+            "showLegend": true,
+            "categoryField": "status",
+            "aggregation": "count",
+            "height": 280.0,
+            "title": "Status Mix",
+            "chartType": "donut"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "DashboardItemBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "DashboardItemBrowse",
+          "linkedEntity": "DashboardItem",
+          "config": {
+            "fields": [
+              {
+                "name": "name",
+                "label": "Name",
+                "variant": "h4"
+              },
+              {
+                "label": "Category",
+                "name": "category",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
+                "name": "amount",
+                "variant": "caption",
+                "label": "Amount"
+              }
+            ],
+            "pageSize": 100.0,
+            "displayPageSize": 5.0
+          }
+        },
+        {
+          "name": "DashboardLayout",
+          "category": "interaction",
+          "linkedEntity": "DashboardItem",
+          "emits": [
+            {
+              "event": "DashboardItemLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[DashboardItem]"
+                }
+              ]
+            },
+            {
+              "event": "DashboardItemLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DashboardItemLoaded",
+                "name": "DashboardItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[DashboardItem]"
+                  }
+                ]
+              },
+              {
+                "key": "DashboardItemLoadFailed",
+                "name": "DashboardItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "DashboardItem",
+                    {
+                      "emit": {
+                        "success": "DashboardItemLoaded",
+                        "failure": "DashboardItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "bar-chart-2"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Dashboard"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.DashboardSummary",
+                        {
+                          "children": [
+                            "@trait.DashboardCategoryChart",
+                            "@trait.DashboardStatusChart"
+                          ],
+                          "gap": "md",
+                          "cols": 2.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Recent Items",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.DashboardItemBrowse"
+                      ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "Dashboard",
+          "path": "/dashboard",
+          "traits": [
+            {
+              "ref": "DashboardLayout"
+            },
+            {
+              "ref": "DashboardSummary"
+            },
+            {
+              "ref": "DashboardCategoryChart"
+            },
+            {
+              "ref": "DashboardStatusChart"
+            },
+            {
+              "ref": "DashboardItemBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

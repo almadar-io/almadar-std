@@ -1,12 +1,12 @@
 {
-  "$generated": "2026-05-02T01:17:43.177Z",
+  "$generated": "2026-05-03T15:10:39.156Z",
   "$source": "tools/behavior-registry-sync",
-  "totalBehaviors": 93,
-  "atoms": 50,
-  "molecules": 11,
+  "totalBehaviors": 96,
+  "atoms": 52,
+  "molecules": 12,
   "organisms": 32,
   "layers": {
-    "UI Patterns": 93
+    "UI Patterns": 96
   },
   "behaviors": {
     "std-agent-activity-log": {
@@ -86,7 +86,6 @@
         "std-agent-conversation",
         "std-agent-search",
         "std-collision",
-        "std-search",
         "std-selection"
       ],
       "connectableEvents": [
@@ -174,7 +173,6 @@
         "std-agent-search",
         "std-collision",
         "std-realtime-chat",
-        "std-search",
         "std-selection",
         "std-service-email"
       ],
@@ -639,7 +637,6 @@
         "std-agent-search",
         "std-collision",
         "std-realtime-chat",
-        "std-search",
         "std-selection",
         "std-service-email"
       ],
@@ -2477,7 +2474,6 @@
         "std-agent-search",
         "std-collision",
         "std-realtime-chat",
-        "std-search",
         "std-selection",
         "std-service-email"
       ],
@@ -4351,7 +4347,6 @@
       ],
       "composableWith": [
         "std-cache-aside",
-        "std-display",
         "std-service-oauth",
         "std-trading-dashboard"
       ],
@@ -4797,7 +4792,6 @@
       ],
       "composableWith": [
         "std-cache-aside",
-        "std-display",
         "std-iot-dashboard",
         "std-service-oauth"
       ],
@@ -4827,8 +4821,8 @@
       "statePattern": "browsing, error, loading",
       "complexity": {
         "states": 3,
-        "events": 3,
-        "transitions": 5
+        "events": 6,
+        "transitions": 9
       },
       "defaultEntity": {
         "name": "BrowseItem",
@@ -4868,7 +4862,10 @@
       "composableWith": [],
       "connectableEvents": [
         "BrowseItemLoaded",
-        "BrowseItemLoadFailed"
+        "BrowseItemLoadFailed",
+        "REFETCH_QUERY",
+        "REFETCH_FILTER",
+        "REFETCH_PAGE"
       ],
       "eventPayloads": {}
     },
@@ -4932,7 +4929,6 @@
         "database"
       ],
       "composableWith": [
-        "std-display",
         "std-iot-dashboard",
         "std-service-oauth",
         "std-trading-dashboard"
@@ -5204,12 +5200,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-display as a Function",
-      "statePattern": "displaying, loading, refreshing",
+      "description": "std-display — DEPRECATED. The earlier shape inlined a hard-coded\nchart + graph-view + several stat cards into a single render-ui spec\nwith @entity.X bindings that no transition explicitly set, which\nviolates the explicit-binding rule (gap #25 in\ndocs/Almadar_Std_Verification.md). The chart payload was hand-\nauthored literal data, not aggregated from a real entity stream.\n\nUse these instead:\n  std-stats   — embeddable stat-card aggregations (count / sum / avg\n                / min / max / distinct), ITEMS_LOADED listener.\n  std-graphs  — embeddable charts (bar / line / pie / area / donut),\n                config-driven categoryField + aggregation, same\n                ITEMS_LOADED listener shape.\n\nCompose them in a molecule alongside std-browse the same way\nstd-filtered-list composes std-search / std-filter / std-browse /\nstd-pagination. See std-dashboard.lolo for the canonical pattern.\n\nThis file is preserved (and still embedded) so existing projects\nthat import `std/behaviors/std-display` keep loading; new dashboards\nshould target std-stats + std-graphs.",
+      "statePattern": "idle",
       "complexity": {
-        "states": 3,
-        "events": 6,
-        "transitions": 5
+        "states": 1,
+        "events": 1,
+        "transitions": 1
       },
       "defaultEntity": {
         "name": "DisplayItem",
@@ -5217,24 +5213,8 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
             "type": "string",
-            "default": "active"
-          },
-          {
-            "name": "createdAt",
-            "type": "string"
+            "required": true
           }
         ]
       },
@@ -5243,22 +5223,9 @@
         "entitySingular": "DisplayItem",
         "entityPlural": "DisplayItems"
       },
-      "defaultIcons": [
-        "bar-chart-2"
-      ],
-      "composableWith": [
-        "std-cache-aside",
-        "std-iot-dashboard",
-        "std-service-oauth",
-        "std-trading-dashboard"
-      ],
-      "connectableEvents": [
-        "LOADED",
-        "REFRESH",
-        "REFRESHED",
-        "DisplayItemLoaded",
-        "DisplayItemLoadFailed"
-      ],
+      "defaultIcons": [],
+      "composableWith": [],
+      "connectableEvents": [],
       "eventPayloads": {}
     },
     "std-drawer": {
@@ -5337,12 +5304,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-filter as a Function — single primitive: filter-group",
-      "statePattern": "browsing, error, loading",
+      "description": "std-filter as a Function — single primitive: filter-group. The atom's\nown FilterTarget entity is the UI-state container — every FILTER\ntransition persists field/value into the entity. Visual reflection of\nthe persisted value (filter-group `value` prop) is a follow-up that\nneeds the pattern registry + UI component to accept a `value` prop;\nthe persistence side is done.",
+      "statePattern": "idle",
       "complexity": {
-        "states": 3,
-        "events": 5,
-        "transitions": 6
+        "states": 1,
+        "events": 3,
+        "transitions": 3
       },
       "defaultEntity": {
         "name": "FilterTarget",
@@ -5354,21 +5321,11 @@
             "required": true
           },
           {
-            "name": "name",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "description",
+            "name": "field",
             "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
-            "default": "active"
-          },
-          {
-            "name": "createdAt",
+            "name": "value",
             "type": "string"
           }
         ]
@@ -5381,8 +5338,6 @@
       "defaultIcons": [],
       "composableWith": [],
       "connectableEvents": [
-        "FilterTargetLoaded",
-        "FilterTargetLoadFailed",
         "FILTER",
         "CLEAR_FILTERS"
       ],
@@ -5480,6 +5435,49 @@
       ],
       "eventPayloads": {}
     },
+    "std-graphs": {
+      "name": "std-graphs",
+      "level": "atom",
+      "family": "unknown",
+      "layer": "UI Patterns",
+      "description": "std-graphs — embeddable chart atom. Drops into a dashboard molecule\nalongside std-stats / std-browse; wire its ITEMS_LOADED listener to\nthe upstream collection's success emit, then configure `chartType` +\n`categoryField` + (`valueField` | `aggregation`) per call-site to\ndeclare WHAT to chart.\n\nAggregation runs in the lolo state machine: ITEMS_LOADED groups\n@payload.data by @config.categoryField (array/groupBy returns\n{<category>: [<rows>]}) then array/maps over (object/entries result)\nto apply the configured aggregation (count | sum | avg | min | max)\nper bucket. The resulting chart-data array of {label, value} drops\ninto the existing chart pattern with no aggregator component required.\n\nThe `ChartPoint` type alias narrows the entity field to the exact\nshape the `chart` pattern's `data` prop expects (`{label, value}`),\nso no `Record<string, unknown>` cast lands at the call site —\nschema authors keep strict typing end-to-end.",
+      "statePattern": "idle",
+      "complexity": {
+        "states": 1,
+        "events": 2,
+        "transitions": 2
+      },
+      "defaultEntity": {
+        "name": "GraphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chartData",
+            "type": "array",
+            "default": []
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "GraphItems",
+        "entitySingular": "GraphItem",
+        "entityPlural": "GraphItems"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "std-pagination",
+        "std-stats"
+      ],
+      "connectableEvents": [
+        "ITEMS_LOADED"
+      ],
+      "eventPayloads": {}
+    },
     "std-modal": {
       "name": "std-modal",
       "level": "atom",
@@ -5556,12 +5554,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-pagination as a Function — single primitive: pagination + infinite-scroll-sentinel",
-      "statePattern": "error, idle, loading",
+      "description": "std-pagination as a Function — single primitive: pagination control.\nThe Pagination UI component emits `{page}` for page changes; the atom's\nPAGE event payload matches that shape. ITEMS_LOADED accepts an upstream\ndata-loaded event payload `{data : [object]}` and derives totalPages =\nceil(len(data) / pageSize). Molecules wire e.g.\n`FilteredItemBrowse.BrowseItemLoaded -> ITEMS_LOADED` to keep the\npagination control in lockstep with the data hub. The PagedItem entity\npersists currentPage and the derived totalPages so reads from\n@entity.totalPages reflect the latest row count.",
+      "statePattern": "idle",
       "complexity": {
-        "states": 3,
+        "states": 1,
         "events": 4,
-        "transitions": 5
+        "transitions": 4
       },
       "defaultEntity": {
         "name": "PagedItem",
@@ -5573,22 +5571,14 @@
             "required": true
           },
           {
-            "name": "name",
-            "type": "string",
-            "required": true
+            "name": "currentPage",
+            "type": "number",
+            "default": 1
           },
           {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "type": "string",
-            "default": "active"
-          },
-          {
-            "name": "createdAt",
-            "type": "string"
+            "name": "totalPages",
+            "type": "number",
+            "default": 1
           }
         ]
       },
@@ -5598,11 +5588,14 @@
         "entityPlural": "PagedItems"
       },
       "defaultIcons": [],
-      "composableWith": [],
+      "composableWith": [
+        "std-graphs",
+        "std-stats"
+      ],
       "connectableEvents": [
         "PagedItemLoaded",
-        "PagedItemLoadFailed",
-        "PAGE"
+        "PAGE",
+        "ITEMS_LOADED"
       ],
       "eventPayloads": {}
     },
@@ -5795,12 +5788,12 @@
       "level": "atom",
       "family": "unknown",
       "layer": "UI Patterns",
-      "description": "std-search as a Function — single primitive: search-input",
-      "statePattern": "error, idle, loading, searching",
+      "description": "std-search as a Function — single primitive: search-input. The atom's\nown SearchResult entity is the UI-state container — SEARCH persists\n@payload.searchTerm (matching the SearchInput component's emit shape)\ninto @entity.searchTerm. Cross-trait listeners route the same payload\nfield to data atoms (Browse REFETCH_QUERY).",
+      "statePattern": "idle",
       "complexity": {
-        "states": 4,
-        "events": 5,
-        "transitions": 8
+        "states": 1,
+        "events": 2,
+        "transitions": 2
       },
       "defaultEntity": {
         "name": "SearchResult",
@@ -5808,23 +5801,11 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
             "type": "string",
-            "default": "active"
+            "required": true
           },
           {
-            "name": "createdAt",
+            "name": "searchTerm",
             "type": "string"
           }
         ]
@@ -5836,21 +5817,12 @@
       },
       "defaultIcons": [],
       "composableWith": [
-        "std-agent-activity-log",
-        "std-agent-assistant",
-        "std-agent-chat-thread",
-        "std-agent-conversation",
         "std-agent-search",
-        "std-collision",
-        "std-selection",
         "std-service-research-assistant",
         "std-service-youtube"
       ],
       "connectableEvents": [
-        "SEARCH",
-        "SearchResultLoaded",
-        "SearchResultLoadFailed",
-        "CLEAR"
+        "SEARCH"
       ],
       "eventPayloads": {}
     },
@@ -5907,8 +5879,7 @@
         "std-agent-chat-thread",
         "std-agent-conversation",
         "std-agent-search",
-        "std-collision",
-        "std-search"
+        "std-collision"
       ],
       "connectableEvents": [
         "SelectableItemLoaded",
@@ -5916,6 +5887,49 @@
         "SELECT",
         "CONFIRM_SELECTION",
         "CLEAR"
+      ],
+      "eventPayloads": {}
+    },
+    "std-stats": {
+      "name": "std-stats",
+      "level": "atom",
+      "family": "unknown",
+      "layer": "UI Patterns",
+      "description": "std-stats — embeddable analytics-card atom. Drop into a dashboard\nmolecule alongside std-browse / std-search / std-filter; wire its\nITEMS_LOADED listener to the upstream collection's success emit, then\nconfigure `metrics` per call-site to declare WHICH aggregations to\nshow.\n\nAggregation runs in the lolo state machine (no custom React component\nbeyond stat-display): the ITEMS_LOADED transition uses array/map over\n@config.metrics with a chained `if` to dispatch each metric to the\nright reducer (array/len | array/sum | array/avg | array/min |\narray/max), and the resulting cards array drops into a data-list\nwhose renderItem maps each card to a stat-display pattern. The atom\nowns its own auxiliary entity (StatsItem) for UI state — explicit-\nbinding rule applies: every @entity.X is set explicitly via\n(set @entity.X ...) on each transition.\n\nEach entry in `metrics` is `{ aggregation, field, label, icon,\nformat, variant, max }` where:\n- aggregation ∈ count|sum|avg|min|max (default count)\n- field is the numeric entity field for sum/avg/min/max\n- label is the card title (required)\n- icon, format (number|currency|percent), variant\n  (default|primary|success|warning|error|info), max are pass-through\n  to the stat-display render.",
+      "statePattern": "idle",
+      "complexity": {
+        "states": 1,
+        "events": 2,
+        "transitions": 2
+      },
+      "defaultEntity": {
+        "name": "StatsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": []
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "StatsItems",
+        "entitySingular": "StatsItem",
+        "entityPlural": "StatsItems"
+      },
+      "defaultIcons": [],
+      "composableWith": [
+        "std-graphs",
+        "std-pagination"
+      ],
+      "connectableEvents": [
+        "ITEMS_LOADED"
       ],
       "eventPayloads": {}
     },
@@ -6035,6 +6049,67 @@
       ],
       "eventPayloads": {}
     },
+    "std-dashboard": {
+      "name": "std-dashboard",
+      "level": "molecule",
+      "family": "unknown",
+      "layer": "UI Patterns",
+      "description": "std-dashboard — molecule composing std-stats + std-graphs + std-browse\ninto a typical dashboard view: stat cards across the top, two charts\nin the middle, data list at the bottom. Browse is the data hub — it\nfetches the rows, emits BrowseItemLoaded; Stats and Graphs both listen\nfor it via cross-trait `Browse.BrowseItemLoaded -> ITEMS_LOADED`. All\nthree atoms render into the layout's `main` slot via `@trait.X`\nplacement.",
+      "statePattern": "composing",
+      "complexity": {
+        "states": 1,
+        "events": 3,
+        "transitions": 1
+      },
+      "defaultEntity": {
+        "name": "DashboardItem",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "units",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Dashboard",
+        "entitySingular": "DashboardItem",
+        "entityPlural": "DashboardItems"
+      },
+      "defaultIcons": [
+        "bar-chart-2"
+      ],
+      "composableWith": [],
+      "connectableEvents": [
+        "DashboardItemLoaded",
+        "DashboardItemLoadFailed"
+      ],
+      "eventPayloads": {}
+    },
     "std-filtered-list": {
       "name": "std-filtered-list",
       "level": "molecule",
@@ -6066,7 +6141,8 @@
           },
           {
             "name": "status",
-            "type": "string"
+            "type": "string",
+            "default": "active"
           }
         ]
       },
@@ -6420,7 +6496,6 @@
         "std-agent-chat-thread",
         "std-agent-conversation",
         "std-agent-search",
-        "std-search",
         "std-selection"
       ],
       "connectableEvents": [
@@ -8512,7 +8587,6 @@
         "std-agent-rag",
         "std-agent-tool-loop",
         "std-cache-aside",
-        "std-display",
         "std-iot-dashboard",
         "std-service-custom-bearer",
         "std-service-email",

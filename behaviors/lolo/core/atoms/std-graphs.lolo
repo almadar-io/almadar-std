@@ -1,0 +1,65 @@
+app std-graphs "1.0.0"
+"std-graphs — embeddable chart atom. Drops into a dashboard molecule
+alongside std-stats / std-browse; wire its ITEMS_LOADED listener to
+the upstream collection's success emit, then configure `chartType` +
+`categoryField` + (`valueField` | `aggregation`) per call-site to
+declare WHAT to chart.
+
+Aggregation runs in the lolo state machine: ITEMS_LOADED groups
+@payload.data by @config.categoryField (array/groupBy returns
+{<category>: [<rows>]}) then array/maps over (object/entries result)
+to apply the configured aggregation (count | sum | avg | min | max)
+per bucket. The resulting chart-data array of {label, value} drops
+into the existing chart pattern with no aggregator component required.
+
+The `ChartPoint` type alias narrows the entity field to the exact
+shape the `chart` pattern's `data` prop expects (`{label, value}`),
+so no `Record<string, unknown>` cast lands at the call site —
+schema authors keep strict typing end-to-end."
+
+orbital GraphItemOrbital {
+  type ChartPoint = { label : string!, value : number }
+
+  entity GraphItem [runtime] {
+    id        : string!
+    chartData : [ChartPoint] = []
+  }
+
+  trait GraphItemGraph -> GraphItem [interaction, instance] {
+    initial: idle
+    config {
+      chartType     : "bar" | "line" | "pie" | "area" | "donut" = "bar"
+      categoryField : string = ""
+      valueField    : string = ""
+      aggregation   : "count" | "sum" | "avg" | "min" | "max" = "count"
+      title         : string = ""
+      subtitle      : string = ""
+      height        : number = 280
+      showLegend    : boolean = true
+      showValues    : boolean = false
+    }
+    state idle {
+      INIT -> idle
+        (set @entity.chartData [])
+        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues" })
+      ITEMS_LOADED -> idle
+        (set @entity.chartData (array/map (object/entries (array/groupBy @payload.data @config.categoryField)) ["fn", "entry", {
+          label: (object/get @entry "0"),
+          value: (if (= @config.aggregation "sum")
+                     (array/sum (object/get @entry "1") @config.valueField)
+                     (if (= @config.aggregation "avg")
+                         (array/avg (object/get @entry "1") @config.valueField)
+                         (if (= @config.aggregation "min")
+                             (array/min (object/get @entry "1") @config.valueField)
+                             (if (= @config.aggregation "max")
+                                 (array/max (object/get @entry "1") @config.valueField)
+                                 (array/len (object/get @entry "1"))))))
+        }]))
+        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues" })
+    }
+    listens {
+      ITEMS_LOADED { data : [object], totalCount : number }
+    }
+  }
+  page "/graphitems" as GraphItemGraphPage -> GraphItemGraph
+}

@@ -1,48 +1,40 @@
-app std-display "1.0.0"
-"std-display as a Function"
+app std-display "1.1.0"
+"std-display — DEPRECATED. The earlier shape inlined a hard-coded
+chart + graph-view + several stat cards into a single render-ui spec
+with @entity.X bindings that no transition explicitly set, which
+violates the explicit-binding rule (gap #25 in
+docs/Almadar_Std_Verification.md). The chart payload was hand-
+authored literal data, not aggregated from a real entity stream.
+
+Use these instead:
+  std-stats   — embeddable stat-card aggregations (count / sum / avg
+                / min / max / distinct), ITEMS_LOADED listener.
+  std-graphs  — embeddable charts (bar / line / pie / area / donut),
+                config-driven categoryField + aggregation, same
+                ITEMS_LOADED listener shape.
+
+Compose them in a molecule alongside std-browse the same way
+std-filtered-list composes std-search / std-filter / std-browse /
+std-pagination. See std-dashboard.lolo for the canonical pattern.
+
+This file is preserved (and still embedded) so existing projects
+that import `std/behaviors/std-display` keep loading; new dashboards
+should target std-stats + std-graphs."
 
 orbital DisplayItemOrbital {
   entity DisplayItem [runtime] {
-    id : string
-    name : string
-    description : string
-    status : "active" | "inactive" | "pending" = "active"
-    createdAt : string
+    id : string!
   }
 
-  type DisplayItemLoaded     = Event DisplayItem                  "Fired when DisplayItem finishes loading"
-  type DisplayItemLoadFailed = Event { message : string } "Fired when DisplayItem fails to load"
-  trait DisplayItemDisplay -> DisplayItem [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (fetch DisplayItem { emit: { success: "DisplayItemLoaded", failure: "DisplayItemLoadFailed" } })
-        (render-ui main { type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "DisplayItems" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "DisplayItems", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "h3", content: "@entity.description" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "h3", content: "@entity.createdAt" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] })
-      LOADED -> displaying
-        (fetch DisplayItem { emit: { success: "DisplayItemLoaded", failure: "DisplayItemLoadFailed" } })
-        (render-ui main { type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "DisplayItems" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "DisplayItems", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "h3", content: "@entity.description" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "h3", content: "@entity.createdAt" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] })
+  trait DisplayItemDisplay -> DisplayItem [interaction, instance] {
+    initial: idle
+    config {
+      message : string = "std-display is deprecated — use std-stats and std-graphs instead. See docs/Almadar_Std_Verification.md gap #25."
     }
-    state displaying {
-      INIT -> displaying
-        (fetch DisplayItem { emit: { success: "DisplayItemLoaded", failure: "DisplayItemLoadFailed" } })
-        (render-ui main { type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "DisplayItems" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "DisplayItems", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "h3", content: "@entity.description" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "h3", content: "@entity.createdAt" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] })
-      REFRESH -> refreshing
-        (fetch DisplayItem { emit: { success: "DisplayItemLoaded", failure: "DisplayItemLoadFailed" } })
-        (render-ui main { type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "DisplayItems" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "DisplayItems", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "h3", content: "@entity.description" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "h3", content: "@entity.createdAt" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch DisplayItem { emit: { success: "DisplayItemLoaded", failure: "DisplayItemLoadFailed" } })
-        (render-ui main { type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "DisplayItems" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "DisplayItems", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "h3", content: "@entity.description" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CreatedAt" }, { type: "typography", variant: "h3", content: "@entity.createdAt" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] })
-    }
-emits {
-      DisplayItemLoaded
-      DisplayItemLoadFailed
-    }
-
-        listens {
-      DisplayItemLoadFailed { message : string }
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "alert", variant: "warning", title: "std-display is deprecated", message: "@config.message" })
     }
   }
-  page "/displayitems" as DisplayItemPage -> DisplayItemDisplay
+  page "/displayitems" as DisplayItemDisplayPage -> DisplayItemDisplay
 }

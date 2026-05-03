@@ -1,0 +1,329 @@
+{
+  "name": "std-stats",
+  "version": "1.0.0",
+  "description": "std-stats — embeddable analytics-card atom. Drop into a dashboard\nmolecule alongside std-browse / std-search / std-filter; wire its\nITEMS_LOADED listener to the upstream collection's success emit, then\nconfigure `metrics` per call-site to declare WHICH aggregations to\nshow.\n\nAggregation runs in the lolo state machine (no custom React component\nbeyond stat-display): the ITEMS_LOADED transition uses array/map over\n@config.metrics with a chained `if` to dispatch each metric to the\nright reducer (array/len | array/sum | array/avg | array/min |\narray/max), and the resulting cards array drops into a data-list\nwhose renderItem maps each card to a stat-display pattern. The atom\nowns its own auxiliary entity (StatsItem) for UI state — explicit-\nbinding rule applies: every @entity.X is set explicitly via\n(set @entity.X ...) on each transition.\n\nEach entry in `metrics` is `{ aggregation, field, label, icon,\nformat, variant, max }` where:\n- aggregation ∈ count|sum|avg|min|max (default count)\n- field is the numeric entity field for sum/avg/min/max\n- label is the card title (required)\n- icon, format (number|currency|percent), variant\n  (default|primary|success|warning|error|info), max are pass-through\n  to the stat-display render.",
+  "orbitals": [
+    {
+      "name": "StatsItemOrbital",
+      "entity": {
+        "name": "StatsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "name": "max",
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number"
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StatsItemStats",
+          "category": "interaction",
+          "linkedEntity": "StatsItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ITEMS_LOADED",
+                "name": "Items Loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cards",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "data-list",
+                      "fields": [],
+                      "entity": "@entity.cards",
+                      "renderItem": [
+                        "fn",
+                        "card",
+                        {
+                          "label": "@card.label",
+                          "format": "@card.format",
+                          "type": "stat-display",
+                          "variant": "@card.variant",
+                          "value": "@card.value",
+                          "max": "@card.max",
+                          "icon": "@card.icon"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ITEMS_LOADED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cards",
+                    [
+                      "array/map",
+                      "@config.metrics",
+                      [
+                        "fn",
+                        "metric",
+                        {
+                          "icon": [
+                            "object/get",
+                            "@metric",
+                            "icon",
+                            ""
+                          ],
+                          "variant": [
+                            "object/get",
+                            "@metric",
+                            "variant",
+                            "default"
+                          ],
+                          "value": [
+                            "if",
+                            [
+                              "=",
+                              [
+                                "object/get",
+                                "@metric",
+                                "aggregation",
+                                "count"
+                              ],
+                              "sum"
+                            ],
+                            [
+                              "array/sum",
+                              "@payload.data",
+                              [
+                                "object/get",
+                                "@metric",
+                                "field",
+                                ""
+                              ]
+                            ],
+                            [
+                              "if",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@metric",
+                                  "aggregation",
+                                  "count"
+                                ],
+                                "avg"
+                              ],
+                              [
+                                "array/avg",
+                                "@payload.data",
+                                [
+                                  "object/get",
+                                  "@metric",
+                                  "field",
+                                  ""
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@metric",
+                                    "aggregation",
+                                    "count"
+                                  ],
+                                  "min"
+                                ],
+                                [
+                                  "array/min",
+                                  "@payload.data",
+                                  [
+                                    "object/get",
+                                    "@metric",
+                                    "field",
+                                    ""
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "=",
+                                    [
+                                      "object/get",
+                                      "@metric",
+                                      "aggregation",
+                                      "count"
+                                    ],
+                                    "max"
+                                  ],
+                                  [
+                                    "array/max",
+                                    "@payload.data",
+                                    [
+                                      "object/get",
+                                      "@metric",
+                                      "field",
+                                      ""
+                                    ]
+                                  ],
+                                  [
+                                    "array/len",
+                                    "@payload.data"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "format": [
+                            "object/get",
+                            "@metric",
+                            "format",
+                            "number"
+                          ],
+                          "label": [
+                            "object/get",
+                            "@metric",
+                            "label"
+                          ],
+                          "max": [
+                            "object/get",
+                            "@metric",
+                            "max",
+                            0.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "data-list",
+                      "entity": "@entity.cards",
+                      "fields": [],
+                      "renderItem": [
+                        "fn",
+                        "card",
+                        {
+                          "icon": "@card.icon",
+                          "label": "@card.label",
+                          "variant": "@card.variant",
+                          "format": "@card.format",
+                          "max": "@card.max",
+                          "type": "stat-display",
+                          "value": "@card.value"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "metrics": {
+              "type": "[object]",
+              "default": []
+            },
+            "title": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StatsItemStatsPage",
+          "path": "/statsitems",
+          "traits": [
+            {
+              "ref": "StatsItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
