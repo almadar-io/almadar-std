@@ -35,7 +35,7 @@ orbital ArticleOrbital {
         (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       ArticleLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Articles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Article", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "status", variant: "badge" }, { name: "author", variant: "body" }, { name: "slug", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Articles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Article", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "status", variant: "badge" }, { name: "author", variant: "body" }, { name: "slug", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
       ArticleLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load article" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -162,6 +162,12 @@ orbital ArticleOrbital {
       INIT -> closed
         (fetch Article { emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
       VIEW -> open
+        (set @entity.title @payload.row.title)
+        (set @entity.slug @payload.row.slug)
+        (set @entity.content @payload.row.content)
+        (set @entity.author @payload.row.author)
+        (set @entity.status @payload.row.status)
+        (set @entity.publishedAt @payload.row.publishedAt)
         (fetch Article {id: "@payload.id" , emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" }, emit: { success: "ArticleLoaded", failure: "ArticleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Published At" }, { type: "typography", variant: "body", content: "@entity.publishedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
@@ -175,7 +181,7 @@ orbital ArticleOrbital {
         (render-ui main { type: "box" })
     }
     listens {
-      VIEW { id : string! }
+      VIEW { id : string!, row : Article }
       SAVE { data : object! }
           ArticleLoadFailed { error : string, code : string }
       ArticleBrowse.VIEW -> VIEW
@@ -243,7 +249,7 @@ orbital MediaAssetOrbital {
         (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       MediaAssetLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
       MediaAssetLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load mediaasset" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -296,6 +302,12 @@ emits {
       INIT -> closed
         (fetch MediaAsset { emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
       VIEW -> open
+        (set @entity.fileName @payload.row.fileName)
+        (set @entity.fileType @payload.row.fileType)
+        (set @entity.fileSize @payload.row.fileSize)
+        (set @entity.url @payload.row.url)
+        (set @entity.altText @payload.row.altText)
+        (set @entity.uploadedAt @payload.row.uploadedAt)
         (fetch MediaAsset {id: "@payload.id" , emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" }, emit: { success: "MediaAssetLoaded", failure: "MediaAssetLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.fileName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Name" }, { type: "typography", variant: "body", content: "@entity.fileName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Type" }, { type: "typography", variant: "body", content: "@entity.fileType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Size" }, { type: "typography", variant: "body", content: "@entity.fileSize" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Url" }, { type: "typography", variant: "body", content: "@entity.url" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Alt Text" }, { type: "typography", variant: "body", content: "@entity.altText" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Uploaded At" }, { type: "typography", variant: "body", content: "@entity.uploadedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
@@ -315,7 +327,7 @@ emits {
 
         listens {
       MediaAssetLoadFailed { error : string, code : string }
-      VIEW { id : string }
+      VIEW { id : string!, row : MediaAsset }
       MediaAssetBrowse.VIEW -> VIEW
     }
   }
@@ -346,7 +358,7 @@ orbital CategoryOrbital {
         (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       CategoryLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
       CategoryLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load category" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -445,6 +457,11 @@ orbital CategoryOrbital {
       INIT -> closed
         (fetch Category { emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
       VIEW -> open
+        (set @entity.name @payload.row.name)
+        (set @entity.slug @payload.row.slug)
+        (set @entity.description @payload.row.description)
+        (set @entity.parentCategory @payload.row.parentCategory)
+        (set @entity.articleCount @payload.row.articleCount)
         (fetch Category {id: "@payload.id" , emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" }, emit: { success: "CategoryLoaded", failure: "CategoryLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Parent Category" }, { type: "typography", variant: "body", content: "@entity.parentCategory" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Article Count" }, { type: "typography", variant: "body", content: "@entity.articleCount" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
@@ -459,7 +476,7 @@ orbital CategoryOrbital {
     }
     listens {
       CategoryLoadFailed { error : string, code : string }
-      VIEW { id : string }
+      VIEW { id : string!, row : Category }
       CategoryBrowse.VIEW -> VIEW
     }
   }
@@ -504,3 +521,43 @@ orbital CategoryOrbital {
   }
   page "/categories" -> CategoryBrowse, CategoryCreate, CategoryEdit, CategoryView, CategoryDelete
 }
+
+orbital CmsHubOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
+  entity CmsHub [runtime] {
+    id      : string!
+    section : string = "articles"
+  }
+
+  trait CmsHubTabs = Tabs.traits.TabsItemTabs {
+    config: {
+      defaultTab: "articles",
+      variant: "underline",
+      tabs: [
+        { id: "articles",   label: "Articles",   icon: "file-text" },
+        { id: "media",      label: "Media",      icon: "image" },
+        { id: "categories", label: "Categories", icon: "folder" }
+      ]
+    }
+  }
+
+  trait CmsHubLayout -> CmsHub [interaction, collection] {
+    initial: viewing
+    state viewing {
+      INIT -> viewing
+        (set @entity.section "articles")
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid" }, { type: "typography", variant: "h2", content: "CMS Hub" }] }, { type: "divider" }, "@trait.CmsHubTabs", { type: "stack", direction: "vertical", gap: "sm", className: "p-4 border rounded-md", children: [{ type: "typography", variant: "overline", color: "secondary", content: "Active section" }, { type: "typography", variant: "h3", content: "@entity.section" }] }] }] })
+      SECTION_CHANGED -> viewing
+        (set @entity.section @payload.tabId)
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid" }, { type: "typography", variant: "h2", content: "CMS Hub" }] }, { type: "divider" }, "@trait.CmsHubTabs", { type: "stack", direction: "vertical", gap: "sm", className: "p-4 border rounded-md", children: [{ type: "typography", variant: "overline", color: "secondary", content: "Active section" }, { type: "typography", variant: "h3", content: "@entity.section" }] }] }] })
+    }
+    listens {
+      CmsHubTabs.TAB_CHANGED -> SECTION_CHANGED
+      SECTION_CHANGED { tabId : string! }
+    }
+  }
+
+  page "/cms-hub" as CmsHubPage -> CmsHubLayout, CmsHubTabs
+}
+

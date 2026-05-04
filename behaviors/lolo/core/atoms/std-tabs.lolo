@@ -1,48 +1,71 @@
-app std-tabs "1.0.0"
-"std-tabs as a Function"
+app std-tabs "2.0.0"
+"std-tabs — embeddable tab-navigation atom. Drop into a layout
+molecule to give the user a tabs strip that swaps which trait fills
+the active tab's slot. Each tab points at a sibling trait via a
+@trait.X content reference; clicking a tab updates the atom's own
+@entity.activeTab and re-renders so only the matching trait's
+output shows. Events remap at the call site (TAB_CHANGED -> Y) so
+the host molecule can listen for routing, persistence, analytics.
 
-orbital TabContentOrbital {
-  entity TabContent [runtime] {
-    id          : string!
-    name        : string!
-    description : string
-    status      : "active" | "inactive" | "pending" = "active"
-    createdAt   : string
+Each entry in `tabs` (all but `id` and `label` optional):
+- id      string!  stable tab id (used as activeTab key)
+- label   string!  visible tab text
+- icon    string   lucide icon name
+- badge   string   small badge in the tab strip (e.g. unread count)
+- content string   @trait.X reference for the panel body. The host
+                   molecule binds a sibling trait there; only the
+                   active tab's content renders at any time. Omit
+                   to leave the panel empty.
+
+Config:
+- tabs        [TabSpec] = []
+- defaultTab  string = ''                       id of the initial active tab.
+                                                Falls back to tabs[0].id if blank.
+- variant     default|pills|underline = default visual style
+- orientation horizontal|vertical = horizontal  tab strip orientation
+
+Compiler statically unrolls array/map over @config.tabs so every
+TabSpec field is fully baked into the emitted props at codegen
+time."
+
+orbital TabsItemOrbital {
+  type TabSpec = {
+    id      : string!
+    label   : string!
+    icon    : string
+    badge   : string
+    content : string
   }
 
-  type TabContentLoaded     = Event { data : [TabContent] }        "Fired when TabContent finishes loading; payload.data holds the list"
-  type TabContentLoadFailed = Event { error : string, code : string } "Fired when TabContent fails to load"
+  entity TabsItem [runtime] {
+    id         : string!
+    activeTab  : string = ""
+    items      : [TabSpec] = []
+  }
 
-  trait TabContentTabs -> TabContent [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      TabContentLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout-grid" }, { type: "typography", content: "TabContents", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Name", id: "name" }, { label: "Description", id: "description" }, { label: "Status", id: "status" }, { label: "CreatedAt", id: "createdAt" }], defaultActiveTab: "name", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [], className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.description" }] }] }] })
-      TabContentLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  trait TabsItemTabs -> TabsItem [interaction, instance] {
+    initial: idle
+    config {
+      tabs        : [object] = []
+      defaultTab  : string = ""
+      variant     : "default" | "pills" | "underline" = "default"
+      orientation : "horizontal" | "vertical" = "horizontal"
     }
     state idle {
-      SELECT_TAB -> loading
-        (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
-        (render-ui main { type: "spinner" })
+      INIT -> idle
+        (set @entity.items @config.tabs)
+        (set @entity.activeTab @config.defaultTab)
+        (render-ui main { type: "tabs", items: "@entity.items", activeTab: "@entity.activeTab", variant: "@config.variant", orientation: "@config.orientation", tabChangeEvent: "TAB_CHANGED" })
+      TAB_CHANGED -> idle
+        (set @entity.activeTab @payload.tabId)
+        (render-ui main { type: "tabs", items: "@entity.items", activeTab: "@entity.activeTab", variant: "@config.variant", orientation: "@config.orientation", tabChangeEvent: "TAB_CHANGED" })
     }
-    state error {
-      INIT -> loading
-        (fetch TabContent { emit: { success: "TabContentLoaded", failure: "TabContentLoadFailed" } })
-        (render-ui main { type: "spinner" })
+    emits {
+      TAB_CHANGED -> external { tabId : string! }
     }
-emits {
-      TabContentLoaded
-      TabContentLoadFailed
-    }
-
-        listens {
-      SELECT_TAB { tab : string! }
-      TabContentLoadFailed { error : string, code : string }
+    listens {
+      TAB_CHANGED { tabId : string! }
     }
   }
-  page "/tabcontents" as TabContentTabsPage -> TabContentTabs
+  page "/tabsitems" as TabsItemTabsPage -> TabsItemTabs
 }
