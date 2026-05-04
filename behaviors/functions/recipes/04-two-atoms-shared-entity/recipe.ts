@@ -30,6 +30,7 @@ import {
 } from '@almadar/std/behaviors/functions';
 import { makeSchema, makeOrbitalWithUses, makePageRef } from '@almadar/core/builders';
 import type { OrbitalSchema, Entity } from '@almadar/core/types';
+import { resolveAndWrap } from '../_lib/dashboard';
 
 const cartItemEntity: Entity = {
   name: 'CartItem',
@@ -41,7 +42,7 @@ const cartItemEntity: Entity = {
   ],
 };
 
-export const schema: OrbitalSchema = makeSchema(
+const refsSchema: OrbitalSchema = makeSchema(
   'recipe-04-cart',
   makeOrbitalWithUses({
     name: 'CartItemOrbital',
@@ -93,3 +94,30 @@ export const schema: OrbitalSchema = makeSchema(
     ],
   }),
 );
+
+// Post-process: resolve refs to materialize render-ui literals, then
+// wrap every `['render-ui', 'main', content]` in a dashboard-layout
+// chrome. The exported schema is fully inlined (no longer composable
+// via further refs), which is fine since chrome wrapping is the last
+// step before validate/compile.
+//
+// Chrome surface in use:
+//   - `searchEvent: 'CART_SEARCH'` — search box dispatches
+//     `UI:CART_SEARCH { value }` on Enter. A future search-trait could
+//     listen and refilter the browse.
+//   - `notifications: '@payload.data'` — bell mounts, badge count
+//     reads from the payload data array (empty in this recipe since
+//     no notification source is wired; the bell still renders but the
+//     badge stays at 0). Real apps would add a NotificationsBrowse
+//     trait that emits `NotificationsLoaded { data }` and listen so
+//     this binding resolves to the actual list.
+//   - `notificationClickEvent: 'OPEN_NOTIFICATIONS'` — bell click
+//     dispatches `UI:OPEN_NOTIFICATIONS` (host trait or sibling
+//     listener can react).
+export const schema: OrbitalSchema = resolveAndWrap(refsSchema, {
+  appName: 'Cart',
+  showSearch: true,
+  searchEvent: 'CART_SEARCH',
+  notifications: [],
+  notificationClickEvent: 'OPEN_NOTIFICATIONS',
+});

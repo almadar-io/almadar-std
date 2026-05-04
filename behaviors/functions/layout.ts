@@ -10,10 +10,38 @@
 
 import type { OrbitalSchema, SExpr } from '@almadar/core/types';
 
-interface NavItemConfig {
+export interface NavItemConfig {
   label: string;
   href: string;
   icon: string;
+}
+
+/**
+ * Optional chrome forwarded into the dashboard-layout pattern at every
+ * wrapped render-ui main effect. All keys are passthroughs to the
+ * pattern's props (see DashboardLayout.tsx in @almadar/ui). Event-name
+ * fields are typed as plain strings here because the Rust render-ui
+ * pattern resolver translates them into bus dispatchers at runtime.
+ */
+export interface DashboardLayoutChrome {
+  /** Search box: any of these flips it on. `searchEvent` is what gets
+   *  dispatched on Enter (`UI:{searchEvent}` with `{ value }` payload). */
+  showSearch?: boolean;
+  searchEvent?: string;
+  /** Notifications bell: pass an array (even `[]`) to render the bell;
+   *  omit/null hides it. The value can be a literal payload binding
+   *  string like `'@payload.data'` so render-ui resolves it from the
+   *  trait's bus payload at render time. */
+  notifications?: unknown;
+  /** Event-name dispatched on bell click (`UI:{notificationClickEvent}`
+   *  with empty payload). */
+  notificationClickEvent?: string;
+  /** Custom sidebar footer content (UI pattern subtree). Omitted →
+   *  no footer. Apps that want Settings should add a navItems entry
+   *  instead of stuffing it into the footer. */
+  sidebarFooter?: unknown;
+  /** Theme toggle visibility. Default true. */
+  showThemeToggle?: boolean;
 }
 
 /**
@@ -21,20 +49,52 @@ interface NavItemConfig {
  *
  * Walks the composed schema's transitions and wraps each
  * `['render-ui', 'main', content]` as
- * `['render-ui', 'main', { type: 'dashboard-layout', appName, navItems, children: [content] }]`.
+ * `['render-ui', 'main', { type: 'dashboard-layout', appName, navItems,
+ *  ...chrome, children: [content] }]`.
  *
- * The compiler renders this naturally since `dashboard-layout` is a registered pattern.
+ * `chrome` is the optional opt-in surface for search box, notification
+ * bell, sidebar footer, and theme toggle (see DashboardLayoutChrome).
+ *
+ * The compiler renders this naturally since `dashboard-layout` is a
+ * registered pattern. Event-name strings get translated into bus
+ * dispatchers by the render-ui pattern resolver.
  */
 export function wrapInDashboardLayout(
   schema: OrbitalSchema,
   appName: string,
   navItems: NavItemConfig[],
+  chrome: DashboardLayoutChrome = {},
 ): OrbitalSchema {
+  // Strip undefined/null entries so the rendered tree only carries
+  // explicit opt-ins (matches "omitted = hide" semantics in the
+  // DashboardLayout component).
+  const chromeProps: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(chrome)) {
+    if (value !== undefined && value !== null) {
+      chromeProps[key] = value;
+    }
+  }
+
   const layoutWrapper = {
     type: 'dashboard-layout',
     appName,
     navItems,
+    ...chromeProps,
   };
+
+  // Chrome event-name props become emits on every wrapped trait — the
+  // dashboard-layout pattern dispatches them via the bus, and the
+  // trait's contract must declare every emit it can produce. Without
+  // this, the validator's `ORB_X_RENDER_UI_EVENT_LITERAL_STALE` rule
+  // (correctly) rejects render-ui literals that reference undeclared
+  // event keys.
+  const chromeEventNames: string[] = [];
+  for (const key of ['searchEvent', 'notificationClickEvent'] as const) {
+    const value = chromeProps[key];
+    if (typeof value === 'string' && value.length > 0) {
+      chromeEventNames.push(value);
+    }
+  }
 
   for (const orbital of schema.orbitals) {
     if (!orbital.traits) continue;
@@ -45,6 +105,8 @@ export function wrapInDashboardLayout(
       const transitions = sm.transitions as Array<{
         effects: SExpr[];
       }>;
+
+      let wrappedAny = false;
       for (const transition of transitions) {
         if (!transition.effects) continue;
         for (let i = 0; i < transition.effects.length; i++) {
@@ -61,8 +123,24 @@ export function wrapInDashboardLayout(
               'main',
               { ...layoutWrapper, children: [content] },
             ];
+            wrappedAny = true;
           }
         }
+      }
+
+      // Only extend emits on traits that actually got chrome — unwrapped
+      // traits keep their original contract.
+      if (wrappedAny && chromeEventNames.length > 0) {
+        const traitWithEmits = traitRef as { emits?: Array<{ event: string; scope?: string }> };
+        const emits = traitWithEmits.emits ?? [];
+        const declared = new Set(emits.map((e) => e.event));
+        for (const eventName of chromeEventNames) {
+          if (!declared.has(eventName)) {
+            emits.push({ event: eventName, scope: 'internal' });
+            declared.add(eventName);
+          }
+        }
+        traitWithEmits.emits = emits;
       }
     }
   }
