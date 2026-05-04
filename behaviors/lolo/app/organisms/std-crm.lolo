@@ -39,26 +39,26 @@ orbital ContactOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load contact" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CONVERT_LEAD -> external { id: string }
-      CREATE
+CONVERT_LEAD -> external { id: string }
+CREATE
       VIEW   { id : string!, row : Contact }
-      EDIT   { id : string!, row : Contact }
-      DELETE { id : string!, row : Contact }
-      ContactLoaded
+EDIT   { id : string!, row : Contact }
+DELETE { id : string!, row : Contact }
+ContactLoaded
       ContactLoadFailed
-      ContactSaved
+ContactSaved
       ContactSaveFailed
-      ContactUpdated
+ContactUpdated
       ContactUpdateFailed
-      ContactDeleted
+ContactDeleted
       ContactDeleteFailed
-      DealSaved
+DealSaved
       DealSaveFailed
-      DealUpdated
+DealUpdated
       DealUpdateFailed
-      DealDeleted
+DealDeleted
       DealDeleteFailed
-      NoteSaved
+NoteSaved
       NoteSaveFailed
     }
     listens {
@@ -97,10 +97,10 @@ orbital ContactOrbital {
         (emit CONTACT_CREATED)
     }
     emits {
-      CONTACT_CREATED -> external { id: string }
-      ContactLoadFailed
+CONTACT_CREATED -> external { id: string }
+ContactLoadFailed
       ContactLoaded
-      ContactSaveFailed
+ContactSaveFailed
       ContactSaved
     }
     listens {
@@ -130,10 +130,10 @@ orbital ContactOrbital {
         (emit CONTACT_UPDATED)
     }
     emits {
-      CONTACT_UPDATED -> external { id: string }
-      ContactLoadFailed
+CONTACT_UPDATED -> external { id: string }
+ContactLoadFailed
       ContactLoaded
-      ContactUpdateFailed
+ContactUpdateFailed
       ContactUpdated
     }
     listens {
@@ -148,6 +148,11 @@ orbital ContactOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.company "")
+        (set @entity.email "")
+        (set @entity.name "")
+        (set @entity.phone "")
+        (set @entity.status "lead")
         (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
       VIEW -> open
         (fetch Contact {id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" }, emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
@@ -163,8 +168,8 @@ orbital ContactOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      EDIT { id : string!, row : Contact }
-      ContactLoaded
+EDIT { id : string!, row : Contact }
+ContactLoaded
       ContactLoadFailed
     }
     listens {
@@ -201,10 +206,10 @@ orbital ContactOrbital {
         (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
     }
     emits {
-      CONTACT_DELETED -> external { id: string }
-      ContactDeleteFailed
+CONTACT_DELETED -> external { id: string }
+ContactDeleteFailed
       ContactDeleted
-      ContactLoadFailed
+ContactLoadFailed
       ContactLoaded
     }
     listens {
@@ -245,12 +250,12 @@ orbital DealOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load deal" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CLOSE_DEAL -> external { id: string }
-      CREATE
+CLOSE_DEAL -> external { id: string }
+CREATE
       VIEW   { id : string!, row : Deal }
-      EDIT   { id : string!, row : Deal }
-      DELETE { id : string!, row : Deal }
-      DealLoaded
+EDIT   { id : string!, row : Deal }
+DELETE { id : string!, row : Deal }
+DealLoaded
       DealLoadFailed
     }
     listens {
@@ -282,11 +287,12 @@ orbital DealOrbital {
         (emit DEAL_CREATED)
     }
     emits {
-      DEAL_CREATED
+DEAL_CREATED
       DealLoadFailed
-      DealLoaded
+DealLoaded
       DealSaveFailed
-      DealSaved
+DealSaved
+    
     }
     listens {
       DealBrowse.CREATE -> CREATE
@@ -315,11 +321,12 @@ orbital DealOrbital {
         (emit DEAL_UPDATED)
     }
     emits {
-      DEAL_UPDATED
+DEAL_UPDATED
       DealLoadFailed
-      DealLoaded
+DealLoaded
       DealUpdateFailed
-      DealUpdated
+DealUpdated
+    
     }
     listens {
       DealBrowse.EDIT -> EDIT
@@ -333,6 +340,11 @@ orbital DealOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.closedAt "")
+        (set @entity.contactId "")
+        (set @entity.stage "")
+        (set @entity.title "")
+        (set @entity.value 0)
         (fetch Deal { emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
       VIEW -> open
         (fetch Deal {id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" }, emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
@@ -348,8 +360,8 @@ orbital DealOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      EDIT { id : string!, row : Deal }
-      DealLoaded
+EDIT { id : string!, row : Deal }
+DealLoaded
       DealLoadFailed
     }
     listens {
@@ -385,11 +397,12 @@ orbital DealOrbital {
         (fetch Deal { emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
     }
     emits {
-      DEAL_DELETED
+DEAL_DELETED
       DealDeleteFailed
-      DealDeleted
+DealDeleted
       DealLoadFailed
-      DealLoaded
+DealLoaded
+    
     }
     listens {
       DealBrowse.DELETE -> DELETE
@@ -415,6 +428,11 @@ orbital PipelineOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.conversionRate 0)
+        (set @entity.lostDeals 0)
+        (set @entity.totalDeals 0)
+        (set @entity.totalValue 0)
+        (set @entity.wonDeals 0)
         (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalDeals", value: "@entity.totalDeals" }, { type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "WonDeals", value: "@entity.wonDeals" }, { type: "stat-display", label: "LostDeals", value: "@entity.lostDeals" }, { type: "stat-display", label: "ConversionRate", value: "@entity.conversionRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -435,7 +453,7 @@ orbital PipelineOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalDeals", value: "@entity.totalDeals" }, { type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "WonDeals", value: "@entity.wonDeals" }, { type: "stat-display", label: "LostDeals", value: "@entity.lostDeals" }, { type: "stat-display", label: "ConversionRate", value: "@entity.conversionRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      PipelineLoaded
+PipelineLoaded
       PipelineLoadFailed
     }
 
@@ -470,9 +488,9 @@ orbital NoteOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load note" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      COMPOSE
+COMPOSE
       VIEW { id : string!, row : Note }
-      NoteLoaded
+NoteLoaded
       NoteLoadFailed
     }
     listens {
@@ -499,11 +517,12 @@ orbital NoteOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      SEND
+SEND
       NoteLoadFailed
-      NoteLoaded
+NoteLoaded
       NoteSaveFailed
-      NoteSaved
+NoteSaved
+    
     }
     listens {
       NoteBrowse.COMPOSE -> COMPOSE
@@ -515,6 +534,10 @@ orbital NoteOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.author "")
+        (set @entity.body "")
+        (set @entity.createdAt "")
+        (set @entity.subject "")
         (fetch Note { emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
       VIEW -> open
         (fetch Note {id: "@payload.id" , emit: { success: "NoteLoaded", failure: "NoteLoadFailed" }, emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
@@ -530,7 +553,7 @@ orbital NoteOrbital {
         (render-ui main { type: "box" })
     }
 emits {
-      NoteLoaded
+NoteLoaded
       NoteLoadFailed
     }
 

@@ -17,6 +17,8 @@ orbital SeqChallengeOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch SeqChallenge { emit: { success: "SeqChallengeLoaded", failure: "SeqChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Sequencer Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -32,7 +34,7 @@ orbital SeqChallengeOrbital {
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Sequencer Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
 emits {
-      SeqChallengeLoaded
+SeqChallengeLoaded
       SeqChallengeLoadFailed
     }
 
@@ -58,6 +60,8 @@ orbital BuildChallengeOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch BuildChallenge { emit: { success: "BuildChallengeLoaded", failure: "BuildChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -73,7 +77,7 @@ orbital BuildChallengeOrbital {
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
 emits {
-      BuildChallengeLoaded
+BuildChallengeLoaded
       BuildChallengeLoadFailed
     }
 
@@ -99,6 +103,8 @@ orbital EventChallengeOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch EventChallenge { emit: { success: "EventChallengeLoaded", failure: "EventChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Event Handler Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -114,7 +120,7 @@ orbital EventChallengeOrbital {
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Event Handler Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
 emits {
-      EventChallengeLoaded
+EventChallengeLoaded
       EventChallengeLoadFailed
     }
 
@@ -139,6 +145,10 @@ orbital StudentProgressOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.averageScore 0)
+        (set @entity.completedLessons 0)
+        (set @entity.streak 0)
+        (set @entity.totalLessons 0)
         (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -159,7 +169,7 @@ orbital StudentProgressOrbital {
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      StudentProgressLoaded
+StudentProgressLoaded
       StudentProgressLoadFailed
     }
 

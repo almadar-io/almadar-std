@@ -33,20 +33,20 @@ orbital CourseOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load course" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ENROLL -> external { id: string }
-      CREATE
+ENROLL -> external { id: string }
+CREATE
       VIEW { id : string!, row : Course }
-      EDIT { id : string!, row : Course }
-      DELETE { id : string!, row : Course }
-      CourseLoaded
+EDIT { id : string!, row : Course }
+DELETE { id : string!, row : Course }
+CourseLoaded
       CourseLoadFailed
-      CourseSaved
+CourseSaved
       CourseSaveFailed
-      CourseUpdated
+CourseUpdated
       CourseUpdateFailed
-      CourseDeleted
+CourseDeleted
       CourseDeleteFailed
-      EnrollmentSaved
+EnrollmentSaved
       EnrollmentSaveFailed
     }
     listens {
@@ -85,10 +85,10 @@ orbital CourseOrbital {
         (emit COURSE_CREATED)
     }
     emits {
-      COURSE_CREATED -> external { id: string }
-      CourseLoadFailed
+COURSE_CREATED -> external { id: string }
+CourseLoadFailed
       CourseLoaded
-      CourseSaveFailed
+CourseSaveFailed
       CourseSaved
     }
     listens {
@@ -121,10 +121,10 @@ orbital CourseOrbital {
         (emit COURSE_UPDATED)
     }
     emits {
-      COURSE_UPDATED -> external { id: string }
-      CourseLoadFailed
+COURSE_UPDATED -> external { id: string }
+CourseLoadFailed
       CourseLoaded
-      CourseUpdateFailed
+CourseUpdateFailed
       CourseUpdated
     }
     listens {
@@ -136,13 +136,18 @@ orbital CourseOrbital {
   }
   trait CourseView -> Course [interaction, collection] {
     emits {
-      EDIT { id : string }
-      CourseLoaded
+EDIT { id : string }
+CourseLoaded
       CourseLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.description "")
+        (set @entity.duration "")
+        (set @entity.instructor "")
+        (set @entity.level "Beginner")
+        (set @entity.title "")
         (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
       VIEW -> open
         (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
@@ -191,10 +196,10 @@ orbital CourseOrbital {
         (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
     }
     emits {
-      COURSE_DELETED -> external { id: string }
-      CourseDeleteFailed
+COURSE_DELETED -> external { id: string }
+CourseDeleteFailed
       CourseDeleted
-      CourseLoadFailed
+CourseLoadFailed
       CourseLoaded
     }
     listens {
@@ -223,6 +228,11 @@ orbital EnrollmentOrbital {
     initial: step1
     state step1 {
       INIT -> step1
+        (set @entity.courseId "")
+        (set @entity.email "")
+        (set @entity.enrolledAt "")
+        (set @entity.status "")
+        (set @entity.studentName "")
         (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       NEXT -> step2
@@ -255,10 +265,10 @@ orbital EnrollmentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
     emits {
-      COMPLETE_LESSON -> external { id: string }
-      EnrollmentLoadFailed
+COMPLETE_LESSON -> external { id: string }
+EnrollmentLoadFailed
       EnrollmentLoaded
-      EnrollmentSaveFailed
+EnrollmentSaveFailed
       EnrollmentSaved
     }
     listens {
@@ -285,6 +295,11 @@ orbital ProgressOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.courseName "")
+        (set @entity.lastActivity "")
+        (set @entity.lessonsCompleted 0)
+        (set @entity.percentComplete 0)
+        (set @entity.totalLessons 0)
         (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -305,7 +320,7 @@ orbital ProgressOrbital {
         (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      ProgressLoaded
+ProgressLoaded
       ProgressLoadFailed
     }
 

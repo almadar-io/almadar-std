@@ -25,6 +25,9 @@ orbital ServiceNodeOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.failureCount 0)
+        (set @entity.successCount 0)
+        (set @entity.threshold 5)
         (fetch ServiceNode { emit: { success: "ServiceNodeLoaded", failure: "ServiceNodeLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
       FAILURE -> open
@@ -47,13 +50,13 @@ orbital ServiceNodeOrbital {
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
     }
 emits {
-      ServiceNodeLoaded
+ServiceNodeLoaded
       ServiceNodeLoadFailed
-      LogEntrySaved
+LogEntrySaved
       LogEntrySaveFailed
-      LogEntryUpdated
+LogEntryUpdated
       LogEntryUpdateFailed
-      LogEntryDeleted
+LogEntryDeleted
       LogEntryDeleteFailed
     }
 
@@ -82,6 +85,10 @@ orbital AlertMetricOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.message "")
+        (set @entity.severity "")
+        (set @entity.source "")
+        (set @entity.timestamp "")
         (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -102,7 +109,7 @@ orbital AlertMetricOrbital {
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      AlertMetricLoaded
+AlertMetricLoaded
       AlertMetricLoadFailed
     }
 
@@ -141,11 +148,11 @@ orbital LogEntryOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load logentry" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CREATE
+CREATE
       VIEW { id : string!, row : LogEntry }
-      EDIT { id : string!, row : LogEntry }
-      DELETE { id : string!, row : LogEntry }
-      LogEntryLoaded
+EDIT { id : string!, row : LogEntry }
+DELETE { id : string!, row : LogEntry }
+LogEntryLoaded
       LogEntryLoadFailed
     }
     listens {
@@ -176,11 +183,12 @@ orbital LogEntryOrbital {
         (emit LOG_ENTRY_CREATED)
     }
     emits {
-      LOG_ENTRY_CREATED
+LOG_ENTRY_CREATED
       LogEntryLoadFailed
-      LogEntryLoaded
+LogEntryLoaded
       LogEntrySaveFailed
-      LogEntrySaved
+LogEntrySaved
+    
     }
     listens {
       LogEntryLoadFailed { error : string, code : string }
@@ -209,11 +217,12 @@ orbital LogEntryOrbital {
         (emit LOG_ENTRY_UPDATED)
     }
     emits {
-      LOG_ENTRY_UPDATED
+LOG_ENTRY_UPDATED
       LogEntryLoadFailed
-      LogEntryLoaded
+LogEntryLoaded
       LogEntryUpdateFailed
-      LogEntryUpdated
+LogEntryUpdated
+    
     }
     listens {
       LogEntryView.EDIT -> EDIT
@@ -225,13 +234,17 @@ orbital LogEntryOrbital {
   }
   trait LogEntryView -> LogEntry [interaction, collection] {
     emits {
-      EDIT { id : string }
-      LogEntryLoaded
+EDIT { id : string }
+LogEntryLoaded
       LogEntryLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.level "")
+        (set @entity.message "")
+        (set @entity.service "")
+        (set @entity.timestamp "")
         (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
       VIEW -> open
         (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
@@ -280,11 +293,12 @@ orbital LogEntryOrbital {
         (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
     }
     emits {
-      LOG_ENTRY_DELETED
+LOG_ENTRY_DELETED
       LogEntryDeleteFailed
-      LogEntryDeleted
+LogEntryDeleted
       LogEntryLoadFailed
-      LogEntryLoaded
+LogEntryLoaded
+    
     }
     listens {
       LogEntryLoadFailed { error : string, code : string }
@@ -309,6 +323,10 @@ orbital SystemMetricOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.name "")
+        (set @entity.trend "")
+        (set @entity.unit "")
+        (set @entity.value 0)
         (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -329,7 +347,7 @@ orbital SystemMetricOrbital {
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      SystemMetricLoaded
+SystemMetricLoaded
       SystemMetricLoadFailed
     }
 

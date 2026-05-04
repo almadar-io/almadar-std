@@ -40,26 +40,26 @@ orbital ProviderOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load provider" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      BOOK -> external { id: string }
-      CREATE
+BOOK -> external { id: string }
+CREATE
       VIEW { id : string!, row : Provider }
-      EDIT { id : string!, row : Provider }
-      DELETE { id : string!, row : Provider }
-      ProviderLoaded
+EDIT { id : string!, row : Provider }
+DELETE { id : string!, row : Provider }
+ProviderLoaded
       ProviderLoadFailed
-      ProviderSaved
+ProviderSaved
       ProviderSaveFailed
-      ProviderUpdated
+ProviderUpdated
       ProviderUpdateFailed
-      ProviderDeleted
+ProviderDeleted
       ProviderDeleteFailed
-      BookingSaved
+BookingSaved
       BookingSaveFailed
-      AppointmentSaved
+AppointmentSaved
       AppointmentSaveFailed
-      AppointmentUpdated
+AppointmentUpdated
       AppointmentUpdateFailed
-      AppointmentDeleted
+AppointmentDeleted
       AppointmentDeleteFailed
     }
     listens {
@@ -101,10 +101,10 @@ orbital ProviderOrbital {
         (emit PROVIDER_CREATED)
     }
     emits {
-      PROVIDER_CREATED -> external { id: string }
-      ProviderLoadFailed
+PROVIDER_CREATED -> external { id: string }
+ProviderLoadFailed
       ProviderLoaded
-      ProviderSaveFailed
+ProviderSaveFailed
       ProviderSaved
     }
     listens {
@@ -137,10 +137,10 @@ orbital ProviderOrbital {
         (emit PROVIDER_UPDATED)
     }
     emits {
-      PROVIDER_UPDATED -> external { id: string }
-      ProviderLoadFailed
+PROVIDER_UPDATED -> external { id: string }
+ProviderLoadFailed
       ProviderLoaded
-      ProviderUpdateFailed
+ProviderUpdateFailed
       ProviderUpdated
     }
     listens {
@@ -152,13 +152,19 @@ orbital ProviderOrbital {
   }
   trait ProviderView -> Provider [interaction, collection] {
     emits {
-      EDIT { id : string }
-      ProviderLoaded
+EDIT { id : string }
+ProviderLoaded
       ProviderLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.available true)
+        (set @entity.location "")
+        (set @entity.name "")
+        (set @entity.phone "")
+        (set @entity.rating 0)
+        (set @entity.specialty "")
         (fetch Provider { emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
       VIEW -> open
         (fetch Provider {id: "@payload.id" , emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" }, emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
@@ -207,10 +213,10 @@ orbital ProviderOrbital {
         (fetch Provider { emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
     }
     emits {
-      PROVIDER_DELETED -> external { id: string }
-      ProviderDeleteFailed
+PROVIDER_DELETED -> external { id: string }
+ProviderDeleteFailed
       ProviderDeleted
-      ProviderLoadFailed
+ProviderLoadFailed
       ProviderLoaded
     }
     listens {
@@ -240,6 +246,12 @@ orbital BookingOrbital {
     initial: step1
     state step1 {
       INIT -> step1
+        (set @entity.customerEmail "")
+        (set @entity.customerName "")
+        (set @entity.date "")
+        (set @entity.notes "")
+        (set @entity.providerName "")
+        (set @entity.time "")
         (fetch Booking { emit: { success: "BookingLoaded", failure: "BookingLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Book Appointment", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Provider Selection", "Your Details", "Date and Time"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Provider Selection", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["providerName"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       NEXT -> step2
@@ -280,9 +292,9 @@ orbital BookingOrbital {
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "Book Appointment", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Provider Selection", "Your Details", "Date and Time"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Provider Selection", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["providerName"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
 emits {
-      BookingLoadFailed
+BookingLoadFailed
       BookingLoaded
-      BookingSaveFailed
+BookingSaveFailed
       BookingSaved
     }
 
@@ -325,11 +337,11 @@ orbital AppointmentOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load appointment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CREATE
+CREATE
       VIEW { id : string!, row : Appointment }
-      EDIT { id : string!, row : Appointment }
-      DELETE { id : string!, row : Appointment }
-      AppointmentLoaded
+EDIT { id : string!, row : Appointment }
+DELETE { id : string!, row : Appointment }
+AppointmentLoaded
       AppointmentLoadFailed
     }
     listens {
@@ -360,11 +372,12 @@ orbital AppointmentOrbital {
         (emit APPOINTMENT_CREATED)
     }
     emits {
-      APPOINTMENT_CREATED
+APPOINTMENT_CREATED
       AppointmentLoadFailed
-      AppointmentLoaded
+AppointmentLoaded
       AppointmentSaveFailed
-      AppointmentSaved
+AppointmentSaved
+    
     }
     listens {
       AppointmentLoadFailed { error : string, code : string }
@@ -393,11 +406,12 @@ orbital AppointmentOrbital {
         (emit APPOINTMENT_UPDATED)
     }
     emits {
-      APPOINTMENT_UPDATED
+APPOINTMENT_UPDATED
       AppointmentLoadFailed
-      AppointmentLoaded
+AppointmentLoaded
       AppointmentUpdateFailed
-      AppointmentUpdated
+AppointmentUpdated
+    
     }
     listens {
       AppointmentView.EDIT -> EDIT
@@ -409,13 +423,19 @@ orbital AppointmentOrbital {
   }
   trait AppointmentView -> Appointment [interaction, collection] {
     emits {
-      EDIT { id : string }
-      AppointmentLoaded
+EDIT { id : string }
+AppointmentLoaded
       AppointmentLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.customerName "")
+        (set @entity.date "")
+        (set @entity.notes "")
+        (set @entity.providerName "")
+        (set @entity.status "")
+        (set @entity.time "")
         (fetch Appointment { emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
       VIEW -> open
         (fetch Appointment {id: "@payload.id" , emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" }, emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
@@ -463,11 +483,12 @@ orbital AppointmentOrbital {
         (fetch Appointment { emit: { success: "AppointmentLoaded", failure: "AppointmentLoadFailed" } })
     }
     emits {
-      APPOINTMENT_DELETED
+APPOINTMENT_DELETED
       AppointmentDeleteFailed
-      AppointmentDeleted
+AppointmentDeleted
       AppointmentLoadFailed
-      AppointmentLoaded
+AppointmentLoaded
+    
     }
     listens {
       AppointmentLoadFailed { error : string, code : string }
@@ -492,6 +513,10 @@ orbital ScheduleOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.availableSlots 0)
+        (set @entity.confirmedToday 0)
+        (set @entity.pendingBookings 0)
+        (set @entity.totalBookings 0)
         (fetch Schedule { emit: { success: "ScheduleLoaded", failure: "ScheduleLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Schedule Overview" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Schedule Overview", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "TotalBookings", value: "@entity.totalBookings" }, { type: "stat-display", label: "ConfirmedToday", value: "@entity.confirmedToday" }, { type: "stat-display", label: "PendingBookings", value: "@entity.pendingBookings" }, { type: "stat-display", label: "AvailableSlots", value: "@entity.availableSlots" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -512,7 +537,7 @@ orbital ScheduleOrbital {
         (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Schedule Overview" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Schedule Overview", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "TotalBookings", value: "@entity.totalBookings" }, { type: "stat-display", label: "ConfirmedToday", value: "@entity.confirmedToday" }, { type: "stat-display", label: "PendingBookings", value: "@entity.pendingBookings" }, { type: "stat-display", label: "AvailableSlots", value: "@entity.availableSlots" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      ScheduleLoaded
+ScheduleLoaded
       ScheduleLoadFailed
     }
 

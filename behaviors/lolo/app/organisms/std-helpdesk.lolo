@@ -33,20 +33,20 @@ orbital TicketOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load ticket" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ASSIGN -> external { id: string }
-      CREATE
+ASSIGN -> external { id: string }
+CREATE
       VIEW { id : string!, row : Ticket }
-      EDIT { id : string!, row : Ticket }
-      DELETE { id : string!, row : Ticket }
-      TicketLoaded
+EDIT { id : string!, row : Ticket }
+DELETE { id : string!, row : Ticket }
+TicketLoaded
       TicketLoadFailed
-      TicketSaved
+TicketSaved
       TicketSaveFailed
-      TicketUpdated
+TicketUpdated
       TicketUpdateFailed
-      TicketDeleted
+TicketDeleted
       TicketDeleteFailed
-      ResponseSaved
+ResponseSaved
       ResponseSaveFailed
     }
     listens {
@@ -85,10 +85,10 @@ orbital TicketOrbital {
         (emit TICKET_CREATED)
     }
     emits {
-      TICKET_CREATED -> external { id: string }
-      TicketLoadFailed
+TICKET_CREATED -> external { id: string }
+TicketLoadFailed
       TicketLoaded
-      TicketSaveFailed
+TicketSaveFailed
       TicketSaved
     }
     listens {
@@ -121,10 +121,10 @@ orbital TicketOrbital {
         (emit TICKET_UPDATED)
     }
     emits {
-      TICKET_UPDATED -> external { id: string }
-      TicketLoadFailed
+TICKET_UPDATED -> external { id: string }
+TicketLoadFailed
       TicketLoaded
-      TicketUpdateFailed
+TicketUpdateFailed
       TicketUpdated
     }
     listens {
@@ -136,13 +136,18 @@ orbital TicketOrbital {
   }
   trait TicketView -> Ticket [interaction, collection] {
     emits {
-      EDIT { id : string }
-      TicketLoaded
+EDIT { id : string }
+TicketLoaded
       TicketLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.assignee "")
+        (set @entity.description "")
+        (set @entity.priority "medium")
+        (set @entity.status "open")
+        (set @entity.subject "")
         (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
       VIEW -> open
         (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
@@ -191,10 +196,10 @@ orbital TicketOrbital {
         (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
     }
     emits {
-      TICKET_DELETED -> external { id: string }
-      TicketDeleteFailed
+TICKET_DELETED -> external { id: string }
+TicketDeleteFailed
       TicketDeleted
-      TicketLoadFailed
+TicketLoadFailed
       TicketLoaded
     }
     listens {
@@ -229,10 +234,10 @@ orbital ResponseOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load response" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      RESOLVE -> external { id: string }
-      COMPOSE
+RESOLVE -> external { id: string }
+COMPOSE
       VIEW { id : string!, row : Response }
-      ResponseLoaded
+ResponseLoaded
       ResponseLoadFailed
     }
     listens {
@@ -260,11 +265,12 @@ orbital ResponseOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      SEND
+SEND
       ResponseLoadFailed
-      ResponseLoaded
+ResponseLoaded
       ResponseSaveFailed
-      ResponseSaved
+ResponseSaved
+    
     }
     listens {
       ResponseLoadFailed { error : string, code : string }
@@ -276,6 +282,10 @@ orbital ResponseOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.author "")
+        (set @entity.body "")
+        (set @entity.createdAt "")
+        (set @entity.ticketId "")
         (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
       VIEW -> open
         (fetch Response {id: "@payload.id" , emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" }, emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
@@ -291,7 +301,7 @@ orbital ResponseOrbital {
         (render-ui main { type: "box" })
     }
 emits {
-      ResponseLoaded
+ResponseLoaded
       ResponseLoadFailed
     }
 
@@ -319,6 +329,11 @@ orbital SupportMetricsOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.activeAgents 0)
+        (set @entity.avgResponseTime "")
+        (set @entity.openTickets 0)
+        (set @entity.resolvedTickets 0)
+        (set @entity.satisfactionScore 0)
         (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -339,7 +354,7 @@ orbital SupportMetricsOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      SupportMetricsLoaded
+SupportMetricsLoaded
       SupportMetricsLoadFailed
     }
 

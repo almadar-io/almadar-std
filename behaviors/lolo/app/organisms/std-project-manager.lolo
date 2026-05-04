@@ -39,23 +39,23 @@ orbital TaskOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load task" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CREATE
+CREATE
       VIEW { id : string!, row : Task }
-      EDIT { id : string!, row : Task }
-      DELETE { id : string!, row : Task }
-      TaskLoaded
+EDIT { id : string!, row : Task }
+DELETE { id : string!, row : Task }
+TaskLoaded
       TaskLoadFailed
-      TaskSaved
+TaskSaved
       TaskSaveFailed
-      TaskUpdated
+TaskUpdated
       TaskUpdateFailed
-      TaskDeleted
+TaskDeleted
       TaskDeleteFailed
-      SprintSaved
+SprintSaved
       SprintSaveFailed
-      SprintUpdated
+SprintUpdated
       SprintUpdateFailed
-      SprintDeleted
+SprintDeleted
       SprintDeleteFailed
     }
     listens {
@@ -97,10 +97,10 @@ orbital TaskOrbital {
         (emit TASK_CREATED)
     }
     emits {
-      TASK_CREATED -> external { id: string }
-      TaskLoadFailed
+TASK_CREATED -> external { id: string }
+TaskLoadFailed
       TaskLoaded
-      TaskSaveFailed
+TaskSaveFailed
       TaskSaved
     }
     listens {
@@ -133,10 +133,10 @@ orbital TaskOrbital {
         (emit TASK_UPDATED)
     }
     emits {
-      TASK_UPDATED -> external { id: string }
-      TaskLoadFailed
+TASK_UPDATED -> external { id: string }
+TaskLoadFailed
       TaskLoaded
-      TaskUpdateFailed
+TaskUpdateFailed
       TaskUpdated
     }
     listens {
@@ -148,13 +148,20 @@ orbital TaskOrbital {
   }
   trait TaskView -> Task [interaction, collection] {
     emits {
-      EDIT { id : string }
-      TaskLoaded
+EDIT { id : string }
+TaskLoaded
       TaskLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.assignee "")
+        (set @entity.description "")
+        (set @entity.dueDate "")
+        (set @entity.priority "medium")
+        (set @entity.status "todo")
+        (set @entity.storyPoints 0)
+        (set @entity.title "")
         (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
       VIEW -> open
         (fetch Task {id: "@payload.id" , emit: { success: "TaskLoaded", failure: "TaskLoadFailed" }, emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
@@ -203,10 +210,10 @@ orbital TaskOrbital {
         (fetch Task { emit: { success: "TaskLoaded", failure: "TaskLoadFailed" } })
     }
     emits {
-      TASK_DELETED -> external { id: string }
-      TaskDeleteFailed
+TASK_DELETED -> external { id: string }
+TaskDeleteFailed
       TaskDeleted
-      TaskLoadFailed
+TaskLoadFailed
       TaskLoaded
     }
     listens {
@@ -248,13 +255,13 @@ orbital SprintOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load sprint" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ASSIGN_TASK -> external { id: string }
-      COMPLETE_SPRINT -> external { id: string }
-      CREATE
+ASSIGN_TASK -> external { id: string }
+COMPLETE_SPRINT -> external { id: string }
+CREATE
       VIEW { id : string!, row : Sprint }
-      EDIT { id : string!, row : Sprint }
-      DELETE { id : string!, row : Sprint }
-      SprintLoaded
+EDIT { id : string!, row : Sprint }
+DELETE { id : string!, row : Sprint }
+SprintLoaded
       SprintLoadFailed
     }
     listens {
@@ -285,11 +292,12 @@ orbital SprintOrbital {
         (emit SPRINT_CREATED)
     }
     emits {
-      SPRINT_CREATED
+SPRINT_CREATED
       SprintLoadFailed
-      SprintLoaded
+SprintLoaded
       SprintSaveFailed
-      SprintSaved
+SprintSaved
+    
     }
     listens {
       SprintLoadFailed { error : string, code : string }
@@ -318,11 +326,12 @@ orbital SprintOrbital {
         (emit SPRINT_UPDATED)
     }
     emits {
-      SPRINT_UPDATED
+SPRINT_UPDATED
       SprintLoadFailed
-      SprintLoaded
+SprintLoaded
       SprintUpdateFailed
-      SprintUpdated
+SprintUpdated
+    
     }
     listens {
       SprintView.EDIT -> EDIT
@@ -334,13 +343,19 @@ orbital SprintOrbital {
   }
   trait SprintView -> Sprint [interaction, collection] {
     emits {
-      EDIT { id : string }
-      SprintLoaded
+EDIT { id : string }
+SprintLoaded
       SprintLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.endDate "")
+        (set @entity.goal "")
+        (set @entity.name "")
+        (set @entity.startDate "")
+        (set @entity.status "todo")
+        (set @entity.taskCount 0)
         (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
       VIEW -> open
         (fetch Sprint {id: "@payload.id" , emit: { success: "SprintLoaded", failure: "SprintLoadFailed" }, emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
@@ -388,11 +403,12 @@ orbital SprintOrbital {
         (fetch Sprint { emit: { success: "SprintLoaded", failure: "SprintLoadFailed" } })
     }
     emits {
-      SPRINT_DELETED
+SPRINT_DELETED
       SprintDeleteFailed
-      SprintDeleted
+SprintDeleted
       SprintLoadFailed
-      SprintLoaded
+SprintLoaded
+    
     }
     listens {
       SprintLoadFailed { error : string, code : string }
@@ -418,6 +434,11 @@ orbital BurndownOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.completedPoints 0)
+        (set @entity.daysRemaining 0)
+        (set @entity.remainingPoints 0)
+        (set @entity.totalPoints 0)
+        (set @entity.velocity 0)
         (fetch Burndown { emit: { success: "BurndownLoaded", failure: "BurndownLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 5, children: [{ type: "stat-display", label: "TotalPoints", value: "@entity.totalPoints" }, { type: "stat-display", label: "CompletedPoints", value: "@entity.completedPoints" }, { type: "stat-display", label: "RemainingPoints", value: "@entity.remainingPoints" }, { type: "stat-display", label: "Velocity", value: "@entity.velocity" }, { type: "stat-display", label: "DaysRemaining", value: "@entity.daysRemaining" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
@@ -438,7 +459,7 @@ orbital BurndownOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 5, children: [{ type: "stat-display", label: "TotalPoints", value: "@entity.totalPoints" }, { type: "stat-display", label: "CompletedPoints", value: "@entity.completedPoints" }, { type: "stat-display", label: "RemainingPoints", value: "@entity.remainingPoints" }, { type: "stat-display", label: "Velocity", value: "@entity.velocity" }, { type: "stat-display", label: "DaysRemaining", value: "@entity.daysRemaining" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
 emits {
-      BurndownLoaded
+BurndownLoaded
       BurndownLoadFailed
     }
 

@@ -292,8 +292,8 @@
                     "FormEntry",
                     {
                       "emit": {
-                        "success": "FormEntryLoaded",
-                        "failure": "FormEntryLoadFailed"
+                        "failure": "FormEntryLoadFailed",
+                        "success": "FormEntryLoaded"
                       }
                     }
                   ],
@@ -312,30 +312,31 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
+                              "type": "typography",
                               "content": "FormEntry Form",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cancelEvent": "INIT",
+                          "mode": "create",
                           "submitEvent": "SUBMIT",
                           "fields": [
                             {
@@ -343,18 +344,18 @@
                               "label": "Name"
                             },
                             {
-                              "name": "description",
-                              "label": "Description"
+                              "label": "Description",
+                              "name": "description"
                             },
                             {
                               "name": "status",
-                              "type": "enum",
                               "values": [
                                 "active",
                                 "inactive",
                                 "pending"
                               ],
-                              "label": "Status"
+                              "label": "Status",
+                              "type": "enum"
                             },
                             {
                               "name": "notes",
@@ -362,23 +363,23 @@
                               "type": "textarea"
                             },
                             {
-                              "type": "number",
+                              "label": "Age",
                               "name": "age",
-                              "label": "Age"
+                              "type": "number"
                             },
                             {
-                              "type": "boolean",
                               "name": "isActive",
-                              "label": "Is Active"
+                              "label": "Is Active",
+                              "type": "boolean"
                             },
                             {
-                              "label": "Birth Date",
                               "name": "birthDate",
+                              "label": "Birth Date",
                               "type": "date"
                             },
                             {
-                              "name": "priority",
                               "label": "Priority",
+                              "name": "priority",
                               "type": "enum",
                               "values": [
                                 "low",
@@ -388,20 +389,19 @@
                               ]
                             },
                             {
-                              "name": "categoryId",
-                              "type": "relation",
                               "label": "Category ID",
                               "relation": {
-                                "entity": "FormEntry",
-                                "cardinality": "many-to-one"
-                              }
+                                "cardinality": "many-to-one",
+                                "entity": "FormEntry"
+                              },
+                              "type": "relation",
+                              "name": "categoryId"
                             }
                           ],
-                          "type": "form-section",
-                          "mode": "create"
+                          "type": "form-section"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -463,8 +463,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "FormEntrySaved",
-                        "failure": "FormEntrySaveFailed"
+                        "failure": "FormEntrySaveFailed",
+                        "success": "FormEntrySaved"
                       }
                     }
                   ],
@@ -472,15 +472,18 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
+                          "type": "typography",
                           "content": "Form Submitted",
-                          "variant": "h2",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
                           "type": "alert",
@@ -488,185 +491,182 @@
                           "message": "Your form has been submitted successfully."
                         },
                         {
+                          "cols": 2.0,
+                          "type": "grid",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "vertical",
                               "gap": "xs",
                               "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Name",
+                                  "color": "muted",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "content": "Name"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@entity.name"
                                 }
-                              ]
-                            },
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Description",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.description"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Status",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.status",
-                                  "variant": "body"
-                                }
                               ],
                               "direction": "vertical"
                             },
                             {
                               "type": "stack",
-                              "gap": "xs",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Notes",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "content": "Description"
+                                },
+                                {
+                                  "content": "@entity.description",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "xs"
+                            },
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Status"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
+                                  "content": "@entity.status"
+                                }
+                              ],
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.notes"
                                 }
                               ],
-                              "direction": "vertical"
+                              "type": "stack"
                             },
                             {
                               "direction": "vertical",
                               "type": "stack",
+                              "gap": "xs",
                               "children": [
                                 {
                                   "color": "muted",
                                   "type": "typography",
-                                  "content": "Age",
+                                  "variant": "caption",
+                                  "content": "Age"
+                                },
+                                {
+                                  "content": "@entity.age",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Is Active"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.isActive"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Birth Date",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.birthDate"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Priority",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.priority"
+                                }
+                              ],
+                              "gap": "xs",
+                              "direction": "vertical"
+                            },
+                            {
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Category ID",
+                                  "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.age",
+                                  "content": "@entity.categoryId",
                                   "variant": "body"
-                                }
-                              ],
-                              "gap": "xs"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Is Active",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.isActive",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Birth Date"
-                                },
-                                {
-                                  "content": "@entity.birthDate",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "xs",
-                              "direction": "vertical"
-                            },
-                            {
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Priority"
-                                },
-                                {
-                                  "content": "@entity.priority",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "xs"
-                            },
-                            {
-                              "gap": "xs",
-                              "direction": "vertical",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Category ID"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.categoryId"
                                 }
                               ]
                             }
-                          ],
-                          "gap": "md",
-                          "type": "grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "action": "RESET",
-                          "variant": "primary",
                           "icon": "plus",
                           "type": "button",
+                          "action": "RESET",
+                          "variant": "primary",
                           "label": "New Entry"
                         }
                       ],
-                      "gap": "lg",
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -701,34 +701,39 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
+                              "content": "FormEntry Form",
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "FormEntry Form"
+                              "variant": "h2"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "form-section",
+                          "submitEvent": "SUBMIT",
                           "cancelEvent": "INIT",
                           "mode": "create",
                           "fields": [
                             {
-                              "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "name": "name"
                             },
                             {
                               "name": "description",
@@ -737,43 +742,43 @@
                             {
                               "name": "status",
                               "label": "Status",
+                              "type": "enum",
                               "values": [
                                 "active",
                                 "inactive",
                                 "pending"
-                              ],
-                              "type": "enum"
+                              ]
                             },
                             {
-                              "name": "notes",
                               "label": "Notes",
+                              "name": "notes",
                               "type": "textarea"
                             },
                             {
+                              "label": "Age",
                               "type": "number",
-                              "name": "age",
-                              "label": "Age"
+                              "name": "age"
                             },
                             {
-                              "name": "isActive",
+                              "label": "Is Active",
                               "type": "boolean",
-                              "label": "Is Active"
+                              "name": "isActive"
                             },
                             {
                               "name": "birthDate",
-                              "label": "Birth Date",
-                              "type": "date"
+                              "type": "date",
+                              "label": "Birth Date"
                             },
                             {
-                              "label": "Priority",
                               "name": "priority",
+                              "type": "enum",
+                              "label": "Priority",
                               "values": [
                                 "low",
                                 "medium",
                                 "high",
                                 "critical"
-                              ],
-                              "type": "enum"
+                              ]
                             },
                             {
                               "label": "Category ID",
@@ -784,14 +789,9 @@
                               },
                               "name": "categoryId"
                             }
-                          ],
-                          "type": "form-section",
-                          "submitEvent": "SUBMIT"
+                          ]
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

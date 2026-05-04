@@ -28,14 +28,14 @@ orbital PostOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load post" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      COMMENT -> external { id: string }
-      CREATE
+COMMENT -> external { id: string }
+CREATE
       VIEW { id : string!, row : Post }
-      PostLoaded
+PostLoaded
       PostLoadFailed
-      PostSaved
+PostSaved
       PostSaveFailed
-      CommentSaved
+CommentSaved
       CommentSaveFailed
     }
     listens {
@@ -66,9 +66,9 @@ orbital PostOrbital {
         (render-ui main { type: "box" })
     }
 emits {
-      PostLoadFailed
+PostLoadFailed
       PostLoaded
-      PostSaveFailed
+PostSaveFailed
       PostSaved
     }
 
@@ -82,6 +82,11 @@ emits {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.author "")
+        (set @entity.content "")
+        (set @entity.createdAt "")
+        (set @entity.likes 0)
+        (set @entity.title "")
         (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
       VIEW -> open
         (fetch Post {id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" }, emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
@@ -97,7 +102,7 @@ emits {
         (render-ui main { type: "box" })
     }
 emits {
-      PostLoaded
+PostLoaded
       PostLoadFailed
     }
 
@@ -134,9 +139,9 @@ orbital CommentOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load comment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      COMPOSE
+COMPOSE
       VIEW { id : string!, row : Comment }
-      CommentLoaded
+CommentLoaded
       CommentLoadFailed
     }
     listens {
@@ -164,11 +169,12 @@ orbital CommentOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      SEND
+SEND
       CommentLoadFailed
-      CommentLoaded
+CommentLoaded
       CommentSaveFailed
-      CommentSaved
+CommentSaved
+    
     }
     listens {
       CommentLoadFailed { error : string, code : string }
@@ -180,6 +186,10 @@ orbital CommentOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.author "")
+        (set @entity.body "")
+        (set @entity.createdAt "")
+        (set @entity.postId "")
         (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
       VIEW -> open
         (fetch Comment {id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" }, emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
@@ -195,7 +205,7 @@ orbital CommentOrbital {
         (render-ui main { type: "box" })
     }
 emits {
-      CommentLoaded
+CommentLoaded
       CommentLoadFailed
     }
 

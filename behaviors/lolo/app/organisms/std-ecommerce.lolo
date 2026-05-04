@@ -44,30 +44,30 @@ orbital ProductOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load product" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      ADD_TO_CART -> external { id: string }
-      CREATE
+ADD_TO_CART -> external { id: string }
+CREATE
       VIEW { id : string!, row : Product }
-      EDIT { id : string!, row : Product }
-      DELETE { id : string!, row : Product }
-      ProductLoaded
+EDIT { id : string!, row : Product }
+DELETE { id : string!, row : Product }
+ProductLoaded
       ProductLoadFailed
-      ProductSaved
+ProductSaved
       ProductSaveFailed
-      ProductUpdated
+ProductUpdated
       ProductUpdateFailed
-      ProductDeleted
+ProductDeleted
       ProductDeleteFailed
-      CartItemSaved
+CartItemSaved
       CartItemSaveFailed
-      CartItemDeleted
+CartItemDeleted
       CartItemDeleteFailed
-      CheckoutSaved
+CheckoutSaved
       CheckoutSaveFailed
-      OrderRecordSaved
+OrderRecordSaved
       OrderRecordSaveFailed
-      OrderRecordUpdated
+OrderRecordUpdated
       OrderRecordUpdateFailed
-      OrderRecordDeleted
+OrderRecordDeleted
       OrderRecordDeleteFailed
     }
     listens {
@@ -111,10 +111,10 @@ orbital ProductOrbital {
         (emit PRODUCT_CREATED)
     }
     emits {
-      PRODUCT_CREATED -> external { id: string }
-      ProductLoadFailed
+PRODUCT_CREATED -> external { id: string }
+ProductLoadFailed
       ProductLoaded
-      ProductSaveFailed
+ProductSaveFailed
       ProductSaved
     }
     listens {
@@ -147,10 +147,10 @@ orbital ProductOrbital {
         (emit PRODUCT_UPDATED)
     }
     emits {
-      PRODUCT_UPDATED -> external { id: string }
-      ProductLoadFailed
+PRODUCT_UPDATED -> external { id: string }
+ProductLoadFailed
       ProductLoaded
-      ProductUpdateFailed
+ProductUpdateFailed
       ProductUpdated
     }
     listens {
@@ -162,13 +162,19 @@ orbital ProductOrbital {
   }
   trait ProductView -> Product [interaction, collection] {
     emits {
-      EDIT { id : string }
-      ProductLoaded
+EDIT { id : string }
+ProductLoaded
       ProductLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.category "")
+        (set @entity.description "")
+        (set @entity.inStock true)
+        (set @entity.name "")
+        (set @entity.price 0)
+        (set @entity.sku "")
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       VIEW -> open
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
@@ -217,10 +223,10 @@ orbital ProductOrbital {
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
     }
     emits {
-      PRODUCT_DELETED -> external { id: string }
-      ProductDeleteFailed
+PRODUCT_DELETED -> external { id: string }
+ProductDeleteFailed
       ProductDeleted
-      ProductLoadFailed
+ProductLoadFailed
       ProductLoaded
     }
     listens {
@@ -271,10 +277,10 @@ orbital CartItemOrbital {
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Order Confirmed", variant: "h2" }, { type: "typography", content: "Your order has been placed successfully.", variant: "body" }, { type: "button", label: "Continue Shopping", action: "INIT", variant: "primary" }] }] })
     }
     emits {
-      CHECKOUT_STARTED -> external { id: string }
-      ADD_ITEM
+CHECKOUT_STARTED -> external { id: string }
+ADD_ITEM
       REQUEST_REMOVE { id : string!, row : CartItem }
-      CartItemLoaded
+CartItemLoaded
       CartItemLoadFailed
     }
     listens {
@@ -302,9 +308,9 @@ orbital CartItemOrbital {
         (render-ui main { type: "box" })
     }
 emits {
-      CartItemLoadFailed
+CartItemLoadFailed
       CartItemLoaded
-      CartItemSaveFailed
+CartItemSaveFailed
       CartItemSaved
     }
 
@@ -340,9 +346,9 @@ emits {
         (fetch CartItem { emit: { success: "CartItemLoaded", failure: "CartItemLoadFailed" } })
     }
 emits {
-      CartItemDeleteFailed
+CartItemDeleteFailed
       CartItemDeleted
-      CartItemLoadFailed
+CartItemLoadFailed
       CartItemLoaded
     }
 
@@ -373,6 +379,12 @@ orbital CheckoutOrbital {
     initial: step1
     state step1 {
       INIT -> step1
+        (set @entity.customerName "")
+        (set @entity.email "")
+        (set @entity.orderTotal 0)
+        (set @entity.paymentMethod "")
+        (set @entity.shippingAddress "")
+        (set @entity.status "")
         (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       NEXT -> step2
@@ -413,10 +425,10 @@ orbital CheckoutOrbital {
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
     }
     emits {
-      ORDER_PLACED -> external { id: string }
-      CheckoutLoadFailed
+ORDER_PLACED -> external { id: string }
+CheckoutLoadFailed
       CheckoutLoaded
-      CheckoutSaveFailed
+CheckoutSaveFailed
       CheckoutSaved
     }
     listens {
@@ -458,11 +470,11 @@ orbital OrderRecordOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load orderrecord" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-      CREATE
+CREATE
       VIEW { id : string!, row : OrderRecord }
-      EDIT { id : string!, row : OrderRecord }
-      DELETE { id : string!, row : OrderRecord }
-      OrderRecordLoaded
+EDIT { id : string!, row : OrderRecord }
+DELETE { id : string!, row : OrderRecord }
+OrderRecordLoaded
       OrderRecordLoadFailed
     }
     listens {
@@ -494,11 +506,12 @@ orbital OrderRecordOrbital {
         (emit ORDER_RECORD_CREATED)
     }
     emits {
-      ORDER_RECORD_CREATED
+ORDER_RECORD_CREATED
       OrderRecordLoadFailed
-      OrderRecordLoaded
+OrderRecordLoaded
       OrderRecordSaveFailed
-      OrderRecordSaved
+OrderRecordSaved
+    
     }
     listens {
       OrderRecordLoadFailed { error : string, code : string }
@@ -527,11 +540,12 @@ orbital OrderRecordOrbital {
         (emit ORDER_RECORD_UPDATED)
     }
     emits {
-      ORDER_RECORD_UPDATED
+ORDER_RECORD_UPDATED
       OrderRecordLoadFailed
-      OrderRecordLoaded
+OrderRecordLoaded
       OrderRecordUpdateFailed
-      OrderRecordUpdated
+OrderRecordUpdated
+    
     }
     listens {
       OrderRecordView.EDIT -> EDIT
@@ -543,13 +557,19 @@ orbital OrderRecordOrbital {
   }
   trait OrderRecordView -> OrderRecord [interaction, collection] {
     emits {
-      EDIT { id : string }
-      OrderRecordLoaded
+EDIT { id : string }
+OrderRecordLoaded
       OrderRecordLoadFailed
     }
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.customerName "")
+        (set @entity.email "")
+        (set @entity.orderTotal 0)
+        (set @entity.paymentMethod "")
+        (set @entity.shippingAddress "")
+        (set @entity.status "")
         (fetch OrderRecord { emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
       VIEW -> open
         (fetch OrderRecord {id: "@payload.id" , emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" }, emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
@@ -597,11 +617,12 @@ orbital OrderRecordOrbital {
         (fetch OrderRecord { emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
     }
     emits {
-      ORDER_RECORD_DELETED
+ORDER_RECORD_DELETED
       OrderRecordDeleteFailed
-      OrderRecordDeleted
+OrderRecordDeleted
       OrderRecordLoadFailed
-      OrderRecordLoaded
+OrderRecordLoaded
+    
     }
     listens {
       OrderRecordLoadFailed { error : string, code : string }
