@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -23,9 +23,9 @@ export interface StdTrainLoopParams {
   /** Entity fields (id is auto-added) */
   fields: EntityField[];
   /** Static JSON architecture tree */
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Training configuration (epochs, optimizer, loss, lr, etc.) */
-  trainingConfig: Record<string, unknown>;
+  trainingConfig: TraitConfig;
   /** Event that starts training (default: "START_TRAINING") */
   startEvent?: string;
   /** Event emitted after each epoch (default: "EPOCH_COMPLETE") */
@@ -51,8 +51,8 @@ export interface StdTrainLoopParams {
 interface TrainLoopConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
-  trainingConfig: Record<string, unknown>;
+  architecture: TraitConfig;
+  trainingConfig: TraitConfig;
   startEvent: string;
   epochEvent: string;
   doneEvent: string;
@@ -172,7 +172,7 @@ function buildTrait(c: TrainLoopConfig): Trait {
   };
 
   // Build the train effect s-expression
-  const trainEffect: unknown[] = ['train', 'primary', {
+  const trainEffect: SExpr[] = ['train', 'primary', {
     architecture: c.architecture,
     config: c.trainingConfig,
     'on-epoch': epochEvent,

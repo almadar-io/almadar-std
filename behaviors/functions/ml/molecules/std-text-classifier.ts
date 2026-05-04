@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
@@ -25,7 +25,7 @@ export interface StdTextClassifierParams {
   /** Entity field containing the source text to classify */
   sourceField: string;
   /** Classification model architecture */
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Class labels, e.g. ["positive", "negative", "neutral"] */
   classes: string[];
   /** Tokenization method. Default: "whitespace" */
@@ -45,7 +45,7 @@ interface TextClassifierConfig {
   entityName: string;
   fields: EntityField[];
   sourceField: string;
-  architecture: unknown;
+  architecture: TraitConfig;
   classes: string[];
   tokenizerMethod: string;
   maxLength: number;
@@ -127,7 +127,7 @@ function buildTokenizerTrait(c: TextClassifierConfig): Trait {
     ],
   };
 
-  const tokenizeEffect: unknown[] = ['tokenize', 'primary', {
+  const tokenizeEffect: SExpr[] = ['tokenize', 'primary', {
     method: tokenizerMethod,
     input: `@entity.${sourceField}`,
     maxLength,
@@ -212,7 +212,7 @@ function buildTextClassifyTrait(c: TextClassifierConfig): Trait {
     ],
   };
 
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@payload.tokens',
     'output-contract': { type: 'tensor', shape: [classes.length], dtype: 'float32', labels: classes, activation: 'softmax' },

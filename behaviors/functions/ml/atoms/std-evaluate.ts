@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -23,7 +23,7 @@ export interface StdEvaluateParams {
   /** Entity fields (id is auto-added) */
   fields: EntityField[];
   /** Static JSON architecture tree */
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Metric names to track (e.g., ["accuracy", "f1", "precision", "recall"]) */
   metrics: string[];
   /** Event that triggers evaluation (default: "EVALUATE") */
@@ -49,7 +49,7 @@ export interface StdEvaluateParams {
 interface EvaluateConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   metrics: string[];
   evaluateEvent: string;
   doneEvent: string;
@@ -137,14 +137,14 @@ function buildTrait(c: EvaluateConfig): Trait {
   };
 
   // Build the evaluate effect s-expression
-  const evaluateEffect: unknown[] = ['evaluate', 'primary', {
+  const evaluateEffect: SExpr[] = ['evaluate', 'primary', {
     architecture: c.architecture,
     metrics: c.metrics,
     'on-complete': doneEvent,
   }];
 
   // Build set-effects for each metric from payload
-  const metricSetEffects: unknown[][] = metrics.map(m => ['set', `@entity.${m}`, `@payload.${m}`]);
+  const metricSetEffects: SExpr[][] = metrics.map(m => ['set', `@entity.${m}`, `@payload.${m}`]);
 
   return {
     name: c.traitName,

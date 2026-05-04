@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -23,11 +23,11 @@ export interface StdForwardParams {
   /** Entity fields (id is auto-added) */
   fields: EntityField[];
   /** Static JSON architecture tree */
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Input validation contract */
-  inputContract?: unknown;
+  inputContract?: TraitConfig;
   /** Output validation contract */
-  outputContract?: unknown;
+  outputContract?: TraitConfig;
   /** Event that triggers inference (default: "PREDICT") */
   inputEvent?: string;
   /** Event emitted when inference completes (default: "PREDICTION_READY") */
@@ -51,7 +51,7 @@ export interface StdForwardParams {
 interface ForwardConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   inputContract: unknown | undefined;
   outputContract: unknown | undefined;
   inputEvent: string;
@@ -166,7 +166,7 @@ function buildTrait(c: ForwardConfig): Trait {
   };
 
   // Build the forward effect s-expression
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@payload.input',
     'input-contract': c.inputContract,

@@ -21,7 +21,7 @@ the persistence side is done.
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-filter';
@@ -51,7 +51,7 @@ export interface StdFilterFilterPayload {
  */
 export interface StdFilterConfig {
   /** Default: `[]` */
-  filters?: unknown[];
+  filters?: TraitConfig[];
   /** Default: `"FILTER"` */
   event?: string;
 }
@@ -75,9 +75,9 @@ export interface StdFilterParams {
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
   events?: Partial<Record<StdFilterEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, unknown[]>;
+  effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
-  listens?: unknown[];
+  listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
   /** Typed call-site config block — see the per-field interface. */
@@ -94,8 +94,8 @@ export function stdFilterTrait(params: StdFilterParams): TraitReference {
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });

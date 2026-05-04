@@ -27,16 +27,18 @@
  * @packageDocumentation
  */
 
+import type { TraitConfig } from '@almadar/core/types';
+
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface DomainViewConfig {
   displayPattern?: string;
-  customRenderItem?: unknown;
-  displayColumns?: unknown[];
-  statsBar?: unknown[];
-  displayProps?: Record<string, unknown>;
+  customRenderItem?: TraitConfig;
+  displayColumns?: TraitConfig[];
+  statsBar?: TraitConfig[];
+  displayProps?: TraitConfig;
 }
 
 // ============================================================================

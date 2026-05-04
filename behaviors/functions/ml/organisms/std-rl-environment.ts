@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, TraitConfig } from '@almadar/core/types';
 
 // ============================================================================
 // Params
@@ -24,12 +24,12 @@ import type { OrbitalSchema } from '@almadar/core/types';
 
 export interface StdRlEnvironmentParams {
   appName?: string;
-  agentArchitecture: unknown;
+  agentArchitecture: TraitConfig;
   observationDim: number;
   actionCount: number;
   maxEpisodeSteps?: number;
   bufferSize?: number;
-  trainingConfig?: Record<string, unknown>;
+  trainingConfig?: TraitConfig;
 }
 
 // ============================================================================

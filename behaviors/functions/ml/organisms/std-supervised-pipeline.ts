@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, EntityField } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField, TraitConfig } from '@almadar/core/types';
 
 // ============================================================================
 // Params
@@ -23,11 +23,11 @@ import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 
 export interface StdSupervisedPipelineParams {
   appName?: string;
-  architecture: unknown;
+  architecture: TraitConfig;
   dataFields?: EntityField[];
   targetField?: string;
   classes?: string[];
-  trainingConfig?: Record<string, unknown>;
+  trainingConfig?: TraitConfig;
   metrics?: string[];
   bufferSize?: number;
 }

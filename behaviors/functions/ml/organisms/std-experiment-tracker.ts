@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, TraitConfig } from '@almadar/core/types';
 
 // ============================================================================
 // Params
@@ -21,10 +21,10 @@ import type { OrbitalSchema } from '@almadar/core/types';
 
 export interface StdExperimentTrackerParams {
   appName?: string;
-  architecture: unknown;
+  architecture: TraitConfig;
   experiments: Array<{
     name: string;
-    config: Record<string, unknown>;
+    config: TraitConfig;
   }>;
   comparisonMetric?: string;
 }

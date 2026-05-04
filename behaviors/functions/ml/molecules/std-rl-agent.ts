@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
@@ -24,7 +24,7 @@ import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/bu
 
 export interface StdRlAgentParams {
   entityName: string;
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Entity fields that represent observations */
   observationFields: string[];
   /** Number of discrete actions the agent can take */
@@ -32,7 +32,7 @@ export interface StdRlAgentParams {
   /** Max transitions in replay buffer. Default: 1000 */
   bufferSize?: number;
   /** Training hyperparameters */
-  trainingConfig?: Record<string, unknown>;
+  trainingConfig?: TraitConfig;
   /** Reward discount factor. Default: 0.99 */
   discountFactor?: number;
   pageName?: string;
@@ -47,11 +47,11 @@ export interface StdRlAgentParams {
 interface RlAgentConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   observationFields: string[];
   actionCount: number;
   bufferSize: number;
-  trainingConfig: Record<string, unknown>;
+  trainingConfig: TraitConfig;
   discountFactor: number;
   policyTraitName: string;
   collectorTraitName: string;
@@ -139,7 +139,7 @@ function buildPolicyTrait(c: RlAgentConfig): Trait {
   };
 
   // Policy network forward pass
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@payload.observation',
     'output-contract': { type: 'tensor', shape: [actionCount], dtype: 'float32', activation: 'softmax' },
@@ -204,7 +204,7 @@ function buildCollectorTrait(c: RlAgentConfig): Trait {
     ],
   };
 
-  const collectEffect: unknown[] = ['buffer-append', 'replay', {
+  const collectEffect: SExpr[] = ['buffer-append', 'replay', {
     capacity: bufferSize,
     transition: {
       observation: '@payload.observation',
@@ -278,7 +278,7 @@ function buildTrainTrait(c: RlAgentConfig): Trait {
     ],
   };
 
-  const trainEffect: unknown[] = ['train', 'primary', {
+  const trainEffect: SExpr[] = ['train', 'primary', {
     architecture: c.architecture,
     config: { ...c.trainingConfig, discountFactor: c.discountFactor },
     source: 'replay',

@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, TraitConfig } from '@almadar/core/types';
 
 // ============================================================================
 // Params
@@ -20,9 +20,9 @@ import type { OrbitalSchema } from '@almadar/core/types';
 
 export interface StdModelServingParams {
   appName?: string;
-  architecture: unknown;
-  inputContract?: unknown;
-  outputContract?: unknown;
+  architecture: TraitConfig;
+  inputContract?: TraitConfig;
+  outputContract?: TraitConfig;
 }
 
 // ============================================================================

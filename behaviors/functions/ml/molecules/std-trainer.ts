@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
@@ -25,8 +25,8 @@ import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/bu
 export interface StdTrainerParams {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
-  trainingConfig: Record<string, unknown>;
+  architecture: TraitConfig;
+  trainingConfig: TraitConfig;
   /** Metric names to track, e.g. ["loss", "accuracy"] */
   metrics: string[];
   /** Run evaluation after training completes. Default: true */
@@ -45,8 +45,8 @@ export interface StdTrainerParams {
 interface TrainerConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
-  trainingConfig: Record<string, unknown>;
+  architecture: TraitConfig;
+  trainingConfig: TraitConfig;
   metrics: string[];
   evaluateAfterTraining: boolean;
   autoCheckpoint: boolean;
@@ -131,7 +131,7 @@ function buildTrainLoopTrait(c: TrainerConfig): Trait {
     ],
   };
 
-  const trainEffect: unknown[] = ['train', 'primary', {
+  const trainEffect: SExpr[] = ['train', 'primary', {
     architecture: c.architecture,
     config: c.trainingConfig,
     metrics: c.metrics,
@@ -225,7 +225,7 @@ function buildEvaluateTrait(c: TrainerConfig): Trait {
     ],
   };
 
-  const evaluateEffect: unknown[] = ['evaluate', 'primary', {
+  const evaluateEffect: SExpr[] = ['evaluate', 'primary', {
     architecture: c.architecture,
     metrics: c.metrics,
     'on-complete': 'EVAL_DONE',
@@ -302,7 +302,7 @@ function buildCheckpointTrait(c: TrainerConfig): Trait {
     ],
   };
 
-  const checkpointEffect: unknown[] = ['checkpoint', 'primary', {
+  const checkpointEffect: SExpr[] = ['checkpoint', 'primary', {
     architecture: c.architecture,
     'on-complete': 'MODEL_SAVED',
   }];

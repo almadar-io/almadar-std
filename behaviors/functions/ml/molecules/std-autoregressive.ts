@@ -17,7 +17,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
@@ -26,7 +26,7 @@ import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/bu
 
 export interface StdAutoregressiveParams {
   entityName: string;
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Total vocabulary size */
   vocabSize: number;
   /** Maximum generation length */
@@ -51,7 +51,7 @@ export interface StdAutoregressiveParams {
 interface AutoregressiveConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   vocabSize: number;
   maxLength: number;
   eosToken: number;
@@ -150,7 +150,7 @@ function buildTrait(c: AutoregressiveConfig): Trait {
   };
 
   // Forward pass effect: produces next token logits
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@entity.generatedTokens',
     'output-contract': { type: 'tensor', shape: [vocabSize], dtype: 'float32', activation: 'softmax' },
@@ -158,16 +158,16 @@ function buildTrait(c: AutoregressiveConfig): Trait {
   }];
 
   // EOS guard: checks if the generated token is the EOS token
-  const eosGuard: unknown[] = ['eq', '@payload.token', eosToken];
+  const eosGuard: SExpr[] = ['eq', '@payload.token', eosToken];
 
   // Max length guard: checks if we've hit max tokens
-  const maxLengthGuard: unknown[] = ['gte', '@entity.tokenCount', maxLength];
+  const maxLengthGuard: SExpr[] = ['gte', '@entity.tokenCount', maxLength];
 
   // Combined stop guard: EOS or max length
-  const stopGuard: unknown[] = ['or', eosGuard, maxLengthGuard];
+  const stopGuard: SExpr[] = ['or', eosGuard, maxLengthGuard];
 
   // Continue guard: NOT stop
-  const continueGuard: unknown[] = ['not', stopGuard];
+  const continueGuard: SExpr[] = ['not', stopGuard];
 
   return {
     name: c.traitName,

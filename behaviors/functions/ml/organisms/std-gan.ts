@@ -14,7 +14,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, TraitConfig } from '@almadar/core/types';
 
 // ============================================================================
 // Params
@@ -22,10 +22,10 @@ import type { OrbitalSchema } from '@almadar/core/types';
 
 export interface StdGanParams {
   appName?: string;
-  generatorArchitecture: unknown;
-  discriminatorArchitecture: unknown;
+  generatorArchitecture: TraitConfig;
+  discriminatorArchitecture: TraitConfig;
   latentDim?: number;
-  trainingConfig?: Record<string, unknown>;
+  trainingConfig?: TraitConfig;
 }
 
 // ============================================================================

@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, SExpr } from '@almadar/core/types';
 
 interface NavItemConfig {
   label: string;
@@ -43,7 +43,7 @@ export function wrapInDashboardLayout(
       const sm = traitRef.stateMachine;
       if (!sm || !('transitions' in sm)) continue;
       const transitions = sm.transitions as Array<{
-        effects: unknown[];
+        effects: SExpr[];
       }>;
       for (const transition of transitions) {
         if (!transition.effects) continue;
@@ -93,7 +93,7 @@ export function wrapInGameShell(
       const sm = traitRef.stateMachine;
       if (!sm || !('transitions' in sm)) continue;
       const transitions = sm.transitions as Array<{
-        effects: unknown[];
+        effects: SExpr[];
       }>;
       for (const transition of transitions) {
         if (!transition.effects) continue;

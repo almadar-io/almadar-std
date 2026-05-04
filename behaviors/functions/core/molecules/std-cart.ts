@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-cart';
@@ -55,7 +55,7 @@ export interface StdCartRequestRemovePayload {
  * Payload shape for the `CartItemLoaded` event.
  */
 export interface StdCartCartItemLoadedPayload {
-  data?: Array<Record<string, unknown>>;
+  data?: EntityRow[];
 }
 
 /**
@@ -85,9 +85,9 @@ export interface StdCartParams {
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
   events?: Partial<Record<StdCartEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, unknown[]>;
+  effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
-  listens?: unknown[];
+  listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
   /** Nested config override (outer key = config field name). */
@@ -104,8 +104,8 @@ export function stdCartCartItemCartBrowseTrait(params: StdCartParams): TraitRefe
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
@@ -119,8 +119,8 @@ export function stdCartCartItemAddItemTrait(params: StdCartParams): TraitReferen
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
@@ -134,8 +134,8 @@ export function stdCartCartItemRemoveConfirmTrait(params: StdCartParams): TraitR
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
@@ -149,8 +149,8 @@ export function stdCartCartItemPersistorTrait(params: StdCartParams): TraitRefer
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });

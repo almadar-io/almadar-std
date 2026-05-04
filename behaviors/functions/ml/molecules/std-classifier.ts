@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, makePage, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 import { stdForward } from '../atoms/std-forward.js';
 
@@ -26,7 +26,7 @@ import { stdForward } from '../atoms/std-forward.js';
 export interface StdClassifierParams {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Entity fields that map to input features */
   inputFields: string[];
   /** Class labels, e.g. ["cat", "dog", "bird"] */
@@ -49,7 +49,7 @@ export interface StdClassifierParams {
 interface ClassifierConfig {
   entityName: string;
   fields: EntityField[];
-  architecture: unknown;
+  architecture: TraitConfig;
   inputFields: string[];
   classes: string[];
   inputRange: [number, number];
@@ -175,7 +175,7 @@ function buildTrait(c: ClassifierConfig): Trait {
   const inputContract = buildInputContract(c.inputFields, c.inputRange);
   const outputContract = buildOutputContract(c.classes);
 
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@payload.input',
     'input-contract': inputContract,

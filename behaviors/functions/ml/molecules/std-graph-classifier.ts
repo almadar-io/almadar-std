@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig, SExpr } from '@almadar/core/types';
 import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
@@ -29,7 +29,7 @@ export interface StdGraphClassifierParams {
   /** Node feature field names */
   nodeFeatures: string[];
   /** GNN architecture (e.g. GCN, GAT layers) */
-  architecture: unknown;
+  architecture: TraitConfig;
   /** Classification labels */
   classes: string[];
   pageName?: string;
@@ -47,7 +47,7 @@ interface GraphClassifierConfig {
   nodeEntity: string;
   edgeField: string;
   nodeFeatures: string[];
-  architecture: unknown;
+  architecture: TraitConfig;
   classes: string[];
   graphTraitName: string;
   classifyTraitName: string;
@@ -124,7 +124,7 @@ function buildGraphBuilderTrait(c: GraphClassifierConfig): Trait {
     ],
   };
 
-  const buildGraphEffect: unknown[] = ['graph-build', 'primary', {
+  const buildGraphEffect: SExpr[] = ['graph-build', 'primary', {
     nodeEntity,
     edgeField,
     features: nodeFeatures,
@@ -209,7 +209,7 @@ function buildGnnClassifyTrait(c: GraphClassifierConfig): Trait {
     ],
   };
 
-  const forwardEffect: unknown[] = ['forward', 'primary', {
+  const forwardEffect: SExpr[] = ['forward', 'primary', {
     architecture: c.architecture,
     input: '@payload.graph',
     'output-contract': { type: 'tensor', shape: [classes.length], dtype: 'float32', labels: classes, activation: 'softmax' },

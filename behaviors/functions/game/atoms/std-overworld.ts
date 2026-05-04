@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-overworld';
@@ -34,7 +34,7 @@ export type StdOverworldEventKey = 'ARRIVE' | 'INIT' | 'TRAVEL' | 'WorldRegionLo
  * Payload shape for the `WorldRegionLoaded` event.
  */
 export interface StdOverworldWorldRegionLoadedPayload {
-  data?: Array<Record<string, unknown>>;
+  data?: EntityRow[];
 }
 
 /**
@@ -64,9 +64,9 @@ export interface StdOverworldParams {
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
   events?: Partial<Record<StdOverworldEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, unknown[]>;
+  effects?: Record<string, SExpr[]>;
   /** Replace the imported trait's `listens` array entirely. */
-  listens?: unknown[];
+  listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
   /** Nested config override (outer key = config field name). */
@@ -83,8 +83,8 @@ export function stdOverworldTrait(params: StdOverworldParams): TraitReference {
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
     ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
     ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });

@@ -11,7 +11,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, TraitConfig } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -26,8 +26,8 @@ export interface StdWeightValidatorParams {
   /** Constraint configuration */
   constraints: {
     maxWeightMagnitude?: number;
-    forbiddenRegions?: unknown[];
-    invariants?: unknown[];
+    forbiddenRegions?: TraitConfig[];
+    invariants?: TraitConfig[];
   };
   /** Event that triggers validation (default: "VALIDATE_WEIGHTS") */
   validateEvent?: string;
@@ -57,8 +57,8 @@ interface WeightValidatorConfig {
   pluralName: string;
   constraints: {
     maxWeightMagnitude: number;
-    forbiddenRegions: unknown[];
-    invariants: unknown[];
+    forbiddenRegions: TraitConfig[];
+    invariants: TraitConfig[];
   };
   validateEvent: string;
   acceptedEvent: string;
