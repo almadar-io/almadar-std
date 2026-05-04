@@ -54,6 +54,51 @@ export type BasicReturnType = 'number' | 'boolean' | 'string' | 'any' | 'void' |
 /**
  * Base metadata for an operator.
  */
+/**
+ * For operators whose actual return type depends on input expressions
+ * rather than being a fixed primitive (gap #24's family in
+ * `docs/Almadar_Std_Verification.md`). The static `returnType` is kept
+ * for back-compat with consumers that don't reason about input-dependent
+ * types; the validator (L2) reads `returnSemantics` first to derive the
+ * concrete type from the call site's argument expressions.
+ *
+ * - `'first-truthy-of-args'` — returns the first truthy argument's value
+ *   (`or` semantics, NOT a boolean). Trips arithmetic-context misuse.
+ * - `'last-truthy-of-args'` — returns the last truthy argument's value
+ *   when all are truthy, else first falsy (`and` short-circuit).
+ * - `'first-non-null-of-args'` — returns the first non-null arg's type
+ *   (`coalesce` / `default` / `??`-style).
+ * - `'branch-union'` — return type is union of branch result types
+ *   (`if cond X Y` → `X | Y`).
+ * - `'element-of-arg<N>'` — returns element type of arg at index N
+ *   (`array/first arr` → element of `arr`, `array/get arr i` → element
+ *   of `arr`). Suffix `?` (e.g. `'element-of-arg<0>?'`) marks
+ *   nullable-when-missing (`array/find` → `T | undefined`).
+ * - `'lambda-result'` — return type is the lambda's body result, with
+ *   the result possibly wrapped in an array (`array/map` →
+ *   `Array<ReturnTypeOf<lambda>>`, `array/reduce` →
+ *   `ReturnTypeOf<lambda>` / type of `init`).
+ * - `'object-key-lookup'` — return type depends on the input object
+ *   shape and the literal key (`object/get`, `object/pick`).
+ * - `'identity-of-arg<N>'` — return type matches the input arg at index N
+ *   (`tap`, `pipe-through`).
+ *
+ * Operators NOT listed here keep the fixed `returnType` semantics —
+ * arithmetic, math, comparisons, aggregations (`array/sum`/`avg`/`len`),
+ * type coercions, all effects.
+ */
+export type ReturnSemantics =
+  | 'first-truthy-of-args'
+  | 'last-truthy-of-args'
+  | 'first-non-null-of-args'
+  | 'branch-union'
+  | 'element-of-arg<0>'
+  | 'element-of-arg<0>?'
+  | 'element-of-arg<1>'
+  | 'lambda-result'
+  | 'object-key-lookup'
+  | 'identity-of-arg<0>';
+
 export interface OperatorMeta {
   /** Operator category */
   category: OperatorCategory;
@@ -67,6 +112,15 @@ export interface OperatorMeta {
   hasSideEffects: boolean;
   /** Return type hint - basic types for core operators, extended types for std modules */
   returnType: string;
+  /**
+   * For operators whose actual return type is determined at the call site
+   * (input-dependent), tag with the appropriate semantics so the L2
+   * validator can derive the concrete type from argument expressions.
+   * Omitted when `returnType` is the fixed truth (most operators).
+   * See {@link ReturnSemantics} for the catalog and gap #24 in the std
+   * verification doc.
+   */
+  returnSemantics?: ReturnSemantics;
 }
 
 // ============================================================================

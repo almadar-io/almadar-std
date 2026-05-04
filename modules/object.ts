@@ -63,9 +63,10 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-object',
     minArity: 2,
     maxArity: 3,
-    description: 'Get nested value by path',
+    description: 'Get nested value by path (return type derived from input object shape and key)',
     hasSideEffects: false,
     returnType: 'any',
+    returnSemantics: 'object-key-lookup',
     params: [
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'path', type: 'string', description: 'Dot-separated path (e.g., "user.name")' },
@@ -129,9 +130,10 @@ export const OBJECT_OPERATORS: Record<string, StdOperatorMeta> = {
     category: 'std-object',
     minArity: 2,
     maxArity: 2,
-    description: 'Select only specified keys',
+    description: 'Select only specified keys (return type is subset of input object shape)',
     hasSideEffects: false,
     returnType: 'any',
+    returnSemantics: 'object-key-lookup',
     params: [
       { name: 'obj', type: 'object', description: 'The object' },
       { name: 'keys', type: 'array', description: 'Keys to keep' },

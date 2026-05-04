@@ -91,6 +91,14 @@ interface CanonicalOperatorEntry {
      * cleanly.
      */
     effect?: OperatorEffectMeta;
+    /**
+     * F2 plan: input-dependent return-type tag for operators whose actual
+     * return type comes from their argument expressions, not the static
+     * `returnType` field. Validator (L2.5 + future binding-type rules)
+     * reads this first and derives the concrete type from the call site.
+     * Omitted for operators with fixed return types.
+     */
+    returnSemantics?: string;
 }
 
 function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
@@ -104,6 +112,7 @@ function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
     };
     if (meta.hasSideEffects) entry.hasSideEffects = true;
     if (meta.effect) entry.effect = meta.effect;
+    if (meta.returnSemantics) entry.returnSemantics = meta.returnSemantics;
     return entry;
 }
 
@@ -159,6 +168,12 @@ function writeRustFile(): number {
     lines.push(`    pub return_type: &'static str,`);
     lines.push(`    pub description: &'static str,`);
     lines.push(`    pub has_side_effects: bool,`);
+    lines.push(`    /// F2 plan: input-dependent return-type tag for operators whose actual`);
+    lines.push(`    /// return type depends on the argument expressions at the call site,`);
+    lines.push(`    /// not the static \`return_type\` field. \`None\` for fixed-return-type`);
+    lines.push(`    /// operators (the majority). See \`docs/Almadar_Std_Verification.md\``);
+    lines.push(`    /// gap #24 + plan F2 in /home/osamah/.claude/plans for the catalog.`);
+    lines.push(`    pub return_semantics: Option<&'static str>,`);
     lines.push(`}`);
     lines.push('');
     lines.push(`/// All operators that should be implemented in Rust`);
@@ -166,6 +181,9 @@ function writeRustFile(): number {
     for (const [name, meta] of rustTargeted) {
         const maxArity = meta.maxArity === null ? 'None' : `Some(${meta.maxArity})`;
         const sideEffects = meta.hasSideEffects ? 'true' : 'false';
+        const returnSemantics = meta.returnSemantics
+            ? `Some(${rustLiteral(meta.returnSemantics)})`
+            : 'None';
         lines.push(`    OperatorMeta {`);
         lines.push(`        name: ${rustLiteral(name)},`);
         lines.push(`        category: ${rustLiteral(meta.category)},`);
@@ -174,6 +192,7 @@ function writeRustFile(): number {
         lines.push(`        return_type: ${rustLiteral(meta.returnType)},`);
         lines.push(`        description: ${rustLiteral(meta.description)},`);
         lines.push(`        has_side_effects: ${sideEffects},`);
+        lines.push(`        return_semantics: ${returnSemantics},`);
         lines.push(`    },`);
     }
     lines.push(`];`);

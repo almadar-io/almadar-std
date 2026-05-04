@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-05-04T03:20:57.740Z",
+  "generated": "2026-05-04T04:56:26.638Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -462,8 +462,9 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": "boolean",
-      "description": "Logical AND",
-      "module": "core"
+      "description": "Logical AND (returns the last truthy value, NOT a boolean — short-circuit)",
+      "module": "core",
+      "returnSemantics": "last-truthy-of-args"
     },
     "array/append": {
       "category": "std-array",
@@ -534,16 +535,18 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "array",
-      "description": "Keep elements matching predicate",
-      "module": "array"
+      "description": "Keep elements matching predicate (returns same array element type as input)",
+      "module": "array",
+      "returnSemantics": "identity-of-arg<0>"
     },
     "array/find": {
       "category": "std-array",
       "minArity": 2,
       "maxArity": 2,
       "returnType": "any",
-      "description": "Find first element matching predicate",
-      "module": "array"
+      "description": "Find first element matching predicate (element type of input array, undefined when no match)",
+      "module": "array",
+      "returnSemantics": "element-of-arg<0>?"
     },
     "array/findIndex": {
       "category": "std-array",
@@ -558,8 +561,9 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "any",
-      "description": "Get first element",
-      "module": "array"
+      "description": "Get first element (element type of input array, may be undefined when empty)",
+      "module": "array",
+      "returnSemantics": "element-of-arg<0>?"
     },
     "array/flatten": {
       "category": "std-array",
@@ -606,8 +610,9 @@
       "minArity": 1,
       "maxArity": 1,
       "returnType": "any",
-      "description": "Get last element",
-      "module": "array"
+      "description": "Get last element (element type of input array, may be undefined when empty)",
+      "module": "array",
+      "returnSemantics": "element-of-arg<0>?"
     },
     "array/len": {
       "category": "std-array",
@@ -622,8 +627,9 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "array",
-      "description": "Transform each element",
-      "module": "array"
+      "description": "Transform each element (return type wraps the lambda result in an array)",
+      "module": "array",
+      "returnSemantics": "lambda-result"
     },
     "array/max": {
       "category": "std-array",
@@ -646,8 +652,9 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "any",
-      "description": "Get element at index",
-      "module": "array"
+      "description": "Get element at index (element type of input array, may be undefined out-of-bounds)",
+      "module": "array",
+      "returnSemantics": "element-of-arg<0>?"
     },
     "array/partition": {
       "category": "std-array",
@@ -670,16 +677,18 @@
       "minArity": 3,
       "maxArity": 3,
       "returnType": "any",
-      "description": "Reduce array to single value",
-      "module": "array"
+      "description": "Reduce array to single value (return type matches the lambda result / init type)",
+      "module": "array",
+      "returnSemantics": "lambda-result"
     },
     "array/reject": {
       "category": "std-array",
       "minArity": 2,
       "maxArity": 2,
       "returnType": "array",
-      "description": "Remove elements matching predicate",
-      "module": "array"
+      "description": "Remove elements matching predicate (returns same array element type as input)",
+      "module": "array",
+      "returnSemantics": "identity-of-arg<0>"
     },
     "array/remove": {
       "category": "std-array",
@@ -1056,8 +1065,9 @@
       "minArity": 3,
       "maxArity": 3,
       "returnType": "any",
-      "description": "Conditional expression (ternary)",
-      "module": "core"
+      "description": "Conditional expression (ternary). Return type is union of branch types.",
+      "module": "core",
+      "returnSemantics": "branch-union"
     },
     "let": {
       "category": "control",
@@ -1409,8 +1419,9 @@
       "minArity": 2,
       "maxArity": 3,
       "returnType": "any",
-      "description": "Get nested value by path",
-      "module": "object"
+      "description": "Get nested value by path (return type derived from input object shape and key)",
+      "module": "object",
+      "returnSemantics": "object-key-lookup"
     },
     "object/has": {
       "category": "std-object",
@@ -1465,8 +1476,9 @@
       "minArity": 2,
       "maxArity": 2,
       "returnType": "any",
-      "description": "Select only specified keys",
-      "module": "object"
+      "description": "Select only specified keys (return type is subset of input object shape)",
+      "module": "object",
+      "returnSemantics": "object-key-lookup"
     },
     "object/set": {
       "category": "std-object",
@@ -1489,8 +1501,9 @@
       "minArity": 2,
       "maxArity": null,
       "returnType": "boolean",
-      "description": "Logical OR",
-      "module": "core"
+      "description": "Logical OR (returns the first truthy value, NOT a boolean — short-circuit)",
+      "module": "core",
+      "returnSemantics": "first-truthy-of-args"
     },
     "os/debounce": {
       "category": "std-os",
