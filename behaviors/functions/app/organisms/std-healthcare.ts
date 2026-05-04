@@ -144,9 +144,8549 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"PatientOrbital","entity":{"name":"Patient","collection":"patients","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"firstName","type":"string","required":true},{"name":"lastName","type":"string","required":true},{"name":"dateOfBirth","type":"datetime","required":true},{"name":"phone","type":"string"},{"name":"insuranceId","type":"string"},{"name":"status","type":"string","default":"active","values":["active","inactive","discharged"]},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"PatientBrowse","category":"interaction","linkedEntity":"Patient","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.firstName","type":"string","required":true},{"name":"row.lastName","type":"string","required":true},{"name":"row.dateOfBirth","type":"datetime","required":true},{"name":"row.phone","type":"string"},{"name":"row.insuranceId","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.firstName","type":"string","required":true},{"name":"row.lastName","type":"string","required":true},{"name":"row.dateOfBirth","type":"datetime","required":true},{"name":"row.phone","type":"string"},{"name":"row.insuranceId","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.firstName","type":"string","required":true},{"name":"row.lastName","type":"string","required":true},{"name":"row.dateOfBirth","type":"datetime","required":true},{"name":"row.phone","type":"string"},{"name":"row.insuranceId","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"PatientLoaded","description":"Fired when Patient finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"event":"PatientLoadFailed","description":"Fired when Patient fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AppointmentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AppointmentUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AppointmentDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"IntakeFormSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"IntakeFormSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PrescriptionSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PrescriptionSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PATIENT_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"PatientCreate"}},{"event":"PATIENT_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"PatientEdit"}},{"event":"PATIENT_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"PatientDelete"}},{"event":"INTAKE_COMPLETE","triggers":"INIT","source":{"kind":"orbital","orbital":"IntakeFormOrbital","trait":"IntakeFormWizard"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PatientLoaded","name":"Patient loaded","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"key":"PatientLoadFailed","name":"Patient load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Patient"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Patient"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Patient"}]},{"key":"PatientSaved","name":"Patient saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PatientSaveFailed","name":"Patient save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientUpdated","name":"Patient updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PatientUpdateFailed","name":"Patient update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientDeleted","name":"Patient deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PatientDeleteFailed","name":"Patient delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentSaved","name":"Appointment saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"AppointmentSaveFailed","name":"Appointment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentUpdated","name":"Appointment updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"AppointmentUpdateFailed","name":"Appointment update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentDeleted","name":"Appointment deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"AppointmentDeleteFailed","name":"Appointment delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"IntakeFormSaved","name":"Intake form saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"IntakeFormSaveFailed","name":"Intake form save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PrescriptionSaved","name":"Prescription saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PrescriptionSaveFailed","name":"Prescription save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Patient",{"emit":{"failure":"PatientLoadFailed","success":"PatientLoaded"}}],["render-ui","main",{"align":"center","gap":"md","direction":"vertical","type":"stack","className":"py-12","children":[{"type":"spinner"},{"color":"muted","type":"typography","variant":"caption","content":"Loading…"}]}]]},{"from":"browsing","to":"browsing","event":"PatientLoaded","effects":[["render-ui","main",{"navItems":[{"label":"Patients","icon":"heart","href":"/patients"},{"href":"/appointments","label":"Appointments","icon":"calendar"},{"icon":"layout-list","label":"Intake","href":"/intake"},{"label":"Prescriptions","href":"/prescriptions","icon":"pill"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"appName":"HealthcareApp","children":[{"type":"stack","direction":"vertical","children":[{"direction":"horizontal","gap":"md","children":[{"gap":"sm","align":"center","direction":"horizontal","children":[{"type":"icon","name":"users"},{"type":"typography","content":"Patients","variant":"h2"}],"type":"stack"},{"children":[{"icon":"plus","action":"CREATE","variant":"primary","type":"button","label":"Create Patient"}],"direction":"horizontal","gap":"sm","type":"stack"}],"align":"center","justify":"between","type":"stack"},{"type":"divider"},{"cols":1,"children":[{"value":"@payload.data.length","label":"Total Patients","icon":"users","type":"stat-display"}],"type":"simple-grid"},{"type":"divider"},{"itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"variant":"ghost","label":"Edit","event":"EDIT"},{"label":"Delete","variant":"danger","event":"DELETE"}],"variant":"card","entity":"@payload.data","gap":"sm","fields":[{"name":"firstName","icon":"user","variant":"h3"},{"variant":"h3","name":"lastName"},{"name":"status","variant":"badge"},{"label":"Date of Birth","format":"date","name":"dateOfBirth","variant":"body"},{"name":"phone","variant":"caption"},{"name":"insuranceId","label":"Insurance ID","variant":"caption"}],"type":"data-list"}],"className":"max-w-5xl mx-auto w-full","gap":"lg"}],"type":"dashboard-layout"}]]},{"from":"browsing","to":"browsing","event":"PatientLoadFailed","effects":[["render-ui","main",{"align":"center","children":[{"name":"alert-triangle","type":"icon","color":"destructive"},{"content":"Failed to load patient","type":"typography","variant":"h3"},{"color":"muted","type":"typography","variant":"body","content":"@payload.error"},{"type":"button","variant":"primary","label":"Retry","icon":"rotate-ccw","action":"INIT"}],"className":"py-12","gap":"md","type":"stack","direction":"vertical"}]]}]},"scope":"collection"},{"name":"PatientCreate","category":"interaction","linkedEntity":"Patient","emits":[{"event":"PATIENT_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientLoadFailed","description":"Fired when Patient fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientLoaded","description":"Fired when Patient finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"event":"PatientSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"PatientBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PATIENT_CREATED","name":"Patient Created"},{"key":"PatientLoadFailed","name":"Patient load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientLoaded","name":"Patient loaded","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"key":"PatientSaveFailed","name":"Patient save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientSaved","name":"Patient saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Patient",{"emit":{"failure":"PatientLoadFailed","success":"PatientLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"direction":"horizontal","children":[{"type":"icon","name":"plus-circle"},{"type":"typography","variant":"h3","content":"Create Patient"}],"gap":"sm","type":"stack"},{"type":"divider"},{"mode":"create","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["firstName","lastName","dateOfBirth","phone","insuranceId","status"],"type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Patient","@payload.data",{"emit":{"failure":"PatientSaveFailed","success":"PatientSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","PATIENT_CREATED"]]}]},"scope":"collection"},{"name":"PatientEdit","category":"interaction","linkedEntity":"Patient","emits":[{"event":"PATIENT_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientLoadFailed","description":"Fired when Patient fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientLoaded","description":"Fired when Patient finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"event":"PatientUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"PatientView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"PatientBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Patient"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PATIENT_UPDATED","name":"Patient Updated"},{"key":"PatientLoadFailed","name":"Patient load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientLoaded","name":"Patient loaded","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"key":"PatientUpdateFailed","name":"Patient update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientUpdated","name":"Patient updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Patient",{"emit":{"failure":"PatientLoadFailed","success":"PatientLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Patient",{"emit":{"failure":"PatientLoadFailed","success":"PatientLoaded"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","type":"stack","children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"edit"},{"type":"typography","content":"Edit Patient","variant":"h3"}]},{"type":"divider"},{"entity":"@payload.row","type":"form-section","mode":"edit","submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["firstName","lastName","dateOfBirth","phone","insuranceId","status"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Patient","@payload.data",{"emit":{"success":"PatientUpdated","failure":"PatientUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","PATIENT_UPDATED"]]}]},"scope":"collection"},{"name":"PatientView","category":"interaction","linkedEntity":"Patient","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientLoaded","description":"Fired when Patient finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"event":"PatientLoadFailed","description":"Fired when Patient fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"PatientBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"PatientLoaded","name":"Patient loaded","payloadSchema":[{"name":"data","type":"[Patient]"}]},{"key":"PatientLoadFailed","name":"Patient load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Patient",{"emit":{"failure":"PatientLoadFailed","success":"PatientLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","children":[{"type":"stack","direction":"horizontal","align":"center","children":[{"name":"eye","type":"icon"},{"type":"typography","variant":"h3","content":"@entity.firstName"}],"gap":"sm"},{"type":"divider"},{"direction":"horizontal","type":"stack","children":[{"content":"First Name","type":"typography","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.firstName"}],"gap":"md"},{"children":[{"content":"Last Name","type":"typography","variant":"caption"},{"content":"@entity.lastName","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal","gap":"md"},{"gap":"md","type":"stack","children":[{"variant":"caption","type":"typography","content":"Date Of Birth"},{"type":"typography","content":"@entity.dateOfBirth","variant":"body"}],"direction":"horizontal"},{"direction":"horizontal","children":[{"variant":"caption","content":"Phone","type":"typography"},{"content":"@entity.phone","type":"typography","variant":"body"}],"gap":"md","type":"stack"},{"gap":"md","type":"stack","children":[{"type":"typography","variant":"caption","content":"Insurance ID"},{"type":"typography","variant":"body","content":"@entity.insuranceId"}],"direction":"horizontal"},{"type":"stack","gap":"md","children":[{"variant":"caption","content":"Status","type":"typography"},{"type":"typography","variant":"body","content":"@entity.status"}],"direction":"horizontal"},{"type":"divider"},{"children":[{"type":"button","action":"EDIT","label":"Edit","icon":"edit","variant":"primary"},{"type":"button","label":"Close","variant":"ghost","action":"CLOSE"}],"justify":"end","type":"stack","gap":"sm","direction":"horizontal"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"PatientDelete","category":"interaction","linkedEntity":"Patient","emits":[{"event":"PATIENT_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PatientLoadFailed","description":"Fired when Patient fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PatientLoaded","description":"Fired when Patient finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Patient]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"PatientBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"PATIENT_DELETED","name":"Patient Deleted"},{"key":"PatientDeleteFailed","name":"Patient delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientDeleted","name":"Patient deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PatientLoadFailed","name":"Patient load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PatientLoaded","name":"Patient loaded","payloadSchema":[{"name":"data","type":"[Patient]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Patient",{"id":"@payload.id","emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}],["render-ui","modal",{"gap":"md","children":[{"direction":"horizontal","gap":"sm","children":[{"type":"icon","name":"alert-triangle"},{"content":"Delete Patient","variant":"h3","type":"typography"}],"align":"center","type":"stack"},{"type":"divider"},{"type":"alert","message":"This action cannot be undone.","variant":"error"},{"direction":"horizontal","justify":"end","type":"stack","gap":"sm","children":[{"label":"Cancel","type":"button","action":"CANCEL","variant":"ghost"},{"label":"Delete","action":"CONFIRM_DELETE","type":"button","variant":"danger","icon":"check"}]}],"type":"stack","direction":"vertical"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Patient","@entity.pendingId",{"emit":{"success":"PatientDeleted","failure":"PatientDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}],["emit","PATIENT_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Patient",{"emit":{"success":"PatientLoaded","failure":"PatientLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"PatientsPage","path":"/patients","traits":[{"ref":"PatientBrowse"},{"ref":"PatientCreate"},{"ref":"PatientEdit"},{"ref":"PatientView"},{"ref":"PatientDelete"}]}]},{"name":"AppointmentOrbital","entity":{"name":"Appointment","collection":"appointments","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"patientName","type":"string","required":true},{"name":"doctorName","type":"string","required":true},{"name":"date","type":"datetime","required":true},{"name":"time","type":"string","required":true},{"name":"reason","type":"string"},{"name":"status","type":"string","default":"active","values":["active","inactive","discharged"]},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"AppointmentBrowse","category":"interaction","linkedEntity":"Appointment","emits":[{"event":"PRESCRIBE","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.patientName","type":"string","required":true},{"name":"row.doctorName","type":"string","required":true},{"name":"row.date","type":"datetime","required":true},{"name":"row.time","type":"string","required":true},{"name":"row.reason","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.patientName","type":"string","required":true},{"name":"row.doctorName","type":"string","required":true},{"name":"row.date","type":"datetime","required":true},{"name":"row.time","type":"string","required":true},{"name":"row.reason","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.patientName","type":"string","required":true},{"name":"row.doctorName","type":"string","required":true},{"name":"row.date","type":"datetime","required":true},{"name":"row.time","type":"string","required":true},{"name":"row.reason","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"AppointmentLoaded","description":"Fired when Appointment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"event":"AppointmentLoadFailed","description":"Fired when Appointment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"APPOINTMENT_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"AppointmentCreate"}},{"event":"APPOINTMENT_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"AppointmentEdit"}},{"event":"APPOINTMENT_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"AppointmentDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"AppointmentLoaded","name":"Appointment loaded","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"key":"AppointmentLoadFailed","name":"Appointment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PRESCRIBE","name":"Prescribe"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}],["render-ui","main",{"className":"py-12","gap":"md","children":[{"type":"spinner"},{"type":"typography","variant":"caption","color":"muted","content":"Loading…"}],"type":"stack","direction":"vertical","align":"center"}]]},{"from":"browsing","to":"browsing","event":"AppointmentLoaded","effects":[["render-ui","main",{"navItems":[{"href":"/patients","icon":"heart","label":"Patients"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"label":"Intake","href":"/intake","icon":"layout-list"},{"href":"/prescriptions","icon":"pill","label":"Prescriptions"},{"icon":"layout-dashboard","label":"Dashboard","href":"/dashboard"}],"children":[{"children":[{"gap":"md","type":"stack","align":"center","justify":"between","direction":"horizontal","children":[{"children":[{"name":"calendar","type":"icon"},{"variant":"h2","type":"typography","content":"Appointments"}],"type":"stack","gap":"sm","align":"center","direction":"horizontal"},{"type":"stack","children":[{"variant":"primary","label":"Create Appointment","type":"button","icon":"plus","action":"CREATE"}],"direction":"horizontal","gap":"sm"}]},{"type":"divider"},{"variant":"card","type":"data-list","entity":"@payload.data","gap":"sm","fields":[{"label":"Patient","name":"patientName","icon":"calendar","variant":"h3"},{"name":"status","variant":"badge"},{"label":"Doctor","variant":"body","name":"doctorName"},{"name":"date","variant":"body","format":"date"},{"name":"time","variant":"caption"},{"variant":"caption","name":"reason"}],"itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"event":"EDIT","variant":"ghost","label":"Edit"},{"event":"DELETE","label":"Delete","variant":"danger"}]}],"direction":"vertical","className":"max-w-5xl mx-auto w-full","gap":"lg","type":"stack"}],"type":"dashboard-layout","appName":"HealthcareApp"}]]},{"from":"browsing","to":"browsing","event":"AppointmentLoadFailed","effects":[["render-ui","main",{"type":"stack","className":"py-12","direction":"vertical","gap":"md","align":"center","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Failed to load appointment"},{"color":"muted","content":"@payload.error","variant":"body","type":"typography"},{"variant":"primary","type":"button","label":"Retry","action":"INIT","icon":"rotate-ccw"}]}]]}]},"scope":"collection"},{"name":"AppointmentCreate","category":"interaction","linkedEntity":"Appointment","emits":[{"event":"APPOINTMENT_CREATED"},{"event":"AppointmentLoadFailed","description":"Fired when Appointment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentLoaded","description":"Fired when Appointment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"event":"AppointmentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"AppointmentBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"APPOINTMENT_CREATED","name":"Appointment Created"},{"key":"AppointmentLoadFailed","name":"Appointment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentLoaded","name":"Appointment loaded","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"key":"AppointmentSaveFailed","name":"Appointment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentSaved","name":"Appointment saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}],["render-ui","modal",{"gap":"md","type":"stack","direction":"vertical","children":[{"children":[{"type":"icon","name":"plus-circle"},{"content":"Create Appointment","type":"typography","variant":"h3"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"mode":"create","submitEvent":"SAVE","type":"form-section","cancelEvent":"CLOSE","fields":["patientName","doctorName","date","time","reason","status"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Appointment","@payload.data",{"emit":{"failure":"AppointmentSaveFailed","success":"AppointmentSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","APPOINTMENT_CREATED"]]}]},"scope":"collection"},{"name":"AppointmentEdit","category":"interaction","linkedEntity":"Appointment","emits":[{"event":"APPOINTMENT_UPDATED"},{"event":"AppointmentLoadFailed","description":"Fired when Appointment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentLoaded","description":"Fired when Appointment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"event":"AppointmentUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"AppointmentView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"AppointmentBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Appointment"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"APPOINTMENT_UPDATED","name":"Appointment Updated"},{"key":"AppointmentLoadFailed","name":"Appointment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentLoaded","name":"Appointment loaded","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"key":"AppointmentUpdateFailed","name":"Appointment update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentUpdated","name":"Appointment updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Appointment",{"emit":{"success":"AppointmentLoaded","failure":"AppointmentLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","children":[{"direction":"horizontal","children":[{"type":"icon","name":"edit"},{"content":"Edit Appointment","variant":"h3","type":"typography"}],"gap":"sm","type":"stack"},{"type":"divider"},{"fields":["patientName","doctorName","date","time","reason","status"],"mode":"edit","entity":"@payload.row","type":"form-section","cancelEvent":"CLOSE","submitEvent":"SAVE"}],"gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Appointment","@payload.data",{"emit":{"success":"AppointmentUpdated","failure":"AppointmentUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","APPOINTMENT_UPDATED"]]}]},"scope":"collection"},{"name":"AppointmentView","category":"interaction","linkedEntity":"Appointment","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AppointmentLoaded","description":"Fired when Appointment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"event":"AppointmentLoadFailed","description":"Fired when Appointment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"AppointmentBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"AppointmentLoaded","name":"Appointment loaded","payloadSchema":[{"name":"data","type":"[Appointment]"}]},{"key":"AppointmentLoadFailed","name":"Appointment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Appointment",{"id":"@payload.id","emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"type":"stack","align":"center","gap":"sm","children":[{"name":"eye","type":"icon"},{"type":"typography","variant":"h3","content":"@entity.patientName"}],"direction":"horizontal"},{"type":"divider"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"typography","variant":"caption","content":"Patient Name"},{"type":"typography","variant":"body","content":"@entity.patientName"}]},{"gap":"md","type":"stack","children":[{"type":"typography","variant":"caption","content":"Doctor Name"},{"variant":"body","content":"@entity.doctorName","type":"typography"}],"direction":"horizontal"},{"children":[{"variant":"caption","type":"typography","content":"Date"},{"content":"@entity.date","type":"typography","variant":"body"}],"gap":"md","type":"stack","direction":"horizontal"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"variant":"caption","content":"Time","type":"typography"},{"type":"typography","content":"@entity.time","variant":"body"}]},{"direction":"horizontal","children":[{"content":"Reason","type":"typography","variant":"caption"},{"content":"@entity.reason","type":"typography","variant":"body"}],"type":"stack","gap":"md"},{"direction":"horizontal","gap":"md","children":[{"content":"Status","variant":"caption","type":"typography"},{"variant":"body","type":"typography","content":"@entity.status"}],"type":"stack"},{"type":"divider"},{"justify":"end","children":[{"label":"Edit","icon":"edit","type":"button","action":"EDIT","variant":"primary"},{"action":"CLOSE","label":"Close","type":"button","variant":"ghost"}],"type":"stack","direction":"horizontal","gap":"sm"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"AppointmentDelete","category":"interaction","linkedEntity":"Appointment","emits":[{"event":"APPOINTMENT_DELETED"},{"event":"AppointmentDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AppointmentLoadFailed","description":"Fired when Appointment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AppointmentLoaded","description":"Fired when Appointment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Appointment]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"AppointmentBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"APPOINTMENT_DELETED","name":"Appointment Deleted"},{"key":"AppointmentDeleteFailed","name":"Appointment delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentDeleted","name":"Appointment deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"AppointmentLoadFailed","name":"Appointment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"AppointmentLoaded","name":"Appointment loaded","payloadSchema":[{"name":"data","type":"[Appointment]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Appointment",{"emit":{"success":"AppointmentLoaded","failure":"AppointmentLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","gap":"md","children":[{"type":"stack","gap":"sm","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Delete Appointment"}],"direction":"horizontal","align":"center"},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"gap":"sm","justify":"end","type":"stack","direction":"horizontal","children":[{"type":"button","label":"Cancel","action":"CANCEL","variant":"ghost"},{"variant":"danger","label":"Delete","type":"button","action":"CONFIRM_DELETE","icon":"check"}]}],"direction":"vertical"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Appointment","@entity.pendingId",{"emit":{"failure":"AppointmentDeleteFailed","success":"AppointmentDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}],["emit","APPOINTMENT_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Appointment",{"emit":{"failure":"AppointmentLoadFailed","success":"AppointmentLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"Appointments","path":"/appointments","traits":[{"ref":"AppointmentBrowse"},{"ref":"AppointmentCreate"},{"ref":"AppointmentEdit"},{"ref":"AppointmentView"},{"ref":"AppointmentDelete"}]}]},{"name":"IntakeFormOrbital","entity":{"name":"IntakeForm","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"firstName","type":"string","required":true},{"name":"lastName","type":"string","required":true},{"name":"dateOfBirth","type":"datetime","required":true},{"name":"allergies","type":"string"},{"name":"medications","type":"string"},{"name":"emergencyContact","type":"string"},{"name":"insuranceProvider","type":"string"},{"name":"insuranceId","type":"string"}]},"traits":[{"name":"IntakeFormWizard","category":"interaction","linkedEntity":"IntakeForm","emits":[{"event":"INTAKE_COMPLETE","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"IntakeFormLoadFailed","description":"Fired when IntakeForm fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"IntakeFormLoaded","description":"Fired when IntakeForm finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[IntakeForm]"}]},{"event":"IntakeFormSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"IntakeFormSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"step1","isInitial":true},{"name":"step2"},{"name":"step3"},{"name":"review"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NEXT","name":"Next"},{"key":"PREV","name":"Prev"},{"key":"COMPLETE","name":"Complete","payloadSchema":[{"name":"data","type":"string"}]},{"key":"RESTART","name":"Restart"},{"key":"INTAKE_COMPLETE","name":"Intake Complete"},{"key":"IntakeFormLoadFailed","name":"IntakeForm load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"IntakeFormLoaded","name":"IntakeForm loaded","payloadSchema":[{"name":"data","type":"[IntakeForm]"}]},{"key":"IntakeFormSaveFailed","name":"IntakeForm save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"IntakeFormSaved","name":"IntakeForm saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"step1","to":"step1","event":"INIT","effects":[["fetch","IntakeForm",{"emit":{"failure":"IntakeFormLoadFailed","success":"IntakeFormLoaded"}}],["render-ui","main",{"appName":"HealthcareApp","type":"dashboard-layout","navItems":[{"href":"/patients","label":"Patients","icon":"heart"},{"href":"/appointments","label":"Appointments","icon":"calendar"},{"icon":"layout-list","href":"/intake","label":"Intake"},{"href":"/prescriptions","icon":"pill","label":"Prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"children":[{"type":"container","children":[{"children":[{"type":"stack","children":[{"type":"icon","name":"clipboard"},{"content":"Patient Intake","variant":"h2","type":"typography"}],"align":"center","direction":"horizontal","gap":"sm"},{"type":"progress-dots","currentIndex":0,"count":3},{"type":"wizard-progress","currentStep":0,"steps":["Personal Info","Medical History","Insurance"]},{"type":"divider"},{"content":"Personal Info","type":"typography","variant":"h3"},{"type":"form-section","fields":["firstName","lastName","dateOfBirth"],"cancelEvent":"INIT","submitEvent":"NEXT","mode":"create"},{"justify":"end","type":"stack","children":[{"label":"Next","action":"NEXT","icon":"arrow-right","variant":"primary","type":"button"}],"gap":"sm","direction":"horizontal"}],"gap":"lg","type":"stack","direction":"vertical"}],"padding":"lg","maxWidth":"lg"}]}]]},{"from":"step1","to":"step2","event":"NEXT","effects":[["fetch","IntakeForm",{"emit":{"failure":"IntakeFormLoadFailed","success":"IntakeFormLoaded"}}],["render-ui","main",{"children":[{"children":[{"direction":"vertical","children":[{"gap":"sm","align":"center","direction":"horizontal","type":"stack","children":[{"name":"clipboard","type":"icon"},{"content":"Patient Intake","type":"typography","variant":"h2"}]},{"currentIndex":1,"type":"progress-dots","count":3},{"type":"wizard-progress","steps":["Personal Info","Medical History","Insurance"],"currentStep":1},{"type":"divider"},{"type":"typography","content":"Medical History","variant":"h3"},{"type":"form-section","mode":"create","fields":["allergies","medications"],"cancelEvent":"PREV","submitEvent":"NEXT"},{"type":"stack","justify":"end","gap":"sm","direction":"horizontal","children":[{"type":"button","action":"PREV","variant":"ghost","label":"Back","icon":"arrow-left"},{"type":"button","action":"NEXT","label":"Next","variant":"primary","icon":"arrow-right"}]}],"type":"stack","gap":"lg"}],"maxWidth":"lg","type":"container","padding":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/patients","icon":"heart","label":"Patients"},{"icon":"calendar","href":"/appointments","label":"Appointments"},{"label":"Intake","href":"/intake","icon":"layout-list"},{"icon":"pill","href":"/prescriptions","label":"Prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"appName":"HealthcareApp"}]]},{"from":"step2","to":"step3","event":"NEXT","effects":[["fetch","IntakeForm",{"emit":{"failure":"IntakeFormLoadFailed","success":"IntakeFormLoaded"}}],["render-ui","main",{"children":[{"children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"clipboard"},{"type":"typography","content":"Patient Intake","variant":"h2"}],"align":"center"},{"currentIndex":2,"type":"progress-dots","count":3},{"steps":["Personal Info","Medical History","Insurance"],"currentStep":2,"type":"wizard-progress"},{"type":"divider"},{"type":"typography","content":"Insurance","variant":"h3"},{"mode":"create","type":"form-section","submitEvent":"NEXT","fields":["emergencyContact","insuranceProvider","insuranceId"],"cancelEvent":"PREV"},{"gap":"sm","type":"stack","justify":"end","children":[{"variant":"ghost","icon":"arrow-left","action":"PREV","label":"Back","type":"button"},{"action":"NEXT","icon":"arrow-right","type":"button","variant":"primary","label":"Next"}],"direction":"horizontal"}]}],"type":"container","padding":"lg","maxWidth":"lg"}],"navItems":[{"icon":"heart","href":"/patients","label":"Patients"},{"label":"Appointments","icon":"calendar","href":"/appointments"},{"icon":"layout-list","href":"/intake","label":"Intake"},{"label":"Prescriptions","href":"/prescriptions","icon":"pill"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"type":"dashboard-layout","appName":"HealthcareApp"}]]},{"from":"step2","to":"step1","event":"PREV","effects":[["fetch","IntakeForm",{"emit":{"success":"IntakeFormLoaded","failure":"IntakeFormLoadFailed"}}],["render-ui","main",{"children":[{"maxWidth":"lg","padding":"lg","type":"container","children":[{"direction":"vertical","children":[{"align":"center","direction":"horizontal","children":[{"type":"icon","name":"clipboard"},{"content":"Patient Intake","type":"typography","variant":"h2"}],"gap":"sm","type":"stack"},{"currentIndex":0,"count":3,"type":"progress-dots"},{"type":"wizard-progress","steps":["Personal Info","Medical History","Insurance"],"currentStep":0},{"type":"divider"},{"variant":"h3","content":"Personal Info","type":"typography"},{"cancelEvent":"INIT","fields":["firstName","lastName","dateOfBirth"],"type":"form-section","mode":"create","submitEvent":"NEXT"},{"direction":"horizontal","gap":"sm","justify":"end","children":[{"label":"Next","type":"button","variant":"primary","icon":"arrow-right","action":"NEXT"}],"type":"stack"}],"type":"stack","gap":"lg"}]}],"navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"href":"/intake","icon":"layout-list","label":"Intake"},{"icon":"pill","href":"/prescriptions","label":"Prescriptions"},{"href":"/dashboard","label":"Dashboard","icon":"layout-dashboard"}],"appName":"HealthcareApp","type":"dashboard-layout"}]]},{"from":"step3","to":"review","event":"NEXT","effects":[["fetch","IntakeForm",{"emit":{"success":"IntakeFormLoaded","failure":"IntakeFormLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"direction":"horizontal","align":"center","type":"stack","children":[{"name":"clipboard","type":"icon"},{"type":"typography","variant":"h2","content":"Patient Intake"}],"gap":"sm"},{"type":"badge","label":"Review"},{"steps":["Personal Info","Medical History","Insurance"],"type":"wizard-progress","currentStep":3},{"type":"divider"},{"children":[{"direction":"horizontal","type":"stack","justify":"between","gap":"md","children":[{"type":"typography","variant":"caption","content":"First Name"},{"variant":"body","type":"typography","content":"@entity.firstName"}]},{"children":[{"type":"typography","variant":"caption","content":"Last Name"},{"content":"@entity.lastName","variant":"body","type":"typography"}],"gap":"md","direction":"horizontal","justify":"between","type":"stack"},{"direction":"horizontal","children":[{"type":"typography","variant":"caption","content":"Date Of Birth"},{"variant":"body","type":"typography","content":"@entity.dateOfBirth"}],"type":"stack","justify":"between","gap":"md"},{"type":"stack","children":[{"type":"typography","variant":"caption","content":"Allergies"},{"variant":"body","content":"@entity.allergies","type":"typography"}],"gap":"md","direction":"horizontal","justify":"between"},{"type":"stack","children":[{"variant":"caption","type":"typography","content":"Medications"},{"content":"@entity.medications","type":"typography","variant":"body"}],"direction":"horizontal","gap":"md","justify":"between"},{"children":[{"content":"Emergency Contact","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.emergencyContact"}],"gap":"md","type":"stack","direction":"horizontal","justify":"between"},{"justify":"between","direction":"horizontal","gap":"md","children":[{"variant":"caption","type":"typography","content":"Insurance Provider"},{"content":"@entity.insuranceProvider","type":"typography","variant":"body"}],"type":"stack"},{"direction":"horizontal","gap":"md","justify":"between","children":[{"content":"Insurance Id","variant":"caption","type":"typography"},{"content":"@entity.insuranceId","type":"typography","variant":"body"}],"type":"stack"}],"gap":"sm","type":"stack","direction":"vertical"},{"showNext":false,"totalSteps":4,"showBack":true,"type":"wizard-navigation","currentStep":3,"showComplete":true}],"gap":"lg","direction":"vertical","type":"stack"}],"appName":"HealthcareApp","navItems":[{"icon":"heart","href":"/patients","label":"Patients"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"href":"/intake","icon":"layout-list","label":"Intake"},{"label":"Prescriptions","icon":"pill","href":"/prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"type":"dashboard-layout"}]]},{"from":"step3","to":"step2","event":"PREV","effects":[["fetch","IntakeForm",{"emit":{"failure":"IntakeFormLoadFailed","success":"IntakeFormLoaded"}}],["render-ui","main",{"appName":"HealthcareApp","navItems":[{"icon":"heart","label":"Patients","href":"/patients"},{"href":"/appointments","label":"Appointments","icon":"calendar"},{"href":"/intake","icon":"layout-list","label":"Intake"},{"icon":"pill","label":"Prescriptions","href":"/prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"children":[{"children":[{"children":[{"children":[{"type":"icon","name":"clipboard"},{"type":"typography","variant":"h2","content":"Patient Intake"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"currentIndex":1,"type":"progress-dots","count":3},{"type":"wizard-progress","currentStep":1,"steps":["Personal Info","Medical History","Insurance"]},{"type":"divider"},{"variant":"h3","type":"typography","content":"Medical History"},{"submitEvent":"NEXT","cancelEvent":"PREV","mode":"create","fields":["allergies","medications"],"type":"form-section"},{"children":[{"type":"button","action":"PREV","label":"Back","variant":"ghost","icon":"arrow-left"},{"icon":"arrow-right","type":"button","action":"NEXT","variant":"primary","label":"Next"}],"type":"stack","direction":"horizontal","gap":"sm","justify":"end"}],"gap":"lg","direction":"vertical","type":"stack"}],"maxWidth":"lg","type":"container","padding":"lg"}],"type":"dashboard-layout"}]]},{"from":"review","to":"step3","event":"PREV","effects":[["fetch","IntakeForm",{"emit":{"success":"IntakeFormLoaded","failure":"IntakeFormLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"align":"center","type":"stack","gap":"sm","children":[{"name":"clipboard","type":"icon"},{"variant":"h2","type":"typography","content":"Patient Intake"}],"direction":"horizontal"},{"count":3,"currentIndex":2,"type":"progress-dots"},{"steps":["Personal Info","Medical History","Insurance"],"currentStep":2,"type":"wizard-progress"},{"type":"divider"},{"content":"Insurance","type":"typography","variant":"h3"},{"type":"form-section","submitEvent":"NEXT","fields":["emergencyContact","insuranceProvider","insuranceId"],"cancelEvent":"PREV","mode":"create"},{"direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"button","icon":"arrow-left","label":"Back","action":"PREV","variant":"ghost"},{"type":"button","label":"Next","icon":"arrow-right","variant":"primary","action":"NEXT"}],"justify":"end"}]}],"type":"container","maxWidth":"lg","padding":"lg"}],"appName":"HealthcareApp","navItems":[{"icon":"heart","label":"Patients","href":"/patients"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"icon":"layout-list","label":"Intake","href":"/intake"},{"label":"Prescriptions","href":"/prescriptions","icon":"pill"},{"label":"Dashboard","icon":"layout-dashboard","href":"/dashboard"}],"type":"dashboard-layout"}]]},{"from":"review","to":"complete","event":"COMPLETE","effects":[["persist","create","IntakeForm","@payload.data",{"emit":{"success":"IntakeFormSaved","failure":"IntakeFormSaveFailed"}}],["notify","success","IntakeForm created successfully"],["render-ui","main",{"navItems":[{"icon":"heart","label":"Patients","href":"/patients"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"href":"/intake","icon":"layout-list","label":"Intake"},{"label":"Prescriptions","href":"/prescriptions","icon":"pill"},{"href":"/dashboard","icon":"layout-dashboard","label":"Dashboard"}],"type":"dashboard-layout","children":[{"children":[{"name":"check-circle","type":"icon"},{"type":"typography","content":"Intake Complete","variant":"h2"},{"type":"typography","content":"Patient intake form has been submitted successfully.","variant":"body"},{"label":"Start New","variant":"primary","type":"button","icon":"refresh-cw","action":"RESTART"}],"align":"center","direction":"vertical","type":"stack","gap":"lg"}],"appName":"HealthcareApp"}]]},{"from":"complete","to":"step1","event":"RESTART","effects":[["fetch","IntakeForm",{"emit":{"failure":"IntakeFormLoadFailed","success":"IntakeFormLoaded"}}],["render-ui","main",{"navItems":[{"href":"/patients","icon":"heart","label":"Patients"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"label":"Intake","icon":"layout-list","href":"/intake"},{"href":"/prescriptions","label":"Prescriptions","icon":"pill"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"appName":"HealthcareApp","children":[{"maxWidth":"lg","type":"container","padding":"lg","children":[{"gap":"lg","direction":"vertical","children":[{"children":[{"type":"icon","name":"clipboard"},{"content":"Patient Intake","type":"typography","variant":"h2"}],"gap":"sm","type":"stack","direction":"horizontal","align":"center"},{"type":"progress-dots","currentIndex":0,"count":3},{"type":"wizard-progress","steps":["Personal Info","Medical History","Insurance"],"currentStep":0},{"type":"divider"},{"type":"typography","variant":"h3","content":"Personal Info"},{"cancelEvent":"INIT","submitEvent":"NEXT","fields":["firstName","lastName","dateOfBirth"],"type":"form-section","mode":"create"},{"justify":"end","direction":"horizontal","children":[{"icon":"arrow-right","variant":"primary","label":"Next","type":"button","action":"NEXT"}],"gap":"sm","type":"stack"}],"type":"stack"}]}],"type":"dashboard-layout"}]]},{"from":"complete","to":"step1","event":"INIT","effects":[["fetch","IntakeForm",{"emit":{"success":"IntakeFormLoaded","failure":"IntakeFormLoadFailed"}}],["render-ui","main",{"navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"href":"/appointments","label":"Appointments","icon":"calendar"},{"href":"/intake","icon":"layout-list","label":"Intake"},{"href":"/prescriptions","icon":"pill","label":"Prescriptions"},{"href":"/dashboard","label":"Dashboard","icon":"layout-dashboard"}],"children":[{"maxWidth":"lg","padding":"lg","type":"container","children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"type":"stack","children":[{"type":"icon","name":"clipboard"},{"type":"typography","content":"Patient Intake","variant":"h2"}],"direction":"horizontal","align":"center","gap":"sm"},{"type":"progress-dots","count":3,"currentIndex":0},{"currentStep":0,"type":"wizard-progress","steps":["Personal Info","Medical History","Insurance"]},{"type":"divider"},{"variant":"h3","type":"typography","content":"Personal Info"},{"fields":["firstName","lastName","dateOfBirth"],"cancelEvent":"INIT","mode":"create","type":"form-section","submitEvent":"NEXT"},{"children":[{"type":"button","label":"Next","variant":"primary","action":"NEXT","icon":"arrow-right"}],"type":"stack","direction":"horizontal","justify":"end","gap":"sm"}]}]}],"type":"dashboard-layout","appName":"HealthcareApp"}]]}]},"scope":"collection"}],"pages":[{"name":"Intake","path":"/intake","traits":[{"ref":"IntakeFormWizard"}]}]},{"name":"PrescriptionOrbital","entity":{"name":"Prescription","collection":"prescriptions","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"medication","type":"string","required":true},{"name":"dosage","type":"string","required":true},{"name":"frequency","type":"string","required":true},{"name":"patientName","type":"string","required":true},{"name":"prescribedBy","type":"string"},{"name":"startDate","type":"datetime"},{"name":"endDate","type":"datetime"}]},"traits":[{"name":"PrescriptionBrowse","category":"interaction","linkedEntity":"Prescription","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.medication","type":"string","required":true},{"name":"row.dosage","type":"string","required":true},{"name":"row.frequency","type":"string","required":true},{"name":"row.patientName","type":"string","required":true},{"name":"row.prescribedBy","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.endDate","type":"datetime"}]},{"event":"PrescriptionLoaded","description":"Fired when Prescription finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"event":"PrescriptionLoadFailed","description":"Fired when Prescription fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PRESCRIBE","triggers":"INIT","source":{"kind":"orbital","orbital":"AppointmentOrbital","trait":"AppointmentBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PrescriptionLoaded","name":"Prescription loaded","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"key":"PrescriptionLoadFailed","name":"Prescription load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Prescription",{"emit":{"success":"PrescriptionLoaded","failure":"PrescriptionLoadFailed"}}],["render-ui","main",{"type":"stack","className":"py-12","align":"center","children":[{"type":"spinner"},{"type":"typography","variant":"caption","color":"muted","content":"Loading…"}],"direction":"vertical","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"PrescriptionLoaded","effects":[["render-ui","main",{"children":[{"type":"stack","gap":"lg","direction":"vertical","className":"max-w-5xl mx-auto w-full","children":[{"gap":"md","direction":"horizontal","align":"center","type":"stack","justify":"between","children":[{"children":[{"name":"file-text","type":"icon"},{"variant":"h2","content":"Prescriptions","type":"typography"}],"direction":"horizontal","type":"stack","gap":"sm","align":"center"},{"gap":"sm","direction":"horizontal","type":"stack","children":[{"type":"button","action":"CREATE","variant":"primary","icon":"plus","label":"Create Prescription"}]}]},{"type":"divider"},{"type":"data-list","variant":"card","itemActions":[{"variant":"ghost","event":"VIEW","label":"View"}],"entity":"@payload.data","fields":[{"name":"medication","icon":"pill","variant":"h3"},{"variant":"badge","name":"dosage"},{"name":"frequency","variant":"body"},{"name":"patientName","label":"Patient","variant":"body"},{"variant":"caption","label":"Prescribed By","name":"prescribedBy"},{"name":"startDate","variant":"caption","format":"date","label":"Start Date"}],"gap":"sm"}]}],"navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"label":"Intake","href":"/intake","icon":"layout-list"},{"icon":"pill","href":"/prescriptions","label":"Prescriptions"},{"icon":"layout-dashboard","href":"/dashboard","label":"Dashboard"}],"appName":"HealthcareApp","type":"dashboard-layout"}]]},{"from":"browsing","to":"browsing","event":"PrescriptionLoadFailed","effects":[["render-ui","main",{"type":"stack","align":"center","className":"py-12","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"content":"Failed to load prescription","variant":"h3","type":"typography"},{"content":"@payload.error","variant":"body","type":"typography","color":"muted"},{"label":"Retry","action":"INIT","type":"button","icon":"rotate-ccw","variant":"primary"}],"gap":"md","direction":"vertical"}]]}]},"scope":"collection"},{"name":"PrescriptionCreate","category":"interaction","linkedEntity":"Prescription","emits":[{"event":"PrescriptionLoadFailed","description":"Fired when Prescription fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PrescriptionLoaded","description":"Fired when Prescription finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"event":"PrescriptionSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PrescriptionSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"PrescriptionBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"PrescriptionLoadFailed","name":"Prescription load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PrescriptionLoaded","name":"Prescription loaded","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"key":"PrescriptionSaveFailed","name":"Prescription save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PrescriptionSaved","name":"Prescription saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Prescription",{"emit":{"failure":"PrescriptionLoadFailed","success":"PrescriptionLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Prescription",{"emit":{"failure":"PrescriptionLoadFailed","success":"PrescriptionLoaded"}}],["render-ui","modal",{"direction":"vertical","type":"stack","gap":"md","children":[{"direction":"horizontal","children":[{"type":"icon","name":"plus-circle"},{"type":"typography","variant":"h3","content":"New Prescription"}],"type":"stack","gap":"sm"},{"type":"divider"},{"type":"form-section","mode":"create","fields":["medication","dosage","frequency","patientName","prescribedBy","startDate","endDate"],"cancelEvent":"CLOSE","submitEvent":"SAVE"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Prescription","@payload.data",{"emit":{"success":"PrescriptionSaved","failure":"PrescriptionSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"PrescriptionView","category":"interaction","linkedEntity":"Prescription","emits":[{"event":"PrescriptionLoaded","description":"Fired when Prescription finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"event":"PrescriptionLoadFailed","description":"Fired when Prescription fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"PrescriptionBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"PrescriptionLoaded","name":"Prescription loaded","payloadSchema":[{"name":"data","type":"[Prescription]"}]},{"key":"PrescriptionLoadFailed","name":"Prescription load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Prescription",{"emit":{"success":"PrescriptionLoaded","failure":"PrescriptionLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Prescription",{"emit":{"success":"PrescriptionLoaded","failure":"PrescriptionLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","direction":"vertical","type":"stack","children":[{"direction":"horizontal","gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"eye"},{"type":"typography","content":"@entity.medication","variant":"h3"}]},{"type":"divider"},{"direction":"horizontal","gap":"md","type":"stack","children":[{"variant":"caption","type":"typography","content":"Medication"},{"content":"@entity.medication","variant":"body","type":"typography"}]},{"children":[{"content":"Dosage","variant":"caption","type":"typography"},{"variant":"body","content":"@entity.dosage","type":"typography"}],"direction":"horizontal","type":"stack","gap":"md"},{"direction":"horizontal","children":[{"type":"typography","content":"Frequency","variant":"caption"},{"content":"@entity.frequency","variant":"body","type":"typography"}],"type":"stack","gap":"md"},{"children":[{"content":"Patient Name","variant":"caption","type":"typography"},{"content":"@entity.patientName","type":"typography","variant":"body"}],"gap":"md","type":"stack","direction":"horizontal"},{"type":"stack","gap":"md","direction":"horizontal","children":[{"variant":"caption","type":"typography","content":"Prescribed By"},{"content":"@entity.prescribedBy","type":"typography","variant":"body"}]},{"direction":"horizontal","children":[{"variant":"caption","content":"Start Date","type":"typography"},{"content":"@entity.startDate","type":"typography","variant":"body"}],"gap":"md","type":"stack"},{"children":[{"type":"typography","content":"End Date","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.endDate"}],"gap":"md","direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"stack","direction":"horizontal","justify":"end","children":[{"variant":"ghost","type":"button","action":"CLOSE","label":"Close"}],"gap":"sm"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"Prescriptions","path":"/prescriptions","traits":[{"ref":"PrescriptionBrowse"},{"ref":"PrescriptionCreate"},{"ref":"PrescriptionView"}]}]},{"name":"DashboardOrbital","entity":{"name":"Dashboard","persistence":"singleton","fields":[{"name":"id","type":"string","required":true},{"name":"totalPatients","type":"number"},{"name":"appointmentsToday","type":"number"},{"name":"pendingIntakes","type":"number"},{"name":"activePrescriptions","type":"number"}]},"traits":[{"name":"DashboardDisplay","category":"interaction","linkedEntity":"Dashboard","emits":[{"event":"DashboardLoaded","description":"Fired when Dashboard finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Dashboard]"}]},{"event":"DashboardLoadFailed","description":"Fired when Dashboard fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"DashboardLoaded","name":"Dashboard loaded","payloadSchema":[{"name":"data","type":"[Dashboard]"}]},{"key":"DashboardLoadFailed","name":"Dashboard load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","Dashboard",{"emit":{"success":"DashboardLoaded","failure":"DashboardLoadFailed"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"children":[{"items":[{"label":"Home","href":"/"},{"label":"Clinic Dashboard"}],"type":"breadcrumb"},{"children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"activity"},{"content":"Clinic Dashboard","variant":"h2","type":"typography"}]},{"label":"Refresh","icon":"refresh-cw","variant":"secondary","action":"REFRESH","type":"button"}],"direction":"horizontal","type":"stack","justify":"between","gap":"md"},{"type":"divider"},{"children":[{"children":[{"type":"stat-display","label":"TotalPatients","value":"@entity.totalPatients"},{"type":"stat-display","label":"AppointmentsToday","value":"@entity.appointmentsToday"},{"type":"stat-display","label":"PendingIntakes","value":"@entity.pendingIntakes"},{"type":"stat-display","label":"ActivePrescriptions","value":"@entity.activePrescriptions"}],"type":"simple-grid","cols":4}],"padding":"md","type":"box"},{"type":"divider"},{"type":"grid","children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}],"cols":2,"gap":"md"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"height":200,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"type":"graph-view","edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400}],"type":"stack","direction":"vertical","gap":"lg"}]}],"navItems":[{"icon":"heart","label":"Patients","href":"/patients"},{"href":"/appointments","label":"Appointments","icon":"calendar"},{"href":"/intake","label":"Intake","icon":"layout-list"},{"href":"/prescriptions","icon":"pill","label":"Prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"type":"dashboard-layout","appName":"HealthcareApp"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","Dashboard",{"emit":{"success":"DashboardLoaded","failure":"DashboardLoadFailed"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Clinic Dashboard"}]},{"type":"stack","gap":"md","justify":"between","direction":"horizontal","children":[{"direction":"horizontal","type":"stack","children":[{"type":"icon","name":"activity"},{"content":"Clinic Dashboard","type":"typography","variant":"h2"}],"gap":"md"},{"icon":"refresh-cw","type":"button","action":"REFRESH","label":"Refresh","variant":"secondary"}]},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":4,"type":"simple-grid","children":[{"type":"stat-display","label":"TotalPatients","value":"@entity.totalPatients"},{"value":"@entity.appointmentsToday","type":"stat-display","label":"AppointmentsToday"},{"value":"@entity.pendingIntakes","type":"stat-display","label":"PendingIntakes"},{"value":"@entity.activePrescriptions","label":"ActivePrescriptions","type":"stat-display"}]}]},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"children":[{"type":"typography","content":"Chart View","variant":"caption"}],"type":"card"},{"type":"card","children":[{"type":"typography","variant":"caption","content":"Graph View"}]}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"height":200,"type":"graph-view","edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"width":400,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}]}]}],"appName":"HealthcareApp","type":"dashboard-layout","navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"href":"/appointments","icon":"calendar","label":"Appointments"},{"icon":"layout-list","label":"Intake","href":"/intake"},{"icon":"pill","label":"Prescriptions","href":"/prescriptions"},{"icon":"layout-dashboard","label":"Dashboard","href":"/dashboard"}]}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","Dashboard",{"emit":{"failure":"DashboardLoadFailed","success":"DashboardLoaded"}}],["render-ui","main",{"navItems":[{"icon":"heart","label":"Patients","href":"/patients"},{"href":"/appointments","icon":"calendar","label":"Appointments"},{"icon":"layout-list","label":"Intake","href":"/intake"},{"label":"Prescriptions","href":"/prescriptions","icon":"pill"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}],"type":"dashboard-layout","appName":"HealthcareApp","children":[{"type":"scaled-diagram","children":[{"type":"stack","children":[{"items":[{"href":"/","label":"Home"},{"label":"Clinic Dashboard"}],"type":"breadcrumb"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"stack","children":[{"type":"icon","name":"activity"},{"variant":"h2","type":"typography","content":"Clinic Dashboard"}],"direction":"horizontal","gap":"md"},{"type":"button","variant":"secondary","label":"Refresh","icon":"refresh-cw","action":"REFRESH"}],"justify":"between"},{"type":"divider"},{"padding":"md","type":"box","children":[{"children":[{"type":"stat-display","label":"TotalPatients","value":"@entity.totalPatients"},{"type":"stat-display","value":"@entity.appointmentsToday","label":"AppointmentsToday"},{"label":"PendingIntakes","value":"@entity.pendingIntakes","type":"stat-display"},{"label":"ActivePrescriptions","type":"stat-display","value":"@entity.activePrescriptions"}],"type":"simple-grid","cols":4}]},{"type":"divider"},{"cols":2,"gap":"md","children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"children":[{"type":"typography","content":"Graph View","variant":"caption"}],"type":"card"}],"type":"grid"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"type":"graph-view","edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"width":400,"height":200}],"gap":"lg","direction":"vertical"}]}]}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","Dashboard",{"emit":{"success":"DashboardLoaded","failure":"DashboardLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"HealthcareApp","children":[{"children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Clinic Dashboard"}],"type":"breadcrumb"},{"type":"stack","gap":"md","justify":"between","children":[{"type":"stack","gap":"md","children":[{"type":"icon","name":"activity"},{"variant":"h2","type":"typography","content":"Clinic Dashboard"}],"direction":"horizontal"},{"label":"Refresh","action":"REFRESH","icon":"refresh-cw","variant":"secondary","type":"button"}],"direction":"horizontal"},{"type":"divider"},{"type":"box","padding":"md","children":[{"type":"simple-grid","cols":4,"children":[{"value":"@entity.totalPatients","type":"stat-display","label":"TotalPatients"},{"label":"AppointmentsToday","type":"stat-display","value":"@entity.appointmentsToday"},{"value":"@entity.pendingIntakes","type":"stat-display","label":"PendingIntakes"},{"type":"stat-display","label":"ActivePrescriptions","value":"@entity.activePrescriptions"}]}]},{"type":"divider"},{"gap":"md","children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"children":[{"variant":"caption","content":"Graph View","type":"typography"}],"type":"card"}],"type":"grid","cols":2},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"type":"graph-view","height":200,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"width":400}]}],"type":"scaled-diagram"}],"navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"label":"Appointments","icon":"calendar","href":"/appointments"},{"label":"Intake","icon":"layout-list","href":"/intake"},{"href":"/prescriptions","label":"Prescriptions","icon":"pill"},{"icon":"layout-dashboard","label":"Dashboard","href":"/dashboard"}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","Dashboard",{"emit":{"success":"DashboardLoaded","failure":"DashboardLoadFailed"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Clinic Dashboard"}]},{"direction":"horizontal","gap":"md","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"name":"activity","type":"icon"},{"type":"typography","content":"Clinic Dashboard","variant":"h2"}]},{"variant":"secondary","action":"REFRESH","label":"Refresh","type":"button","icon":"refresh-cw"}],"justify":"between","type":"stack"},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":4,"children":[{"type":"stat-display","value":"@entity.totalPatients","label":"TotalPatients"},{"type":"stat-display","label":"AppointmentsToday","value":"@entity.appointmentsToday"},{"value":"@entity.pendingIntakes","label":"PendingIntakes","type":"stat-display"},{"type":"stat-display","label":"ActivePrescriptions","value":"@entity.activePrescriptions"}],"type":"simple-grid"}]},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"width":400,"height":200,"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}]}]}]}],"appName":"HealthcareApp","type":"dashboard-layout","navItems":[{"label":"Patients","href":"/patients","icon":"heart"},{"label":"Appointments","href":"/appointments","icon":"calendar"},{"label":"Intake","href":"/intake","icon":"layout-list"},{"label":"Prescriptions","icon":"pill","href":"/prescriptions"},{"label":"Dashboard","href":"/dashboard","icon":"layout-dashboard"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Dashboard","path":"/dashboard","traits":[{"ref":"DashboardDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'PatientOrbital',
+      uses: [],
+      entity: {
+        'name': 'Patient',
+        'collection': 'patients',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'firstName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'lastName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateOfBirth',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+          },
+          {
+            'name': 'insuranceId',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'discharged',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PatientBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Patient',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.firstName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.lastName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.dateOfBirth',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.insuranceId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.firstName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.lastName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.dateOfBirth',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.insuranceId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.firstName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.lastName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.dateOfBirth',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.insuranceId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoaded',
+              'description': 'Fired when Patient finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Patient]',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoadFailed',
+              'description': 'Fired when Patient fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PATIENT_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientCreate',
+              },
+            },
+            {
+              'event': 'PATIENT_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientEdit',
+              },
+            },
+            {
+              'event': 'PATIENT_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientDelete',
+              },
+            },
+            {
+              'event': 'INTAKE_COMPLETE',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'IntakeFormOrbital',
+                'trait': 'IntakeFormWizard',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PatientLoaded',
+                'name': 'Patient loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Patient]',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoadFailed',
+                'name': 'Patient load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Patient',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Patient',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Patient',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientSaved',
+                'name': 'Patient saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientSaveFailed',
+                'name': 'Patient save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientUpdated',
+                'name': 'Patient updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientUpdateFailed',
+                'name': 'Patient update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientDeleted',
+                'name': 'Patient deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientDeleteFailed',
+                'name': 'Patient delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentSaved',
+                'name': 'Appointment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentSaveFailed',
+                'name': 'Appointment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentUpdated',
+                'name': 'Appointment updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentUpdateFailed',
+                'name': 'Appointment update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentDeleted',
+                'name': 'Appointment deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentDeleteFailed',
+                'name': 'Appointment delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'IntakeFormSaved',
+                'name': 'Intake form saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'IntakeFormSaveFailed',
+                'name': 'Intake form save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionSaved',
+                'name': 'Prescription saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionSaveFailed',
+                'name': 'Prescription save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PatientLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'users',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Patients',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'label': 'Create Patient',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Total Patients',
+                                  'type': 'stat-display',
+                                  'icon': 'users',
+                                  'value': '@payload.data.length',
+                                },
+                              ],
+                              'cols': 1,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'name': 'firstName',
+                                  'variant': 'h3',
+                                  'icon': 'user',
+                                },
+                                {
+                                  'name': 'lastName',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'format': 'date',
+                                  'name': 'dateOfBirth',
+                                  'label': 'Date of Birth',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'phone',
+                                },
+                                {
+                                  'name': 'insuranceId',
+                                  'label': 'Insurance ID',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'entity': '@payload.data',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'icon': 'heart',
+                          'label': 'Patients',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                          'href': '/intake',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PatientLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'content': 'Failed to load patient',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'type': 'button',
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'className': 'py-12',
+                      'align': 'center',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PatientCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Patient',
+          'emits': [
+            {
+              'event': 'PATIENT_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoadFailed',
+              'description': 'Fired when Patient fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoaded',
+              'description': 'Fired when Patient finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Patient]',
+                },
+              ],
+            },
+            {
+              'event': 'PatientSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PATIENT_CREATED',
+                'name': 'Patient Created',
+              },
+              {
+                'key': 'PatientLoadFailed',
+                'name': 'Patient load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoaded',
+                'name': 'Patient loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Patient]',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientSaveFailed',
+                'name': 'Patient save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientSaved',
+                'name': 'Patient saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'failure': 'PatientLoadFailed',
+                        'success': 'PatientLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Create Patient',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'fields': [
+                            'firstName',
+                            'lastName',
+                            'dateOfBirth',
+                            'phone',
+                            'insuranceId',
+                            'status',
+                          ],
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Patient',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'PatientSaved',
+                        'failure': 'PatientSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PATIENT_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PatientEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Patient',
+          'emits': [
+            {
+              'event': 'PATIENT_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoadFailed',
+              'description': 'Fired when Patient fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoaded',
+              'description': 'Fired when Patient finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Patient]',
+                },
+              ],
+            },
+            {
+              'event': 'PatientUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Patient',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PATIENT_UPDATED',
+                'name': 'Patient Updated',
+              },
+              {
+                'key': 'PatientLoadFailed',
+                'name': 'Patient load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoaded',
+                'name': 'Patient loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Patient]',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientUpdateFailed',
+                'name': 'Patient update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientUpdated',
+                'name': 'Patient updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'failure': 'PatientLoadFailed',
+                        'success': 'PatientLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Edit Patient',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'edit',
+                          'entity': '@payload.row',
+                          'fields': [
+                            'firstName',
+                            'lastName',
+                            'dateOfBirth',
+                            'phone',
+                            'insuranceId',
+                            'status',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Patient',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'PatientUpdated',
+                        'failure': 'PatientUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PATIENT_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PatientView',
+          'category': 'interaction',
+          'linkedEntity': 'Patient',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoaded',
+              'description': 'Fired when Patient finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Patient]',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoadFailed',
+              'description': 'Fired when Patient fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'PatientLoaded',
+                'name': 'Patient loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Patient]',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoadFailed',
+                'name': 'Patient load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.dateOfBirth',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.firstName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.insuranceId',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.phone',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'active',
+                  ],
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.firstName',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'First Name',
+                            },
+                            {
+                              'content': '@entity.firstName',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Last Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.lastName',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Date Of Birth',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.dateOfBirth',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Phone',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.phone',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Insurance ID',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.insuranceId',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'primary',
+                              'type': 'button',
+                              'label': 'Edit',
+                              'icon': 'edit',
+                              'action': 'EDIT',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'label': 'Close',
+                            },
+                          ],
+                          'type': 'stack',
+                          'justify': 'end',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PatientDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Patient',
+          'emits': [
+            {
+              'event': 'PATIENT_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoadFailed',
+              'description': 'Fired when Patient fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PatientLoaded',
+              'description': 'Fired when Patient finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Patient]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PatientBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'PATIENT_DELETED',
+                'name': 'Patient Deleted',
+              },
+              {
+                'key': 'PatientDeleteFailed',
+                'name': 'Patient delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientDeleted',
+                'name': 'Patient deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoadFailed',
+                'name': 'Patient load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PatientLoaded',
+                'name': 'Patient loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Patient]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'failure': 'PatientLoadFailed',
+                        'success': 'PatientLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Delete Patient',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'label': 'Delete',
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Patient',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'PatientDeleteFailed',
+                        'success': 'PatientDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PATIENT_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'success': 'PatientLoaded',
+                        'failure': 'PatientLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Patient',
+                    {
+                      'emit': {
+                        'failure': 'PatientLoadFailed',
+                        'success': 'PatientLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'PatientsPage',
+          'path': '/patients',
+          'traits': [
+            {
+              'ref': 'PatientBrowse',
+            },
+            {
+              'ref': 'PatientCreate',
+            },
+            {
+              'ref': 'PatientEdit',
+            },
+            {
+              'ref': 'PatientView',
+            },
+            {
+              'ref': 'PatientDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'AppointmentOrbital',
+      uses: [],
+      entity: {
+        'name': 'Appointment',
+        'collection': 'appointments',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'doctorName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'date',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'time',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'discharged',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'AppointmentBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Appointment',
+          'emits': [
+            {
+              'event': 'PRESCRIBE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.patientName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.doctorName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.date',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.time',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.reason',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.patientName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.doctorName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.date',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.time',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.reason',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.patientName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.doctorName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.date',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.time',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.reason',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoaded',
+              'description': 'Fired when Appointment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoadFailed',
+              'description': 'Fired when Appointment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'APPOINTMENT_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentCreate',
+              },
+            },
+            {
+              'event': 'APPOINTMENT_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentEdit',
+              },
+            },
+            {
+              'event': 'APPOINTMENT_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'AppointmentLoaded',
+                'name': 'Appointment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Appointment]',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoadFailed',
+                'name': 'Appointment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PRESCRIBE',
+                'name': 'Prescribe',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                        },
+                      ],
+                      'gap': 'md',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'AppointmentLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'href': '/patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'icon': 'pill',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'calendar',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Appointments',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'label': 'Create Appointment',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'label': 'Patient',
+                                  'name': 'patientName',
+                                  'variant': 'h3',
+                                  'icon': 'calendar',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'label': 'Doctor',
+                                  'variant': 'body',
+                                  'name': 'doctorName',
+                                },
+                                {
+                                  'name': 'date',
+                                  'variant': 'body',
+                                  'format': 'date',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'time',
+                                },
+                                {
+                                  'name': 'reason',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'AppointmentLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'variant': 'h3',
+                          'type': 'typography',
+                          'content': 'Failed to load appointment',
+                        },
+                        {
+                          'variant': 'body',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'type': 'button',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AppointmentCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Appointment',
+          'emits': [
+            {
+              'event': 'APPOINTMENT_CREATED',
+            },
+            {
+              'event': 'AppointmentLoadFailed',
+              'description': 'Fired when Appointment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoaded',
+              'description': 'Fired when Appointment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'APPOINTMENT_CREATED',
+                'name': 'Appointment Created',
+              },
+              {
+                'key': 'AppointmentLoadFailed',
+                'name': 'Appointment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoaded',
+                'name': 'Appointment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Appointment]',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentSaveFailed',
+                'name': 'Appointment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentSaved',
+                'name': 'Appointment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'success': 'AppointmentLoaded',
+                        'failure': 'AppointmentLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'content': 'Create Appointment',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'fields': [
+                            'patientName',
+                            'doctorName',
+                            'date',
+                            'time',
+                            'reason',
+                            'status',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Appointment',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentSaveFailed',
+                        'success': 'AppointmentSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'APPOINTMENT_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AppointmentEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Appointment',
+          'emits': [
+            {
+              'event': 'APPOINTMENT_UPDATED',
+            },
+            {
+              'event': 'AppointmentLoadFailed',
+              'description': 'Fired when Appointment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoaded',
+              'description': 'Fired when Appointment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Appointment',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'APPOINTMENT_UPDATED',
+                'name': 'Appointment Updated',
+              },
+              {
+                'key': 'AppointmentLoadFailed',
+                'name': 'Appointment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoaded',
+                'name': 'Appointment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Appointment]',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentUpdateFailed',
+                'name': 'Appointment update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentUpdated',
+                'name': 'Appointment updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'success': 'AppointmentLoaded',
+                        'failure': 'AppointmentLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'AppointmentLoaded',
+                        'failure': 'AppointmentLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Edit Appointment',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'fields': [
+                            'patientName',
+                            'doctorName',
+                            'date',
+                            'time',
+                            'reason',
+                            'status',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Appointment',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'AppointmentUpdated',
+                        'failure': 'AppointmentUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'APPOINTMENT_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AppointmentView',
+          'category': 'interaction',
+          'linkedEntity': 'Appointment',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoaded',
+              'description': 'Fired when Appointment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoadFailed',
+              'description': 'Fired when Appointment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'AppointmentLoaded',
+                'name': 'Appointment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Appointment]',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoadFailed',
+                'name': 'Appointment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.date',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.doctorName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.patientName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.reason',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'active',
+                  ],
+                  [
+                    'set',
+                    '@entity.time',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.patientName',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'content': 'Patient Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.patientName',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Doctor Name',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.doctorName',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Date',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.date',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Time',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.time',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Reason',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.reason',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'button',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                              'label': 'Edit',
+                              'action': 'EDIT',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'justify': 'end',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AppointmentDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Appointment',
+          'emits': [
+            {
+              'event': 'APPOINTMENT_DELETED',
+            },
+            {
+              'event': 'AppointmentDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoadFailed',
+              'description': 'Fired when Appointment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AppointmentLoaded',
+              'description': 'Fired when Appointment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AppointmentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'APPOINTMENT_DELETED',
+                'name': 'Appointment Deleted',
+              },
+              {
+                'key': 'AppointmentDeleteFailed',
+                'name': 'Appointment delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentDeleted',
+                'name': 'Appointment deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoadFailed',
+                'name': 'Appointment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AppointmentLoaded',
+                'name': 'Appointment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Appointment]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'success': 'AppointmentLoaded',
+                        'failure': 'AppointmentLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Appointment',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'action': 'CANCEL',
+                              'variant': 'ghost',
+                            },
+                            {
+                              'label': 'Delete',
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Appointment',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentDeleteFailed',
+                        'success': 'AppointmentDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'APPOINTMENT_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Appointment',
+                    {
+                      'emit': {
+                        'failure': 'AppointmentLoadFailed',
+                        'success': 'AppointmentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Appointments',
+          'path': '/appointments',
+          'traits': [
+            {
+              'ref': 'AppointmentBrowse',
+            },
+            {
+              'ref': 'AppointmentCreate',
+            },
+            {
+              'ref': 'AppointmentEdit',
+            },
+            {
+              'ref': 'AppointmentView',
+            },
+            {
+              'ref': 'AppointmentDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'IntakeFormOrbital',
+      uses: [],
+      entity: {
+        'name': 'IntakeForm',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'firstName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'lastName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateOfBirth',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'allergies',
+            'type': 'string',
+          },
+          {
+            'name': 'medications',
+            'type': 'string',
+          },
+          {
+            'name': 'emergencyContact',
+            'type': 'string',
+          },
+          {
+            'name': 'insuranceProvider',
+            'type': 'string',
+          },
+          {
+            'name': 'insuranceId',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'IntakeFormWizard',
+          'category': 'interaction',
+          'linkedEntity': 'IntakeForm',
+          'emits': [
+            {
+              'event': 'INTAKE_COMPLETE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormLoadFailed',
+              'description': 'Fired when IntakeForm fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormLoaded',
+              'description': 'Fired when IntakeForm finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[IntakeForm]',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'IntakeFormSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'step1',
+                'isInitial': true,
+              },
+              {
+                'name': 'step2',
+              },
+              {
+                'name': 'step3',
+              },
+              {
+                'name': 'review',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NEXT',
+                'name': 'Next',
+              },
+              {
+                'key': 'PREV',
+                'name': 'Prev',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'INTAKE_COMPLETE',
+                'name': 'Intake Complete',
+              },
+              {
+                'key': 'IntakeFormLoadFailed',
+                'name': 'IntakeForm load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'IntakeFormLoaded',
+                'name': 'IntakeForm loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[IntakeForm]',
+                  },
+                ],
+              },
+              {
+                'key': 'IntakeFormSaveFailed',
+                'name': 'IntakeForm save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'IntakeFormSaved',
+                'name': 'IntakeForm saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'step1',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.allergies',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.dateOfBirth',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.emergencyContact',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.firstName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.insuranceId',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.insuranceProvider',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.medications',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'failure': 'IntakeFormLoadFailed',
+                        'success': 'IntakeFormLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'clipboard',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Patient Intake',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'currentIndex': 0,
+                                  'count': 3,
+                                },
+                                {
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Personal Info',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'cancelEvent': 'INIT',
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'firstName',
+                                    'lastName',
+                                    'dateOfBirth',
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-right',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'label': 'Patients',
+                          'href': '/patients',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'href': '/intake',
+                          'label': 'Intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step1',
+                'to': 'step2',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormLoaded',
+                        'failure': 'IntakeFormLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'type': 'container',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Patient Intake',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'currentIndex': 1,
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                },
+                                {
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 1,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Medical History',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'fields': [
+                                    'allergies',
+                                    'medications',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'PREV',
+                                  'mode': 'create',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'end',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'icon': 'arrow-left',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'label': 'Back',
+                                    },
+                                    {
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'href': '/patients',
+                          'label': 'Patients',
+                        },
+                        {
+                          'label': 'Appointments',
+                          'icon': 'calendar',
+                          'href': '/appointments',
+                        },
+                        {
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                        },
+                        {
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step3',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormLoaded',
+                        'failure': 'IntakeFormLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard',
+                                    },
+                                    {
+                                      'content': 'Patient Intake',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 2,
+                                },
+                                {
+                                  'currentStep': 2,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Insurance',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'submitEvent': 'NEXT',
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                  'fields': [
+                                    'emergencyContact',
+                                    'insuranceProvider',
+                                    'insuranceId',
+                                  ],
+                                  'cancelEvent': 'PREV',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'icon': 'arrow-left',
+                                    },
+                                    {
+                                      'label': 'Next',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'href': '/patients',
+                          'label': 'Patients',
+                        },
+                        {
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step1',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'failure': 'IntakeFormLoadFailed',
+                        'success': 'IntakeFormLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'href': '/patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                          'label': 'Intake',
+                        },
+                        {
+                          'href': '/prescriptions',
+                          'label': 'Prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'type': 'container',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'clipboard',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Patient Intake',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Personal Info',
+                                },
+                                {
+                                  'fields': [
+                                    'firstName',
+                                    'lastName',
+                                    'dateOfBirth',
+                                  ],
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'cancelEvent': 'INIT',
+                                  'submitEvent': 'NEXT',
+                                },
+                                {
+                                  'justify': 'end',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                      'icon': 'arrow-right',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'padding': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'review',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormLoaded',
+                        'failure': 'IntakeFormLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'href': '/patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'clipboard',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Patient Intake',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'badge',
+                              'label': 'Review',
+                            },
+                            {
+                              'currentStep': 3,
+                              'steps': [
+                                'Personal Info',
+                                'Medical History',
+                                'Insurance',
+                              ],
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                      'content': 'First Name',
+                                    },
+                                    {
+                                      'content': '@entity.firstName',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'content': 'Last Name',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.lastName',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Date Of Birth',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.dateOfBirth',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Allergies',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.allergies',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Medications',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.medications',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'content': 'Emergency Contact',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.emergencyContact',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Insurance Provider',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.insuranceProvider',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Insurance Id',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.insuranceId',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                            {
+                              'currentStep': 3,
+                              'totalSteps': 4,
+                              'showComplete': true,
+                              'showBack': true,
+                              'type': 'wizard-navigation',
+                              'showNext': false,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'step2',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'failure': 'IntakeFormLoadFailed',
+                        'success': 'IntakeFormLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'clipboard',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Patient Intake',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                },
+                                {
+                                  'currentIndex': 1,
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                  'currentStep': 1,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'content': 'Medical History',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'PREV',
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'fields': [
+                                    'allergies',
+                                    'medications',
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'label': 'Back',
+                                      'icon': 'arrow-left',
+                                      'variant': 'ghost',
+                                      'action': 'PREV',
+                                    },
+                                    {
+                                      'icon': 'arrow-right',
+                                      'action': 'NEXT',
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'icon': 'heart',
+                          'label': 'Patients',
+                        },
+                        {
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'label': 'Intake',
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'step3',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'failure': 'IntakeFormLoadFailed',
+                        'success': 'IntakeFormLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'clipboard',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Patient Intake',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                  'currentIndex': 2,
+                                },
+                                {
+                                  'currentStep': 2,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Insurance',
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'fields': [
+                                    'emergencyContact',
+                                    'insuranceProvider',
+                                    'insuranceId',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'PREV',
+                                  'type': 'form-section',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'icon': 'arrow-left',
+                                      'type': 'button',
+                                    },
+                                    {
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                  'justify': 'end',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                            },
+                          ],
+                          'padding': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'HealthcareApp',
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'label': 'Patients',
+                          'href': '/patients',
+                        },
+                        {
+                          'href': '/appointments',
+                          'label': 'Appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'href': '/intake',
+                          'label': 'Intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'IntakeForm',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormSaved',
+                        'failure': 'IntakeFormSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'notify',
+                    'success',
+                    'IntakeForm created successfully',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'check-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Intake Complete',
+                              'type': 'typography',
+                              'variant': 'h2',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': 'Patient intake form has been submitted successfully.',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'primary',
+                              'icon': 'refresh-cw',
+                              'label': 'Start New',
+                              'type': 'button',
+                              'action': 'RESTART',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'href': '/patients',
+                          'label': 'Patients',
+                        },
+                        {
+                          'href': '/appointments',
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormLoaded',
+                        'failure': 'IntakeFormLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Patient Intake',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                  'content': 'Personal Info',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'INIT',
+                                  'fields': [
+                                    'firstName',
+                                    'lastName',
+                                    'dateOfBirth',
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'heart',
+                          'label': 'Patients',
+                          'href': '/patients',
+                        },
+                        {
+                          'href': '/appointments',
+                          'label': 'Appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                        },
+                        {
+                          'icon': 'pill',
+                          'href': '/prescriptions',
+                          'label': 'Prescriptions',
+                        },
+                        {
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                          'label': 'Dashboard',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'IntakeForm',
+                    {
+                      'emit': {
+                        'success': 'IntakeFormLoaded',
+                        'failure': 'IntakeFormLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'icon': 'heart',
+                          'href': '/patients',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/prescriptions',
+                          'label': 'Prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Patient Intake',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'currentIndex': 0,
+                                  'count': 3,
+                                },
+                                {
+                                  'steps': [
+                                    'Personal Info',
+                                    'Medical History',
+                                    'Insurance',
+                                  ],
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'content': 'Personal Info',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'mode': 'create',
+                                  'fields': [
+                                    'firstName',
+                                    'lastName',
+                                    'dateOfBirth',
+                                  ],
+                                  'cancelEvent': 'INIT',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-right',
+                                      'action': 'NEXT',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Intake',
+          'path': '/intake',
+          'traits': [
+            {
+              'ref': 'IntakeFormWizard',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'PrescriptionOrbital',
+      uses: [],
+      entity: {
+        'name': 'Prescription',
+        'collection': 'prescriptions',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'medication',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dosage',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'frequency',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'prescribedBy',
+            'type': 'string',
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+          },
+          {
+            'name': 'endDate',
+            'type': 'datetime',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PrescriptionBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Prescription',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.medication',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.dosage',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.frequency',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.patientName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.prescribedBy',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionLoaded',
+              'description': 'Fired when Prescription finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Prescription]',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionLoadFailed',
+              'description': 'Fired when Prescription fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PRESCRIBE',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'AppointmentOrbital',
+                'trait': 'AppointmentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PrescriptionLoaded',
+                'name': 'Prescription loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Prescription]',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionLoadFailed',
+                'name': 'Prescription load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Prescription',
+                    {
+                      'emit': {
+                        'failure': 'PrescriptionLoadFailed',
+                        'success': 'PrescriptionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PrescriptionLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'HealthcareApp',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'icon': 'heart',
+                          'label': 'Patients',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'href': '/appointments',
+                          'label': 'Appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'href': '/intake',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/prescriptions',
+                          'label': 'Prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'file-text',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Prescriptions',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'label': 'Create Prescription',
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'variant': 'card',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'name': 'medication',
+                                  'icon': 'pill',
+                                },
+                                {
+                                  'name': 'dosage',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'frequency',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'label': 'Patient',
+                                  'name': 'patientName',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'prescribedBy',
+                                  'label': 'Prescribed By',
+                                },
+                                {
+                                  'name': 'startDate',
+                                  'label': 'Start Date',
+                                  'variant': 'caption',
+                                  'format': 'date',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PrescriptionLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'content': 'Failed to load prescription',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'color': 'muted',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'variant': 'body',
+                        },
+                        {
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'type': 'button',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PrescriptionCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Prescription',
+          'emits': [
+            {
+              'event': 'PrescriptionLoadFailed',
+              'description': 'Fired when Prescription fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionLoaded',
+              'description': 'Fired when Prescription finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Prescription]',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PrescriptionBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionLoadFailed',
+                'name': 'Prescription load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionLoaded',
+                'name': 'Prescription loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Prescription]',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionSaveFailed',
+                'name': 'Prescription save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionSaved',
+                'name': 'Prescription saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Prescription',
+                    {
+                      'emit': {
+                        'failure': 'PrescriptionLoadFailed',
+                        'success': 'PrescriptionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Prescription',
+                    {
+                      'emit': {
+                        'success': 'PrescriptionLoaded',
+                        'failure': 'PrescriptionLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'New Prescription',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'medication',
+                            'dosage',
+                            'frequency',
+                            'patientName',
+                            'prescribedBy',
+                            'startDate',
+                            'endDate',
+                          ],
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Prescription',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PrescriptionSaveFailed',
+                        'success': 'PrescriptionSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PrescriptionView',
+          'category': 'interaction',
+          'linkedEntity': 'Prescription',
+          'emits': [
+            {
+              'event': 'PrescriptionLoaded',
+              'description': 'Fired when Prescription finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Prescription]',
+                },
+              ],
+            },
+            {
+              'event': 'PrescriptionLoadFailed',
+              'description': 'Fired when Prescription fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PrescriptionBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'PrescriptionLoaded',
+                'name': 'Prescription loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Prescription]',
+                  },
+                ],
+              },
+              {
+                'key': 'PrescriptionLoadFailed',
+                'name': 'Prescription load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.dosage',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.endDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.frequency',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.medication',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.patientName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.prescribedBy',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.startDate',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Prescription',
+                    {
+                      'emit': {
+                        'failure': 'PrescriptionLoadFailed',
+                        'success': 'PrescriptionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Prescription',
+                    {
+                      'emit': {
+                        'success': 'PrescriptionLoaded',
+                        'failure': 'PrescriptionLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.medication',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Medication',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.medication',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Dosage',
+                            },
+                            {
+                              'content': '@entity.dosage',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Frequency',
+                            },
+                            {
+                              'content': '@entity.frequency',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Patient Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.patientName',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Prescribed By',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.prescribedBy',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Start Date',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.startDate',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'End Date',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.endDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Prescriptions',
+          'path': '/prescriptions',
+          'traits': [
+            {
+              'ref': 'PrescriptionBrowse',
+            },
+            {
+              'ref': 'PrescriptionCreate',
+            },
+            {
+              'ref': 'PrescriptionView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'DashboardOrbital',
+      uses: [],
+      entity: {
+        'name': 'Dashboard',
+        'persistence': 'singleton',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalPatients',
+            'type': 'number',
+          },
+          {
+            'name': 'appointmentsToday',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingIntakes',
+            'type': 'number',
+          },
+          {
+            'name': 'activePrescriptions',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DashboardDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'Dashboard',
+          'emits': [
+            {
+              'event': 'DashboardLoaded',
+              'description': 'Fired when Dashboard finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Dashboard]',
+                },
+              ],
+            },
+            {
+              'event': 'DashboardLoadFailed',
+              'description': 'Fired when Dashboard fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'DashboardLoaded',
+                'name': 'Dashboard loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Dashboard]',
+                  },
+                ],
+              },
+              {
+                'key': 'DashboardLoadFailed',
+                'name': 'Dashboard load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.activePrescriptions',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.appointmentsToday',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.pendingIntakes',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalPatients',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'Dashboard',
+                    {
+                      'emit': {
+                        'success': 'DashboardLoaded',
+                        'failure': 'DashboardLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'href': '/patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                          'label': 'Intake',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Clinic Dashboard',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'activity',
+                                        },
+                                        {
+                                          'content': 'Clinic Dashboard',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 4,
+                                      'children': [
+                                        {
+                                          'value': '@entity.totalPatients',
+                                          'type': 'stat-display',
+                                          'label': 'TotalPatients',
+                                        },
+                                        {
+                                          'value': '@entity.appointmentsToday',
+                                          'type': 'stat-display',
+                                          'label': 'AppointmentsToday',
+                                        },
+                                        {
+                                          'value': '@entity.pendingIntakes',
+                                          'label': 'PendingIntakes',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'ActivePrescriptions',
+                                          'value': '@entity.activePrescriptions',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Dashboard',
+                    {
+                      'emit': {
+                        'success': 'DashboardLoaded',
+                        'failure': 'DashboardLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Patients',
+                          'href': '/patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'href': '/appointments',
+                          'label': 'Appointments',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                          'label': 'Intake',
+                        },
+                        {
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                        },
+                        {
+                          'href': '/dashboard',
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Clinic Dashboard',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'activity',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Clinic Dashboard',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 4,
+                                      'children': [
+                                        {
+                                          'label': 'TotalPatients',
+                                          'value': '@entity.totalPatients',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'AppointmentsToday',
+                                          'value': '@entity.appointmentsToday',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'PendingIntakes',
+                                          'value': '@entity.pendingIntakes',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'ActivePrescriptions',
+                                          'value': '@entity.activePrescriptions',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Dashboard',
+                    {
+                      'emit': {
+                        'success': 'DashboardLoaded',
+                        'failure': 'DashboardLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Clinic Dashboard',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'activity',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Clinic Dashboard',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalPatients',
+                                          'value': '@entity.totalPatients',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'AppointmentsToday',
+                                          'value': '@entity.appointmentsToday',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'PendingIntakes',
+                                          'value': '@entity.pendingIntakes',
+                                        },
+                                        {
+                                          'label': 'ActivePrescriptions',
+                                          'type': 'stat-display',
+                                          'value': '@entity.activePrescriptions',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 4,
+                                    },
+                                  ],
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'label': 'Patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'href': '/appointments',
+                          'label': 'Appointments',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                          'href': '/intake',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                          'icon': 'layout-dashboard',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'Dashboard',
+                    {
+                      'emit': {
+                        'success': 'DashboardLoaded',
+                        'failure': 'DashboardLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Clinic Dashboard',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'activity',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Clinic Dashboard',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalPatients',
+                                          'value': '@entity.totalPatients',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'AppointmentsToday',
+                                          'value': '@entity.appointmentsToday',
+                                        },
+                                        {
+                                          'label': 'PendingIntakes',
+                                          'type': 'stat-display',
+                                          'value': '@entity.pendingIntakes',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'ActivePrescriptions',
+                                          'value': '@entity.activePrescriptions',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 4,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'HealthcareApp',
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'label': 'Patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Appointments',
+                          'href': '/appointments',
+                        },
+                        {
+                          'label': 'Intake',
+                          'icon': 'layout-list',
+                          'href': '/intake',
+                        },
+                        {
+                          'href': '/prescriptions',
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                        },
+                        {
+                          'label': 'Dashboard',
+                          'icon': 'layout-dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Dashboard',
+                    {
+                      'emit': {
+                        'failure': 'DashboardLoadFailed',
+                        'success': 'DashboardLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'HealthcareApp',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/patients',
+                          'label': 'Patients',
+                          'icon': 'heart',
+                        },
+                        {
+                          'label': 'Appointments',
+                          'icon': 'calendar',
+                          'href': '/appointments',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Intake',
+                          'href': '/intake',
+                        },
+                        {
+                          'icon': 'pill',
+                          'label': 'Prescriptions',
+                          'href': '/prescriptions',
+                        },
+                        {
+                          'icon': 'layout-dashboard',
+                          'label': 'Dashboard',
+                          'href': '/dashboard',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Clinic Dashboard',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'activity',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Clinic Dashboard',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 4,
+                                      'children': [
+                                        {
+                                          'label': 'TotalPatients',
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalPatients',
+                                        },
+                                        {
+                                          'label': 'AppointmentsToday',
+                                          'type': 'stat-display',
+                                          'value': '@entity.appointmentsToday',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.pendingIntakes',
+                                          'label': 'PendingIntakes',
+                                        },
+                                        {
+                                          'value': '@entity.activePrescriptions',
+                                          'type': 'stat-display',
+                                          'label': 'ActivePrescriptions',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Dashboard',
+          'path': '/dashboard',
+          'traits': [
+            {
+              'ref': 'DashboardDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

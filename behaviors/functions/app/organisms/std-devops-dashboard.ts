@@ -84,9 +84,6348 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ServiceNodeOrbital","entity":{"name":"ServiceNode","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"status","type":"string","values":["healthy","degraded","down"]},{"name":"url","type":"string"},{"name":"lastChecked","type":"datetime"},{"name":"failureCount","type":"number","default":0},{"name":"successCount","type":"number","default":0},{"name":"threshold","type":"number","default":5}]},"traits":[{"name":"ServiceNodeCircuitBreaker","category":"interaction","linkedEntity":"ServiceNode","emits":[{"event":"ServiceNodeLoaded","description":"Fired when ServiceNode finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ServiceNode]"}]},{"event":"ServiceNodeLoadFailed","description":"Fired when ServiceNode fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntrySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"LogEntrySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"LogEntryUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"LogEntryDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"},{"name":"halfOpen"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"FAILURE","name":"Failure"},{"key":"SUCCESS","name":"Success"},{"key":"TIMEOUT","name":"Timeout"},{"key":"RESET","name":"Reset"},{"key":"ServiceNodeLoaded","name":"ServiceNode loaded","payloadSchema":[{"name":"data","type":"[ServiceNode]"}]},{"key":"ServiceNodeLoadFailed","name":"ServiceNode load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntrySaved","name":"Log entry saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"LogEntrySaveFailed","name":"Log entry save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryUpdated","name":"Log entry updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"LogEntryUpdateFailed","name":"Log entry update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryDeleted","name":"Log entry deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"LogEntryDeleteFailed","name":"Log entry delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","ServiceNode",{"emit":{"success":"ServiceNodeLoaded","failure":"ServiceNodeLoadFailed"}}],["render-ui","main",{"appName":"DevOps Dashboard","children":[{"gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"md","align":"center","type":"stack","justify":"between","children":[{"align":"center","children":[{"name":"server","type":"icon"},{"content":"ServiceNode","variant":"h2","type":"typography"}],"type":"stack","gap":"md","direction":"horizontal"},{"pulse":false,"status":"online","type":"status-dot","label":"Circuit Closed"}]},{"type":"divider"},{"message":"Service is healthy. All requests are being processed.","variant":"success","type":"alert"},{"type":"simple-grid","cols":2,"children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}]},{"type":"meter","max":"@entity.threshold","min":0,"value":"@entity.failureCount"}],"type":"stack"}],"navItems":[{"icon":"server","href":"/services","label":"Services"},{"icon":"bell","href":"/alerts","label":"Alerts"},{"label":"Logs","href":"/logs","icon":"terminal"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"type":"dashboard-layout"}]]},{"from":"closed","to":"open","event":"FAILURE","effects":[["render-ui","main",{"navItems":[{"label":"Services","href":"/services","icon":"server"},{"href":"/alerts","icon":"bell","label":"Alerts"},{"href":"/logs","label":"Logs","icon":"terminal"},{"label":"Metrics","icon":"layout-list","href":"/metrics"}],"type":"dashboard-layout","appName":"DevOps Dashboard","children":[{"gap":"lg","direction":"vertical","children":[{"children":[{"direction":"horizontal","gap":"md","align":"center","type":"stack","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"ServiceNode","variant":"h2"}]},{"status":"critical","type":"status-dot","label":"Circuit Open","pulse":true}],"justify":"between","align":"center","type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"type":"alert","variant":"error","message":"Circuit is open. Requests are being rejected to prevent cascading failures."},{"cols":2,"children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"type":"stat-display","label":"Successes","value":"@entity.successCount"}],"type":"simple-grid"},{"type":"meter","value":"@entity.failureCount","min":0,"max":"@entity.threshold"},{"action":"RESET","type":"button","icon":"rotate-ccw","label":"Reset","variant":"ghost"}],"type":"stack"}]}]]},{"from":"closed","to":"closed","event":"SUCCESS","effects":[["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"gap":"md","type":"stack","direction":"horizontal","align":"center","justify":"between","children":[{"gap":"md","align":"center","direction":"horizontal","children":[{"type":"icon","name":"server"},{"type":"typography","content":"ServiceNode","variant":"h2"}],"type":"stack"},{"type":"status-dot","status":"online","pulse":false,"label":"Circuit Closed"}]},{"type":"divider"},{"type":"alert","message":"Service is healthy. All requests are being processed.","variant":"success"},{"children":[{"label":"Failures","type":"stat-display","value":"@entity.failureCount"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}],"type":"simple-grid","cols":2},{"min":0,"max":"@entity.threshold","type":"meter","value":"@entity.failureCount"}]}],"type":"dashboard-layout","navItems":[{"href":"/services","icon":"server","label":"Services"},{"href":"/alerts","icon":"bell","label":"Alerts"},{"icon":"terminal","href":"/logs","label":"Logs"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"appName":"DevOps Dashboard"}]]},{"from":"open","to":"halfOpen","event":"TIMEOUT","effects":[["render-ui","main",{"type":"dashboard-layout","children":[{"gap":"lg","children":[{"children":[{"children":[{"name":"activity","type":"icon"},{"content":"ServiceNode","variant":"h2","type":"typography"}],"gap":"md","direction":"horizontal","align":"center","type":"stack"},{"label":"Circuit Half-Open","type":"status-dot","status":"warning","pulse":true}],"direction":"horizontal","gap":"md","type":"stack","align":"center","justify":"between"},{"type":"divider"},{"type":"alert","variant":"warning","message":"Testing recovery. Limited requests are being allowed through."},{"type":"simple-grid","children":[{"label":"Failures","type":"stat-display","value":"@entity.failureCount"},{"label":"Successes","type":"stat-display","value":"@entity.successCount"}],"cols":2}],"type":"stack","direction":"vertical"}],"appName":"DevOps Dashboard","navItems":[{"label":"Services","href":"/services","icon":"server"},{"label":"Alerts","href":"/alerts","icon":"bell"},{"icon":"terminal","href":"/logs","label":"Logs"},{"href":"/metrics","label":"Metrics","icon":"layout-list"}]}]]},{"from":"open","to":"closed","event":"RESET","effects":[["render-ui","main",{"appName":"DevOps Dashboard","type":"dashboard-layout","navItems":[{"label":"Services","icon":"server","href":"/services"},{"icon":"bell","label":"Alerts","href":"/alerts"},{"href":"/logs","icon":"terminal","label":"Logs"},{"icon":"layout-list","label":"Metrics","href":"/metrics"}],"children":[{"gap":"lg","children":[{"align":"center","children":[{"children":[{"type":"icon","name":"server"},{"content":"ServiceNode","type":"typography","variant":"h2"}],"direction":"horizontal","type":"stack","align":"center","gap":"md"},{"label":"Circuit Closed","type":"status-dot","status":"online","pulse":false}],"direction":"horizontal","type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"variant":"success","message":"Service is healthy. All requests are being processed.","type":"alert"},{"children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"type":"stat-display","label":"Successes","value":"@entity.successCount"}],"cols":2,"type":"simple-grid"},{"type":"meter","value":"@entity.failureCount","max":"@entity.threshold","min":0}],"direction":"vertical","type":"stack"}]}]]},{"from":"halfOpen","to":"closed","event":"SUCCESS","effects":[["render-ui","main",{"appName":"DevOps Dashboard","children":[{"gap":"lg","children":[{"type":"stack","gap":"md","align":"center","direction":"horizontal","children":[{"type":"stack","gap":"md","children":[{"name":"server","type":"icon"},{"variant":"h2","content":"ServiceNode","type":"typography"}],"direction":"horizontal","align":"center"},{"status":"online","label":"Circuit Closed","pulse":false,"type":"status-dot"}],"justify":"between"},{"type":"divider"},{"message":"Service is healthy. All requests are being processed.","variant":"success","type":"alert"},{"cols":2,"children":[{"label":"Failures","value":"@entity.failureCount","type":"stat-display"},{"type":"stat-display","label":"Successes","value":"@entity.successCount"}],"type":"simple-grid"},{"min":0,"value":"@entity.failureCount","type":"meter","max":"@entity.threshold"}],"type":"stack","direction":"vertical"}],"navItems":[{"href":"/services","icon":"server","label":"Services"},{"icon":"bell","label":"Alerts","href":"/alerts"},{"icon":"terminal","label":"Logs","href":"/logs"},{"icon":"layout-list","label":"Metrics","href":"/metrics"}],"type":"dashboard-layout"}]]},{"from":"halfOpen","to":"open","event":"FAILURE","effects":[["render-ui","main",{"appName":"DevOps Dashboard","children":[{"children":[{"children":[{"type":"stack","gap":"md","align":"center","direction":"horizontal","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"ServiceNode","variant":"h2"}]},{"status":"critical","type":"status-dot","pulse":true,"label":"Circuit Open"}],"direction":"horizontal","type":"stack","align":"center","justify":"between","gap":"md"},{"type":"divider"},{"type":"alert","variant":"error","message":"Circuit is open. Requests are being rejected to prevent cascading failures."},{"type":"simple-grid","children":[{"value":"@entity.failureCount","label":"Failures","type":"stat-display"},{"label":"Successes","value":"@entity.successCount","type":"stat-display"}],"cols":2},{"min":0,"type":"meter","value":"@entity.failureCount","max":"@entity.threshold"},{"variant":"ghost","icon":"rotate-ccw","label":"Reset","type":"button","action":"RESET"}],"direction":"vertical","gap":"lg","type":"stack"}],"navItems":[{"href":"/services","label":"Services","icon":"server"},{"label":"Alerts","icon":"bell","href":"/alerts"},{"icon":"terminal","label":"Logs","href":"/logs"},{"icon":"layout-list","href":"/metrics","label":"Metrics"}],"type":"dashboard-layout"}]]},{"from":"halfOpen","to":"closed","event":"RESET","effects":[["render-ui","main",{"navItems":[{"icon":"server","label":"Services","href":"/services"},{"href":"/alerts","icon":"bell","label":"Alerts"},{"icon":"terminal","label":"Logs","href":"/logs"},{"label":"Metrics","icon":"layout-list","href":"/metrics"}],"type":"dashboard-layout","appName":"DevOps Dashboard","children":[{"children":[{"type":"stack","direction":"horizontal","gap":"md","justify":"between","children":[{"gap":"md","direction":"horizontal","type":"stack","align":"center","children":[{"name":"server","type":"icon"},{"type":"typography","content":"ServiceNode","variant":"h2"}]},{"label":"Circuit Closed","type":"status-dot","pulse":false,"status":"online"}],"align":"center"},{"type":"divider"},{"type":"alert","message":"Service is healthy. All requests are being processed.","variant":"success"},{"type":"simple-grid","cols":2,"children":[{"value":"@entity.failureCount","label":"Failures","type":"stat-display"},{"label":"Successes","value":"@entity.successCount","type":"stat-display"}]},{"value":"@entity.failureCount","type":"meter","max":"@entity.threshold","min":0}],"direction":"vertical","type":"stack","gap":"lg"}]}]]}]},"scope":"collection"}],"pages":[{"name":"ServicesPage","path":"/services","traits":[{"ref":"ServiceNodeCircuitBreaker"}]}]},{"name":"AlertMetricOrbital","entity":{"name":"AlertMetric","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"severity","type":"string","required":true},{"name":"message","type":"string","required":true},{"name":"timestamp","type":"string"},{"name":"source","type":"string"}]},"traits":[{"name":"AlertMetricDisplay","category":"interaction","linkedEntity":"AlertMetric","emits":[{"event":"AlertMetricLoaded","description":"Fired when AlertMetric finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[AlertMetric]"}]},{"event":"AlertMetricLoadFailed","description":"Fired when AlertMetric fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"AlertMetricLoaded","name":"AlertMetric loaded","payloadSchema":[{"name":"data","type":"[AlertMetric]"}]},{"key":"AlertMetricLoadFailed","name":"AlertMetric load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","AlertMetric",{"emit":{"success":"AlertMetricLoaded","failure":"AlertMetricLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"children":[{"type":"stack","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Alerts"}]},{"justify":"between","type":"stack","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","content":"Alerts","variant":"h2"}]},{"icon":"refresh-cw","variant":"secondary","action":"REFRESH","label":"Refresh","type":"button"}],"direction":"horizontal","gap":"md"},{"type":"divider"},{"children":[{"children":[{"type":"card","children":[{"type":"stack","children":[{"type":"typography","variant":"caption","content":"Severity"},{"type":"typography","variant":"h3","content":"@entity.severity"}],"gap":"sm","direction":"vertical"}]},{"type":"card","children":[{"children":[{"content":"Message","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.message","variant":"h3"}],"gap":"sm","type":"stack","direction":"vertical"}]},{"children":[{"children":[{"type":"typography","variant":"caption","content":"Timestamp"},{"variant":"h3","content":"@entity.timestamp","type":"typography"}],"gap":"sm","direction":"vertical","type":"stack"}],"type":"card"},{"children":[{"gap":"sm","children":[{"content":"Source","variant":"caption","type":"typography"},{"content":"@entity.source","type":"typography","variant":"h3"}],"direction":"vertical","type":"stack"}],"type":"card"}],"type":"simple-grid","cols":3}],"padding":"md","type":"box"},{"type":"divider"},{"cols":2,"gap":"md","type":"grid","children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"type":"graph-view","width":400,"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"height":200}],"gap":"lg","direction":"vertical"}],"type":"scaled-diagram"}],"appName":"DevOps Dashboard","navItems":[{"label":"Services","href":"/services","icon":"server"},{"label":"Alerts","href":"/alerts","icon":"bell"},{"label":"Logs","href":"/logs","icon":"terminal"},{"href":"/metrics","icon":"layout-list","label":"Metrics"}]}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","AlertMetric",{"emit":{"failure":"AlertMetricLoadFailed","success":"AlertMetricLoaded"}}],["render-ui","main",{"navItems":[{"icon":"server","label":"Services","href":"/services"},{"icon":"bell","label":"Alerts","href":"/alerts"},{"label":"Logs","href":"/logs","icon":"terminal"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"appName":"DevOps Dashboard","children":[{"type":"scaled-diagram","children":[{"type":"stack","gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Alerts"}],"type":"breadcrumb"},{"justify":"between","type":"stack","direction":"horizontal","gap":"md","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","content":"Alerts","variant":"h2"}],"gap":"md","type":"stack","direction":"horizontal"},{"variant":"secondary","label":"Refresh","icon":"refresh-cw","action":"REFRESH","type":"button"}]},{"type":"divider"},{"children":[{"children":[{"children":[{"direction":"vertical","gap":"sm","type":"stack","children":[{"type":"typography","variant":"caption","content":"Severity"},{"variant":"h3","content":"@entity.severity","type":"typography"}]}],"type":"card"},{"type":"card","children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"variant":"caption","content":"Message","type":"typography"},{"variant":"h3","content":"@entity.message","type":"typography"}]}]},{"type":"card","children":[{"gap":"sm","children":[{"variant":"caption","content":"Timestamp","type":"typography"},{"content":"@entity.timestamp","type":"typography","variant":"h3"}],"type":"stack","direction":"vertical"}]},{"children":[{"direction":"vertical","type":"stack","children":[{"content":"Source","variant":"caption","type":"typography"},{"variant":"h3","type":"typography","content":"@entity.source"}],"gap":"sm"}],"type":"card"}],"cols":3,"type":"simple-grid"}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"type":"card","children":[{"content":"Graph View","variant":"caption","type":"typography"}]}],"gap":"md","cols":2},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"width":400,"nodes":[{"label":"Start","id":"a"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"height":200,"type":"graph-view","edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}]}],"direction":"vertical"}]}],"type":"dashboard-layout"}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","AlertMetric",{"emit":{"failure":"AlertMetricLoadFailed","success":"AlertMetricLoaded"}}],["render-ui","main",{"navItems":[{"label":"Services","icon":"server","href":"/services"},{"href":"/alerts","label":"Alerts","icon":"bell"},{"icon":"terminal","href":"/logs","label":"Logs"},{"href":"/metrics","icon":"layout-list","label":"Metrics"}],"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Alerts"}],"type":"breadcrumb"},{"justify":"between","direction":"horizontal","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"alert-triangle"},{"content":"Alerts","variant":"h2","type":"typography"}]},{"type":"button","variant":"secondary","icon":"refresh-cw","action":"REFRESH","label":"Refresh"}],"type":"stack","gap":"md"},{"type":"divider"},{"padding":"md","children":[{"cols":3,"children":[{"type":"card","children":[{"children":[{"type":"typography","content":"Severity","variant":"caption"},{"variant":"h3","content":"@entity.severity","type":"typography"}],"direction":"vertical","type":"stack","gap":"sm"}]},{"children":[{"children":[{"content":"Message","type":"typography","variant":"caption"},{"content":"@entity.message","variant":"h3","type":"typography"}],"gap":"sm","direction":"vertical","type":"stack"}],"type":"card"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Timestamp"},{"type":"typography","variant":"h3","content":"@entity.timestamp"}]}]},{"children":[{"type":"stack","children":[{"content":"Source","type":"typography","variant":"caption"},{"content":"@entity.source","variant":"h3","type":"typography"}],"gap":"sm","direction":"vertical"}],"type":"card"}],"type":"simple-grid"}],"type":"box"},{"type":"divider"},{"type":"grid","gap":"md","children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"children":[{"type":"typography","content":"Graph View","variant":"caption"}],"type":"card"}],"cols":2},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"width":400,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"height":200}],"type":"stack","gap":"lg"}]}],"appName":"DevOps Dashboard"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","AlertMetric",{"emit":{"failure":"AlertMetricLoadFailed","success":"AlertMetricLoaded"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Alerts"}],"type":"breadcrumb"},{"children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","type":"typography","content":"Alerts"}],"gap":"md","type":"stack","direction":"horizontal"},{"label":"Refresh","action":"REFRESH","variant":"secondary","icon":"refresh-cw","type":"button"}],"gap":"md","type":"stack","direction":"horizontal","justify":"between"},{"type":"divider"},{"padding":"md","children":[{"cols":3,"type":"simple-grid","children":[{"children":[{"type":"stack","direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Severity"},{"type":"typography","variant":"h3","content":"@entity.severity"}],"gap":"sm"}],"type":"card"},{"type":"card","children":[{"children":[{"type":"typography","content":"Message","variant":"caption"},{"content":"@entity.message","type":"typography","variant":"h3"}],"direction":"vertical","type":"stack","gap":"sm"}]},{"type":"card","children":[{"type":"stack","children":[{"variant":"caption","content":"Timestamp","type":"typography"},{"type":"typography","content":"@entity.timestamp","variant":"h3"}],"gap":"sm","direction":"vertical"}]},{"children":[{"type":"stack","children":[{"type":"typography","content":"Source","variant":"caption"},{"variant":"h3","type":"typography","content":"@entity.source"}],"gap":"sm","direction":"vertical"}],"type":"card"}]}],"type":"box"},{"type":"divider"},{"gap":"md","cols":2,"children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"type":"card","children":[{"variant":"caption","content":"Graph View","type":"typography"}]}],"type":"grid"},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"height":200,"width":400,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"type":"graph-view"}]}]}],"navItems":[{"href":"/services","icon":"server","label":"Services"},{"icon":"bell","label":"Alerts","href":"/alerts"},{"label":"Logs","icon":"terminal","href":"/logs"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"type":"dashboard-layout","appName":"DevOps Dashboard"}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","AlertMetric",{"emit":{"failure":"AlertMetricLoadFailed","success":"AlertMetricLoaded"}}],["render-ui","main",{"appName":"DevOps Dashboard","navItems":[{"label":"Services","href":"/services","icon":"server"},{"label":"Alerts","href":"/alerts","icon":"bell"},{"icon":"terminal","label":"Logs","href":"/logs"},{"icon":"layout-list","label":"Metrics","href":"/metrics"}],"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"children":[{"items":[{"label":"Home","href":"/"},{"label":"Alerts"}],"type":"breadcrumb"},{"children":[{"children":[{"type":"icon","name":"alert-triangle"},{"variant":"h2","type":"typography","content":"Alerts"}],"direction":"horizontal","type":"stack","gap":"md"},{"type":"button","variant":"secondary","label":"Refresh","action":"REFRESH","icon":"refresh-cw"}],"direction":"horizontal","type":"stack","justify":"between","gap":"md"},{"type":"divider"},{"type":"box","padding":"md","children":[{"children":[{"type":"card","children":[{"children":[{"type":"typography","content":"Severity","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.severity"}],"direction":"vertical","gap":"sm","type":"stack"}]},{"type":"card","children":[{"gap":"sm","children":[{"variant":"caption","type":"typography","content":"Message"},{"variant":"h3","content":"@entity.message","type":"typography"}],"type":"stack","direction":"vertical"}]},{"type":"card","children":[{"children":[{"content":"Timestamp","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.timestamp","variant":"h3"}],"gap":"sm","type":"stack","direction":"vertical"}]},{"type":"card","children":[{"type":"stack","children":[{"content":"Source","type":"typography","variant":"caption"},{"content":"@entity.source","variant":"h3","type":"typography"}],"gap":"sm","direction":"vertical"}]}],"type":"simple-grid","cols":3}]},{"type":"divider"},{"gap":"md","type":"grid","children":[{"children":[{"variant":"caption","type":"typography","content":"Chart View"}],"type":"card"},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}]},{"height":200,"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"label":"End","id":"c"}],"type":"graph-view","width":400,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}]}],"type":"stack","gap":"lg","direction":"vertical"}]}]}]]}]},"scope":"collection"}],"pages":[{"name":"Alerts","path":"/alerts","traits":[{"ref":"AlertMetricDisplay"}]}]},{"name":"LogEntryOrbital","entity":{"name":"LogEntry","collection":"logentrys","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"level","type":"string","required":true},{"name":"message","type":"string","required":true},{"name":"timestamp","type":"datetime"},{"name":"service","type":"string"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"LogEntryBrowse","category":"interaction","linkedEntity":"LogEntry","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.level","type":"string","required":true},{"name":"row.message","type":"string","required":true},{"name":"row.timestamp","type":"datetime"},{"name":"row.service","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.level","type":"string","required":true},{"name":"row.message","type":"string","required":true},{"name":"row.timestamp","type":"datetime"},{"name":"row.service","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.level","type":"string","required":true},{"name":"row.message","type":"string","required":true},{"name":"row.timestamp","type":"datetime"},{"name":"row.service","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"LogEntryLoaded","description":"Fired when LogEntry finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"event":"LogEntryLoadFailed","description":"Fired when LogEntry fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"LOG_ENTRY_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"LogEntryCreate"}},{"event":"LOG_ENTRY_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"LogEntryEdit"}},{"event":"LOG_ENTRY_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"LogEntryDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LogEntryLoaded","name":"LogEntry loaded","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"key":"LogEntryLoadFailed","name":"LogEntry load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","LogEntry",{"emit":{"success":"LogEntryLoaded","failure":"LogEntryLoadFailed"}}],["render-ui","main",{"align":"center","gap":"md","className":"py-12","type":"stack","direction":"vertical","children":[{"type":"spinner"},{"content":"Loading…","type":"typography","variant":"caption","color":"muted"}]}]]},{"from":"browsing","to":"browsing","event":"LogEntryLoaded","effects":[["render-ui","main",{"children":[{"children":[{"justify":"between","direction":"horizontal","align":"center","children":[{"direction":"horizontal","children":[{"name":"file-text","type":"icon"},{"variant":"h2","type":"typography","content":"Logs"}],"type":"stack","gap":"sm","align":"center"},{"children":[{"label":"Create LogEntry","type":"button","variant":"primary","icon":"plus","action":"CREATE"}],"direction":"horizontal","gap":"sm","type":"stack"}],"gap":"md","type":"stack"},{"type":"divider"},{"itemActions":[{"event":"VIEW","variant":"ghost","label":"View"},{"event":"EDIT","label":"Edit","variant":"ghost"},{"event":"DELETE","variant":"danger","label":"Delete"}],"fields":[{"name":"message","variant":"h4","icon":"file-text"},{"variant":"badge","name":"level"},{"name":"service","variant":"body"},{"name":"timestamp","format":"date","variant":"caption"}],"variant":"compact","gap":"sm","type":"data-list","entity":"@payload.data"}],"type":"stack","gap":"lg","direction":"vertical","className":"max-w-5xl mx-auto w-full"}],"appName":"DevOps Dashboard","type":"dashboard-layout","navItems":[{"label":"Services","href":"/services","icon":"server"},{"label":"Alerts","icon":"bell","href":"/alerts"},{"label":"Logs","href":"/logs","icon":"terminal"},{"icon":"layout-list","label":"Metrics","href":"/metrics"}]}]]},{"from":"browsing","to":"browsing","event":"LogEntryLoadFailed","effects":[["render-ui","main",{"className":"py-12","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"type":"typography","variant":"h3","content":"Failed to load logentry"},{"color":"muted","variant":"body","content":"@payload.error","type":"typography"},{"label":"Retry","type":"button","variant":"primary","icon":"rotate-ccw","action":"INIT"}],"type":"stack","direction":"vertical","align":"center","gap":"md"}]]}]},"scope":"collection"},{"name":"LogEntryCreate","category":"interaction","linkedEntity":"LogEntry","emits":[{"event":"LOG_ENTRY_CREATED"},{"event":"LogEntryLoadFailed","description":"Fired when LogEntry fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryLoaded","description":"Fired when LogEntry finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"event":"LogEntrySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntrySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"LogEntryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LOG_ENTRY_CREATED","name":"Log Entry Created"},{"key":"LogEntryLoadFailed","name":"LogEntry load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryLoaded","name":"LogEntry loaded","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"key":"LogEntrySaveFailed","name":"LogEntry save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntrySaved","name":"LogEntry saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","LogEntry",{"emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","LogEntry",{"emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}],["render-ui","modal",{"children":[{"direction":"horizontal","gap":"sm","children":[{"type":"icon","name":"plus-circle"},{"variant":"h3","content":"Create LogEntry","type":"typography"}],"type":"stack"},{"type":"divider"},{"mode":"create","submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["level","message","timestamp","service"],"type":"form-section"}],"gap":"md","type":"stack","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","LogEntry","@payload.data",{"emit":{"failure":"LogEntrySaveFailed","success":"LogEntrySaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","LOG_ENTRY_CREATED"]]}]},"scope":"collection"},{"name":"LogEntryEdit","category":"interaction","linkedEntity":"LogEntry","emits":[{"event":"LOG_ENTRY_UPDATED"},{"event":"LogEntryLoadFailed","description":"Fired when LogEntry fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryLoaded","description":"Fired when LogEntry finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"event":"LogEntryUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"LogEntryView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"LogEntryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"LogEntry"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LOG_ENTRY_UPDATED","name":"Log Entry Updated"},{"key":"LogEntryLoadFailed","name":"LogEntry load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryLoaded","name":"LogEntry loaded","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"key":"LogEntryUpdateFailed","name":"LogEntry update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryUpdated","name":"LogEntry updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","LogEntry",{"emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","LogEntry",{"id":"@payload.id","emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"gap":"sm","children":[{"type":"icon","name":"edit"},{"variant":"h3","content":"Edit LogEntry","type":"typography"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"entity":"@payload.row","mode":"edit","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["level","message","timestamp","service"],"type":"form-section"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","LogEntry","@payload.data",{"emit":{"success":"LogEntryUpdated","failure":"LogEntryUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","LOG_ENTRY_UPDATED"]]}]},"scope":"collection"},{"name":"LogEntryView","category":"interaction","linkedEntity":"LogEntry","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"LogEntryLoaded","description":"Fired when LogEntry finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"event":"LogEntryLoadFailed","description":"Fired when LogEntry fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"LogEntryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"LogEntryLoaded","name":"LogEntry loaded","payloadSchema":[{"name":"data","type":"[LogEntry]"}]},{"key":"LogEntryLoadFailed","name":"LogEntry load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","LogEntry",{"emit":{"success":"LogEntryLoaded","failure":"LogEntryLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","LogEntry",{"id":"@payload.id","emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"type":"stack","direction":"horizontal","children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.level"}],"gap":"sm","align":"center"},{"type":"divider"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"typography","content":"Level","variant":"caption"},{"content":"@entity.level","variant":"body","type":"typography"}]},{"direction":"horizontal","children":[{"variant":"caption","content":"Message","type":"typography"},{"type":"typography","variant":"body","content":"@entity.message"}],"gap":"md","type":"stack"},{"gap":"md","children":[{"type":"typography","variant":"caption","content":"Timestamp"},{"content":"@entity.timestamp","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal"},{"children":[{"type":"typography","variant":"caption","content":"Service"},{"content":"@entity.service","type":"typography","variant":"body"}],"type":"stack","gap":"md","direction":"horizontal"},{"type":"divider"},{"type":"stack","direction":"horizontal","children":[{"icon":"edit","action":"EDIT","type":"button","label":"Edit","variant":"primary"},{"action":"CLOSE","type":"button","variant":"ghost","label":"Close"}],"gap":"sm","justify":"end"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"LogEntryDelete","category":"interaction","linkedEntity":"LogEntry","emits":[{"event":"LOG_ENTRY_DELETED"},{"event":"LogEntryDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"LogEntryLoadFailed","description":"Fired when LogEntry fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"LogEntryLoaded","description":"Fired when LogEntry finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[LogEntry]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"LogEntryBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"LOG_ENTRY_DELETED","name":"Log Entry Deleted"},{"key":"LogEntryDeleteFailed","name":"LogEntry delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryDeleted","name":"LogEntry deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"LogEntryLoadFailed","name":"LogEntry load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"LogEntryLoaded","name":"LogEntry loaded","payloadSchema":[{"name":"data","type":"[LogEntry]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","LogEntry",{"emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","LogEntry",{"id":"@payload.id","emit":{"success":"LogEntryLoaded","failure":"LogEntryLoadFailed"}}],["render-ui","modal",{"direction":"vertical","type":"stack","children":[{"type":"stack","gap":"sm","direction":"horizontal","align":"center","children":[{"type":"icon","name":"alert-triangle"},{"variant":"h3","type":"typography","content":"Delete LogEntry"}]},{"type":"divider"},{"message":"This action cannot be undone.","variant":"error","type":"alert"},{"direction":"horizontal","type":"stack","gap":"sm","justify":"end","children":[{"label":"Cancel","type":"button","variant":"ghost","action":"CANCEL"},{"icon":"check","label":"Delete","action":"CONFIRM_DELETE","type":"button","variant":"danger"}]}],"gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","LogEntry","@entity.pendingId",{"emit":{"success":"LogEntryDeleted","failure":"LogEntryDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","LogEntry",{"emit":{"success":"LogEntryLoaded","failure":"LogEntryLoadFailed"}}],["emit","LOG_ENTRY_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","LogEntry",{"emit":{"failure":"LogEntryLoadFailed","success":"LogEntryLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","LogEntry",{"emit":{"success":"LogEntryLoaded","failure":"LogEntryLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Logs","path":"/logs","traits":[{"ref":"LogEntryBrowse"},{"ref":"LogEntryCreate"},{"ref":"LogEntryEdit"},{"ref":"LogEntryView"},{"ref":"LogEntryDelete"}]}]},{"name":"SystemMetricOrbital","entity":{"name":"SystemMetric","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"value","type":"number","required":true},{"name":"unit","type":"string"},{"name":"trend","type":"string"}]},"traits":[{"name":"SystemMetricDisplay","category":"interaction","linkedEntity":"SystemMetric","emits":[{"event":"SystemMetricLoaded","description":"Fired when SystemMetric finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[SystemMetric]"}]},{"event":"SystemMetricLoadFailed","description":"Fired when SystemMetric fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"SystemMetricLoaded","name":"SystemMetric loaded","payloadSchema":[{"name":"data","type":"[SystemMetric]"}]},{"key":"SystemMetricLoadFailed","name":"SystemMetric load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","SystemMetric",{"emit":{"failure":"SystemMetricLoadFailed","success":"SystemMetricLoaded"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Metrics"}]},{"type":"stack","justify":"between","direction":"horizontal","gap":"md","children":[{"direction":"horizontal","children":[{"name":"activity","type":"icon"},{"content":"Metrics","type":"typography","variant":"h2"}],"gap":"md","type":"stack"},{"action":"REFRESH","type":"button","label":"Refresh","variant":"secondary","icon":"refresh-cw"}]},{"type":"divider"},{"type":"box","padding":"md","children":[{"children":[{"children":[{"children":[{"variant":"caption","content":"Name","type":"typography"},{"content":"@entity.name","type":"typography","variant":"h3"}],"gap":"sm","direction":"vertical","type":"stack"}],"type":"card"},{"value":"@entity.value","label":"Value","type":"stat-display"},{"children":[{"type":"stack","children":[{"type":"typography","content":"Unit","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.unit"}],"gap":"sm","direction":"vertical"}],"type":"card"},{"children":[{"direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Trend"},{"type":"typography","variant":"h3","content":"@entity.trend"}],"type":"stack","gap":"sm"}],"type":"card"}],"cols":3,"type":"simple-grid"}]},{"type":"divider"},{"type":"grid","gap":"md","children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"type":"card","children":[{"type":"typography","content":"Graph View","variant":"caption"}]}],"cols":2},{"data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"type":"graph-view","edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400,"height":200,"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}]}],"gap":"lg","direction":"vertical","type":"stack"}]}],"appName":"DevOps Dashboard","type":"dashboard-layout","navItems":[{"label":"Services","href":"/services","icon":"server"},{"href":"/alerts","label":"Alerts","icon":"bell"},{"href":"/logs","icon":"terminal","label":"Logs"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}]}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","SystemMetric",{"emit":{"failure":"SystemMetricLoadFailed","success":"SystemMetricLoaded"}}],["render-ui","main",{"children":[{"children":[{"type":"stack","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Metrics"}]},{"children":[{"direction":"horizontal","gap":"md","children":[{"name":"activity","type":"icon"},{"content":"Metrics","type":"typography","variant":"h2"}],"type":"stack"},{"type":"button","icon":"refresh-cw","action":"REFRESH","variant":"secondary","label":"Refresh"}],"gap":"md","direction":"horizontal","type":"stack","justify":"between"},{"type":"divider"},{"padding":"md","type":"box","children":[{"type":"simple-grid","children":[{"children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"variant":"caption","content":"Name","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.name"}]}],"type":"card"},{"label":"Value","type":"stat-display","value":"@entity.value"},{"type":"card","children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"variant":"caption","content":"Unit","type":"typography"},{"content":"@entity.unit","type":"typography","variant":"h3"}]}]},{"type":"card","children":[{"children":[{"variant":"caption","content":"Trend","type":"typography"},{"content":"@entity.trend","type":"typography","variant":"h3"}],"gap":"sm","type":"stack","direction":"vertical"}]}],"cols":3}]},{"type":"divider"},{"type":"grid","cols":2,"children":[{"children":[{"variant":"caption","content":"Chart View","type":"typography"}],"type":"card"},{"type":"card","children":[{"type":"typography","content":"Graph View","variant":"caption"}]}],"gap":"md"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"height":200,"width":400,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view"}],"direction":"vertical","gap":"lg"}],"type":"scaled-diagram"}],"navItems":[{"href":"/services","label":"Services","icon":"server"},{"label":"Alerts","href":"/alerts","icon":"bell"},{"label":"Logs","href":"/logs","icon":"terminal"},{"href":"/metrics","icon":"layout-list","label":"Metrics"}],"type":"dashboard-layout","appName":"DevOps Dashboard"}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","SystemMetric",{"emit":{"success":"SystemMetricLoaded","failure":"SystemMetricLoadFailed"}}],["render-ui","main",{"appName":"DevOps Dashboard","type":"dashboard-layout","navItems":[{"href":"/services","icon":"server","label":"Services"},{"label":"Alerts","icon":"bell","href":"/alerts"},{"label":"Logs","href":"/logs","icon":"terminal"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"children":[{"type":"scaled-diagram","children":[{"children":[{"items":[{"label":"Home","href":"/"},{"label":"Metrics"}],"type":"breadcrumb"},{"type":"stack","children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"name":"activity","type":"icon"},{"type":"typography","content":"Metrics","variant":"h2"}]},{"icon":"refresh-cw","type":"button","label":"Refresh","action":"REFRESH","variant":"secondary"}],"gap":"md","direction":"horizontal","justify":"between"},{"type":"divider"},{"children":[{"cols":3,"children":[{"children":[{"children":[{"variant":"caption","content":"Name","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.name"}],"type":"stack","direction":"vertical","gap":"sm"}],"type":"card"},{"value":"@entity.value","label":"Value","type":"stat-display"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"content":"Unit","type":"typography","variant":"caption"},{"content":"@entity.unit","variant":"h3","type":"typography"}]}]},{"children":[{"direction":"vertical","type":"stack","children":[{"content":"Trend","type":"typography","variant":"caption"},{"content":"@entity.trend","variant":"h3","type":"typography"}],"gap":"sm"}],"type":"card"}],"type":"simple-grid"}],"padding":"md","type":"box"},{"type":"divider"},{"type":"grid","children":[{"children":[{"variant":"caption","type":"typography","content":"Chart View"}],"type":"card"},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}],"gap":"md","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","width":400,"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"label":"End","id":"c"}],"height":200}],"gap":"lg","direction":"vertical","type":"stack"}]}]}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","SystemMetric",{"emit":{"success":"SystemMetricLoaded","failure":"SystemMetricLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Metrics"}]},{"justify":"between","gap":"md","direction":"horizontal","type":"stack","children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"name":"activity","type":"icon"},{"type":"typography","content":"Metrics","variant":"h2"}]},{"type":"button","label":"Refresh","action":"REFRESH","variant":"secondary","icon":"refresh-cw"}]},{"type":"divider"},{"children":[{"type":"simple-grid","cols":3,"children":[{"children":[{"direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Name"},{"variant":"h3","type":"typography","content":"@entity.name"}],"gap":"sm","type":"stack"}],"type":"card"},{"type":"stat-display","label":"Value","value":"@entity.value"},{"type":"card","children":[{"gap":"sm","children":[{"type":"typography","content":"Unit","variant":"caption"},{"variant":"h3","type":"typography","content":"@entity.unit"}],"type":"stack","direction":"vertical"}]},{"children":[{"direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Trend"},{"content":"@entity.trend","type":"typography","variant":"h3"}],"gap":"sm","type":"stack"}],"type":"card"}]}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"type":"card","children":[{"type":"typography","variant":"caption","content":"Graph View"}]}],"gap":"md","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"height":200,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"width":400,"type":"graph-view"}],"gap":"lg","type":"stack","direction":"vertical"}],"type":"scaled-diagram"}],"appName":"DevOps Dashboard","navItems":[{"href":"/services","icon":"server","label":"Services"},{"href":"/alerts","label":"Alerts","icon":"bell"},{"label":"Logs","href":"/logs","icon":"terminal"},{"icon":"layout-list","label":"Metrics","href":"/metrics"}],"type":"dashboard-layout"}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","SystemMetric",{"emit":{"success":"SystemMetricLoaded","failure":"SystemMetricLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/services","icon":"server","label":"Services"},{"label":"Alerts","href":"/alerts","icon":"bell"},{"label":"Logs","icon":"terminal","href":"/logs"},{"label":"Metrics","href":"/metrics","icon":"layout-list"}],"appName":"DevOps Dashboard","children":[{"children":[{"type":"stack","direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Metrics"}],"type":"breadcrumb"},{"children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"type":"icon","name":"activity"},{"type":"typography","variant":"h2","content":"Metrics"}]},{"action":"REFRESH","icon":"refresh-cw","variant":"secondary","label":"Refresh","type":"button"}],"gap":"md","direction":"horizontal","type":"stack","justify":"between"},{"type":"divider"},{"padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"type":"card","children":[{"gap":"sm","direction":"vertical","type":"stack","children":[{"variant":"caption","type":"typography","content":"Name"},{"content":"@entity.name","variant":"h3","type":"typography"}]}]},{"label":"Value","value":"@entity.value","type":"stat-display"},{"children":[{"children":[{"variant":"caption","type":"typography","content":"Unit"},{"variant":"h3","type":"typography","content":"@entity.unit"}],"direction":"vertical","gap":"sm","type":"stack"}],"type":"card"},{"children":[{"type":"stack","children":[{"content":"Trend","type":"typography","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.trend"}],"direction":"vertical","gap":"sm"}],"type":"card"}]}],"type":"box"},{"type":"divider"},{"children":[{"type":"card","children":[{"type":"typography","content":"Chart View","variant":"caption"}]},{"type":"card","children":[{"type":"typography","content":"Graph View","variant":"caption"}]}],"type":"grid","cols":2,"gap":"md"},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"width":400,"height":200,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"type":"graph-view"}],"gap":"lg"}],"type":"scaled-diagram"}],"type":"dashboard-layout"}]]}]},"scope":"collection"}],"pages":[{"name":"Metrics","path":"/metrics","traits":[{"ref":"SystemMetricDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ServiceNodeOrbital',
+      uses: [],
+      entity: {
+        'name': 'ServiceNode',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'healthy',
+              'degraded',
+              'down',
+            ],
+          },
+          {
+            'name': 'url',
+            'type': 'string',
+          },
+          {
+            'name': 'lastChecked',
+            'type': 'datetime',
+          },
+          {
+            'name': 'failureCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'successCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+            'default': 5,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ServiceNodeCircuitBreaker',
+          'category': 'interaction',
+          'linkedEntity': 'ServiceNode',
+          'emits': [
+            {
+              'event': 'ServiceNodeLoaded',
+              'description': 'Fired when ServiceNode finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ServiceNode]',
+                },
+              ],
+            },
+            {
+              'event': 'ServiceNodeLoadFailed',
+              'description': 'Fired when ServiceNode fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntrySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntrySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+              {
+                'name': 'halfOpen',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'FAILURE',
+                'name': 'Failure',
+              },
+              {
+                'key': 'SUCCESS',
+                'name': 'Success',
+              },
+              {
+                'key': 'TIMEOUT',
+                'name': 'Timeout',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'ServiceNodeLoaded',
+                'name': 'ServiceNode loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ServiceNode]',
+                  },
+                ],
+              },
+              {
+                'key': 'ServiceNodeLoadFailed',
+                'name': 'ServiceNode load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntrySaved',
+                'name': 'Log entry saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntrySaveFailed',
+                'name': 'Log entry save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryUpdated',
+                'name': 'Log entry updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryUpdateFailed',
+                'name': 'Log entry update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryDeleted',
+                'name': 'Log entry deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryDeleteFailed',
+                'name': 'Log entry delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.failureCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.successCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.threshold',
+                    5,
+                  ],
+                  [
+                    'fetch',
+                    'ServiceNode',
+                    {
+                      'emit': {
+                        'success': 'ServiceNodeLoaded',
+                        'failure': 'ServiceNodeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'content': 'ServiceNode',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                  'pulse': false,
+                                  'status': 'online',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                              'type': 'meter',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'FAILURE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'alert-triangle',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'ServiceNode',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Circuit Open',
+                                  'type': 'status-dot',
+                                  'status': 'critical',
+                                  'pulse': true,
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                              'variant': 'error',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                },
+                              ],
+                            },
+                            {
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'type': 'meter',
+                            },
+                            {
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'variant': 'ghost',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'SUCCESS',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'ServiceNode',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'status': 'online',
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'variant': 'success',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'halfOpen',
+                'event': 'TIMEOUT',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'align': 'center',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'activity',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'ServiceNode',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'status': 'warning',
+                                  'pulse': true,
+                                  'label': 'Circuit Half-Open',
+                                  'type': 'status-dot',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'warning',
+                              'message': 'Testing recovery. Limited requests are being allowed through.',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'ServiceNode',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'pulse': false,
+                                  'status': 'online',
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Closed',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'variant': 'success',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'meter',
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'closed',
+                'event': 'SUCCESS',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'ServiceNode',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'status': 'online',
+                                  'pulse': false,
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Closed',
+                                },
+                              ],
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                              'cols': 2,
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                              'type': 'meter',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'open',
+                'event': 'FAILURE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'alert-triangle',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'ServiceNode',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'label': 'Circuit Open',
+                                  'status': 'critical',
+                                  'type': 'status-dot',
+                                  'pulse': true,
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                              'variant': 'error',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'value': '@entity.failureCount',
+                              'type': 'meter',
+                              'max': '@entity.threshold',
+                              'min': 0,
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'icon': 'server',
+                          'href': '/services',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'closed',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'ServiceNode',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'pulse': false,
+                                  'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'variant': 'success',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'href': '/services',
+                          'label': 'Services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ServicesPage',
+          'path': '/services',
+          'traits': [
+            {
+              'ref': 'ServiceNodeCircuitBreaker',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'AlertMetricOrbital',
+      uses: [],
+      entity: {
+        'name': 'AlertMetric',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+          },
+          {
+            'name': 'source',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'AlertMetricDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'AlertMetric',
+          'emits': [
+            {
+              'event': 'AlertMetricLoaded',
+              'description': 'Fired when AlertMetric finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AlertMetric]',
+                },
+              ],
+            },
+            {
+              'event': 'AlertMetricLoadFailed',
+              'description': 'Fired when AlertMetric fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'AlertMetricLoaded',
+                'name': 'AlertMetric loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[AlertMetric]',
+                  },
+                ],
+              },
+              {
+                'key': 'AlertMetricLoadFailed',
+                'name': 'AlertMetric load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.severity',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.source',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.timestamp',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'AlertMetric',
+                    {
+                      'emit': {
+                        'success': 'AlertMetricLoaded',
+                        'failure': 'AlertMetricLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Alerts',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'alert-triangle',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Alerts',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Severity',
+                                                },
+                                                {
+                                                  'content': '@entity.severity',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Message',
+                                                },
+                                                {
+                                                  'content': '@entity.message',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.timestamp',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Source',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.source',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                          'href': '/alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'AlertMetric',
+                    {
+                      'emit': {
+                        'success': 'AlertMetricLoaded',
+                        'failure': 'AlertMetricLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Alerts',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'alert-triangle',
+                                        },
+                                        {
+                                          'content': 'Alerts',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Severity',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.severity',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Message',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.message',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Timestamp',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.timestamp',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Source',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.source',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'AlertMetric',
+                    {
+                      'emit': {
+                        'success': 'AlertMetricLoaded',
+                        'failure': 'AlertMetricLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'icon': 'server',
+                          'href': '/services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                          'href': '/alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Alerts',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'alert-triangle',
+                                        },
+                                        {
+                                          'content': 'Alerts',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Severity',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.severity',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Message',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.message',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Timestamp',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.timestamp',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Source',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.source',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'AlertMetric',
+                    {
+                      'emit': {
+                        'failure': 'AlertMetricLoadFailed',
+                        'success': 'AlertMetricLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Alerts',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'alert-triangle',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Alerts',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Severity',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.severity',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Message',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.message',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Timestamp',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'content': 'Source',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.source',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'icon': 'server',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'AlertMetric',
+                    {
+                      'emit': {
+                        'failure': 'AlertMetricLoadFailed',
+                        'success': 'AlertMetricLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Alerts',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'alert-triangle',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Alerts',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Severity',
+                                                },
+                                                {
+                                                  'content': '@entity.severity',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Message',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.message',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Timestamp',
+                                                },
+                                                {
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Source',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.source',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Alerts',
+          'path': '/alerts',
+          'traits': [
+            {
+              'ref': 'AlertMetricDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'LogEntryOrbital',
+      uses: [],
+      entity: {
+        'name': 'LogEntry',
+        'collection': 'logentrys',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+          },
+          {
+            'name': 'service',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'LogEntryBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'LogEntry',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.level',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.message',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.timestamp',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.service',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.level',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.message',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.timestamp',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.service',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.level',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.message',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.timestamp',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.service',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoaded',
+              'description': 'Fired when LogEntry finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[LogEntry]',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoadFailed',
+              'description': 'Fired when LogEntry fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'LOG_ENTRY_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryCreate',
+              },
+            },
+            {
+              'event': 'LOG_ENTRY_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryEdit',
+              },
+            },
+            {
+              'event': 'LOG_ENTRY_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LogEntryLoaded',
+                'name': 'LogEntry loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[LogEntry]',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoadFailed',
+                'name': 'LogEntry load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'align': 'center',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'LogEntryLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'file-text',
+                                    },
+                                    {
+                                      'content': 'Logs',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'label': 'Create LogEntry',
+                                      'action': 'CREATE',
+                                      'type': 'button',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'name': 'message',
+                                  'variant': 'h4',
+                                  'icon': 'file-text',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'level',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'service',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'timestamp',
+                                  'format': 'date',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'variant': 'compact',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'href': '/services',
+                          'label': 'Services',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'LogEntryLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load logentry',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'variant': 'body',
+                        },
+                        {
+                          'action': 'INIT',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'LogEntryCreate',
+          'category': 'interaction',
+          'linkedEntity': 'LogEntry',
+          'emits': [
+            {
+              'event': 'LOG_ENTRY_CREATED',
+            },
+            {
+              'event': 'LogEntryLoadFailed',
+              'description': 'Fired when LogEntry fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoaded',
+              'description': 'Fired when LogEntry finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[LogEntry]',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntrySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntrySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LOG_ENTRY_CREATED',
+                'name': 'Log Entry Created',
+              },
+              {
+                'key': 'LogEntryLoadFailed',
+                'name': 'LogEntry load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoaded',
+                'name': 'LogEntry loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[LogEntry]',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntrySaveFailed',
+                'name': 'LogEntry save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntrySaved',
+                'name': 'LogEntry saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Create LogEntry',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'level',
+                            'message',
+                            'timestamp',
+                            'service',
+                          ],
+                          'type': 'form-section',
+                          'mode': 'create',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'LogEntry',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'LogEntrySaved',
+                        'failure': 'LogEntrySaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'LOG_ENTRY_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'LogEntryEdit',
+          'category': 'interaction',
+          'linkedEntity': 'LogEntry',
+          'emits': [
+            {
+              'event': 'LOG_ENTRY_UPDATED',
+            },
+            {
+              'event': 'LogEntryLoadFailed',
+              'description': 'Fired when LogEntry fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoaded',
+              'description': 'Fired when LogEntry finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[LogEntry]',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'LogEntry',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LOG_ENTRY_UPDATED',
+                'name': 'Log Entry Updated',
+              },
+              {
+                'key': 'LogEntryLoadFailed',
+                'name': 'LogEntry load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoaded',
+                'name': 'LogEntry loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[LogEntry]',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryUpdateFailed',
+                'name': 'LogEntry update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryUpdated',
+                'name': 'LogEntry updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Edit LogEntry',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'level',
+                            'message',
+                            'timestamp',
+                            'service',
+                          ],
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'LogEntry',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'LogEntryUpdated',
+                        'failure': 'LogEntryUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'LOG_ENTRY_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'LogEntryView',
+          'category': 'interaction',
+          'linkedEntity': 'LogEntry',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoaded',
+              'description': 'Fired when LogEntry finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[LogEntry]',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoadFailed',
+              'description': 'Fired when LogEntry fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'LogEntryLoaded',
+                'name': 'LogEntry loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[LogEntry]',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoadFailed',
+                'name': 'LogEntry load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.level',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.message',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.service',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.timestamp',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.level',
+                            },
+                          ],
+                          'align': 'center',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Level',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.level',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Message',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.message',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Timestamp',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.timestamp',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Service',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.service',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Edit',
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'LogEntryDelete',
+          'category': 'interaction',
+          'linkedEntity': 'LogEntry',
+          'emits': [
+            {
+              'event': 'LOG_ENTRY_DELETED',
+            },
+            {
+              'event': 'LogEntryDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoadFailed',
+              'description': 'Fired when LogEntry fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LogEntryLoaded',
+              'description': 'Fired when LogEntry finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[LogEntry]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'LogEntryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'LOG_ENTRY_DELETED',
+                'name': 'Log Entry Deleted',
+              },
+              {
+                'key': 'LogEntryDeleteFailed',
+                'name': 'LogEntry delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryDeleted',
+                'name': 'LogEntry deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoadFailed',
+                'name': 'LogEntry load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LogEntryLoaded',
+                'name': 'LogEntry loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[LogEntry]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete LogEntry',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                        },
+                        {
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'justify': 'end',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'LogEntry',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'LogEntryDeleted',
+                        'failure': 'LogEntryDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'LOG_ENTRY_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'LogEntry',
+                    {
+                      'emit': {
+                        'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Logs',
+          'path': '/logs',
+          'traits': [
+            {
+              'ref': 'LogEntryBrowse',
+            },
+            {
+              'ref': 'LogEntryCreate',
+            },
+            {
+              'ref': 'LogEntryEdit',
+            },
+            {
+              'ref': 'LogEntryView',
+            },
+            {
+              'ref': 'LogEntryDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'SystemMetricOrbital',
+      uses: [],
+      entity: {
+        'name': 'SystemMetric',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unit',
+            'type': 'string',
+          },
+          {
+            'name': 'trend',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'SystemMetricDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'SystemMetric',
+          'emits': [
+            {
+              'event': 'SystemMetricLoaded',
+              'description': 'Fired when SystemMetric finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[SystemMetric]',
+                },
+              ],
+            },
+            {
+              'event': 'SystemMetricLoadFailed',
+              'description': 'Fired when SystemMetric fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'SystemMetricLoaded',
+                'name': 'SystemMetric loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[SystemMetric]',
+                  },
+                ],
+              },
+              {
+                'key': 'SystemMetricLoadFailed',
+                'name': 'SystemMetric load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.trend',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.unit',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.value',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'SystemMetric',
+                    {
+                      'emit': {
+                        'failure': 'SystemMetricLoadFailed',
+                        'success': 'SystemMetricLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'icon': 'server',
+                          'href': '/services',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Metrics',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'activity',
+                                        },
+                                        {
+                                          'content': 'Metrics',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Name',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.name',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'value': '@entity.value',
+                                          'type': 'stat-display',
+                                          'label': 'Value',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.unit',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Trend',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.trend',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'height': 200,
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'SystemMetric',
+                    {
+                      'emit': {
+                        'success': 'SystemMetricLoaded',
+                        'failure': 'SystemMetricLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Metrics',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'activity',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Metrics',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Name',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.name',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.value',
+                                          'label': 'Value',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Trend',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.trend',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'cols': 3,
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                          'href': '/alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'SystemMetric',
+                    {
+                      'emit': {
+                        'failure': 'SystemMetricLoadFailed',
+                        'success': 'SystemMetricLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Metrics',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'activity',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Metrics',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Name',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'label': 'Value',
+                                          'value': '@entity.value',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Trend',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.trend',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'SystemMetric',
+                    {
+                      'emit': {
+                        'success': 'SystemMetricLoaded',
+                        'failure': 'SystemMetricLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Metrics',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'activity',
+                                        },
+                                        {
+                                          'content': 'Metrics',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Name',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'label': 'Value',
+                                          'type': 'stat-display',
+                                          'value': '@entity.value',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Trend',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.trend',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'SystemMetric',
+                    {
+                      'emit': {
+                        'failure': 'SystemMetricLoadFailed',
+                        'success': 'SystemMetricLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Metrics',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'activity',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Metrics',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Name',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.value',
+                                          'label': 'Value',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Trend',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.trend',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Metrics',
+          'path': '/metrics',
+          'traits': [
+            {
+              'ref': 'SystemMetricDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

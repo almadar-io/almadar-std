@@ -99,9 +99,7246 @@ export function stdAgentAssistant(params: StdAgentAssistantParams): OrbitalDefin
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"AssistantOrbital","entity":{"name":"Assistant","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"messages","type":"string","default":"[]"},{"name":"currentMessage","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"memoryCount","type":"number","default":0},{"name":"contextUsage","type":"number","default":0},{"name":"provider","type":"string","default":"default"},{"name":"sessionId","type":"string","default":""},{"name":"status","type":"string","default":"idle"},{"name":"error","type":"string","default":""},{"name":"turnCount","type":"number","default":0},{"name":"lastMessage","type":"string","default":""},{"name":"tokenCount","type":"number","default":0},{"name":"role","type":"string","default":"user"},{"name":"content","type":"string","default":""},{"name":"timestamp","type":"string","default":""},{"name":"toolName","type":"string","default":""}]},"traits":[{"name":"AssistantConversation","category":"interaction","linkedEntity":"Assistant","emits":[{"event":"SEND_MESSAGE","scope":"internal","payloadSchema":[{"name":"content","type":"string"}]},{"event":"MEMORIZE_RESPONSE","scope":"internal","payloadSchema":[{"name":"content","type":"string"}]},{"event":"MEMORIZE_RESPONSE","scope":"external","payloadSchema":[{"name":"content","type":"string"}]},{"event":"AssistantLoaded","description":"Fired when Assistant finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Assistant]"}]},{"event":"AssistantLoadFailed","description":"Fired when Assistant fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"AssistantDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"AssistantDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MemorySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"MemorySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProviderConfigUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProviderConfigUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PROVIDER_CHANGED","triggers":"INIT","source":{"kind":"orbital","orbital":"ProviderConfigOrbital","trait":"ProviderManager"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"composing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"AssistantLoaded","name":"Assistant loaded","payloadSchema":[{"name":"data","type":"[Assistant]"}]},{"key":"AssistantLoadFailed","name":"Assistant load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"COMPOSE","name":"Compose"},{"key":"CLEAR","name":"Clear"},{"key":"SEND","name":"Send","payloadSchema":[{"name":"content","type":"string","required":true}]},{"key":"CANCEL_COMPOSE","name":"Cancel Compose"},{"key":"SEND_MESSAGE","name":"Send Message"},{"key":"MEMORIZE_RESPONSE","name":"Memorize Response"},{"key":"AssistantDeleted","name":"Assistant deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"AssistantDeleteFailed","name":"Assistant delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MemorySaved","name":"Memory saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"MemorySaveFailed","name":"Memory save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProviderConfigUpdated","name":"Provider config updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ProviderConfigUpdateFailed","name":"Provider config update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Assistant",{"emit":{"failure":"AssistantLoadFailed","success":"AssistantLoaded"}}],["render-ui","main",{"gap":"md","align":"center","children":[{"type":"spinner"},{"content":"Loading assistant…","color":"muted","variant":"caption","type":"typography"}],"direction":"vertical","type":"stack","className":"py-12"}]]},{"from":"idle","to":"idle","event":"AssistantLoaded","effects":[["render-ui","main",{"children":[{"children":[{"align":"center","children":[{"gap":"sm","children":[{"name":"message-circle","type":"icon"},{"variant":"h2","type":"typography","content":"Assistant Thread"}],"type":"stack","align":"center","direction":"horizontal"},{"type":"button","label":"New Message","action":"COMPOSE","variant":"primary","icon":"plus"}],"gap":"sm","direction":"horizontal","type":"stack","justify":"between"},{"type":"divider"},{"type":"data-list","fields":[],"entity":"@payload.data","renderItem":["fn","item",{"children":[{"direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"badge","label":"@item.role"},{"variant":"secondary","type":"badge","label":"@item.status"},{"content":"@item.timestamp","variant":"caption","color":"muted","type":"typography"}],"align":"center"},{"content":"@item.content","variant":"body","type":"typography"}],"type":"stack","gap":"xs","direction":"vertical"}]}],"direction":"vertical","gap":"lg","type":"stack"}],"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","href":"/memory","icon":"brain"},{"icon":"settings","label":"Settings","href":"/settings"}],"appName":"Agent Assistant","type":"dashboard-layout"}]]},{"from":"idle","to":"idle","event":"AssistantLoadFailed","effects":[["render-ui","main",{"children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"variant":"h3","content":"Failed to load assistant","type":"typography"},{"content":"@payload.error","variant":"body","color":"muted","type":"typography"},{"variant":"primary","icon":"rotate-ccw","label":"Retry","action":"INIT","type":"button"}],"align":"center","type":"stack","direction":"vertical","gap":"md","className":"py-12"}]]},{"from":"idle","to":"composing","event":"COMPOSE","effects":[["render-ui","main",{"gap":"lg","type":"stack","direction":"vertical","children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"name":"message-circle","type":"icon"},{"content":"Assistant Thread","type":"typography","variant":"h2"}],"align":"center"},{"type":"divider"},{"cancelEvent":"CANCEL_COMPOSE","type":"form-section","fields":["content"],"mode":"create","submitEvent":"SEND"}]}]]},{"from":"idle","to":"idle","event":"CLEAR","effects":[["persist","delete","Assistant",{"emit":{"success":"AssistantDeleted","failure":"AssistantDeleteFailed"}}],["fetch","Assistant",{"emit":{"success":"AssistantLoaded","failure":"AssistantLoadFailed"}}],["render-ui","main",{"type":"spinner"}]]},{"from":"composing","to":"idle","event":"SEND","effects":[["persist","create","Assistant",{"content":"@payload.content","status":"sent","role":"user","timestamp":"@now"},{"emit":{"success":"SEND_MESSAGE"}}],["fetch","Assistant",{"emit":{"success":"AssistantLoaded","failure":"AssistantLoadFailed"}}],["render-ui","main",{"type":"spinner"}]]},{"from":"composing","to":"idle","event":"CANCEL_COMPOSE","effects":[["fetch","Assistant",{"emit":{"failure":"AssistantLoadFailed","success":"AssistantLoaded"}}],["render-ui","main",{"type":"spinner"}]]},{"from":"composing","to":"idle","event":"CLEAR","effects":[["persist","delete","Assistant",{"emit":{"success":"AssistantDeleted","failure":"AssistantDeleteFailed"}}],["fetch","Assistant",{"emit":{"success":"AssistantLoaded","failure":"AssistantLoadFailed"}}],["render-ui","main",{"type":"spinner"}]]}]},"scope":"collection"},{"name":"AssistantAgent","category":"interaction","linkedEntity":"Assistant","emits":[{"event":"TOKEN_UPDATE","scope":"internal","payloadSchema":[{"name":"tokenCount","type":"number"}]},{"event":"AssistantLoaded","description":"Fired when Assistant finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Assistant]"}]},{"event":"AssistantLoadFailed","description":"Fired when Assistant fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"active"},{"name":"paused"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"SEND_MESSAGE","name":"Send Message","payloadSchema":[{"name":"content","type":"string","required":true}]},{"key":"PAUSE","name":"Pause"},{"key":"CLEAR","name":"Clear"},{"key":"RESUME","name":"Resume"},{"key":"TOKEN_UPDATE","name":"Token Update"},{"key":"AssistantLoaded","name":"Assistant loaded","payloadSchema":[{"name":"data","type":"[Assistant]"}]},{"key":"AssistantLoadFailed","name":"Assistant load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Assistant",{"emit":{"success":"AssistantLoaded","failure":"AssistantLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","href":"/memory","icon":"brain"},{"icon":"settings","href":"/settings","label":"Settings"}],"children":[{"icon":"message-circle","description":"Conversation is ready","type":"empty-state","title":"Conversation"}]}]]},{"from":"idle","to":"active","event":"SEND_MESSAGE","effects":[["set","@entity.lastMessage","@payload.content"],["set","@entity.turnCount",["+","@entity.turnCount",1]],["agent/generate","@payload.content"],["emit","TOKEN_UPDATE"]]},{"from":"active","to":"active","event":"SEND_MESSAGE","effects":[["set","@entity.lastMessage","@payload.content"],["set","@entity.turnCount",["+","@entity.turnCount",1]],["agent/generate","@payload.content"],["emit","TOKEN_UPDATE"]]},{"from":"active","to":"paused","event":"PAUSE"},{"from":"active","to":"idle","event":"CLEAR","effects":[["set","@entity.messages",[]],["set","@entity.turnCount",0],["set","@entity.lastMessage",""],["set","@entity.tokenCount",0]]},{"from":"paused","to":"active","event":"RESUME"},{"from":"paused","to":"idle","event":"CLEAR","effects":[["set","@entity.messages",[]],["set","@entity.turnCount",0],["set","@entity.lastMessage",""],["set","@entity.tokenCount",0]]}]},"scope":"collection"}],"pages":[{"name":"ChatPage","path":"/chat","traits":[{"ref":"AssistantConversation"}]}]},{"name":"MemoryOrbital","entity":{"name":"Memory","collection":"memorys","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"content","type":"string","default":""},{"name":"category","type":"string"},{"name":"strength","type":"number"},{"name":"pinned","type":"boolean"},{"name":"scope","type":"string"},{"name":"lastAccessedAt","type":"string"},{"name":"createdAt","type":"string"}]},"traits":[{"name":"MemoryBrowse","category":"interaction","linkedEntity":"Memory","emits":[{"event":"MEMORIZE"},{"event":"RECALL"},{"event":"DECAY"},{"event":"PIN","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"REINFORCE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"FORGET","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"MemoryLoaded","description":"Fired when Memory finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"event":"MemoryLoadFailed","description":"Fired when Memory fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"MEMORIZED","triggers":"INIT","source":{"kind":"trait","trait":"MemoryCreate"}},{"event":"PINNED","triggers":"INIT","source":{"kind":"trait","trait":"MemoryAgent"}},{"event":"FORGOT","triggers":"INIT","source":{"kind":"trait","trait":"MemoryAgent"}},{"event":"REINFORCED","triggers":"INIT","source":{"kind":"trait","trait":"MemoryAgent"}},{"event":"DECAYED","triggers":"INIT","source":{"kind":"trait","trait":"MemoryAgent"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"MemoryLoaded","name":"Memory loaded","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"key":"MemoryLoadFailed","name":"Memory load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MEMORIZE","name":"Memorize"},{"key":"RECALL","name":"Recall"},{"key":"DECAY","name":"Decay"},{"key":"PIN","name":"Pin"},{"key":"REINFORCE","name":"Reinforce"},{"key":"FORGET","name":"Forget"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Memory",{"emit":{"success":"MemoryLoaded","failure":"MemoryLoadFailed"}}],["render-ui","main",{"type":"stack","children":[{"type":"spinner"},{"content":"Loading…","type":"typography","color":"muted","variant":"caption"}],"gap":"md","direction":"vertical","align":"center","className":"py-12"}]]},{"from":"browsing","to":"browsing","event":"MemoryLoaded","effects":[["render-ui","main",{"navItems":[{"icon":"message-circle","href":"/chat","label":"Chat"},{"href":"/memory","icon":"brain","label":"Memory"},{"href":"/settings","icon":"settings","label":"Settings"}],"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"justify":"between","gap":"md","align":"center","children":[{"children":[{"type":"icon","name":"brain"},{"content":"Memory Manager","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack","align":"center"},{"type":"stack","gap":"sm","children":[{"type":"button","variant":"primary","label":"Memorize","icon":"plus","action":"MEMORIZE"},{"type":"button","action":"RECALL","label":"Recall","variant":"secondary","icon":"search"},{"variant":"ghost","icon":"clock","label":"Decay All","action":"DECAY","type":"button"}],"direction":"horizontal"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"data-grid","entity":"@payload.data","fields":[{"name":"content","icon":"brain","label":"Content","variant":"h4"},{"label":"Category","colorMap":{"pending":"warning","inactive":"neutral","disabled":"neutral","scheduled":"warning","error":"destructive","done":"success","cancelled":"destructive","failed":"destructive","archived":"neutral","completed":"success","draft":"warning","active":"success"},"variant":"badge","name":"category"},{"variant":"caption","label":"Strength","name":"strength"}],"itemActions":[{"label":"Pin","event":"PIN","variant":"ghost"},{"variant":"ghost","label":"Reinforce","event":"REINFORCE"},{"variant":"danger","event":"FORGET","label":"Forget"}]}],"className":"max-w-5xl mx-auto w-full"}],"appName":"Agent Assistant","type":"dashboard-layout"}]]},{"from":"browsing","to":"browsing","event":"MemoryLoadFailed","effects":[["render-ui","main",{"direction":"vertical","children":[{"name":"alert-triangle","color":"destructive","type":"icon"},{"type":"typography","variant":"h3","content":"Failed to load memory"},{"content":"@payload.error","color":"muted","variant":"body","type":"typography"},{"label":"Retry","variant":"primary","icon":"rotate-ccw","action":"INIT","type":"button"}],"className":"py-12","align":"center","type":"stack","gap":"md"}]]}]},"scope":"collection"},{"name":"MemoryCreate","category":"interaction","linkedEntity":"Memory","emits":[{"event":"MEMORIZED"},{"event":"MemoryLoadFailed","description":"Fired when Memory fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MemoryLoaded","description":"Fired when Memory finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"event":"MemorySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MemorySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"MEMORIZE","triggers":"MEMORIZE","source":{"kind":"trait","trait":"MemoryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"MEMORIZE","name":"Memorize"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"MEMORIZED","name":"Memorized"},{"key":"MemoryLoadFailed","name":"Memory load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MemoryLoaded","name":"Memory loaded","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"key":"MemorySaveFailed","name":"Memory save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MemorySaved","name":"Memory saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Memory",{"emit":{"failure":"MemoryLoadFailed","success":"MemoryLoaded"}}]]},{"from":"closed","to":"open","event":"MEMORIZE","effects":[["render-ui","modal",{"direction":"vertical","gap":"md","children":[{"gap":"sm","children":[{"name":"plus-circle","type":"icon"},{"type":"typography","content":"Memorize","variant":"h3"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"mode":"create","fields":["content","category","scope"],"cancelEvent":"CLOSE","submitEvent":"SAVE","type":"form-section"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Memory","@payload.data",{"emit":{"failure":"MemorySaveFailed","success":"MemorySaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","MEMORIZED"]]}]},"scope":"collection"},{"name":"MemoryAgent","category":"interaction","linkedEntity":"Memory","emits":[{"event":"FORGOT","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"REINFORCED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DECAYED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PINNED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"MemoryLoadFailed","description":"Fired when Memory fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MemoryLoaded","description":"Fired when Memory finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"event":"MemorySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MemorySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"MEMORIZE_RESPONSE","triggers":"MEMORIZE","source":{"kind":"orbital","orbital":"AssistantOrbital","trait":"AssistantConversation"}},{"event":"RECALL","triggers":"RECALL","source":{"kind":"trait","trait":"MemoryBrowse"}},{"event":"DECAY","triggers":"DECAY","source":{"kind":"trait","trait":"MemoryBrowse"}},{"event":"PIN","triggers":"PIN","source":{"kind":"trait","trait":"MemoryBrowse"}},{"event":"REINFORCE","triggers":"REINFORCE","source":{"kind":"trait","trait":"MemoryBrowse"}},{"event":"FORGET","triggers":"FORGET","source":{"kind":"trait","trait":"MemoryBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"active"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DO_MEMORIZE","name":"Do Memorize","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DECAY","name":"Decay"},{"key":"MEMORIZED","name":"Memorized"},{"key":"RECALL","name":"Recall","payloadSchema":[{"name":"query","type":"string"}]},{"key":"PIN","name":"Pin","payloadSchema":[{"name":"id","type":"string"}]},{"key":"FORGET","name":"Forget","payloadSchema":[{"name":"id","type":"string"}]},{"key":"REINFORCE","name":"Reinforce","payloadSchema":[{"name":"id","type":"string"}]},{"key":"FORGOT","name":"Forgot"},{"key":"REINFORCED","name":"Reinforced"},{"key":"DECAYED","name":"Decayed"},{"key":"PINNED","name":"Pinned"},{"key":"MemoryLoadFailed","name":"Memory load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MemoryLoaded","name":"Memory loaded","payloadSchema":[{"name":"data","type":"[Memory]"}]},{"key":"MemorySaveFailed","name":"Memory save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MemorySaved","name":"Memory saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Memory",{"emit":{"success":"MemoryLoaded","failure":"MemoryLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/chat","icon":"message-circle","label":"Chat"},{"label":"Memory","icon":"brain","href":"/memory"},{"label":"Settings","href":"/settings","icon":"settings"}],"type":"dashboard-layout","appName":"Agent Assistant","children":[{"icon":"brain","title":"Memory","description":"Memory is ready","type":"empty-state"}]}]]},{"from":"idle","to":"active","event":"DO_MEMORIZE","effects":[["agent/memorize","@payload.data.content","@payload.data.category"],["persist","create","Memory","@payload.data",{"emit":{"failure":"MemorySaveFailed","success":"MemorySaved"}}]]},{"from":"idle","to":"idle","event":"DECAY","effects":[["agent/decay"],["emit","DECAYED"]]},{"from":"idle","to":"active","event":"MEMORIZED","effects":[["fetch","Memory",{"emit":{"success":"MemoryLoaded","failure":"MemoryLoadFailed"}}]]},{"from":"active","to":"active","event":"RECALL","effects":[["agent/recall","@payload.query"]]},{"from":"active","to":"active","event":"PIN","guard":["not",["agent/is-pinned","@payload.id"]],"effects":[["agent/pin","@payload.id"],["set","@entity.pinned",true],["emit","PINNED"]]},{"from":"active","to":"idle","event":"FORGET","effects":[["agent/forget","@payload.id"],["emit","FORGOT"]]},{"from":"active","to":"active","event":"REINFORCE","effects":[["agent/reinforce","@payload.id"],["emit","REINFORCED"]]},{"from":"active","to":"active","event":"DECAY","effects":[["agent/decay"],["emit","DECAYED"]]}]},"scope":"collection"}],"pages":[{"name":"Memory","path":"/memory","traits":[{"ref":"MemoryBrowse"},{"ref":"MemoryCreate"},{"ref":"MemoryAgent"}]}]},{"name":"AssistantContextOrbital","entity":{"name":"AssistantContext","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"tokenCount","type":"number","default":0},{"name":"maxTokens","type":"number"},{"name":"usage","type":"number"},{"name":"lastCompactedAt","type":"string"},{"name":"current","type":"number"},{"name":"max","type":"number"},{"name":"threshold","type":"number"},{"name":"message","type":"string"},{"name":"notificationType","type":"string"}]},"traits":[{"name":"AssistantContextMonitor","category":"interaction","linkedEntity":"AssistantContext","emits":[{"event":"COMPACT"},{"event":"AssistantContextLoaded","description":"Fired when AssistantContext finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"event":"AssistantContextLoadFailed","description":"Fired when AssistantContext fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"normal","isInitial":true},{"name":"warning"},{"name":"critical"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"UPDATE","name":"Update","payloadSchema":[{"name":"current","type":"string"}]},{"key":"COMPACT","name":"Compact"},{"key":"RESET","name":"Reset"},{"key":"AssistantContextLoaded","name":"AssistantContext loaded","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"key":"AssistantContextLoadFailed","name":"AssistantContext load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"normal","to":"normal","event":"INIT","effects":[["fetch","AssistantContext",{"emit":{"success":"AssistantContextLoaded","failure":"AssistantContextLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","children":[{"children":[{"type":"stack","direction":"horizontal","align":"center","gap":"sm","children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","variant":"h2","type":"typography"},{"type":"badge","variant":"default","label":"Normal"}]},{"type":"divider"},{"value":"@entity.current","type":"progress-bar","max":"@entity.max"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}]},{"variant":"ghost","icon":"rotate-ccw","action":"RESET","type":"button","label":"Reset"}],"type":"stack","direction":"vertical","gap":"lg"}],"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"icon":"brain","href":"/memory","label":"Memory"},{"label":"Settings","icon":"settings","href":"/settings"}]}]]},{"from":"normal","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"direction":"horizontal","gap":"sm","type":"stack","children":[{"name":"gauge","type":"icon"},{"content":"Token Usage","variant":"h2","type":"typography"},{"label":"Normal","variant":"default","type":"badge"}],"align":"center"},{"type":"divider"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"gap":"md","direction":"horizontal","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"type":"stack"},{"type":"button","variant":"ghost","icon":"rotate-ccw","action":"RESET","label":"Reset"}]}],"type":"dashboard-layout","appName":"Agent Assistant","navItems":[{"icon":"message-circle","label":"Chat","href":"/chat"},{"label":"Memory","href":"/memory","icon":"brain"},{"label":"Settings","icon":"settings","href":"/settings"}]}]]},{"from":"normal","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","icon":"brain","href":"/memory"},{"icon":"settings","label":"Settings","href":"/settings"}],"children":[{"children":[{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":[{"type":"icon","name":"alert-triangle"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"warning","label":"Warning","type":"badge"}]},{"type":"divider"},{"message":"Token usage approaching limit. Consider compacting.","type":"alert","variant":"warning"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"direction":"horizontal","children":[{"label":"Tokens Used","type":"stat-display","value":"@entity.current"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"gap":"md","type":"stack"},{"children":[{"type":"button","label":"Compact","variant":"primary","action":"COMPACT","icon":"minimize-2"},{"action":"RESET","variant":"ghost","icon":"rotate-ccw","type":"button","label":"Reset"}],"gap":"sm","direction":"horizontal","type":"stack"}],"gap":"lg","direction":"vertical","type":"stack"}]}]]},{"from":"normal","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","children":[{"gap":"sm","align":"center","children":[{"type":"icon","name":"alert-octagon"},{"content":"Token Usage","type":"typography","variant":"h2"},{"label":"Critical","type":"badge","variant":"danger"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"variant":"error","type":"alert","message":"Token usage critical. Compact immediately to avoid truncation."},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"stack","gap":"sm","children":[{"variant":"primary","icon":"minimize-2","action":"COMPACT","type":"button","label":"Compact Now"},{"variant":"ghost","label":"Reset","icon":"rotate-ccw","action":"RESET","type":"button"}],"direction":"horizontal"}],"type":"stack"}],"appName":"Agent Assistant","navItems":[{"label":"Chat","icon":"message-circle","href":"/chat"},{"icon":"brain","href":"/memory","label":"Memory"},{"href":"/settings","icon":"settings","label":"Settings"}],"type":"dashboard-layout"}]]},{"from":"normal","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"appName":"Agent Assistant","children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"default","type":"badge","label":"Normal"}]},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"gap":"md","direction":"horizontal","type":"stack","children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}]},{"type":"button","icon":"rotate-ccw","action":"RESET","variant":"ghost","label":"Reset"}]}],"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","href":"/memory","icon":"brain"},{"label":"Settings","icon":"settings","href":"/settings"}],"type":"dashboard-layout"}]]},{"from":"normal","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"navItems":[{"label":"Chat","icon":"message-circle","href":"/chat"},{"href":"/memory","icon":"brain","label":"Memory"},{"href":"/settings","label":"Settings","icon":"settings"}],"appName":"Agent Assistant","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"icon","name":"gauge"},{"type":"typography","content":"Token Usage","variant":"h2"},{"variant":"default","type":"badge","label":"Normal"}],"align":"center"},{"type":"divider"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"children":[{"value":"@entity.current","label":"Tokens Used","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"direction":"horizontal","type":"stack","gap":"md"},{"icon":"rotate-ccw","label":"Reset","type":"button","action":"RESET","variant":"ghost"}]}],"type":"dashboard-layout"}]]},{"from":"warning","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"children":[{"type":"icon","name":"alert-triangle"},{"variant":"h2","content":"Token Usage","type":"typography"},{"type":"badge","variant":"warning","label":"Warning"}],"type":"stack","direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"message":"Token usage approaching limit. Consider compacting.","variant":"warning","type":"alert"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"direction":"horizontal","gap":"md","type":"stack"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"variant":"primary","icon":"minimize-2","type":"button","label":"Compact","action":"COMPACT"},{"icon":"rotate-ccw","action":"RESET","label":"Reset","variant":"ghost","type":"button"}]}]}],"appName":"Agent Assistant","navItems":[{"icon":"message-circle","label":"Chat","href":"/chat"},{"icon":"brain","label":"Memory","href":"/memory"},{"label":"Settings","href":"/settings","icon":"settings"}]}]]},{"from":"warning","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"sm","type":"stack","children":[{"name":"alert-octagon","type":"icon"},{"type":"typography","variant":"h2","content":"Token Usage"},{"type":"badge","label":"Critical","variant":"danger"}],"align":"center"},{"type":"divider"},{"type":"alert","variant":"error","message":"Token usage critical. Compact immediately to avoid truncation."},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"label":"Max Tokens","type":"stat-display","value":"@entity.max"}],"direction":"horizontal","type":"stack","gap":"md"},{"gap":"sm","type":"stack","direction":"horizontal","children":[{"label":"Compact Now","type":"button","action":"COMPACT","icon":"minimize-2","variant":"primary"},{"icon":"rotate-ccw","action":"RESET","type":"button","label":"Reset","variant":"ghost"}]}],"type":"stack"}],"type":"dashboard-layout","navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","icon":"brain","href":"/memory"},{"label":"Settings","href":"/settings","icon":"settings"}],"appName":"Agent Assistant"}]]},{"from":"warning","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"appName":"Agent Assistant","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"gap":"sm","children":[{"type":"icon","name":"gauge"},{"variant":"h2","content":"Token Usage","type":"typography"},{"label":"Normal","variant":"default","type":"badge"}],"type":"stack","direction":"horizontal","align":"center"},{"type":"divider"},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"value":"@entity.max","type":"stat-display","label":"Max Tokens"}],"type":"stack","gap":"md","direction":"horizontal"},{"label":"Reset","type":"button","action":"RESET","icon":"rotate-ccw","variant":"ghost"}]}],"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"icon":"brain","href":"/memory","label":"Memory"},{"icon":"settings","label":"Settings","href":"/settings"}],"type":"dashboard-layout"}]]},{"from":"warning","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"appName":"Agent Assistant","type":"dashboard-layout","children":[{"children":[{"align":"center","direction":"horizontal","gap":"sm","children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","variant":"h2","type":"typography"},{"label":"Normal","type":"badge","variant":"default"}],"type":"stack"},{"type":"divider"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"gap":"md","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"type":"stack","direction":"horizontal"},{"icon":"rotate-ccw","label":"Reset","action":"RESET","type":"button","variant":"ghost"}],"gap":"lg","type":"stack","direction":"vertical"}],"navItems":[{"icon":"message-circle","href":"/chat","label":"Chat"},{"href":"/memory","label":"Memory","icon":"brain"},{"label":"Settings","href":"/settings","icon":"settings"}]}]]},{"from":"warning","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"direction":"horizontal","children":[{"name":"gauge","type":"icon"},{"content":"Token Usage","variant":"h2","type":"typography"},{"label":"Normal","variant":"default","type":"badge"}],"type":"stack","align":"center","gap":"sm"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"gap":"md","type":"stack","direction":"horizontal"},{"action":"RESET","icon":"rotate-ccw","type":"button","variant":"ghost","label":"Reset"}]}],"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"label":"Memory","href":"/memory","icon":"brain"},{"href":"/settings","label":"Settings","icon":"settings"}]}]]},{"from":"critical","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","children":[{"direction":"vertical","gap":"lg","children":[{"gap":"sm","direction":"horizontal","type":"stack","align":"center","children":[{"type":"icon","name":"alert-octagon"},{"type":"typography","content":"Token Usage","variant":"h2"},{"variant":"danger","type":"badge","label":"Critical"}]},{"type":"divider"},{"message":"Token usage critical. Compact immediately to avoid truncation.","variant":"error","type":"alert"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"gap":"md","type":"stack","direction":"horizontal"},{"direction":"horizontal","children":[{"label":"Compact Now","variant":"primary","icon":"minimize-2","type":"button","action":"COMPACT"},{"icon":"rotate-ccw","action":"RESET","type":"button","label":"Reset","variant":"ghost"}],"gap":"sm","type":"stack"}],"type":"stack"}],"navItems":[{"label":"Chat","icon":"message-circle","href":"/chat"},{"label":"Memory","href":"/memory","icon":"brain"},{"label":"Settings","icon":"settings","href":"/settings"}]}]]},{"from":"critical","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Assistant","navItems":[{"href":"/chat","icon":"message-circle","label":"Chat"},{"href":"/memory","icon":"brain","label":"Memory"},{"label":"Settings","icon":"settings","href":"/settings"}],"children":[{"children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"label":"Warning","variant":"warning","type":"badge"}],"type":"stack","gap":"sm","align":"center","direction":"horizontal"},{"type":"divider"},{"type":"alert","variant":"warning","message":"Token usage approaching limit. Consider compacting."},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"type":"stat-display","value":"@entity.max","label":"Max Tokens"}]},{"children":[{"label":"Compact","variant":"primary","icon":"minimize-2","type":"button","action":"COMPACT"},{"action":"RESET","icon":"rotate-ccw","label":"Reset","variant":"ghost","type":"button"}],"type":"stack","gap":"sm","direction":"horizontal"}],"type":"stack","direction":"vertical","gap":"lg"}]}]]},{"from":"critical","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"icon":"message-circle","label":"Chat","href":"/chat"},{"href":"/memory","label":"Memory","icon":"brain"},{"href":"/settings","label":"Settings","icon":"settings"}],"appName":"Agent Assistant","children":[{"children":[{"align":"center","gap":"sm","children":[{"type":"icon","name":"gauge"},{"type":"typography","variant":"h2","content":"Token Usage"},{"variant":"default","type":"badge","label":"Normal"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"type":"stack","direction":"horizontal","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"gap":"md"},{"icon":"rotate-ccw","variant":"ghost","action":"RESET","type":"button","label":"Reset"}],"direction":"vertical","type":"stack","gap":"lg"}],"type":"dashboard-layout"}]]},{"from":"critical","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"href":"/memory","label":"Memory","icon":"brain"},{"label":"Settings","href":"/settings","icon":"settings"}],"appName":"Agent Assistant","children":[{"gap":"lg","children":[{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","content":"Token Usage","type":"typography"},{"label":"Normal","type":"badge","variant":"default"}]},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"direction":"horizontal","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"type":"stack","gap":"md"},{"action":"RESET","type":"button","icon":"rotate-ccw","variant":"ghost","label":"Reset"}],"type":"stack","direction":"vertical"}]}]]},{"from":"critical","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"icon":"brain","label":"Memory","href":"/memory"},{"href":"/settings","label":"Settings","icon":"settings"}],"appName":"Agent Assistant","children":[{"children":[{"direction":"horizontal","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"label":"Normal","variant":"default","type":"badge"}],"gap":"sm","type":"stack"},{"type":"divider"},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"direction":"horizontal","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"type":"stack","gap":"md"},{"label":"Reset","icon":"rotate-ccw","variant":"ghost","type":"button","action":"RESET"}],"direction":"vertical","type":"stack","gap":"lg"}]}]]}]},"scope":"collection"},{"name":"AssistantContextNotification","category":"interaction","linkedEntity":"AssistantContext","emits":[{"event":"AssistantContextLoaded","description":"Fired when AssistantContext finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"event":"AssistantContextLoadFailed","description":"Fired when AssistantContext fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"hidden","isInitial":true},{"name":"visible"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"SHOW","name":"Show","payloadSchema":[{"name":"message","type":"string"},{"name":"notificationType","type":"string"}]},{"key":"HIDE","name":"Hide"},{"key":"AssistantContextLoaded","name":"AssistantContext loaded","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"key":"AssistantContextLoadFailed","name":"AssistantContext load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"hidden","to":"hidden","event":"INIT","effects":[["fetch","AssistantContext",{"emit":{"success":"AssistantContextLoaded","failure":"AssistantContextLoadFailed"}}]]},{"from":"hidden","to":"visible","event":"SHOW","effects":[["set","@entity.message","@payload.message"],["set","@entity.notificationType","@payload.notificationType"],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"justify":"between","direction":"horizontal","gap":"md","type":"stack","align":"center","children":[{"type":"stack","gap":"md","children":[{"type":"icon","name":"layers"},{"variant":"h2","type":"typography","content":"Context Window Alert"}],"direction":"horizontal","align":"center"},{"variant":"ghost","icon":"x","type":"button","label":"Dismiss","action":"HIDE"}]},{"type":"divider"},{"type":"alert","variant":"@entity.notificationType","message":"@entity.message"},{"type":"toast-slot"},{"variant":"warning","message":"@entity.message","type":"alert"}]}],"navItems":[{"icon":"message-circle","label":"Chat","href":"/chat"},{"label":"Memory","href":"/memory","icon":"brain"},{"label":"Settings","href":"/settings","icon":"settings"}],"type":"dashboard-layout","appName":"Agent Assistant"}]]},{"from":"visible","to":"visible","event":"SHOW","effects":[["set","@entity.message","@payload.message"],["set","@entity.notificationType","@payload.notificationType"],["render-ui","main",{"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"icon":"brain","label":"Memory","href":"/memory"},{"icon":"settings","label":"Settings","href":"/settings"}],"appName":"Agent Assistant","children":[{"children":[{"gap":"md","type":"stack","justify":"between","children":[{"type":"stack","children":[{"type":"icon","name":"layers"},{"content":"Context Window Alert","variant":"h2","type":"typography"}],"direction":"horizontal","gap":"md","align":"center"},{"icon":"x","type":"button","label":"Dismiss","action":"HIDE","variant":"ghost"}],"align":"center","direction":"horizontal"},{"type":"divider"},{"message":"@entity.message","type":"alert","variant":"@entity.notificationType"},{"type":"toast-slot"},{"type":"alert","message":"@entity.message","variant":"warning"}],"direction":"vertical","type":"stack","gap":"lg"}],"type":"dashboard-layout"}]]},{"from":"visible","to":"hidden","event":"HIDE","effects":[["set","@entity.message",""]]}]},"scope":"collection"},{"name":"AssistantContextAgent","category":"interaction","linkedEntity":"AssistantContext","emits":[{"event":"SHOW","scope":"internal","payloadSchema":[{"name":"message","type":"string","required":true},{"name":"notificationType","type":"string"}]},{"event":"UPDATE","scope":"internal","payloadSchema":[{"name":"current","type":"number"},{"name":"max","type":"number"}]},{"event":"AssistantContextLoaded","description":"Fired when AssistantContext finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"event":"AssistantContextLoadFailed","description":"Fired when AssistantContext fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"COMPACT","triggers":"COMPACT","source":{"kind":"trait","trait":"AssistantContextMonitor"}}],"stateMachine":{"states":[{"name":"normal","isInitial":true},{"name":"approaching_limit"},{"name":"at_limit"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"UPDATE_TOKENS","name":"Update Tokens"},{"key":"COMPACT","name":"Compact"},{"key":"SHOW","name":"Show"},{"key":"UPDATE","name":"Update"},{"key":"AssistantContextLoaded","name":"AssistantContext loaded","payloadSchema":[{"name":"data","type":"[AssistantContext]"}]},{"key":"AssistantContextLoadFailed","name":"AssistantContext load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"normal","to":"normal","event":"INIT","effects":[["fetch","AssistantContext",{"emit":{"success":"AssistantContextLoaded","failure":"AssistantContextLoadFailed"}}],["agent/token-count"],["agent/context-usage"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/chat","label":"Chat","icon":"message-circle"},{"href":"/memory","label":"Memory","icon":"brain"},{"label":"Settings","href":"/settings","icon":"settings"}],"appName":"Agent Assistant","children":[{"icon":"layers","type":"empty-state","title":"Context Window","description":"Context Window is ready"}]}]]},{"from":"normal","to":"normal","event":"UPDATE_TOKENS","guard":["<",["/","@entity.tokenCount","@entity.maxTokens"],0.85],"effects":[["agent/token-count"],["agent/context-usage"],["set","@entity.usage",["*",["/","@entity.tokenCount","@entity.maxTokens"],100]],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"]]},{"from":"normal","to":"approaching_limit","event":"UPDATE_TOKENS","guard":["and",[">=",["/","@entity.tokenCount","@entity.maxTokens"],0.85],["<",["/","@entity.tokenCount","@entity.maxTokens"],1]],"effects":[["agent/token-count"],["agent/context-usage"],["set","@entity.usage",["*",["/","@entity.tokenCount","@entity.maxTokens"],100]],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"],["emit","SHOW",{"notificationType":"warning","message":"Token usage approaching limit"}]]},{"from":"approaching_limit","to":"at_limit","event":"UPDATE_TOKENS","guard":[">=",["/","@entity.tokenCount","@entity.maxTokens"],1],"effects":[["agent/token-count"],["agent/context-usage"],["set","@entity.usage",100],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"],["emit","SHOW",{"message":"Token usage at limit","notificationType":"error"}]]},{"from":"approaching_limit","to":"normal","event":"COMPACT","effects":[["agent/compact"],["agent/token-count"],["agent/context-usage"],["set","@entity.lastCompactedAt","@now"],["set","@entity.usage",["*",["/","@entity.tokenCount","@entity.maxTokens"],100]],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"]]},{"from":"approaching_limit","to":"approaching_limit","event":"UPDATE_TOKENS","guard":["and",[">=",["/","@entity.tokenCount","@entity.maxTokens"],0.85],["<",["/","@entity.tokenCount","@entity.maxTokens"],1]],"effects":[["agent/token-count"],["agent/context-usage"],["set","@entity.usage",["*",["/","@entity.tokenCount","@entity.maxTokens"],100]],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"]]},{"from":"at_limit","to":"normal","event":"COMPACT","effects":[["agent/compact"],["agent/token-count"],["agent/context-usage"],["set","@entity.lastCompactedAt","@now"],["set","@entity.usage",["*",["/","@entity.tokenCount","@entity.maxTokens"],100]],["set","@entity.current","@entity.tokenCount"],["emit","UPDATE"]]}]},"scope":"collection"}],"pages":[{"name":"Context","path":"/context","traits":[{"ref":"AssistantContextMonitor"}]}]},{"name":"ProviderConfigOrbital","entity":{"name":"ProviderConfig","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"currentProvider","type":"string"},{"name":"currentModel","type":"string"},{"name":"fallbackProvider","type":"string"},{"name":"requestCount","type":"number"},{"name":"message","type":"string"},{"name":"notificationType","type":"string"}]},"traits":[{"name":"ProviderManager","category":"interaction","linkedEntity":"ProviderConfig","emits":[{"event":"SWITCHED"},{"event":"PROVIDER_CHANGED","scope":"internal","payloadSchema":[{"name":"provider","type":"string"}]},{"event":"PROVIDER_CHANGED","scope":"external","payloadSchema":[{"name":"provider","type":"string"}]},{"event":"ProviderConfigLoadFailed","description":"Fired when ProviderConfig fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProviderConfigLoaded","description":"Fired when ProviderConfig finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"event":"ProviderConfigUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProviderConfigUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"SWITCH","name":"Switch"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"SWITCHED","name":"Switched"},{"key":"PROVIDER_CHANGED","name":"Provider Changed"},{"key":"ProviderConfigLoadFailed","name":"ProviderConfig load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProviderConfigLoaded","name":"ProviderConfig loaded","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"key":"ProviderConfigUpdateFailed","name":"ProviderConfig update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProviderConfigUpdated","name":"ProviderConfig updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","ProviderConfig",{"emit":{"failure":"ProviderConfigLoadFailed","success":"ProviderConfigLoaded"}}],["render-ui","main",{"children":[{"type":"stack","children":[{"children":[{"direction":"horizontal","children":[{"type":"icon","name":"repeat"},{"content":"Switch Provider","type":"typography","variant":"h2"}],"type":"stack","gap":"md"},{"variant":"primary","label":"Open","type":"button","icon":"repeat","action":"SWITCH"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"icon":"repeat","description":"Click Open to view details in a modal overlay.","title":"Nothing open","type":"empty-state"}],"direction":"vertical","gap":"lg"}],"appName":"Agent Assistant","type":"dashboard-layout","navItems":[{"icon":"message-circle","href":"/chat","label":"Chat"},{"href":"/memory","icon":"brain","label":"Memory"},{"icon":"settings","label":"Settings","href":"/settings"}]}]]},{"from":"closed","to":"open","event":"SWITCH","effects":[["fetch","ProviderConfig",{"emit":{"success":"ProviderConfigLoaded","failure":"ProviderConfigLoadFailed"}}],["render-ui","modal",{"gap":"md","type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","gap":"sm","children":[{"name":"repeat","type":"icon"},{"type":"typography","content":"Switch Provider","variant":"h3"}]},{"type":"divider"},{"children":[{"content":"Current:","type":"typography","variant":"caption"},{"label":"@entity.currentProvider","type":"badge"},{"label":"@entity.currentModel","type":"badge"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"form-section","mode":"edit","submitEvent":"SAVE","entity":"@entity","fields":["currentProvider","currentModel"],"cancelEvent":"CLOSE"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","ProviderConfig",{"emit":{"success":"ProviderConfigLoaded","failure":"ProviderConfigLoadFailed"}}],["render-ui","main",{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"children":[{"gap":"md","type":"stack","children":[{"name":"repeat","type":"icon"},{"type":"typography","variant":"h2","content":"Switch Provider"}],"direction":"horizontal"},{"label":"Open","type":"button","variant":"primary","icon":"repeat","action":"SWITCH"}],"gap":"md","type":"stack","justify":"between","direction":"horizontal"},{"type":"divider"},{"icon":"repeat","title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state"}]}],"appName":"Agent Assistant","type":"dashboard-layout","navItems":[{"href":"/chat","icon":"message-circle","label":"Chat"},{"icon":"brain","label":"Memory","href":"/memory"},{"icon":"settings","href":"/settings","label":"Settings"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","ProviderConfig","@payload.data",{"emit":{"failure":"ProviderConfigUpdateFailed","success":"ProviderConfigUpdated"}}],["render-ui","modal",null],["emit","SWITCHED"],["fetch","ProviderConfig",{"emit":{"success":"ProviderConfigLoaded","failure":"ProviderConfigLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"type":"stack","direction":"horizontal","gap":"md","justify":"between","children":[{"direction":"horizontal","children":[{"type":"icon","name":"repeat"},{"type":"typography","content":"Switch Provider","variant":"h2"}],"gap":"md","type":"stack"},{"label":"Open","type":"button","icon":"repeat","variant":"primary","action":"SWITCH"}]},{"type":"divider"},{"icon":"repeat","title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state"}],"gap":"lg","direction":"vertical","type":"stack"}],"navItems":[{"label":"Chat","icon":"message-circle","href":"/chat"},{"icon":"brain","href":"/memory","label":"Memory"},{"label":"Settings","icon":"settings","href":"/settings"}],"appName":"Agent Assistant","type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"ProviderConfigNotification","category":"interaction","linkedEntity":"ProviderConfig","emits":[{"event":"ProviderConfigLoaded","description":"Fired when ProviderConfig finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"event":"ProviderConfigLoadFailed","description":"Fired when ProviderConfig fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"hidden","isInitial":true},{"name":"visible"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"SHOW","name":"Show","payloadSchema":[{"name":"message","type":"string"},{"name":"notificationType","type":"string"}]},{"key":"HIDE","name":"Hide"},{"key":"ProviderConfigLoaded","name":"ProviderConfig loaded","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"key":"ProviderConfigLoadFailed","name":"ProviderConfig load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"hidden","to":"hidden","event":"INIT","effects":[["fetch","ProviderConfig",{"emit":{"failure":"ProviderConfigLoadFailed","success":"ProviderConfigLoaded"}}]]},{"from":"hidden","to":"visible","event":"SHOW","effects":[["set","@entity.message","@payload.message"],["set","@entity.notificationType","@payload.notificationType"],["render-ui","main",{"appName":"Agent Assistant","children":[{"type":"stack","children":[{"gap":"md","direction":"horizontal","align":"center","children":[{"type":"stack","gap":"md","align":"center","direction":"horizontal","children":[{"type":"icon","name":"server"},{"content":"Provider Status","variant":"h2","type":"typography"}]},{"variant":"ghost","label":"Dismiss","action":"HIDE","type":"button","icon":"x"}],"type":"stack","justify":"between"},{"type":"divider"},{"type":"alert","variant":"@entity.notificationType","message":"@entity.message"},{"type":"toast-slot"},{"message":"@entity.message","type":"alert","variant":"warning"}],"direction":"vertical","gap":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/chat","icon":"message-circle","label":"Chat"},{"icon":"brain","label":"Memory","href":"/memory"},{"href":"/settings","icon":"settings","label":"Settings"}]}]]},{"from":"visible","to":"visible","event":"SHOW","effects":[["set","@entity.message","@payload.message"],["set","@entity.notificationType","@payload.notificationType"],["render-ui","main",{"navItems":[{"label":"Chat","href":"/chat","icon":"message-circle"},{"icon":"brain","href":"/memory","label":"Memory"},{"label":"Settings","href":"/settings","icon":"settings"}],"type":"dashboard-layout","children":[{"type":"stack","children":[{"children":[{"align":"center","children":[{"type":"icon","name":"server"},{"content":"Provider Status","type":"typography","variant":"h2"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"button","icon":"x","variant":"ghost","label":"Dismiss","action":"HIDE"}],"align":"center","justify":"between","direction":"horizontal","gap":"md","type":"stack"},{"type":"divider"},{"variant":"@entity.notificationType","message":"@entity.message","type":"alert"},{"type":"toast-slot"},{"message":"@entity.message","type":"alert","variant":"warning"}],"gap":"lg","direction":"vertical"}],"appName":"Agent Assistant"}]]},{"from":"visible","to":"hidden","event":"HIDE","effects":[["set","@entity.message",""]]}]},"scope":"collection"},{"name":"ProviderConfigAgent","category":"interaction","linkedEntity":"ProviderConfig","emits":[{"event":"SHOW","scope":"internal","payloadSchema":[{"name":"message","type":"string","required":true},{"name":"notificationType","type":"string"}]},{"event":"ProviderConfigLoaded","description":"Fired when ProviderConfig finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"event":"ProviderConfigLoadFailed","description":"Fired when ProviderConfig fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"SWITCHED","triggers":"SWITCHED","source":{"kind":"trait","trait":"ProviderManager"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"active"},{"name":"switching"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DO_SWITCH","name":"Do Switch","payloadSchema":[{"name":"data","type":"string"}]},{"key":"SWITCHED","name":"Switched"},{"key":"SWITCH_AUTO","name":"Switch Auto"},{"key":"SHOW","name":"Show"},{"key":"ProviderConfigLoaded","name":"ProviderConfig loaded","payloadSchema":[{"name":"data","type":"[ProviderConfig]"}]},{"key":"ProviderConfigLoadFailed","name":"ProviderConfig load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"active","event":"INIT","effects":[["fetch","ProviderConfig",{"emit":{"success":"ProviderConfigLoaded","failure":"ProviderConfigLoadFailed"}}],["agent/provider"],["agent/model"],["render-ui","main",{"type":"dashboard-layout","children":[{"description":"Provider is ready","type":"empty-state","icon":"repeat","title":"Provider"}],"navItems":[{"href":"/chat","label":"Chat","icon":"message-circle"},{"label":"Memory","href":"/memory","icon":"brain"},{"href":"/settings","label":"Settings","icon":"settings"}],"appName":"Agent Assistant"}]]},{"from":"idle","to":"switching","event":"DO_SWITCH","effects":[["agent/switch-provider","@payload.data.currentProvider","@payload.data.currentModel"],["set","@entity.currentProvider","@payload.data.currentProvider"],["set","@entity.currentModel","@payload.data.currentModel"]]},{"from":"active","to":"switching","event":"DO_SWITCH","effects":[["agent/switch-provider","@payload.data.currentProvider","@payload.data.currentModel"],["set","@entity.currentProvider","@payload.data.currentProvider"],["set","@entity.currentModel","@payload.data.currentModel"]]},{"from":"active","to":"switching","event":"SWITCHED","effects":[["agent/switch-provider","@entity.currentProvider","@entity.currentModel"]]},{"from":"active","to":"switching","event":"SWITCH_AUTO","effects":[["agent/switch-provider","@entity.fallbackProvider"],["set","@entity.currentProvider","@entity.fallbackProvider"]]},{"from":"switching","to":"active","event":"INIT","effects":[["agent/provider"],["agent/model"],["set","@entity.requestCount",["+","@entity.requestCount",1]],["emit","SHOW",{"message":"Provider switched","notificationType":"info"}]]}]},"scope":"collection"}],"pages":[{"name":"Settings","path":"/settings","traits":[{"ref":"ProviderManager"}]}]},{"name":"AssistantNavOrbital","entity":{"name":"AssistantNav","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"messages","type":"string","default":"[]"},{"name":"currentMessage","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"memoryCount","type":"number","default":0},{"name":"contextUsage","type":"number","default":0},{"name":"provider","type":"string","default":"default"},{"name":"sessionId","type":"string","default":""},{"name":"status","type":"string","default":"idle"},{"name":"error","type":"string","default":""}]},"traits":[{"name":"AssistantTabs","category":"interaction","linkedEntity":"AssistantNav","emits":[{"event":"AssistantNavLoaded","description":"Fired when AssistantNav finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[AssistantNav]"}]},{"event":"AssistantNavLoadFailed","description":"Fired when AssistantNav fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"AssistantNavLoaded","name":"AssistantNav loaded","payloadSchema":[{"name":"data","type":"[AssistantNav]"}]},{"key":"AssistantNavLoadFailed","name":"AssistantNav load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SELECT_TAB","name":"Select Tab","payloadSchema":[{"name":"tab","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","AssistantNav",{"emit":{"success":"AssistantNavLoaded","failure":"AssistantNavLoadFailed"}}],["render-ui","main",{"children":[{"type":"spinner"},{"content":"Loading…","variant":"caption","type":"typography","color":"muted"}],"direction":"vertical","type":"stack","align":"center","gap":"md","className":"py-12"}]]},{"from":"idle","to":"idle","event":"AssistantNavLoaded","effects":[["render-ui","main",{"children":[{"gap":"lg","type":"stack","children":[{"children":[{"name":"message-circle","type":"icon"},{"type":"typography","content":"Assistant","variant":"h2"}],"type":"stack","gap":"sm","direction":"horizontal","align":"center"},{"type":"divider"},{"tabs":[{"label":"Chat","value":"chat"},{"label":"Memory","value":"memory"},{"value":"settings","label":"Settings"}],"defaultActiveTab":"chat","onTabChange":"SELECT_TAB","type":"tabs"},{"type":"divider"},{"fields":[],"className":"transition-shadow hover:shadow-md cursor-pointer","type":"data-grid","entity":"@payload.data","renderItem":["fn","item",{"type":"stack","children":[{"content":"@item.messages","type":"typography","variant":"h4"},{"color":"muted","type":"typography","content":"@item.currentMessage","variant":"caption"}],"gap":"sm","direction":"vertical"}]}],"direction":"vertical"}],"type":"dashboard-layout","appName":"Agent Assistant","navItems":[{"href":"/chat","icon":"message-circle","label":"Chat"},{"icon":"brain","href":"/memory","label":"Memory"},{"href":"/settings","icon":"settings","label":"Settings"}]}]]},{"from":"idle","to":"idle","event":"AssistantNavLoadFailed","effects":[["render-ui","main",{"children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Failed to load"},{"color":"muted","type":"typography","variant":"body","content":"@payload.error"},{"label":"Retry","variant":"primary","type":"button","icon":"rotate-ccw","action":"INIT"}],"direction":"vertical","type":"stack","gap":"md","align":"center","className":"py-12"}]]},{"from":"idle","to":"idle","event":"SELECT_TAB","effects":[["fetch","AssistantNav",{"emit":{"failure":"AssistantNavLoadFailed","success":"AssistantNavLoaded"}}],["render-ui","main",{"type":"spinner"}]]}]},"scope":"collection"}],"pages":[{"name":"AssistantNav","path":"/assistant/nav","traits":[{"ref":"AssistantTabs"}]}]},{"name":"MemorySidebarOrbital","entity":{"name":"MemorySidebar","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"content","type":"string","default":""},{"name":"query","type":"string"},{"name":"strength","type":"number"}]},"traits":[{"name":"MemoryDrawer","category":"interaction","linkedEntity":"MemorySidebar","emits":[{"event":"MemorySidebarLoaded","description":"Fired when MemorySidebar finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[MemorySidebar]"}]},{"event":"MemorySidebarLoadFailed","description":"Fired when MemorySidebar fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"OPEN","name":"Open"},{"key":"CLOSE","name":"Close"},{"key":"MemorySidebarLoaded","name":"MemorySidebar loaded","payloadSchema":[{"name":"data","type":"[MemorySidebar]"}]},{"key":"MemorySidebarLoadFailed","name":"MemorySidebar load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","MemorySidebar",{"emit":{"failure":"MemorySidebarLoadFailed","success":"MemorySidebarLoaded"}}]]},{"from":"closed","to":"open","event":"OPEN","effects":[["fetch","MemorySidebar",{"emit":{"success":"MemorySidebarLoaded","failure":"MemorySidebarLoadFailed"}}],["render-ui","drawer",{"gap":"none","type":"stack","children":[{"children":[{"type":"stack","direction":"vertical","gap":"md","children":[{"children":[{"type":"typography","variant":"caption","content":"Content"},{"type":"typography","variant":"body","content":"@entity.content"}],"type":"stack","direction":"horizontal","gap":"md","justify":"between"},{"children":[{"type":"typography","content":"Query","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.query"}],"gap":"md","direction":"horizontal","type":"stack","justify":"between"},{"children":[{"variant":"caption","type":"typography","content":"Strength"},{"variant":"body","type":"typography","content":"@entity.strength"}],"type":"stack","direction":"horizontal","gap":"md","justify":"between"},{"type":"divider"},{"justify":"end","children":[{"action":"CLOSE","variant":"ghost","label":"Close","type":"button"}],"type":"stack","direction":"horizontal","gap":"sm"}]}],"type":"drawer","title":"Memory Recall","isOpen":true},{"position":"right","isOpen":true,"children":[{"direction":"vertical","children":[{"children":[{"variant":"caption","content":"Content","type":"typography"},{"variant":"body","content":"@entity.content","type":"typography"}],"type":"stack","justify":"between","direction":"horizontal","gap":"md"},{"gap":"md","justify":"between","children":[{"content":"Query","type":"typography","variant":"caption"},{"variant":"body","content":"@entity.query","type":"typography"}],"direction":"horizontal","type":"stack"},{"justify":"between","direction":"horizontal","type":"stack","children":[{"variant":"caption","content":"Strength","type":"typography"},{"content":"@entity.strength","type":"typography","variant":"body"}],"gap":"md"}],"gap":"md","type":"stack"}],"onClose":"CLOSE","title":"Memory Recall","type":"side-panel"}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","drawer",null],["fetch","MemorySidebar",{"emit":{"success":"MemorySidebarLoaded","failure":"MemorySidebarLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"AssistantSidebar","path":"/assistant/sidebar","traits":[{"ref":"MemoryDrawer"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'AssistantOrbital',
+      uses: [],
+      entity: {
+        'name': 'Assistant',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'messages',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'currentMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'contextUsage',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'default',
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'turnCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'default': 'user',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'AssistantConversation',
+          'category': 'interaction',
+          'linkedEntity': 'Assistant',
+          'emits': [
+            {
+              'event': 'SEND_MESSAGE',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MEMORIZE_RESPONSE',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MEMORIZE_RESPONSE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantLoaded',
+              'description': 'Fired when Assistant finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Assistant]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantLoadFailed',
+              'description': 'Fired when Assistant fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PROVIDER_CHANGED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'ProviderConfigOrbital',
+                'trait': 'ProviderManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'composing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'AssistantLoaded',
+                'name': 'Assistant loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Assistant]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantLoadFailed',
+                'name': 'Assistant load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'CLEAR',
+                'name': 'Clear',
+              },
+              {
+                'key': 'SEND',
+                'name': 'Send',
+                'payloadSchema': [
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CANCEL_COMPOSE',
+                'name': 'Cancel Compose',
+              },
+              {
+                'key': 'SEND_MESSAGE',
+                'name': 'Send Message',
+              },
+              {
+                'key': 'MEMORIZE_RESPONSE',
+                'name': 'Memorize Response',
+              },
+              {
+                'key': 'AssistantDeleted',
+                'name': 'Assistant deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantDeleteFailed',
+                'name': 'Assistant delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaved',
+                'name': 'Memory saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaveFailed',
+                'name': 'Memory save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigUpdated',
+                'name': 'Provider config updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigUpdateFailed',
+                'name': 'Provider config update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'failure': 'AssistantLoadFailed',
+                        'success': 'AssistantLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'variant': 'caption',
+                          'content': 'Loading assistant…',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'AssistantLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'message-circle',
+                                    },
+                                    {
+                                      'content': 'Assistant Thread',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'icon': 'plus',
+                                  'label': 'New Message',
+                                  'action': 'COMPOSE',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'entity': '@payload.data',
+                              'fields': [],
+                              'type': 'data-list',
+                              'renderItem': [
+                                'fn',
+                                'item',
+                                {
+                                  'type': 'stack',
+                                  'gap': 'xs',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'sm',
+                                      'type': 'stack',
+                                      'align': 'center',
+                                      'children': [
+                                        {
+                                          'label': '@item.role',
+                                          'type': 'badge',
+                                        },
+                                        {
+                                          'type': 'badge',
+                                          'label': '@item.status',
+                                          'variant': 'secondary',
+                                        },
+                                        {
+                                          'color': 'muted',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': '@item.timestamp',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@item.content',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'icon': 'brain',
+                          'label': 'Memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'AssistantLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load assistant',
+                        },
+                        {
+                          'color': 'muted',
+                          'variant': 'body',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'variant': 'primary',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'composing',
+                'event': 'COMPOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'lg',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'message-circle',
+                            },
+                            {
+                              'content': 'Assistant Thread',
+                              'type': 'typography',
+                              'variant': 'h2',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'cancelEvent': 'CANCEL_COMPOSE',
+                          'fields': [
+                            'content',
+                          ],
+                          'submitEvent': 'SEND',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'CLEAR',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'failure': 'AssistantDeleteFailed',
+                        'success': 'AssistantDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantLoaded',
+                        'failure': 'AssistantLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'spinner',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'composing',
+                'to': 'idle',
+                'event': 'SEND',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Assistant',
+                    {
+                      'content': '@payload.content',
+                      'timestamp': '@now',
+                      'role': 'user',
+                      'status': 'sent',
+                    },
+                    {
+                      'emit': {
+                        'success': 'SEND_MESSAGE',
+                      },
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantLoaded',
+                        'failure': 'AssistantLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'spinner',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'composing',
+                'to': 'idle',
+                'event': 'CANCEL_COMPOSE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantLoaded',
+                        'failure': 'AssistantLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'spinner',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'composing',
+                'to': 'idle',
+                'event': 'CLEAR',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantDeleted',
+                        'failure': 'AssistantDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantLoaded',
+                        'failure': 'AssistantLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'spinner',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AssistantAgent',
+          'category': 'interaction',
+          'linkedEntity': 'Assistant',
+          'emits': [
+            {
+              'event': 'TOKEN_UPDATE',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'tokenCount',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantLoaded',
+              'description': 'Fired when Assistant finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Assistant]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantLoadFailed',
+              'description': 'Fired when Assistant fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'active',
+              },
+              {
+                'name': 'paused',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SEND_MESSAGE',
+                'name': 'Send Message',
+                'payloadSchema': [
+                  {
+                    'name': 'content',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PAUSE',
+                'name': 'Pause',
+              },
+              {
+                'key': 'CLEAR',
+                'name': 'Clear',
+              },
+              {
+                'key': 'RESUME',
+                'name': 'Resume',
+              },
+              {
+                'key': 'TOKEN_UPDATE',
+                'name': 'Token Update',
+              },
+              {
+                'key': 'AssistantLoaded',
+                'name': 'Assistant loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Assistant]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantLoadFailed',
+                'name': 'Assistant load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Assistant',
+                    {
+                      'emit': {
+                        'success': 'AssistantLoaded',
+                        'failure': 'AssistantLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'title': 'Conversation',
+                          'icon': 'message-circle',
+                          'description': 'Conversation is ready',
+                          'type': 'empty-state',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'SEND_MESSAGE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.lastMessage',
+                    '@payload.content',
+                  ],
+                  [
+                    'set',
+                    '@entity.turnCount',
+                    [
+                      '+',
+                      '@entity.turnCount',
+                      1,
+                    ],
+                  ],
+                  [
+                    'agent/generate',
+                    '@payload.content',
+                  ],
+                  [
+                    'emit',
+                    'TOKEN_UPDATE',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'SEND_MESSAGE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.lastMessage',
+                    '@payload.content',
+                  ],
+                  [
+                    'set',
+                    '@entity.turnCount',
+                    [
+                      '+',
+                      '@entity.turnCount',
+                      1,
+                    ],
+                  ],
+                  [
+                    'agent/generate',
+                    '@payload.content',
+                  ],
+                  [
+                    'emit',
+                    'TOKEN_UPDATE',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'paused',
+                'event': 'PAUSE',
+              },
+              {
+                'from': 'active',
+                'to': 'idle',
+                'event': 'CLEAR',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.messages',
+                    [],
+                  ],
+                  [
+                    'set',
+                    '@entity.turnCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.lastMessage',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.tokenCount',
+                    0,
+                  ],
+                ],
+              },
+              {
+                'from': 'paused',
+                'to': 'active',
+                'event': 'RESUME',
+              },
+              {
+                'from': 'paused',
+                'to': 'idle',
+                'event': 'CLEAR',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.messages',
+                    [],
+                  ],
+                  [
+                    'set',
+                    '@entity.turnCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.lastMessage',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.tokenCount',
+                    0,
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ChatPage',
+          'path': '/chat',
+          'traits': [
+            {
+              'ref': 'AssistantConversation',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'MemoryOrbital',
+      uses: [],
+      entity: {
+        'name': 'Memory',
+        'collection': 'memorys',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+          },
+          {
+            'name': 'lastAccessedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'MemoryBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Memory',
+          'emits': [
+            {
+              'event': 'MEMORIZE',
+            },
+            {
+              'event': 'RECALL',
+            },
+            {
+              'event': 'DECAY',
+            },
+            {
+              'event': 'PIN',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'REINFORCE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'FORGET',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemoryLoaded',
+              'description': 'Fired when Memory finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Memory]',
+                },
+              ],
+            },
+            {
+              'event': 'MemoryLoadFailed',
+              'description': 'Fired when Memory fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'MEMORIZED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryCreate',
+              },
+            },
+            {
+              'event': 'PINNED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryAgent',
+              },
+            },
+            {
+              'event': 'FORGOT',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryAgent',
+              },
+            },
+            {
+              'event': 'REINFORCED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryAgent',
+              },
+            },
+            {
+              'event': 'DECAYED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryAgent',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'MemoryLoaded',
+                'name': 'Memory loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Memory]',
+                  },
+                ],
+              },
+              {
+                'key': 'MemoryLoadFailed',
+                'name': 'Memory load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIZE',
+                'name': 'Memorize',
+              },
+              {
+                'key': 'RECALL',
+                'name': 'Recall',
+              },
+              {
+                'key': 'DECAY',
+                'name': 'Decay',
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Memory',
+                    {
+                      'emit': {
+                        'success': 'MemoryLoaded',
+                        'failure': 'MemoryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'MemoryLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'brain',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Memory Manager',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'label': 'Memorize',
+                                      'action': 'MEMORIZE',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                    },
+                                    {
+                                      'label': 'Recall',
+                                      'type': 'button',
+                                      'action': 'RECALL',
+                                      'icon': 'search',
+                                      'variant': 'secondary',
+                                    },
+                                    {
+                                      'icon': 'clock',
+                                      'action': 'DECAY',
+                                      'variant': 'ghost',
+                                      'type': 'button',
+                                      'label': 'Decay All',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'label': 'Pin',
+                                  'event': 'PIN',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Reinforce',
+                                  'event': 'REINFORCE',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'event': 'FORGET',
+                                  'label': 'Forget',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'name': 'content',
+                                  'icon': 'brain',
+                                  'label': 'Content',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'colorMap': {
+                                    'archived': 'neutral',
+                                    'pending': 'warning',
+                                    'scheduled': 'warning',
+                                    'disabled': 'neutral',
+                                    'draft': 'warning',
+                                    'cancelled': 'destructive',
+                                    'failed': 'destructive',
+                                    'error': 'destructive',
+                                    'inactive': 'neutral',
+                                    'active': 'success',
+                                    'done': 'success',
+                                    'completed': 'success',
+                                  },
+                                  'label': 'Category',
+                                  'name': 'category',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'label': 'Strength',
+                                  'name': 'strength',
+                                  'variant': 'caption',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'icon': 'brain',
+                          'href': '/memory',
+                        },
+                        {
+                          'icon': 'settings',
+                          'href': '/settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'MemoryLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load memory',
+                        },
+                        {
+                          'variant': 'body',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'type': 'button',
+                          'variant': 'primary',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                      'className': 'py-12',
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'MemoryCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Memory',
+          'emits': [
+            {
+              'event': 'MEMORIZED',
+            },
+            {
+              'event': 'MemoryLoadFailed',
+              'description': 'Fired when Memory fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemoryLoaded',
+              'description': 'Fired when Memory finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Memory]',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'MEMORIZE',
+              'triggers': 'MEMORIZE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'MEMORIZE',
+                'name': 'Memorize',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIZED',
+                'name': 'Memorized',
+              },
+              {
+                'key': 'MemoryLoadFailed',
+                'name': 'Memory load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemoryLoaded',
+                'name': 'Memory loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Memory]',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaveFailed',
+                'name': 'Memory save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaved',
+                'name': 'Memory saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Memory',
+                    {
+                      'emit': {
+                        'success': 'MemoryLoaded',
+                        'failure': 'MemoryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'MEMORIZE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Memorize',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'content',
+                            'category',
+                            'scope',
+                          ],
+                          'type': 'form-section',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Memory',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'MemorySaveFailed',
+                        'success': 'MemorySaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'MEMORIZED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'MemoryAgent',
+          'category': 'interaction',
+          'linkedEntity': 'Memory',
+          'emits': [
+            {
+              'event': 'FORGOT',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'REINFORCED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DECAYED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PINNED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemoryLoadFailed',
+              'description': 'Fired when Memory fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemoryLoaded',
+              'description': 'Fired when Memory finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Memory]',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'MEMORIZE_RESPONSE',
+              'triggers': 'MEMORIZE',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'AssistantOrbital',
+                'trait': 'AssistantConversation',
+              },
+            },
+            {
+              'event': 'RECALL',
+              'triggers': 'RECALL',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+            {
+              'event': 'DECAY',
+              'triggers': 'DECAY',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+            {
+              'event': 'PIN',
+              'triggers': 'PIN',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+            {
+              'event': 'REINFORCE',
+              'triggers': 'REINFORCE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+            {
+              'event': 'FORGET',
+              'triggers': 'FORGET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MemoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'active',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DO_MEMORIZE',
+                'name': 'Do Memorize',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DECAY',
+                'name': 'Decay',
+              },
+              {
+                'key': 'MEMORIZED',
+                'name': 'Memorized',
+              },
+              {
+                'key': 'RECALL',
+                'name': 'Recall',
+                'payloadSchema': [
+                  {
+                    'name': 'query',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGOT',
+                'name': 'Forgot',
+              },
+              {
+                'key': 'REINFORCED',
+                'name': 'Reinforced',
+              },
+              {
+                'key': 'DECAYED',
+                'name': 'Decayed',
+              },
+              {
+                'key': 'PINNED',
+                'name': 'Pinned',
+              },
+              {
+                'key': 'MemoryLoadFailed',
+                'name': 'Memory load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemoryLoaded',
+                'name': 'Memory loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Memory]',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaveFailed',
+                'name': 'Memory save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySaved',
+                'name': 'Memory saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Memory',
+                    {
+                      'emit': {
+                        'failure': 'MemoryLoadFailed',
+                        'success': 'MemoryLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'empty-state',
+                          'icon': 'brain',
+                          'description': 'Memory is ready',
+                          'title': 'Memory',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'DO_MEMORIZE',
+                'effects': [
+                  [
+                    'agent/memorize',
+                    '@payload.data.content',
+                    '@payload.data.category',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'Memory',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'MemorySaved',
+                        'failure': 'MemorySaveFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'DECAY',
+                'effects': [
+                  [
+                    'agent/decay',
+                  ],
+                  [
+                    'emit',
+                    'DECAYED',
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'MEMORIZED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Memory',
+                    {
+                      'emit': {
+                        'failure': 'MemoryLoadFailed',
+                        'success': 'MemoryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'RECALL',
+                'effects': [
+                  [
+                    'agent/recall',
+                    '@payload.query',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'PIN',
+                'guard': [
+                  'not',
+                  [
+                    'agent/is-pinned',
+                    '@payload.id',
+                  ],
+                ],
+                'effects': [
+                  [
+                    'agent/pin',
+                    '@payload.id',
+                  ],
+                  [
+                    'set',
+                    '@entity.pinned',
+                    true,
+                  ],
+                  [
+                    'emit',
+                    'PINNED',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'idle',
+                'event': 'FORGET',
+                'effects': [
+                  [
+                    'agent/forget',
+                    '@payload.id',
+                  ],
+                  [
+                    'emit',
+                    'FORGOT',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'REINFORCE',
+                'effects': [
+                  [
+                    'agent/reinforce',
+                    '@payload.id',
+                  ],
+                  [
+                    'emit',
+                    'REINFORCED',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'DECAY',
+                'effects': [
+                  [
+                    'agent/decay',
+                  ],
+                  [
+                    'emit',
+                    'DECAYED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Memory',
+          'path': '/memory',
+          'traits': [
+            {
+              'ref': 'MemoryBrowse',
+            },
+            {
+              'ref': 'MemoryCreate',
+            },
+            {
+              'ref': 'MemoryAgent',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'AssistantContextOrbital',
+      uses: [],
+      entity: {
+        'name': 'AssistantContext',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'maxTokens',
+            'type': 'number',
+          },
+          {
+            'name': 'usage',
+            'type': 'number',
+          },
+          {
+            'name': 'lastCompactedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'current',
+            'type': 'number',
+          },
+          {
+            'name': 'max',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'AssistantContextMonitor',
+          'category': 'interaction',
+          'linkedEntity': 'AssistantContext',
+          'emits': [
+            {
+              'event': 'COMPACT',
+            },
+            {
+              'event': 'AssistantContextLoaded',
+              'description': 'Fired when AssistantContext finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AssistantContext]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantContextLoadFailed',
+              'description': 'Fired when AssistantContext fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'normal',
+                'isInitial': true,
+              },
+              {
+                'name': 'warning',
+              },
+              {
+                'name': 'critical',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'UPDATE',
+                'name': 'Update',
+                'payloadSchema': [
+                  {
+                    'name': 'current',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPACT',
+                'name': 'Compact',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'AssistantContextLoaded',
+                'name': 'AssistantContext loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[AssistantContext]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantContextLoadFailed',
+                'name': 'AssistantContext load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.max',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'AssistantContext',
+                    {
+                      'emit': {
+                        'success': 'AssistantContextLoaded',
+                        'failure': 'AssistantContextLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'href': '/memory',
+                          'label': 'Memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'type': 'button',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-triangle',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'align': 'center',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'label': 'Compact',
+                                  'action': 'COMPACT',
+                                  'variant': 'primary',
+                                },
+                                {
+                                  'type': 'button',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                  'label': 'Reset',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'label': 'Memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'danger',
+                                  'label': 'Critical',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'label': 'Compact Now',
+                                  'action': 'COMPACT',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'icon': 'brain',
+                          'label': 'Memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'href': '/memory',
+                          'label': 'Memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-triangle',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'label': 'Compact',
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'action': 'COMPACT',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Critical',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'type': 'alert',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'action': 'COMPACT',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                  'label': 'Compact Now',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'icon': 'settings',
+                          'href': '/settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'icon': 'brain',
+                          'label': 'Memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Critical',
+                                  'type': 'badge',
+                                  'variant': 'danger',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'error',
+                              'type': 'alert',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'action': 'COMPACT',
+                                  'label': 'Compact Now',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'label': 'Memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'name': 'alert-triangle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'variant': 'warning',
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'warning',
+                              'type': 'alert',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'label': 'Compact',
+                                  'action': 'COMPACT',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'action': 'RESET',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'icon': 'settings',
+                          'href': '/settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'icon': 'brain',
+                          'href': '/memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'variant': 'ghost',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'action': 'RESET',
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'href': '/memory',
+                          'label': 'Memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                          'label': 'Chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AssistantContextNotification',
+          'category': 'interaction',
+          'linkedEntity': 'AssistantContext',
+          'emits': [
+            {
+              'event': 'AssistantContextLoaded',
+              'description': 'Fired when AssistantContext finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AssistantContext]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantContextLoadFailed',
+              'description': 'Fired when AssistantContext fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'hidden',
+                'isInitial': true,
+              },
+              {
+                'name': 'visible',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SHOW',
+                'name': 'Show',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'notificationType',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'HIDE',
+                'name': 'Hide',
+              },
+              {
+                'key': 'AssistantContextLoaded',
+                'name': 'AssistantContext loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[AssistantContext]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantContextLoadFailed',
+                'name': 'AssistantContext load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'hidden',
+                'to': 'hidden',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'AssistantContext',
+                    {
+                      'emit': {
+                        'success': 'AssistantContextLoaded',
+                        'failure': 'AssistantContextLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'hidden',
+                'to': 'visible',
+                'event': 'SHOW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '@payload.message',
+                  ],
+                  [
+                    'set',
+                    '@entity.notificationType',
+                    '@payload.notificationType',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                          'label': 'Chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'layers',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Context Window Alert',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'button',
+                                  'icon': 'x',
+                                  'action': 'HIDE',
+                                  'label': 'Dismiss',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': '@entity.message',
+                              'type': 'alert',
+                              'variant': '@entity.notificationType',
+                            },
+                            {
+                              'type': 'toast-slot',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': '@entity.message',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'visible',
+                'to': 'visible',
+                'event': 'SHOW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '@payload.message',
+                  ],
+                  [
+                    'set',
+                    '@entity.notificationType',
+                    '@payload.notificationType',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'layers',
+                                    },
+                                    {
+                                      'content': 'Context Window Alert',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'button',
+                                  'action': 'HIDE',
+                                  'label': 'Dismiss',
+                                  'variant': 'ghost',
+                                  'icon': 'x',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': '@entity.notificationType',
+                              'message': '@entity.message',
+                            },
+                            {
+                              'type': 'toast-slot',
+                            },
+                            {
+                              'variant': 'warning',
+                              'message': '@entity.message',
+                              'type': 'alert',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'icon': 'settings',
+                          'href': '/settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'visible',
+                'to': 'hidden',
+                'event': 'HIDE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'AssistantContextAgent',
+          'category': 'interaction',
+          'linkedEntity': 'AssistantContext',
+          'emits': [
+            {
+              'event': 'SHOW',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'notificationType',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'UPDATE',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'current',
+                  'type': 'number',
+                },
+                {
+                  'name': 'max',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantContextLoaded',
+              'description': 'Fired when AssistantContext finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AssistantContext]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantContextLoadFailed',
+              'description': 'Fired when AssistantContext fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'COMPACT',
+              'triggers': 'COMPACT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'AssistantContextMonitor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'normal',
+                'isInitial': true,
+              },
+              {
+                'name': 'approaching_limit',
+              },
+              {
+                'name': 'at_limit',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'UPDATE_TOKENS',
+                'name': 'Update Tokens',
+              },
+              {
+                'key': 'COMPACT',
+                'name': 'Compact',
+              },
+              {
+                'key': 'SHOW',
+                'name': 'Show',
+              },
+              {
+                'key': 'UPDATE',
+                'name': 'Update',
+              },
+              {
+                'key': 'AssistantContextLoaded',
+                'name': 'AssistantContext loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[AssistantContext]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantContextLoadFailed',
+                'name': 'AssistantContext load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.maxTokens',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.tokenCount',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'AssistantContext',
+                    {
+                      'emit': {
+                        'failure': 'AssistantContextLoadFailed',
+                        'success': 'AssistantContextLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/memory',
+                          'label': 'Memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'empty-state',
+                          'icon': 'layers',
+                          'title': 'Context Window',
+                          'description': 'Context Window is ready',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'UPDATE_TOKENS',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@entity.tokenCount',
+                    '@entity.maxTokens',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    [
+                      '*',
+                      [
+                        '/',
+                        '@entity.tokenCount',
+                        '@entity.maxTokens',
+                      ],
+                      100,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'approaching_limit',
+                'event': 'UPDATE_TOKENS',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@entity.tokenCount',
+                      '@entity.maxTokens',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@entity.tokenCount',
+                      '@entity.maxTokens',
+                    ],
+                    1,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    [
+                      '*',
+                      [
+                        '/',
+                        '@entity.tokenCount',
+                        '@entity.maxTokens',
+                      ],
+                      100,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                  [
+                    'emit',
+                    'SHOW',
+                    {
+                      'notificationType': 'warning',
+                      'message': 'Token usage approaching limit',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'approaching_limit',
+                'to': 'at_limit',
+                'event': 'UPDATE_TOKENS',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@entity.tokenCount',
+                    '@entity.maxTokens',
+                  ],
+                  1,
+                ],
+                'effects': [
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    100,
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                  [
+                    'emit',
+                    'SHOW',
+                    {
+                      'message': 'Token usage at limit',
+                      'notificationType': 'error',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'approaching_limit',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    [
+                      '*',
+                      [
+                        '/',
+                        '@entity.tokenCount',
+                        '@entity.maxTokens',
+                      ],
+                      100,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                ],
+              },
+              {
+                'from': 'approaching_limit',
+                'to': 'approaching_limit',
+                'event': 'UPDATE_TOKENS',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@entity.tokenCount',
+                      '@entity.maxTokens',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@entity.tokenCount',
+                      '@entity.maxTokens',
+                    ],
+                    1,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    [
+                      '*',
+                      [
+                        '/',
+                        '@entity.tokenCount',
+                        '@entity.maxTokens',
+                      ],
+                      100,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                ],
+              },
+              {
+                'from': 'at_limit',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'agent/context-usage',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'set',
+                    '@entity.usage',
+                    [
+                      '*',
+                      [
+                        '/',
+                        '@entity.tokenCount',
+                        '@entity.maxTokens',
+                      ],
+                      100,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.current',
+                    '@entity.tokenCount',
+                  ],
+                  [
+                    'emit',
+                    'UPDATE',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Context',
+          'path': '/context',
+          'traits': [
+            {
+              'ref': 'AssistantContextMonitor',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ProviderConfigOrbital',
+      uses: [],
+      entity: {
+        'name': 'ProviderConfig',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'currentProvider',
+            'type': 'string',
+          },
+          {
+            'name': 'currentModel',
+            'type': 'string',
+          },
+          {
+            'name': 'fallbackProvider',
+            'type': 'string',
+          },
+          {
+            'name': 'requestCount',
+            'type': 'number',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ProviderManager',
+          'category': 'interaction',
+          'linkedEntity': 'ProviderConfig',
+          'emits': [
+            {
+              'event': 'SWITCHED',
+            },
+            {
+              'event': 'PROVIDER_CHANGED',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'provider',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PROVIDER_CHANGED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'provider',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigLoadFailed',
+              'description': 'Fired when ProviderConfig fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigLoaded',
+              'description': 'Fired when ProviderConfig finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ProviderConfig]',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SWITCH',
+                'name': 'Switch',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SWITCHED',
+                'name': 'Switched',
+              },
+              {
+                'key': 'PROVIDER_CHANGED',
+                'name': 'Provider Changed',
+              },
+              {
+                'key': 'ProviderConfigLoadFailed',
+                'name': 'ProviderConfig load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigLoaded',
+                'name': 'ProviderConfig loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ProviderConfig]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigUpdateFailed',
+                'name': 'ProviderConfig update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigUpdated',
+                'name': 'ProviderConfig updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentModel',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentProvider',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'repeat',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Switch Provider',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'SWITCH',
+                                  'variant': 'primary',
+                                  'icon': 'repeat',
+                                  'type': 'button',
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'repeat',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'href': '/memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'icon': 'settings',
+                          'label': 'Settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'SWITCH',
+                'effects': [
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'repeat',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Switch Provider',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Current:',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.currentProvider',
+                            },
+                            {
+                              'label': '@entity.currentModel',
+                              'type': 'badge',
+                            },
+                          ],
+                        },
+                        {
+                          'mode': 'edit',
+                          'fields': [
+                            'currentProvider',
+                            'currentModel',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'entity': '@entity',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'href': '/memory',
+                          'icon': 'brain',
+                          'label': 'Memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'repeat',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Switch Provider',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'icon': 'repeat',
+                                  'type': 'button',
+                                  'label': 'Open',
+                                  'action': 'SWITCH',
+                                },
+                              ],
+                              'justify': 'between',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'icon': 'repeat',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'ProviderConfig',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigUpdated',
+                        'failure': 'ProviderConfigUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'SWITCHED',
+                  ],
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'href': '/memory',
+                          'label': 'Memory',
+                          'icon': 'brain',
+                        },
+                        {
+                          'label': 'Settings',
+                          'icon': 'settings',
+                          'href': '/settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'repeat',
+                                    },
+                                    {
+                                      'content': 'Switch Provider',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'action': 'SWITCH',
+                                  'variant': 'primary',
+                                  'icon': 'repeat',
+                                  'type': 'button',
+                                  'label': 'Open',
+                                },
+                              ],
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'icon': 'repeat',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProviderConfigNotification',
+          'category': 'interaction',
+          'linkedEntity': 'ProviderConfig',
+          'emits': [
+            {
+              'event': 'ProviderConfigLoaded',
+              'description': 'Fired when ProviderConfig finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ProviderConfig]',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigLoadFailed',
+              'description': 'Fired when ProviderConfig fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'hidden',
+                'isInitial': true,
+              },
+              {
+                'name': 'visible',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SHOW',
+                'name': 'Show',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'notificationType',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'HIDE',
+                'name': 'Hide',
+              },
+              {
+                'key': 'ProviderConfigLoaded',
+                'name': 'ProviderConfig loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ProviderConfig]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigLoadFailed',
+                'name': 'ProviderConfig load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'hidden',
+                'to': 'hidden',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'hidden',
+                'to': 'visible',
+                'event': 'SHOW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '@payload.message',
+                  ],
+                  [
+                    'set',
+                    '@entity.notificationType',
+                    '@payload.notificationType',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Provider Status',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'action': 'HIDE',
+                                  'icon': 'x',
+                                  'label': 'Dismiss',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': '@entity.message',
+                              'type': 'alert',
+                              'variant': '@entity.notificationType',
+                            },
+                            {
+                              'type': 'toast-slot',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': '@entity.message',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'label': 'Settings',
+                          'href': '/settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'visible',
+                'to': 'visible',
+                'event': 'SHOW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '@payload.message',
+                  ],
+                  [
+                    'set',
+                    '@entity.notificationType',
+                    '@payload.notificationType',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'icon': 'brain',
+                          'href': '/memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'label': 'Settings',
+                          'icon': 'settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Provider Status',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'button',
+                                  'action': 'HIDE',
+                                  'label': 'Dismiss',
+                                  'variant': 'ghost',
+                                  'icon': 'x',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': '@entity.message',
+                              'variant': '@entity.notificationType',
+                            },
+                            {
+                              'type': 'toast-slot',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': '@entity.message',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Assistant',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'visible',
+                'to': 'hidden',
+                'event': 'HIDE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.message',
+                    '',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProviderConfigAgent',
+          'category': 'interaction',
+          'linkedEntity': 'ProviderConfig',
+          'emits': [
+            {
+              'event': 'SHOW',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'notificationType',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigLoaded',
+              'description': 'Fired when ProviderConfig finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ProviderConfig]',
+                },
+              ],
+            },
+            {
+              'event': 'ProviderConfigLoadFailed',
+              'description': 'Fired when ProviderConfig fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'SWITCHED',
+              'triggers': 'SWITCHED',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProviderManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'active',
+              },
+              {
+                'name': 'switching',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DO_SWITCH',
+                'name': 'Do Switch',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SWITCHED',
+                'name': 'Switched',
+              },
+              {
+                'key': 'SWITCH_AUTO',
+                'name': 'Switch Auto',
+              },
+              {
+                'key': 'SHOW',
+                'name': 'Show',
+              },
+              {
+                'key': 'ProviderConfigLoaded',
+                'name': 'ProviderConfig loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ProviderConfig]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProviderConfigLoadFailed',
+                'name': 'ProviderConfig load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.fallbackProvider',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'ProviderConfig',
+                    {
+                      'emit': {
+                        'success': 'ProviderConfigLoaded',
+                        'failure': 'ProviderConfigLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/provider',
+                  ],
+                  [
+                    'agent/model',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Assistant',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'message-circle',
+                          'label': 'Chat',
+                        },
+                        {
+                          'label': 'Memory',
+                          'icon': 'brain',
+                          'href': '/memory',
+                        },
+                        {
+                          'href': '/settings',
+                          'icon': 'settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'title': 'Provider',
+                          'type': 'empty-state',
+                          'icon': 'repeat',
+                          'description': 'Provider is ready',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'switching',
+                'event': 'DO_SWITCH',
+                'effects': [
+                  [
+                    'agent/switch-provider',
+                    '@payload.data.currentProvider',
+                    '@payload.data.currentModel',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentProvider',
+                    '@payload.data.currentProvider',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentModel',
+                    '@payload.data.currentModel',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'switching',
+                'event': 'DO_SWITCH',
+                'effects': [
+                  [
+                    'agent/switch-provider',
+                    '@payload.data.currentProvider',
+                    '@payload.data.currentModel',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentProvider',
+                    '@payload.data.currentProvider',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentModel',
+                    '@payload.data.currentModel',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'switching',
+                'event': 'SWITCHED',
+                'effects': [
+                  [
+                    'agent/switch-provider',
+                    '@entity.currentProvider',
+                    '@entity.currentModel',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'switching',
+                'event': 'SWITCH_AUTO',
+                'effects': [
+                  [
+                    'agent/switch-provider',
+                    '@entity.fallbackProvider',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentProvider',
+                    '@entity.fallbackProvider',
+                  ],
+                ],
+              },
+              {
+                'from': 'switching',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'agent/provider',
+                  ],
+                  [
+                    'agent/model',
+                  ],
+                  [
+                    'set',
+                    '@entity.requestCount',
+                    [
+                      '+',
+                      '@entity.requestCount',
+                      1,
+                    ],
+                  ],
+                  [
+                    'emit',
+                    'SHOW',
+                    {
+                      'message': 'Provider switched',
+                      'notificationType': 'info',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Settings',
+          'path': '/settings',
+          'traits': [
+            {
+              'ref': 'ProviderManager',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'AssistantNavOrbital',
+      uses: [],
+      entity: {
+        'name': 'AssistantNav',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'messages',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'currentMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'contextUsage',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'default',
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'AssistantTabs',
+          'category': 'interaction',
+          'linkedEntity': 'AssistantNav',
+          'emits': [
+            {
+              'event': 'SELECT_TAB',
+              'payloadSchema': [
+                {
+                  'name': 'tabId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantNavLoaded',
+              'description': 'Fired when AssistantNav finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[AssistantNav]',
+                },
+              ],
+            },
+            {
+              'event': 'AssistantNavLoadFailed',
+              'description': 'Fired when AssistantNav fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'AssistantNavLoaded',
+                'name': 'AssistantNav loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[AssistantNav]',
+                  },
+                ],
+              },
+              {
+                'key': 'AssistantNavLoadFailed',
+                'name': 'AssistantNav load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SELECT_TAB',
+                'name': 'Select Tab',
+                'payloadSchema': [
+                  {
+                    'name': 'tabId',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'AssistantNav',
+                    {
+                      'emit': {
+                        'success': 'AssistantNavLoaded',
+                        'failure': 'AssistantNavLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                          'type': 'typography',
+                          'color': 'muted',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'AssistantNavLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'message-circle',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'brain',
+                          'label': 'Memory',
+                          'href': '/memory',
+                        },
+                        {
+                          'icon': 'settings',
+                          'href': '/settings',
+                          'label': 'Settings',
+                        },
+                      ],
+                      'appName': 'Agent Assistant',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'message-circle',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Assistant',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'defaultActiveTab': 'chat',
+                              'type': 'tabs',
+                              'tabChangeEvent': 'SELECT_TAB',
+                              'tabs': [
+                                {
+                                  'label': 'Chat',
+                                  'value': 'chat',
+                                },
+                                {
+                                  'value': 'memory',
+                                  'label': 'Memory',
+                                },
+                                {
+                                  'value': 'settings',
+                                  'label': 'Settings',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'fields': [],
+                              'className': 'transition-shadow hover:shadow-md cursor-pointer',
+                              'renderItem': [
+                                'fn',
+                                'item',
+                                {
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h4',
+                                      'content': '@item.messages',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@item.currentMessage',
+                                      'variant': 'caption',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'AssistantNavLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'type': 'icon',
+                          'color': 'destructive',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                        {
+                          'type': 'button',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'SELECT_TAB',
+                'effects': [
+                  [
+                    'fetch',
+                    'AssistantNav',
+                    {
+                      'emit': {
+                        'success': 'AssistantNavLoaded',
+                        'failure': 'AssistantNavLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'spinner',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'AssistantNav',
+          'path': '/assistant/nav',
+          'traits': [
+            {
+              'ref': 'AssistantTabs',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'MemorySidebarOrbital',
+      uses: [],
+      entity: {
+        'name': 'MemorySidebar',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'MemoryDrawer',
+          'category': 'interaction',
+          'linkedEntity': 'MemorySidebar',
+          'emits': [
+            {
+              'event': 'MemorySidebarLoaded',
+              'description': 'Fired when MemorySidebar finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MemorySidebar]',
+                },
+              ],
+            },
+            {
+              'event': 'MemorySidebarLoadFailed',
+              'description': 'Fired when MemorySidebar fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'OPEN',
+                'name': 'Open',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'MemorySidebarLoaded',
+                'name': 'MemorySidebar loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[MemorySidebar]',
+                  },
+                ],
+              },
+              {
+                'key': 'MemorySidebarLoadFailed',
+                'name': 'MemorySidebar load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.content',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.query',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.strength',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'MemorySidebar',
+                    {
+                      'emit': {
+                        'success': 'MemorySidebarLoaded',
+                        'failure': 'MemorySidebarLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'OPEN',
+                'effects': [
+                  [
+                    'fetch',
+                    'MemorySidebar',
+                    {
+                      'emit': {
+                        'success': 'MemorySidebarLoaded',
+                        'failure': 'MemorySidebarLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'drawer',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Content',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.content',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Query',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.query',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Strength',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.strength',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'variant': 'ghost',
+                                      'label': 'Close',
+                                      'type': 'button',
+                                      'action': 'CLOSE',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                },
+                              ],
+                            },
+                          ],
+                          'title': 'Memory Recall',
+                          'isOpen': true,
+                          'type': 'drawer',
+                        },
+                        {
+                          'position': 'right',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Content',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.content',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'content': 'Query',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.query',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Strength',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'content': '@entity.strength',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'md',
+                            },
+                          ],
+                          'type': 'side-panel',
+                          'title': 'Memory Recall',
+                          'onClose': 'CLOSE',
+                          'isOpen': true,
+                        },
+                      ],
+                      'gap': 'none',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'drawer',
+                    null,
+                  ],
+                  [
+                    'fetch',
+                    'MemorySidebar',
+                    {
+                      'emit': {
+                        'success': 'MemorySidebarLoaded',
+                        'failure': 'MemorySidebarLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'AssistantSidebar',
+          'path': '/assistant/sidebar',
+          'traits': [
+            {
+              'ref': 'MemoryDrawer',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

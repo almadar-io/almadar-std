@@ -144,9 +144,14409 @@ export function stdAgentBuilder(params: StdAgentBuilderParams): OrbitalDefinitio
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"BuildPlanOrbital","uses":[{"from":"std/behaviors/std-agent-step-progress","as":"AgentStepProgress"},{"from":"std/behaviors/std-tabs","as":"Tabs"}],"entity":{"name":"BuildPlan","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"task","type":"string","default":""},{"name":"category","type":"string","default":""},{"name":"steps","type":"string","default":""},{"name":"confidence","type":"number","default":0},{"name":"status","type":"string","default":"idle"},{"name":"relevantMemories","type":"string","default":""},{"name":"memoryCount","type":"number","default":0},{"name":"error","type":"string","default":""},{"name":"input","type":"string","default":""},{"name":"prompt","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"provider","type":"string","default":"anthropic"},{"name":"model","type":"string","default":"claude-sonnet-4-20250514"},{"name":"content","type":"string","default":""},{"name":"scope","type":"string","default":""},{"name":"strength","type":"number","default":1},{"name":"pinned","type":"boolean","default":false},{"name":"action","type":"string","default":""},{"name":"detail","type":"string","default":""},{"name":"timestamp","type":"string","default":""},{"name":"duration","type":"number","default":0},{"name":"icon","type":"string","default":"circle"}]},"traits":[{"name":"BuildPlanner","category":"interaction","linkedEntity":"BuildPlan","emits":[{"event":"PLAN_READY","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildTaskLoaded","description":"Emitted event BuildTaskLoaded","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildTaskLoadFailed","description":"Emitted event BuildTaskLoadFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildPlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildPlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoopSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildLoopSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildFixSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildSessionUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildSessionUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PLAN_READY","triggers":"INIT","source":{"kind":"trait","trait":"BuildPlanner"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"classifying"},{"name":"recalling"},{"name":"planning"},{"name":"ready"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PLAN","name":"Plan"},{"key":"CLASSIFIED","name":"Classified","payloadSchema":[{"name":"category","type":"string","required":true}]},{"key":"FAILED","name":"Failed","payloadSchema":[{"name":"error","type":"string","required":true}]},{"key":"MEMORIES_LOADED","name":"Memories Loaded","payloadSchema":[{"name":"memories","type":"string","required":true},{"name":"count","type":"number","required":true}]},{"key":"PLAN_GENERATED","name":"Plan Generated","payloadSchema":[{"name":"steps","type":"string","required":true},{"name":"confidence","type":"number","required":true},{"name":"plan","type":"string"},{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"PLAN_READY","name":"Plan Ready"},{"key":"BuildTaskLoaded","name":"Build task loaded","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildTaskLoadFailed","name":"Build task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildPlanSaved","name":"BuildPlan saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildPlanSaveFailed","name":"BuildPlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoopSaved","name":"Build loop saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildLoopSaveFailed","name":"Build loop save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixSaved","name":"Build fix saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildFixSaveFailed","name":"Build fix save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildSessionUpdated","name":"Build session updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildSessionUpdateFailed","name":"Build session update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"direction":"vertical","children":[{"type":"stack","children":[{"type":"icon","name":"map"},{"type":"typography","content":"Task Planner","variant":"h2"}],"direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"type":"card","children":[{"type":"stack","direction":"vertical","children":[{"type":"typography","content":"Describe the task to plan","variant":"body"},{"entity":"@entity","mode":"edit","submitEvent":"PLAN","type":"form-section","fields":["task"]}],"gap":"md"}]}],"gap":"lg","type":"stack"}],"appName":"Schema Builder"}]]},{"from":"idle","to":"classifying","event":"PLAN","effects":[["set","@entity.status","classifying"],["agent/generate",["str/concat","Classify this task into exactly one category.\\n","Categories: ","schema, component, trait, page, behavior","\\n","Task: ","@entity.task","\\n","Return only the category name."]],["render-ui","main",{"children":[{"direction":"vertical","children":[{"type":"icon","name":"tag"},{"content":"Classifying task...","variant":"h3","type":"typography"},{"type":"spinner"},{"content":"@entity.task","variant":"caption","type":"typography"}],"align":"center","type":"stack","gap":"lg"}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}],"appName":"Schema Builder","type":"dashboard-layout"}]]},{"from":"classifying","to":"recalling","event":"CLASSIFIED","effects":[["set","@entity.category","@payload.category"],["set","@entity.status","recalling"],["agent/recall",["str/concat","@entity.category"," ","@entity.task"],5],["render-ui","main",{"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"direction":"vertical","gap":"lg","align":"center","children":[{"name":"brain","type":"icon"},{"content":"Recalling relevant experience...","type":"typography","variant":"h3"},{"type":"spinner"},{"type":"badge","label":"@entity.category"}],"type":"stack"}],"appName":"Schema Builder","type":"dashboard-layout"}]]},{"from":"classifying","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"appName":"Schema Builder","navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","label":"Fix","icon":"wrench"}],"type":"dashboard-layout","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"content":"Planning Failed","type":"typography","variant":"h2"},{"variant":"error","message":"@entity.error","type":"alert"},{"label":"Try Again","icon":"rotate-ccw","variant":"primary","action":"RESET","type":"button"}],"direction":"vertical","gap":"lg","align":"center","type":"stack"}]}]]},{"from":"recalling","to":"planning","event":"MEMORIES_LOADED","effects":[["set","@entity.relevantMemories","@payload.memories"],["set","@entity.memoryCount","@payload.count"],["set","@entity.status","planning"],["agent/generate",["str/concat","Task: ","@entity.task","\\n","Category: ","@entity.category","\\n","Relevant experience:\\n","@entity.relevantMemories","\\n\\n","Generate a numbered step-by-step execution plan. ","Include a confidence score (0-100) for how likely this plan will succeed."]],["render-ui","main",{"children":[{"type":"stack","children":[{"type":"icon","name":"cpu"},{"variant":"h3","content":"Generating plan...","type":"typography"},{"type":"spinner"},{"justify":"center","children":[{"type":"badge","label":"@entity.category"},{"label":"@entity.memoryCount","type":"badge"}],"type":"stack","gap":"md","direction":"horizontal"}],"align":"center","gap":"lg","direction":"vertical"}],"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"appName":"Schema Builder"}]]},{"from":"recalling","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"type":"dashboard-layout","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","content":"Planning Failed","type":"typography"},{"variant":"error","type":"alert","message":"@entity.error"},{"variant":"primary","icon":"rotate-ccw","label":"Try Again","action":"RESET","type":"button"}],"gap":"lg","direction":"vertical","type":"stack","align":"center"}]}]]},{"from":"planning","to":"ready","event":"PLAN_GENERATED","effects":[["set","@entity.steps","@payload.steps"],["set","@entity.confidence","@payload.confidence"],["set","@entity.status","ready"],["agent/memorize",["str/concat","Plan for ","@entity.category"," task: ","@entity.task"],"pattern-affinity"],["emit","PLAN_READY"],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"align":"center","justify":"between","children":[{"gap":"sm","direction":"horizontal","align":"center","children":[{"type":"icon","name":"check-circle"},{"type":"typography","variant":"h2","content":"Plan Ready"}],"type":"stack"},{"variant":"ghost","label":"New Plan","icon":"rotate-ccw","action":"RESET","type":"button"}],"gap":"sm","direction":"horizontal","type":"stack"},{"type":"divider"},{"children":[{"label":"Category","icon":"tag","type":"stat-display","value":"@entity.category"},{"type":"stat-display","value":"@entity.confidence","icon":"target","label":"Confidence"},{"value":"@entity.memoryCount","type":"stat-display","label":"Memories Used","icon":"brain"}],"type":"simple-grid","cols":3},{"type":"divider"},{"type":"card","children":[{"children":[{"content":"Task","variant":"caption","type":"typography"},{"content":"@entity.task","variant":"body","type":"typography"},{"type":"divider"},{"type":"typography","content":"Execution Plan","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.steps"}],"direction":"vertical","type":"stack","gap":"md"}]},{"children":[{"direction":"vertical","type":"stack","children":[{"variant":"caption","type":"typography","content":"Relevant Memories"},{"type":"typography","variant":"body","content":"@entity.relevantMemories"}],"gap":"sm"}],"type":"card"}]}],"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","icon":"wrench","href":"/fix"}]}]]},{"from":"planning","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"gap":"lg","direction":"vertical","align":"center","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"Planning Failed","variant":"h2"},{"type":"alert","variant":"error","message":"@entity.error"},{"icon":"rotate-ccw","variant":"primary","type":"button","label":"Try Again","action":"RESET"}],"type":"stack"}]}]]},{"from":"ready","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.category",""],["set","@entity.steps",""],["set","@entity.confidence",0],["set","@entity.relevantMemories",""],["set","@entity.memoryCount",0],["set","@entity.error",""],["render-ui","main",{"navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}],"appName":"Schema Builder","type":"dashboard-layout","children":[{"children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"map"},{"type":"typography","variant":"h2","content":"Task Planner"}],"align":"center"},{"type":"divider"},{"children":[{"type":"stack","direction":"vertical","children":[{"type":"typography","content":"Describe the task to plan","variant":"body"},{"fields":["task"],"mode":"edit","type":"form-section","submitEvent":"PLAN","entity":"@entity"}],"gap":"md"}],"type":"card"}],"gap":"lg","direction":"vertical","type":"stack"}]}]]}]},"scope":"collection"},{"name":"PlannerTaskInput","category":"interaction","linkedEntity":"BuildPlan","emits":[{"event":"BuildPlanLoaded","description":"Fired when BuildPlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"event":"BuildPlanLoadFailed","description":"Fired when BuildPlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NEW_TASK","name":"New Task"},{"key":"CLOSE","name":"Close"},{"key":"PLAN","name":"Plan","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"BuildPlanLoaded","name":"BuildPlan loaded","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"key":"BuildPlanLoadFailed","name":"BuildPlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildPlan",{"emit":{"success":"BuildPlanLoaded","failure":"BuildPlanLoadFailed"}}]]},{"from":"closed","to":"open","event":"NEW_TASK","effects":[["render-ui","modal",{"direction":"vertical","children":[{"type":"icon","name":"map"},{"content":"Describe the task to plan","type":"typography","variant":"h3"},{"type":"divider"},{"type":"form-section","entity":"@entity","mode":"edit","cancelEvent":"CLOSE","submitEvent":"PLAN","fields":["task"]}],"type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"PLAN","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"PlannerClassifierFlow","category":"interaction","linkedEntity":"BuildPlan","emits":[{"event":"SAVE","scope":"internal"},{"event":"CLASSIFIED","scope":"internal"},{"event":"BuildPlanLoadFailed","description":"Fired when BuildPlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildPlanLoaded","description":"Fired when BuildPlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"event":"BuildPlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildPlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CLASSIFY","name":"Classify"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"CLASSIFIED","name":"Classified"},{"key":"BuildPlanLoadFailed","name":"BuildPlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildPlanLoaded","name":"BuildPlan loaded","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"key":"BuildPlanSaveFailed","name":"BuildPlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildPlanSaved","name":"BuildPlan saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildPlan",{"emit":{"success":"BuildPlanLoaded","failure":"BuildPlanLoadFailed"}}],["render-ui","main",{"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"appName":"Schema Builder","children":[{"gap":"lg","type":"stack","children":[{"direction":"horizontal","gap":"md","type":"stack","justify":"between","children":[{"direction":"horizontal","gap":"md","children":[{"type":"icon","name":"tag"},{"content":"BuildPlan","variant":"h2","type":"typography"}],"type":"stack"},{"variant":"primary","type":"button","label":"Open","action":"CLASSIFY","icon":"tag"}]},{"type":"divider"},{"title":"Nothing open","icon":"tag","description":"Click Open to view details in a modal overlay.","type":"empty-state"}],"direction":"vertical"}],"type":"dashboard-layout"}]]},{"from":"closed","to":"open","event":"CLASSIFY","effects":[["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"children":[{"type":"icon","name":"tag"},{"type":"typography","variant":"h3","content":"BuildPlan"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"gap":"sm","children":[{"content":"Categories:","variant":"caption","type":"typography"},{"variant":"secondary","type":"badge","label":"schema"},{"variant":"secondary","type":"badge","label":"component"},{"variant":"secondary","label":"trait","type":"badge"},{"label":"page","type":"badge","variant":"secondary"},{"label":"behavior","variant":"secondary","type":"badge"}],"type":"stack","direction":"horizontal"},{"mode":"create","submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["input"],"type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildPlan",{"emit":{"failure":"BuildPlanLoadFailed","success":"BuildPlanLoaded"}}],["render-ui","main",{"children":[{"gap":"lg","type":"stack","children":[{"gap":"md","children":[{"children":[{"name":"tag","type":"icon"},{"type":"typography","variant":"h2","content":"BuildPlan"}],"type":"stack","direction":"horizontal","gap":"md"},{"label":"Open","variant":"primary","type":"button","action":"CLASSIFY","icon":"tag"}],"justify":"between","direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"empty-state","icon":"tag","description":"Click Open to view details in a modal overlay.","title":"Nothing open"}],"direction":"vertical"}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"icon":"wrench","label":"Fix","href":"/fix"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildPlan","@payload.data",{"emit":{"failure":"BuildPlanSaveFailed","success":"BuildPlanSaved"}}],["render-ui","modal",null],["emit","CLASSIFIED"],["fetch","BuildPlan",{"emit":{"failure":"BuildPlanLoadFailed","success":"BuildPlanLoaded"}}],["render-ui","main",{"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}],"type":"dashboard-layout","children":[{"type":"stack","children":[{"children":[{"children":[{"type":"icon","name":"tag"},{"type":"typography","content":"BuildPlan","variant":"h2"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"button","label":"Open","action":"CLASSIFY","variant":"primary","icon":"tag"}],"type":"stack","direction":"horizontal","justify":"between","gap":"md"},{"type":"divider"},{"icon":"tag","type":"empty-state","description":"Click Open to view details in a modal overlay.","title":"Nothing open"}],"gap":"lg","direction":"vertical"}],"appName":"Schema Builder"}]]}]},"scope":"collection"},{"name":"PlannerCompletionFlow","category":"interaction","linkedEntity":"BuildPlan","emits":[{"event":"SAVE","scope":"internal"},{"event":"GENERATED","scope":"internal"},{"event":"BuildPlanLoadFailed","description":"Fired when BuildPlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildPlanLoaded","description":"Fired when BuildPlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"event":"BuildPlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildPlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"GENERATE","name":"Generate"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"GENERATED","name":"Generated"},{"key":"BuildPlanLoadFailed","name":"BuildPlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildPlanLoaded","name":"BuildPlan loaded","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"key":"BuildPlanSaveFailed","name":"BuildPlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildPlanSaved","name":"BuildPlan saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildPlan",{"emit":{"success":"BuildPlanLoaded","failure":"BuildPlanLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","icon":"hammer","href":"/build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"direction":"horizontal","children":[{"name":"sparkles","type":"icon"},{"type":"typography","content":"BuildPlan","variant":"h2"}],"type":"stack","gap":"md"},{"action":"GENERATE","label":"Open","type":"button","variant":"primary","icon":"sparkles"}],"justify":"between"},{"type":"divider"},{"type":"empty-state","icon":"sparkles","title":"Nothing open","description":"Click Open to view details in a modal overlay."}]}]}]]},{"from":"closed","to":"open","event":"GENERATE","effects":[["render-ui","modal",{"gap":"md","type":"stack","children":[{"children":[{"type":"icon","name":"sparkles"},{"type":"typography","variant":"h3","content":"BuildPlan"}],"direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"type":"stack","children":[{"label":"@entity.provider","type":"badge"},{"type":"badge","label":"@entity.model"}],"gap":"sm","direction":"horizontal"},{"cancelEvent":"CLOSE","type":"form-section","submitEvent":"SAVE","mode":"create","fields":["prompt"]}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildPlan",{"emit":{"failure":"BuildPlanLoadFailed","success":"BuildPlanLoaded"}}],["render-ui","main",{"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","type":"dashboard-layout","children":[{"gap":"lg","children":[{"justify":"between","direction":"horizontal","children":[{"type":"stack","gap":"md","children":[{"name":"sparkles","type":"icon"},{"type":"typography","content":"BuildPlan","variant":"h2"}],"direction":"horizontal"},{"label":"Open","action":"GENERATE","variant":"primary","type":"button","icon":"sparkles"}],"type":"stack","gap":"md"},{"type":"divider"},{"icon":"sparkles","title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state"}],"type":"stack","direction":"vertical"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildPlan","@payload.data",{"emit":{"success":"BuildPlanSaved","failure":"BuildPlanSaveFailed"}}],["render-ui","modal",null],["emit","GENERATED"],["fetch","BuildPlan",{"emit":{"failure":"BuildPlanLoadFailed","success":"BuildPlanLoaded"}}],["render-ui","main",{"appName":"Schema Builder","children":[{"direction":"vertical","children":[{"justify":"between","children":[{"children":[{"type":"icon","name":"sparkles"},{"variant":"h2","type":"typography","content":"BuildPlan"}],"direction":"horizontal","type":"stack","gap":"md"},{"action":"GENERATE","label":"Open","icon":"sparkles","type":"button","variant":"primary"}],"gap":"md","type":"stack","direction":"horizontal"},{"type":"divider"},{"title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state","icon":"sparkles"}],"gap":"lg","type":"stack"}],"type":"dashboard-layout","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","icon":"hammer","label":"Build"},{"href":"/fix","label":"Fix","icon":"wrench"}]}]]}]},"scope":"collection"},{"name":"PlannerMemoryLifecycle","category":"interaction","linkedEntity":"BuildPlan","emits":[{"event":"BuildPlanLoaded","description":"Fired when BuildPlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"event":"BuildPlanLoadFailed","description":"Fired when BuildPlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"BuildPlanLoaded","name":"BuildPlan loaded","payloadSchema":[{"name":"data","type":"[BuildPlan]"}]},{"key":"BuildPlanLoadFailed","name":"BuildPlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PIN","name":"Pin","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"BuildPlan"}]},{"key":"REINFORCE","name":"Reinforce","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"BuildPlan"}]},{"key":"FORGET","name":"Forget","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"BuildPlan"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","BuildPlan",{"emit":{"success":"BuildPlanLoaded","failure":"BuildPlanLoadFailed"}}],["render-ui","main",{"children":[{"type":"spinner"},{"color":"muted","content":"Loading…","variant":"caption","type":"typography"}],"className":"py-12","align":"center","type":"stack","direction":"vertical","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"BuildPlanLoaded","effects":[["render-ui","main",{"appName":"Schema Builder","children":[{"gap":"lg","className":"max-w-5xl mx-auto w-full","type":"stack","direction":"vertical","children":[{"type":"stack","children":[{"gap":"sm","type":"stack","align":"center","children":[{"type":"icon","name":"brain"},{"content":"BuildPlan Manager","variant":"h2","type":"typography"}],"direction":"horizontal"}],"gap":"md","direction":"horizontal","justify":"between","align":"center"},{"type":"divider"},{"fields":[{"name":"content","variant":"h4","icon":"brain","label":"Content"},{"variant":"badge","label":"Category","name":"category"},{"variant":"caption","name":"strength","label":"Strength"}],"type":"data-grid","entity":"@payload.data","itemActions":[{"variant":"ghost","label":"Pin","event":"PIN"},{"label":"Reinforce","event":"REINFORCE","variant":"ghost"},{"variant":"danger","label":"Forget","event":"FORGET"}]}]}],"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"type":"dashboard-layout"}]]},{"from":"browsing","to":"browsing","event":"BuildPlanLoadFailed","effects":[["render-ui","main",{"gap":"md","align":"center","className":"py-12","type":"stack","direction":"vertical","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"content":"Failed to load buildplan","type":"typography","variant":"h3"},{"type":"typography","variant":"body","content":"@payload.error","color":"muted"},{"icon":"rotate-ccw","label":"Retry","type":"button","action":"INIT","variant":"primary"}]}]]}]},"scope":"collection"}],"pages":[{"name":"PlanPage","path":"/plan","traits":[{"ref":"BuildPlanner"}]}]},{"name":"BuildLoopOrbital","entity":{"name":"BuildLoop","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"task","type":"string","default":""},{"name":"plan","type":"string"},{"name":"iterations","type":"number"},{"name":"maxIterations","type":"number"},{"name":"status","type":"string","default":"idle"},{"name":"result","type":"string"},{"name":"currentTool","type":"string"},{"name":"lastToolResult","type":"string"},{"name":"error","type":"string","default":""},{"name":"currentStep","type":"number"},{"name":"totalSteps","type":"number"},{"name":"steps","type":"string","default":""},{"name":"toolName","type":"string"},{"name":"args","type":"string"},{"name":"prompt","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"provider","type":"string","default":"anthropic"},{"name":"model","type":"string","default":"claude-sonnet-4-20250514"},{"name":"tokenCount","type":"number"},{"name":"maxTokens","type":"number"},{"name":"usage","type":"number"},{"name":"current","type":"number"},{"name":"max","type":"number"},{"name":"threshold","type":"number"},{"name":"lastCompactedAt","type":"string"},{"name":"action","type":"string","default":""},{"name":"detail","type":"string","default":""},{"name":"timestamp","type":"string","default":""},{"name":"duration","type":"number","default":0}]},"traits":[{"name":"SchemaBuilder","category":"interaction","linkedEntity":"BuildLoop","emits":[{"event":"TOOL_LOOP_DONE","scope":"external","payloadSchema":[{"name":"schema","type":"string"}]},{"event":"RESET"}],"listens":[{"event":"PLAN_READY","triggers":"EXECUTE","source":{"kind":"orbital","orbital":"BuildPlanOrbital","trait":"BuildPlanner"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopStepProgress"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopContextMonitor"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"planning"},{"name":"executing"},{"name":"checking"},{"name":"completed"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EXECUTE","name":"Execute"},{"key":"PLAN_GENERATED","name":"Plan Generated","payloadSchema":[{"name":"plan","type":"string"},{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"FAILED","name":"Failed","payloadSchema":[{"name":"error","type":"string"}]},{"key":"TOOL_RESULT","name":"Tool Result","payloadSchema":[{"name":"output","type":"string"}]},{"key":"CHECK_PASSED","name":"Check Passed","payloadSchema":[{"name":"result","type":"string"}]},{"key":"CHECK_NEEDS_MORE","name":"Check Needs More","payloadSchema":[{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"MAX_ITERATIONS","name":"Max Iterations","payloadSchema":[{"name":"error","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"TOOL_LOOP_DONE","name":"Tool Loop Done"}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","href":"/build","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","children":[{"name":"repeat","type":"icon"},{"variant":"h2","type":"typography","content":"Tool Execution Loop"}],"gap":"sm","align":"center"},{"type":"divider"},{"type":"card","children":[{"gap":"md","children":[{"type":"typography","variant":"body","content":"Describe the task to execute with tools"},{"type":"form-section","entity":"@entity","submitEvent":"EXECUTE","fields":["task"],"mode":"edit"}],"direction":"vertical","type":"stack"}]}]}],"appName":"Schema Builder"}]]},{"from":"idle","to":"planning","event":"EXECUTE","effects":[["set","@entity.status","planning"],["set","@entity.iterations",0],["agent/generate",["str/concat","Task: ","@entity.task","\\n\\nAvailable tools: ",["str/join",["agent/tools"],", "],"\\n\\nGenerate a step-by-step plan. Return the first tool to call and its arguments."]],["render-ui","main",{"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"type":"stack","direction":"vertical","align":"center","children":[{"name":"brain","type":"icon"},{"variant":"h3","content":"Planning execution...","type":"typography"},{"type":"spinner"},{"variant":"caption","type":"typography","content":"@entity.task"}],"gap":"lg"}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"planning","to":"executing","event":"PLAN_GENERATED","effects":[["set","@entity.plan","@payload.plan"],["set","@entity.currentTool","@payload.toolName"],["set","@entity.iterations",["+","@entity.iterations",1]],["agent/invoke","@payload.toolName","@payload.toolArgs"],["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","children":[{"align":"center","justify":"between","children":[{"direction":"horizontal","gap":"sm","type":"stack","children":[{"name":"tool","type":"icon"},{"variant":"h2","type":"typography","content":"Executing Tool"}],"align":"center"},{"label":"@entity.maxIterations","type":"badge"}],"gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","gap":"sm","children":[{"content":"Current Tool","variant":"caption","type":"typography"},{"type":"typography","content":"@entity.currentTool","variant":"h4"},{"type":"spinner"}],"type":"stack"}]},{"type":"card","children":[{"type":"stack","children":[{"type":"typography","content":"Plan","variant":"caption"},{"type":"typography","content":"@entity.plan","variant":"body"}],"direction":"vertical","gap":"sm"}]}],"type":"stack"}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"icon":"hammer","label":"Build","href":"/build"},{"icon":"wrench","href":"/fix","label":"Fix"}]}]]},{"from":"planning","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"appName":"Schema Builder","children":[{"align":"center","gap":"lg","type":"stack","direction":"vertical","children":[{"type":"icon","name":"x-circle"},{"type":"typography","content":"Loop Failed","variant":"h2"},{"variant":"error","type":"alert","message":"@entity.error"},{"cols":2,"type":"simple-grid","children":[{"type":"stat-display","value":"@entity.iterations","label":"Iterations Used","icon":"repeat"},{"label":"Max Allowed","type":"stat-display","icon":"shield","value":"@entity.maxIterations"}]},{"action":"RESET","variant":"primary","label":"Retry","type":"button","icon":"rotate-ccw"}]}],"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"icon":"wrench","label":"Fix","href":"/fix"}]}]]},{"from":"executing","to":"checking","event":"TOOL_RESULT","effects":[["set","@entity.lastToolResult","@payload.output"],["agent/generate",["str/concat","Task: ","@entity.task","\\nPlan: ","@entity.plan","\\nTool output: ","@payload.output","\\n\\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."]],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","children":[{"name":"eye","type":"icon"},{"variant":"h3","type":"typography","content":"Checking result..."},{"type":"spinner"},{"label":"@entity.iterations","type":"badge"}],"gap":"lg","align":"center"}],"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}]}]]},{"from":"executing","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"icon":"hammer","href":"/build","label":"Build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"appName":"Schema Builder","children":[{"type":"stack","direction":"vertical","gap":"lg","align":"center","children":[{"type":"icon","name":"x-circle"},{"variant":"h2","type":"typography","content":"Loop Failed"},{"variant":"error","type":"alert","message":"@entity.error"},{"children":[{"value":"@entity.iterations","icon":"repeat","label":"Iterations Used","type":"stat-display"},{"value":"@entity.maxIterations","type":"stat-display","icon":"shield","label":"Max Allowed"}],"cols":2,"type":"simple-grid"},{"icon":"rotate-ccw","variant":"primary","action":"RESET","type":"button","label":"Retry"}]}],"type":"dashboard-layout"}]]},{"from":"checking","to":"completed","event":"CHECK_PASSED","effects":[["set","@entity.result","@payload.result"],["set","@entity.status","completed"],["render-ui","main",{"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}],"appName":"Schema Builder","type":"dashboard-layout","children":[{"type":"stack","children":[{"justify":"between","children":[{"children":[{"type":"icon","name":"check-circle"},{"type":"typography","content":"Loop Complete","variant":"h2"}],"type":"stack","gap":"sm","direction":"horizontal","align":"center"},{"label":"New Task","variant":"ghost","icon":"rotate-ccw","action":"RESET","type":"button"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"simple-grid","cols":2,"children":[{"label":"Iterations","value":"@entity.iterations","icon":"repeat","type":"stat-display"},{"label":"Status","value":"@entity.status","icon":"check","type":"stat-display"}]},{"type":"divider"},{"type":"card","children":[{"type":"stack","gap":"md","children":[{"content":"Task","variant":"caption","type":"typography"},{"variant":"body","type":"typography","content":"@entity.task"},{"type":"divider"},{"type":"typography","content":"Result","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.result"}],"direction":"vertical"}]}],"gap":"lg","direction":"vertical"}]}]]},{"from":"checking","to":"executing","event":"CHECK_NEEDS_MORE","effects":[["set","@entity.currentTool","@payload.toolName"],["set","@entity.iterations",["+","@entity.iterations",1]],["if",[">=",["agent/context-usage"],0.8],["agent/compact","hybrid"],["log","Context below compact threshold"]],["agent/invoke","@payload.toolName","@payload.toolArgs"],["render-ui","main",{"type":"dashboard-layout","children":[{"direction":"vertical","gap":"lg","children":[{"type":"stack","align":"center","gap":"sm","justify":"between","direction":"horizontal","children":[{"direction":"horizontal","align":"center","gap":"sm","children":[{"type":"icon","name":"tool"},{"content":"Executing Tool","variant":"h2","type":"typography"}],"type":"stack"},{"label":"@entity.maxIterations","type":"badge"}]},{"type":"divider"},{"children":[{"direction":"vertical","type":"stack","gap":"sm","children":[{"variant":"caption","content":"Current Tool","type":"typography"},{"content":"@entity.currentTool","variant":"h4","type":"typography"},{"type":"spinner"}]}],"type":"card"},{"type":"card","children":[{"children":[{"variant":"caption","content":"Plan","type":"typography"},{"type":"typography","content":"@entity.plan","variant":"body"}],"gap":"sm","type":"stack","direction":"vertical"}]}],"type":"stack"}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}],"appName":"Schema Builder"}]]},{"from":"checking","to":"failed","event":"MAX_ITERATIONS","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"type":"dashboard-layout","appName":"Schema Builder","children":[{"gap":"lg","type":"stack","align":"center","direction":"vertical","children":[{"name":"x-circle","type":"icon"},{"variant":"h2","type":"typography","content":"Loop Failed"},{"variant":"error","type":"alert","message":"@entity.error"},{"children":[{"type":"stat-display","value":"@entity.iterations","icon":"repeat","label":"Iterations Used"},{"type":"stat-display","value":"@entity.maxIterations","label":"Max Allowed","icon":"shield"}],"type":"simple-grid","cols":2},{"label":"Retry","type":"button","action":"RESET","variant":"primary","icon":"rotate-ccw"}]}]}]]},{"from":"completed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.plan",""],["set","@entity.result",""],["set","@entity.currentTool",""],["set","@entity.lastToolResult",""],["set","@entity.iterations",0],["set","@entity.error",""],["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"sm","align":"center","type":"stack","children":[{"name":"repeat","type":"icon"},{"variant":"h2","type":"typography","content":"Tool Execution Loop"}]},{"type":"divider"},{"children":[{"gap":"md","type":"stack","direction":"vertical","children":[{"variant":"body","type":"typography","content":"Describe the task to execute with tools"},{"mode":"edit","type":"form-section","entity":"@entity","submitEvent":"EXECUTE","fields":["task"]}]}],"type":"card"}],"type":"stack"}],"appName":"Schema Builder","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","icon":"wrench","href":"/fix"}],"type":"dashboard-layout"}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.plan",""],["set","@entity.result",""],["set","@entity.currentTool",""],["set","@entity.lastToolResult",""],["set","@entity.iterations",0],["set","@entity.error",""],["render-ui","main",{"navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"type":"dashboard-layout","children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"direction":"horizontal","gap":"sm","type":"stack","align":"center","children":[{"name":"repeat","type":"icon"},{"content":"Tool Execution Loop","type":"typography","variant":"h2"}]},{"type":"divider"},{"children":[{"direction":"vertical","children":[{"type":"typography","content":"Describe the task to execute with tools","variant":"body"},{"type":"form-section","entity":"@entity","mode":"edit","fields":["task"],"submitEvent":"EXECUTE"}],"gap":"md","type":"stack"}],"type":"card"}]}],"appName":"Schema Builder"}]]}]},"scope":"collection"},{"name":"ToolLoopStepProgress","category":"interaction","linkedEntity":"BuildLoop","emits":[{"event":"RESET"},{"event":"BuildLoopLoaded","description":"Fired when BuildLoop finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"event":"BuildLoopLoadFailed","description":"Fired when BuildLoop fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"SchemaBuilder"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopContextMonitor"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"in_progress"},{"name":"completed"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"RESET","name":"Reset"},{"key":"ADVANCE","name":"Advance"},{"key":"COMPLETE","name":"Complete"},{"key":"FAIL","name":"Fail"},{"key":"BuildLoopLoaded","name":"BuildLoop loaded","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"key":"BuildLoopLoadFailed","name":"BuildLoop load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":[{"name":"list-ordered","type":"icon"},{"type":"typography","variant":"h2","content":"BuildLoop"},{"label":"Idle","type":"badge","variant":"default"}]},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"variant":"primary","icon":"play","label":"Start","type":"button","action":"START"}]}],"appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"href":"/build","label":"Build","icon":"hammer"},{"icon":"wrench","label":"Fix","href":"/fix"}],"type":"dashboard-layout"}]]},{"from":"idle","to":"in_progress","event":"START","effects":[["set","@entity.status","in_progress"],["set","@entity.currentStep",0],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","children":[{"type":"stack","gap":"lg","children":[{"direction":"horizontal","children":[{"name":"loader","type":"icon"},{"variant":"h2","content":"BuildLoop","type":"typography"},{"type":"badge","label":"In Progress","variant":"warning"}],"align":"center","type":"stack","gap":"sm"},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"align":"center","gap":"sm","type":"stack","children":[{"value":"@entity.currentStep","type":"stat-display","label":"Current Step"},{"label":"Total Steps","type":"stat-display","value":"@entity.totalSteps"}],"direction":"horizontal"},{"children":[{"variant":"primary","label":"Advance","action":"ADVANCE","type":"button","icon":"chevron-right"},{"icon":"rotate-ccw","action":"RESET","variant":"ghost","type":"button","label":"Reset"}],"direction":"horizontal","type":"stack","gap":"sm"}],"direction":"vertical"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}]}]]},{"from":"idle","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"type":"stack","gap":"lg","children":[{"align":"center","children":[{"type":"icon","name":"list-ordered"},{"type":"typography","variant":"h2","content":"BuildLoop"},{"label":"Idle","variant":"default","type":"badge"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}]},{"icon":"play","type":"button","action":"START","variant":"primary","label":"Start"}],"direction":"vertical"}]}]]},{"from":"in_progress","to":"in_progress","event":"ADVANCE","guard":["<","@entity.currentStep","@entity.totalSteps"],"effects":[["set","@entity.currentStep",["+","@entity.currentStep",1]],["render-ui","main",{"appName":"Schema Builder","children":[{"gap":"lg","direction":"vertical","children":[{"gap":"sm","type":"stack","children":[{"name":"loader","type":"icon"},{"content":"BuildLoop","variant":"h2","type":"typography"},{"label":"In Progress","variant":"warning","type":"badge"}],"direction":"horizontal","align":"center"},{"type":"divider"},{"steps":[{"title":"Plan","id":"0"},{"id":"1","title":"Execute"},{"id":"2","title":"Check"},{"id":"3","title":"Complete"}],"currentStep":"@entity.currentStep","type":"wizard-progress"},{"type":"stack","direction":"horizontal","align":"center","children":[{"label":"Current Step","value":"@entity.currentStep","type":"stat-display"},{"type":"stat-display","label":"Total Steps","value":"@entity.totalSteps"}],"gap":"sm"},{"type":"stack","children":[{"variant":"primary","icon":"chevron-right","action":"ADVANCE","type":"button","label":"Advance"},{"label":"Reset","variant":"ghost","icon":"rotate-ccw","type":"button","action":"RESET"}],"direction":"horizontal","gap":"sm"}],"type":"stack"}],"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","href":"/build","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"in_progress","to":"completed","event":"COMPLETE","effects":[["set","@entity.status","completed"],["set","@entity.currentStep","@entity.totalSteps"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}],"appName":"Schema Builder","children":[{"direction":"vertical","type":"stack","children":[{"type":"stack","gap":"sm","children":[{"name":"check-circle","type":"icon"},{"variant":"h2","type":"typography","content":"BuildLoop"},{"variant":"success","type":"badge","label":"Completed"}],"direction":"horizontal","align":"center"},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"id":"2","title":"Check"},{"title":"Complete","id":"3"}],"type":"wizard-progress","currentStep":"@entity.totalSteps"},{"variant":"success","message":"All steps completed successfully.","type":"alert"},{"action":"RESET","variant":"ghost","type":"button","icon":"rotate-ccw","label":"Reset"}],"gap":"lg"}]}]]},{"from":"in_progress","to":"failed","event":"FAIL","effects":[["set","@entity.status","failed"],["render-ui","main",{"appName":"Schema Builder","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","label":"Build","icon":"hammer"},{"icon":"wrench","href":"/fix","label":"Fix"}],"children":[{"type":"stack","children":[{"children":[{"type":"icon","name":"x-circle"},{"variant":"h2","content":"BuildLoop","type":"typography"},{"type":"badge","label":"Failed","variant":"danger"}],"align":"center","direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"steps":[{"title":"Plan","id":"0"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"type":"alert","message":"Pipeline failed at the current step.","variant":"error"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"label":"Failed At Step","value":"@entity.currentStep","type":"stat-display"}]},{"type":"button","action":"RESET","label":"Reset","variant":"ghost","icon":"rotate-ccw"}],"gap":"lg","direction":"vertical"}],"type":"dashboard-layout"}]]},{"from":"in_progress","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}],"type":"dashboard-layout","appName":"Schema Builder","children":[{"children":[{"direction":"horizontal","type":"stack","children":[{"type":"icon","name":"list-ordered"},{"variant":"h2","type":"typography","content":"BuildLoop"},{"type":"badge","label":"Idle","variant":"default"}],"gap":"sm","align":"center"},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}]},{"label":"Start","action":"START","icon":"play","type":"button","variant":"primary"}],"direction":"vertical","gap":"lg","type":"stack"}]}]]},{"from":"completed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","href":"/build","label":"Build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"children":[{"type":"stack","gap":"lg","children":[{"align":"center","gap":"sm","direction":"horizontal","children":[{"name":"list-ordered","type":"icon"},{"type":"typography","content":"BuildLoop","variant":"h2"},{"variant":"default","type":"badge","label":"Idle"}],"type":"stack"},{"type":"divider"},{"steps":[{"title":"Plan","id":"0"},{"id":"1","title":"Execute"},{"id":"2","title":"Check"},{"title":"Complete","id":"3"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"type":"button","action":"START","label":"Start","variant":"primary","icon":"play"}],"direction":"vertical"}]}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"children":[{"type":"icon","name":"list-ordered"},{"variant":"h2","content":"BuildLoop","type":"typography"},{"variant":"default","type":"badge","label":"Idle"}],"type":"stack","direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"type":"wizard-progress","steps":[{"title":"Plan","id":"0"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}],"currentStep":"@entity.currentStep"},{"type":"button","icon":"play","action":"START","label":"Start","variant":"primary"}]}],"appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"ToolLoopCompletionFlow","category":"interaction","linkedEntity":"BuildLoop","emits":[{"event":"SAVE","scope":"internal"},{"event":"GENERATED","scope":"internal"},{"event":"BuildLoopLoadFailed","description":"Fired when BuildLoop fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoopLoaded","description":"Fired when BuildLoop finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"event":"BuildLoopSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoopSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"GENERATE","name":"Generate"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"GENERATED","name":"Generated"},{"key":"BuildLoopLoadFailed","name":"BuildLoop load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoopLoaded","name":"BuildLoop loaded","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"key":"BuildLoopSaveFailed","name":"BuildLoop save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoopSaved","name":"BuildLoop saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildLoop",{"emit":{"failure":"BuildLoopLoadFailed","success":"BuildLoopLoaded"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"children":[{"justify":"between","direction":"horizontal","type":"stack","children":[{"direction":"horizontal","children":[{"type":"icon","name":"sparkles"},{"variant":"h2","content":"BuildLoop","type":"typography"}],"type":"stack","gap":"md"},{"icon":"sparkles","type":"button","action":"GENERATE","label":"Open","variant":"primary"}],"gap":"md"},{"type":"divider"},{"title":"Nothing open","type":"empty-state","icon":"sparkles","description":"Click Open to view details in a modal overlay."}],"gap":"lg","type":"stack","direction":"vertical"}],"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"appName":"Schema Builder"}]]},{"from":"closed","to":"open","event":"GENERATE","effects":[["render-ui","modal",{"type":"stack","direction":"vertical","children":[{"gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"sparkles"},{"variant":"h3","content":"BuildLoop","type":"typography"}]},{"type":"divider"},{"direction":"horizontal","gap":"sm","type":"stack","children":[{"label":"@entity.provider","type":"badge"},{"type":"badge","label":"@entity.model"}]},{"fields":["prompt"],"type":"form-section","cancelEvent":"CLOSE","mode":"create","submitEvent":"SAVE"}],"gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"gap":"md","justify":"between","direction":"horizontal","type":"stack","children":[{"gap":"md","type":"stack","children":[{"type":"icon","name":"sparkles"},{"content":"BuildLoop","type":"typography","variant":"h2"}],"direction":"horizontal"},{"variant":"primary","action":"GENERATE","icon":"sparkles","type":"button","label":"Open"}]},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","icon":"sparkles","title":"Nothing open","type":"empty-state"}]}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildLoop","@payload.data",{"emit":{"failure":"BuildLoopSaveFailed","success":"BuildLoopSaved"}}],["render-ui","modal",null],["emit","GENERATED"],["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","children":[{"children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"name":"sparkles","type":"icon"},{"type":"typography","content":"BuildLoop","variant":"h2"}]},{"label":"Open","variant":"primary","action":"GENERATE","type":"button","icon":"sparkles"}],"type":"stack","gap":"md","direction":"horizontal","justify":"between"},{"type":"divider"},{"title":"Nothing open","icon":"sparkles","type":"empty-state","description":"Click Open to view details in a modal overlay."}],"type":"stack"}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"icon":"wrench","href":"/fix","label":"Fix"}],"appName":"Schema Builder","type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"ToolLoopToolCallFlow","category":"interaction","linkedEntity":"BuildLoop","emits":[{"event":"SAVE","scope":"internal"},{"event":"INVOKED","scope":"internal"},{"event":"BuildLoopLoadFailed","description":"Fired when BuildLoop fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoopLoaded","description":"Fired when BuildLoop finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"event":"BuildLoopSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoopSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"INVOKE","name":"Invoke"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"INVOKED","name":"Invoked"},{"key":"BuildLoopLoadFailed","name":"BuildLoop load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoopLoaded","name":"BuildLoop loaded","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"key":"BuildLoopSaveFailed","name":"BuildLoop save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoopSaved","name":"BuildLoop saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"gap":"md","type":"stack","children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"name":"wrench","type":"icon"},{"type":"typography","content":"Invoke Tool","variant":"h2"}]},{"type":"button","action":"INVOKE","label":"Open","variant":"primary","icon":"wrench"}],"justify":"between","direction":"horizontal"},{"type":"divider"},{"title":"Nothing open","icon":"wrench","type":"empty-state","description":"Click Open to view details in a modal overlay."}]}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"appName":"Schema Builder","type":"dashboard-layout"}]]},{"from":"closed","to":"open","event":"INVOKE","effects":[["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"wrench"},{"variant":"h3","content":"Invoke Tool","type":"typography"}]},{"type":"divider"},{"submitEvent":"SAVE","fields":["toolName","args"],"mode":"create","cancelEvent":"CLOSE","type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"appName":"Schema Builder","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"direction":"vertical","children":[{"gap":"md","justify":"between","direction":"horizontal","type":"stack","children":[{"gap":"md","direction":"horizontal","children":[{"type":"icon","name":"wrench"},{"variant":"h2","content":"Invoke Tool","type":"typography"}],"type":"stack"},{"icon":"wrench","action":"INVOKE","type":"button","label":"Open","variant":"primary"}]},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","title":"Nothing open","type":"empty-state","icon":"wrench"}],"gap":"lg","type":"stack"}],"type":"dashboard-layout"}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildLoop","@payload.data",{"emit":{"success":"BuildLoopSaved","failure":"BuildLoopSaveFailed"}}],["render-ui","modal",null],["emit","INVOKED"],["fetch","BuildLoop",{"emit":{"failure":"BuildLoopLoadFailed","success":"BuildLoopLoaded"}}],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","children":[{"type":"stack","children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"icon","name":"wrench"},{"variant":"h2","content":"Invoke Tool","type":"typography"}]},{"variant":"primary","icon":"wrench","type":"button","label":"Open","action":"INVOKE"}],"gap":"md","direction":"horizontal","justify":"between"},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","title":"Nothing open","icon":"wrench","type":"empty-state"}],"gap":"lg"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"ToolLoopContextMonitor","category":"interaction","linkedEntity":"BuildLoop","emits":[{"event":"RESET"},{"event":"BuildLoopLoaded","description":"Fired when BuildLoop finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"event":"BuildLoopLoadFailed","description":"Fired when BuildLoop fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"SchemaBuilder"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopStepProgress"}}],"stateMachine":{"states":[{"name":"normal","isInitial":true},{"name":"warning"},{"name":"critical"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"UPDATE","name":"Update","payloadSchema":[{"name":"current","type":"string"}]},{"key":"COMPACT","name":"Compact"},{"key":"RESET","name":"Reset"},{"key":"BuildLoopLoaded","name":"BuildLoop loaded","payloadSchema":[{"name":"data","type":"[BuildLoop]"}]},{"key":"BuildLoopLoadFailed","name":"BuildLoop load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"normal","to":"normal","event":"INIT","effects":[["fetch","BuildLoop",{"emit":{"success":"BuildLoopLoaded","failure":"BuildLoopLoadFailed"}}],["render-ui","main",{"appName":"Schema Builder","children":[{"gap":"lg","children":[{"direction":"horizontal","children":[{"name":"gauge","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"type":"badge","label":"Normal","variant":"default"}],"align":"center","gap":"sm","type":"stack"},{"type":"divider"},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"type":"stack","gap":"md","children":[{"value":"@entity.current","label":"Tokens Used","type":"stat-display"},{"value":"@entity.max","type":"stat-display","label":"Max Tokens"}],"direction":"horizontal"},{"label":"Reset","action":"RESET","icon":"rotate-ccw","variant":"ghost","type":"button"}],"direction":"vertical","type":"stack"}],"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"label":"Build","icon":"hammer","href":"/build"},{"href":"/fix","label":"Fix","icon":"wrench"}],"type":"dashboard-layout"}]]},{"from":"normal","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"children":[{"direction":"horizontal","gap":"sm","type":"stack","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"type":"badge","variant":"default","label":"Normal"}]},{"type":"divider"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"gap":"md","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"value":"@entity.max","type":"stat-display","label":"Max Tokens"}],"type":"stack","direction":"horizontal"},{"action":"RESET","type":"button","variant":"ghost","label":"Reset","icon":"rotate-ccw"}],"type":"stack","direction":"vertical","gap":"lg"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"normal","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","type":"dashboard-layout","children":[{"type":"stack","gap":"lg","children":[{"align":"center","type":"stack","children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"label":"Warning","type":"badge","variant":"warning"}],"gap":"sm","direction":"horizontal"},{"type":"divider"},{"message":"Token usage approaching limit. Consider compacting.","type":"alert","variant":"warning"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"direction":"horizontal","type":"stack","gap":"md"},{"children":[{"action":"COMPACT","type":"button","label":"Compact","variant":"primary","icon":"minimize-2"},{"type":"button","action":"RESET","label":"Reset","icon":"rotate-ccw","variant":"ghost"}],"gap":"sm","direction":"horizontal","type":"stack"}],"direction":"vertical"}]}]]},{"from":"normal","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","children":[{"children":[{"type":"stack","children":[{"type":"icon","name":"alert-octagon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"type":"badge","label":"Critical","variant":"danger"}],"direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"variant":"error","message":"Token usage critical. Compact immediately to avoid truncation.","type":"alert"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"type":"stack","direction":"horizontal","gap":"md"},{"direction":"horizontal","children":[{"variant":"primary","icon":"minimize-2","label":"Compact Now","type":"button","action":"COMPACT"},{"variant":"ghost","label":"Reset","type":"button","icon":"rotate-ccw","action":"RESET"}],"type":"stack","gap":"sm"}],"gap":"lg","type":"stack","direction":"vertical"}],"appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"normal","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"type":"dashboard-layout","children":[{"gap":"lg","children":[{"children":[{"name":"gauge","type":"icon"},{"content":"Token Usage","type":"typography","variant":"h2"},{"type":"badge","label":"Normal","variant":"default"}],"gap":"sm","type":"stack","direction":"horizontal","align":"center"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"type":"stack","children":[{"label":"Tokens Used","type":"stat-display","value":"@entity.current"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"gap":"md","direction":"horizontal"},{"type":"button","label":"Reset","variant":"ghost","action":"RESET","icon":"rotate-ccw"}],"direction":"vertical","type":"stack"}],"appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"href":"/fix","label":"Fix","icon":"wrench"}]}]]},{"from":"normal","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"type":"stack","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"default","type":"badge","label":"Normal"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"label":"Max Tokens","type":"stat-display","value":"@entity.max"}]},{"type":"button","variant":"ghost","icon":"rotate-ccw","label":"Reset","action":"RESET"}]}],"appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"icon":"wrench","href":"/fix","label":"Fix"}],"type":"dashboard-layout"}]]},{"from":"warning","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"label":"Build","icon":"hammer","href":"/build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","content":"Token Usage","variant":"h2"},{"type":"badge","label":"Warning","variant":"warning"}],"align":"center","gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"alert","variant":"warning","message":"Token usage approaching limit. Consider compacting."},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"gap":"md","children":[{"value":"@entity.current","label":"Tokens Used","type":"stat-display"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"type":"stack","direction":"horizontal"},{"direction":"horizontal","children":[{"type":"button","label":"Compact","variant":"primary","icon":"minimize-2","action":"COMPACT"},{"action":"RESET","type":"button","variant":"ghost","label":"Reset","icon":"rotate-ccw"}],"gap":"sm","type":"stack"}]}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"warning","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"appName":"Schema Builder","children":[{"children":[{"gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"alert-octagon"},{"type":"typography","content":"Token Usage","variant":"h2"},{"variant":"danger","label":"Critical","type":"badge"}],"direction":"horizontal"},{"type":"divider"},{"variant":"error","message":"Token usage critical. Compact immediately to avoid truncation.","type":"alert"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"type":"stack","gap":"md","direction":"horizontal"},{"direction":"horizontal","children":[{"label":"Compact Now","variant":"primary","icon":"minimize-2","type":"button","action":"COMPACT"},{"action":"RESET","label":"Reset","icon":"rotate-ccw","type":"button","variant":"ghost"}],"gap":"sm","type":"stack"}],"direction":"vertical","gap":"lg","type":"stack"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","href":"/build","label":"Build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"type":"dashboard-layout"}]]},{"from":"warning","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"gap":"lg","children":[{"direction":"horizontal","align":"center","children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","type":"typography","variant":"h2"},{"type":"badge","label":"Normal","variant":"default"}],"type":"stack","gap":"sm"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"direction":"horizontal","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"type":"stack","gap":"md"},{"label":"Reset","type":"button","action":"RESET","icon":"rotate-ccw","variant":"ghost"}],"direction":"vertical","type":"stack"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","href":"/build","label":"Build"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","type":"dashboard-layout"}]]},{"from":"warning","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","children":[{"gap":"lg","type":"stack","children":[{"direction":"horizontal","gap":"sm","type":"stack","children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","type":"typography","variant":"h2"},{"label":"Normal","type":"badge","variant":"default"}],"align":"center"},{"type":"divider"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"type":"stack","gap":"md","direction":"horizontal"},{"label":"Reset","action":"RESET","type":"button","icon":"rotate-ccw","variant":"ghost"}],"direction":"vertical"}]}]]},{"from":"warning","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"appName":"Schema Builder","children":[{"children":[{"children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","type":"typography","variant":"h2"},{"variant":"default","type":"badge","label":"Normal"}],"type":"stack","direction":"horizontal","align":"center","gap":"sm"},{"type":"divider"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"direction":"horizontal","gap":"md","type":"stack","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}]},{"type":"button","icon":"rotate-ccw","variant":"ghost","action":"RESET","label":"Reset"}],"gap":"lg","type":"stack","direction":"vertical"}],"type":"dashboard-layout","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}]}]]},{"from":"critical","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","children":[{"direction":"horizontal","gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"alert-octagon"},{"content":"Token Usage","variant":"h2","type":"typography"},{"type":"badge","label":"Critical","variant":"danger"}]},{"type":"divider"},{"variant":"error","message":"Token usage critical. Compact immediately to avoid truncation.","type":"alert"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"type":"stack","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"value":"@entity.max","type":"stat-display","label":"Max Tokens"}],"gap":"md","direction":"horizontal"},{"direction":"horizontal","gap":"sm","children":[{"icon":"minimize-2","action":"COMPACT","type":"button","label":"Compact Now","variant":"primary"},{"variant":"ghost","type":"button","label":"Reset","action":"RESET","icon":"rotate-ccw"}],"type":"stack"}],"gap":"lg"}],"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"critical","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"align":"center","gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"alert-triangle"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"warning","label":"Warning","type":"badge"}]},{"type":"divider"},{"variant":"warning","message":"Token usage approaching limit. Consider compacting.","type":"alert"},{"max":"@entity.max","type":"progress-bar","value":"@entity.current"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","value":"@entity.max","label":"Max Tokens"}]},{"type":"stack","direction":"horizontal","children":[{"variant":"primary","type":"button","label":"Compact","action":"COMPACT","icon":"minimize-2"},{"icon":"rotate-ccw","variant":"ghost","type":"button","label":"Reset","action":"RESET"}],"gap":"sm"}]}],"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"icon":"hammer","label":"Build","href":"/build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"appName":"Schema Builder"}]]},{"from":"critical","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"type":"stack","children":[{"type":"stack","direction":"horizontal","children":[{"type":"icon","name":"gauge"},{"type":"typography","content":"Token Usage","variant":"h2"},{"type":"badge","label":"Normal","variant":"default"}],"gap":"sm","align":"center"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"label":"Max Tokens","type":"stat-display","value":"@entity.max"}],"type":"stack","direction":"horizontal","gap":"md"},{"action":"RESET","type":"button","icon":"rotate-ccw","variant":"ghost","label":"Reset"}],"direction":"vertical","gap":"lg"}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"icon":"hammer","href":"/build","label":"Build"},{"icon":"wrench","label":"Fix","href":"/fix"}]}]]},{"from":"critical","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"appName":"Schema Builder","children":[{"type":"stack","gap":"lg","children":[{"type":"stack","direction":"horizontal","gap":"sm","align":"center","children":[{"name":"gauge","type":"icon"},{"variant":"h2","content":"Token Usage","type":"typography"},{"label":"Normal","variant":"default","type":"badge"}]},{"type":"divider"},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"direction":"horizontal","children":[{"label":"Tokens Used","type":"stat-display","value":"@entity.current"},{"label":"Max Tokens","type":"stat-display","value":"@entity.max"}],"gap":"md","type":"stack"},{"icon":"rotate-ccw","type":"button","action":"RESET","label":"Reset","variant":"ghost"}],"direction":"vertical"}]}]]},{"from":"critical","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"type":"dashboard-layout","children":[{"children":[{"gap":"sm","direction":"horizontal","type":"stack","align":"center","children":[{"type":"icon","name":"gauge"},{"type":"typography","variant":"h2","content":"Token Usage"},{"type":"badge","variant":"default","label":"Normal"}]},{"type":"divider"},{"value":"@entity.current","type":"progress-bar","max":"@entity.max"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}]},{"label":"Reset","action":"RESET","type":"button","variant":"ghost","icon":"rotate-ccw"}],"gap":"lg","direction":"vertical","type":"stack"}],"appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Build","path":"/build","traits":[{"ref":"SchemaBuilder"}]}]},{"name":"BuildFixOrbital","entity":{"name":"BuildFix","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"target","type":"string"},{"name":"validationErrors","type":"string"},{"name":"fixAttempts","type":"number"},{"name":"maxAttempts","type":"number"},{"name":"status","type":"string","default":"idle"},{"name":"currentFix","type":"string"},{"name":"errorCount","type":"number"},{"name":"error","type":"string","default":""},{"name":"currentStep","type":"number"},{"name":"totalSteps","type":"number"},{"name":"steps","type":"string","default":""},{"name":"toolName","type":"string"},{"name":"args","type":"string"},{"name":"result","type":"string"},{"name":"prompt","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"provider","type":"string","default":"anthropic"},{"name":"model","type":"string","default":"claude-sonnet-4-20250514"}]},"traits":[{"name":"FixLoop","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"FIX_SUCCEEDED","scope":"external","payloadSchema":[{"name":"target","type":"string"}]},{"event":"FIX_FAILED","scope":"external","payloadSchema":[{"name":"target","type":"string"},{"name":"error","type":"string"}]},{"event":"RESET"}],"listens":[{"event":"FIX_SUCCEEDED","triggers":"INIT","source":{"kind":"trait","trait":"FixLoop"}},{"event":"FIX_FAILED","triggers":"INIT","source":{"kind":"trait","trait":"FixLoop"}},{"event":"TOOL_LOOP_DONE","triggers":"FIX","source":{"kind":"orbital","orbital":"BuildLoopOrbital","trait":"SchemaBuilder"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"FixLoopStepProgress"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"validating"},{"name":"fixing"},{"name":"applying"},{"name":"succeeded"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"FIX","name":"Fix"},{"key":"VALIDATION_PASSED","name":"Validation Passed"},{"key":"VALIDATION_ERRORS","name":"Validation Errors","payloadSchema":[{"name":"errors","type":"string"},{"name":"count","type":"string"}]},{"key":"EXCEEDED_ATTEMPTS","name":"Exceeded Attempts","payloadSchema":[{"name":"error","type":"string"}]},{"key":"FIX_GENERATED","name":"Fix Generated","payloadSchema":[{"name":"fix","type":"string"}]},{"key":"FAILED","name":"Failed","payloadSchema":[{"name":"error","type":"string"}]},{"key":"FIX_APPLIED","name":"Fix Applied"},{"key":"RESET","name":"Reset"},{"key":"FIX_SUCCEEDED","name":"Fix Succeeded"},{"key":"FIX_FAILED","name":"Fix Failed"}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["render-ui","main",{"children":[{"type":"stack","children":[{"children":[{"type":"icon","name":"wrench"},{"type":"typography","content":"Validation-Fix Loop","variant":"h2"}],"align":"center","direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","gap":"md","children":[{"variant":"body","content":"Enter the target to validate and auto-fix","type":"typography"},{"type":"form-section","submitEvent":"FIX","fields":["target"],"entity":"@entity","mode":"edit"}],"type":"stack"}]}],"gap":"lg","direction":"vertical"}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}]}]]},{"from":"idle","to":"validating","event":"FIX","effects":[["set","@entity.status","validating"],["set","@entity.fixAttempts",0],["set","@entity.validationErrors",""],["set","@entity.errorCount",0],["agent/invoke","validate-schema",{"target":"@entity.target"}],["render-ui","main",{"navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"direction":"vertical","children":[{"name":"shield-check","type":"icon"},{"type":"typography","content":"Validating...","variant":"h3"},{"type":"spinner"},{"direction":"horizontal","gap":"md","justify":"center","type":"stack","children":[{"type":"badge","label":"@entity.target"},{"type":"badge","label":"@entity.maxAttempts"}]}],"align":"center","type":"stack","gap":"lg"}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"validating","to":"succeeded","event":"VALIDATION_PASSED","effects":[["set","@entity.status","succeeded"],["emit","FIX_SUCCEEDED"],["render-ui","main",{"type":"dashboard-layout","children":[{"gap":"lg","type":"stack","children":[{"type":"stack","direction":"horizontal","gap":"sm","align":"center","justify":"between","children":[{"type":"stack","gap":"sm","align":"center","children":[{"name":"check-circle","type":"icon"},{"content":"Validation Passed","variant":"h2","type":"typography"}],"direction":"horizontal"},{"type":"button","variant":"ghost","label":"New Target","icon":"rotate-ccw","action":"RESET"}]},{"type":"divider"},{"cols":2,"type":"simple-grid","children":[{"type":"stat-display","value":"@entity.fixAttempts","label":"Fix Attempts","icon":"wrench"},{"icon":"check","value":"Passed","type":"stat-display","label":"Status"}]},{"children":[{"type":"stack","children":[{"type":"typography","content":"Target","variant":"caption"},{"content":"@entity.target","variant":"body","type":"typography"}],"gap":"sm","direction":"vertical"}],"type":"card"}],"direction":"vertical"}],"appName":"Schema Builder","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"href":"/fix","icon":"wrench","label":"Fix"}]}]]},{"from":"validating","to":"fixing","event":"VALIDATION_ERRORS","effects":[["set","@entity.validationErrors","@payload.errors"],["set","@entity.errorCount","@payload.count"],["set","@entity.fixAttempts",["+","@entity.fixAttempts",1]],["set","@entity.status","fixing"],["agent/generate",["str/concat","Target: ","@entity.target","\\n\\nValidation errors:\\n","@payload.errors","\\n\\nGenerate a fix that resolves these errors. Return only the fix content."]],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"direction":"vertical","gap":"lg","children":[{"align":"center","type":"stack","gap":"sm","direction":"horizontal","justify":"between","children":[{"align":"center","children":[{"name":"cpu","type":"icon"},{"content":"Generating fix...","type":"typography","variant":"h2"}],"gap":"sm","direction":"horizontal","type":"stack"},{"label":"@entity.fixAttempts","type":"badge"}]},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","gap":"sm","children":[{"content":"Validation Errors","variant":"caption","type":"typography"},{"type":"alert","variant":"error","message":"@entity.validationErrors"}],"type":"stack"}]},{"type":"spinner"}],"type":"stack"}],"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"validating","to":"failed","event":"EXCEEDED_ATTEMPTS","effects":[["set","@entity.status","failed"],["set","@entity.error","@payload.error"],["emit","FIX_FAILED"],["render-ui","main",{"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}],"appName":"Schema Builder","type":"dashboard-layout","children":[{"type":"stack","align":"center","direction":"vertical","gap":"lg","children":[{"type":"icon","name":"x-circle"},{"content":"Fix Loop Failed","variant":"h2","type":"typography"},{"type":"alert","variant":"error","message":"@entity.error"},{"cols":2,"type":"simple-grid","children":[{"type":"stat-display","label":"Attempts Used","value":"@entity.fixAttempts","icon":"wrench"},{"label":"Remaining Errors","icon":"alert-triangle","value":"@entity.errorCount","type":"stat-display"}]},{"type":"card","children":[{"direction":"vertical","type":"stack","children":[{"type":"typography","content":"Last Validation Errors","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.validationErrors"}],"gap":"sm"}]},{"type":"button","label":"Retry","action":"RESET","icon":"rotate-ccw","variant":"primary"}]}]}]]},{"from":"fixing","to":"applying","event":"FIX_GENERATED","effects":[["set","@entity.currentFix","@payload.fix"],["set","@entity.status","applying"],["agent/invoke","apply-fix",{"fix":"@payload.fix","target":"@entity.target"}],["render-ui","main",{"children":[{"children":[{"name":"tool","type":"icon"},{"type":"typography","variant":"h3","content":"Applying fix..."},{"type":"spinner"},{"type":"card","children":[{"children":[{"type":"typography","variant":"caption","content":"Proposed Fix"},{"type":"typography","variant":"body","content":"@entity.currentFix"}],"gap":"sm","direction":"vertical","type":"stack"}]}],"type":"stack","direction":"vertical","align":"center","gap":"lg"}],"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"fixing","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["emit","FIX_FAILED"],["render-ui","main",{"navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"type":"stack","gap":"lg","align":"center","direction":"vertical","children":[{"type":"icon","name":"x-circle"},{"type":"typography","content":"Fix Loop Failed","variant":"h2"},{"message":"@entity.error","variant":"error","type":"alert"},{"type":"simple-grid","cols":2,"children":[{"type":"stat-display","icon":"wrench","value":"@entity.fixAttempts","label":"Attempts Used"},{"label":"Remaining Errors","type":"stat-display","value":"@entity.errorCount","icon":"alert-triangle"}]},{"children":[{"children":[{"variant":"caption","type":"typography","content":"Last Validation Errors"},{"type":"typography","content":"@entity.validationErrors","variant":"body"}],"gap":"sm","direction":"vertical","type":"stack"}],"type":"card"},{"action":"RESET","label":"Retry","variant":"primary","icon":"rotate-ccw","type":"button"}]}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"applying","to":"validating","event":"FIX_APPLIED","effects":[["set","@entity.status","validating"],["agent/invoke","validate-schema",{"target":"@entity.target"}],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"name":"shield-check","type":"icon"},{"type":"typography","variant":"h3","content":"Validating..."},{"type":"spinner"},{"justify":"center","gap":"md","type":"stack","children":[{"label":"@entity.target","type":"badge"},{"type":"badge","label":"@entity.maxAttempts"}],"direction":"horizontal"}],"align":"center"}]}]]},{"from":"applying","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["emit","FIX_FAILED"],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","children":[{"children":[{"name":"x-circle","type":"icon"},{"variant":"h2","type":"typography","content":"Fix Loop Failed"},{"variant":"error","message":"@entity.error","type":"alert"},{"cols":2,"children":[{"type":"stat-display","label":"Attempts Used","icon":"wrench","value":"@entity.fixAttempts"},{"type":"stat-display","label":"Remaining Errors","value":"@entity.errorCount","icon":"alert-triangle"}],"type":"simple-grid"},{"children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Last Validation Errors"},{"content":"@entity.validationErrors","type":"typography","variant":"body"}]}],"type":"card"},{"variant":"primary","action":"RESET","icon":"rotate-ccw","type":"button","label":"Retry"}],"direction":"vertical","align":"center","type":"stack","gap":"lg"}],"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}]}]]},{"from":"succeeded","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.target",""],["set","@entity.validationErrors",""],["set","@entity.currentFix",""],["set","@entity.fixAttempts",0],["set","@entity.errorCount",0],["set","@entity.error",""],["render-ui","main",{"appName":"Schema Builder","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","icon":"hammer","label":"Build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"type":"stack","gap":"sm","align":"center","children":[{"name":"wrench","type":"icon"},{"variant":"h2","content":"Validation-Fix Loop","type":"typography"}],"direction":"horizontal"},{"type":"divider"},{"type":"card","children":[{"gap":"md","type":"stack","direction":"vertical","children":[{"variant":"body","type":"typography","content":"Enter the target to validate and auto-fix"},{"type":"form-section","entity":"@entity","mode":"edit","submitEvent":"FIX","fields":["target"]}]}]}]}],"type":"dashboard-layout"}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.target",""],["set","@entity.validationErrors",""],["set","@entity.currentFix",""],["set","@entity.fixAttempts",0],["set","@entity.errorCount",0],["set","@entity.error",""],["render-ui","main",{"appName":"Schema Builder","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"wrench"},{"type":"typography","variant":"h2","content":"Validation-Fix Loop"}],"direction":"horizontal"},{"type":"divider"},{"children":[{"type":"stack","direction":"vertical","gap":"md","children":[{"content":"Enter the target to validate and auto-fix","type":"typography","variant":"body"},{"entity":"@entity","submitEvent":"FIX","type":"form-section","fields":["target"],"mode":"edit"}]}],"type":"card"}]}],"navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"FixLoopStepProgress","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"RESET"},{"event":"BuildFixLoaded","description":"Fired when BuildFix finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"event":"BuildFixLoadFailed","description":"Fired when BuildFix fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"FixLoop"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"in_progress"},{"name":"completed"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"RESET","name":"Reset"},{"key":"ADVANCE","name":"Advance"},{"key":"COMPLETE","name":"Complete"},{"key":"FAIL","name":"Fail"},{"key":"BuildFixLoaded","name":"BuildFix loaded","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"key":"BuildFixLoadFailed","name":"BuildFix load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","BuildFix",{"emit":{"failure":"BuildFixLoadFailed","success":"BuildFixLoaded"}}],["render-ui","main",{"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"href":"/build","label":"Build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"type":"dashboard-layout","appName":"Schema Builder","children":[{"children":[{"direction":"horizontal","align":"center","gap":"sm","children":[{"type":"icon","name":"list-ordered"},{"variant":"h2","type":"typography","content":"BuildFix"},{"variant":"default","label":"Idle","type":"badge"}],"type":"stack"},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"id":"0","title":"Validate"},{"id":"1","title":"Analyze"},{"title":"Fix","id":"2"},{"title":"Re-validate","id":"3"}]},{"icon":"play","type":"button","label":"Start","action":"START","variant":"primary"}],"gap":"lg","type":"stack","direction":"vertical"}]}]]},{"from":"idle","to":"in_progress","event":"START","effects":[["set","@entity.status","in_progress"],["set","@entity.currentStep",0],["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"gap":"lg","type":"stack","children":[{"children":[{"type":"icon","name":"loader"},{"type":"typography","variant":"h2","content":"BuildFix"},{"type":"badge","variant":"warning","label":"In Progress"}],"gap":"sm","align":"center","direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"wizard-progress","steps":[{"id":"0","title":"Validate"},{"id":"1","title":"Analyze"},{"id":"2","title":"Fix"},{"id":"3","title":"Re-validate"}],"currentStep":"@entity.currentStep"},{"align":"center","children":[{"type":"stat-display","label":"Current Step","value":"@entity.currentStep"},{"label":"Total Steps","type":"stat-display","value":"@entity.totalSteps"}],"type":"stack","direction":"horizontal","gap":"sm"},{"gap":"sm","direction":"horizontal","children":[{"label":"Advance","icon":"chevron-right","action":"ADVANCE","type":"button","variant":"primary"},{"icon":"rotate-ccw","type":"button","action":"RESET","label":"Reset","variant":"ghost"}],"type":"stack"}],"direction":"vertical"}],"appName":"Schema Builder"}]]},{"from":"idle","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"type":"dashboard-layout","appName":"Schema Builder","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"type":"stack","direction":"horizontal","children":[{"name":"list-ordered","type":"icon"},{"type":"typography","variant":"h2","content":"BuildFix"},{"type":"badge","variant":"default","label":"Idle"}],"align":"center","gap":"sm"},{"type":"divider"},{"steps":[{"id":"0","title":"Validate"},{"title":"Analyze","id":"1"},{"id":"2","title":"Fix"},{"title":"Re-validate","id":"3"}],"currentStep":"@entity.currentStep","type":"wizard-progress"},{"variant":"primary","action":"START","icon":"play","type":"button","label":"Start"}]}]}]]},{"from":"in_progress","to":"in_progress","event":"ADVANCE","guard":["<","@entity.currentStep","@entity.totalSteps"],"effects":[["set","@entity.currentStep",["+","@entity.currentStep",1]],["render-ui","main",{"children":[{"type":"stack","children":[{"align":"center","children":[{"name":"loader","type":"icon"},{"variant":"h2","type":"typography","content":"BuildFix"},{"type":"badge","label":"In Progress","variant":"warning"}],"direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"steps":[{"id":"0","title":"Validate"},{"title":"Analyze","id":"1"},{"id":"2","title":"Fix"},{"id":"3","title":"Re-validate"}],"currentStep":"@entity.currentStep","type":"wizard-progress"},{"type":"stack","gap":"sm","direction":"horizontal","children":[{"value":"@entity.currentStep","type":"stat-display","label":"Current Step"},{"type":"stat-display","label":"Total Steps","value":"@entity.totalSteps"}],"align":"center"},{"type":"stack","gap":"sm","direction":"horizontal","children":[{"icon":"chevron-right","action":"ADVANCE","label":"Advance","variant":"primary","type":"button"},{"action":"RESET","icon":"rotate-ccw","type":"button","label":"Reset","variant":"ghost"}]}],"direction":"vertical","gap":"lg"}],"type":"dashboard-layout","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"appName":"Schema Builder"}]]},{"from":"in_progress","to":"completed","event":"COMPLETE","effects":[["set","@entity.status","completed"],["set","@entity.currentStep","@entity.totalSteps"],["render-ui","main",{"appName":"Schema Builder","children":[{"gap":"lg","type":"stack","children":[{"direction":"horizontal","type":"stack","children":[{"type":"icon","name":"check-circle"},{"type":"typography","content":"BuildFix","variant":"h2"},{"label":"Completed","type":"badge","variant":"success"}],"align":"center","gap":"sm"},{"type":"divider"},{"currentStep":"@entity.totalSteps","type":"wizard-progress","steps":[{"id":"0","title":"Validate"},{"title":"Analyze","id":"1"},{"id":"2","title":"Fix"},{"id":"3","title":"Re-validate"}]},{"type":"alert","variant":"success","message":"All steps completed successfully."},{"variant":"ghost","type":"button","label":"Reset","action":"RESET","icon":"rotate-ccw"}],"direction":"vertical"}],"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"in_progress","to":"failed","event":"FAIL","effects":[["set","@entity.status","failed"],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"type":"stack","direction":"vertical","children":[{"direction":"horizontal","align":"center","gap":"sm","children":[{"name":"x-circle","type":"icon"},{"content":"BuildFix","type":"typography","variant":"h2"},{"variant":"danger","type":"badge","label":"Failed"}],"type":"stack"},{"type":"divider"},{"steps":[{"title":"Validate","id":"0"},{"title":"Analyze","id":"1"},{"id":"2","title":"Fix"},{"title":"Re-validate","id":"3"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"type":"alert","message":"Pipeline failed at the current step.","variant":"error"},{"direction":"horizontal","gap":"sm","children":[{"type":"stat-display","label":"Failed At Step","value":"@entity.currentStep"}],"type":"stack"},{"label":"Reset","action":"RESET","icon":"rotate-ccw","variant":"ghost","type":"button"}],"gap":"lg"}],"navItems":[{"label":"Plan","icon":"clipboard-list","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"in_progress","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"gap":"sm","children":[{"name":"list-ordered","type":"icon"},{"variant":"h2","type":"typography","content":"BuildFix"},{"variant":"default","type":"badge","label":"Idle"}],"direction":"horizontal","type":"stack","align":"center"},{"type":"divider"},{"currentStep":"@entity.currentStep","type":"wizard-progress","steps":[{"id":"0","title":"Validate"},{"title":"Analyze","id":"1"},{"id":"2","title":"Fix"},{"id":"3","title":"Re-validate"}]},{"action":"START","icon":"play","label":"Start","variant":"primary","type":"button"}]}],"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","href":"/fix","icon":"wrench"}]}]]},{"from":"completed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"children":[{"type":"stack","children":[{"type":"stack","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"list-ordered"},{"content":"BuildFix","variant":"h2","type":"typography"},{"variant":"default","type":"badge","label":"Idle"}],"align":"center"},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"title":"Validate","id":"0"},{"title":"Analyze","id":"1"},{"title":"Fix","id":"2"},{"id":"3","title":"Re-validate"}]},{"type":"button","label":"Start","action":"START","variant":"primary","icon":"play"}],"direction":"vertical","gap":"lg"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","icon":"hammer","href":"/build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"type":"dashboard-layout","appName":"Schema Builder"}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","children":[{"children":[{"type":"stack","children":[{"name":"list-ordered","type":"icon"},{"variant":"h2","content":"BuildFix","type":"typography"},{"type":"badge","label":"Idle","variant":"default"}],"direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"steps":[{"id":"0","title":"Validate"},{"id":"1","title":"Analyze"},{"title":"Fix","id":"2"},{"title":"Re-validate","id":"3"}],"type":"wizard-progress","currentStep":"@entity.currentStep"},{"type":"button","variant":"primary","label":"Start","action":"START","icon":"play"}],"gap":"lg","type":"stack","direction":"vertical"}],"navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"icon":"wrench","label":"Fix","href":"/fix"}]}]]}]},"scope":"collection"},{"name":"FixLoopErrorsBrowse","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"BuildFixLoaded","description":"Fired when BuildFix finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"event":"BuildFixLoadFailed","description":"Fired when BuildFix fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"BuildFixLoaded","name":"BuildFix loaded","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"key":"BuildFixLoadFailed","name":"BuildFix load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"align":"center","className":"py-12","direction":"vertical","type":"stack","children":[{"type":"spinner"},{"variant":"caption","type":"typography","color":"muted","content":"Loading…"}],"gap":"md"}]]},{"from":"browsing","to":"browsing","event":"BuildFixLoaded","effects":[["render-ui","main",{"children":[{"type":"stack","direction":"vertical","gap":"lg","className":"max-w-5xl mx-auto w-full","children":[{"align":"center","gap":"md","justify":"between","type":"stack","direction":"horizontal","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","type":"typography","content":"Validation Errors"}],"gap":"sm","type":"stack","direction":"horizontal","align":"center"}]},{"type":"divider"},{"entity":"@payload.data","fields":[{"icon":"alert-triangle","name":"target","label":"Target","variant":"h4"},{"label":"Error Count","variant":"badge","name":"errorCount"},{"variant":"caption","label":"Status","name":"status"}],"type":"data-grid"},{"action":"INIT","icon":"plus","type":"floating-action-button"}]}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"icon":"hammer","href":"/build","label":"Build"},{"label":"Fix","icon":"wrench","href":"/fix"}]}]]},{"from":"browsing","to":"browsing","event":"BuildFixLoadFailed","effects":[["render-ui","main",{"align":"center","className":"py-12","children":[{"name":"alert-triangle","type":"icon","color":"destructive"},{"type":"typography","variant":"h3","content":"Failed to load buildfix"},{"content":"@payload.error","type":"typography","color":"muted","variant":"body"},{"type":"button","action":"INIT","variant":"primary","icon":"rotate-ccw","label":"Retry"}],"type":"stack","gap":"md","direction":"vertical"}]]}]},"scope":"collection"},{"name":"FixLoopValidateCall","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"SAVE","scope":"internal"},{"event":"INVOKED","scope":"internal"},{"event":"INVOKE"},{"event":"BuildFixLoadFailed","description":"Fired when BuildFix fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixLoaded","description":"Fired when BuildFix finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"event":"BuildFixSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"INVOKE","name":"Invoke"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"INVOKED","name":"Invoked"},{"key":"BuildFixLoadFailed","name":"BuildFix load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixLoaded","name":"BuildFix loaded","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"key":"BuildFixSaveFailed","name":"BuildFix save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixSaved","name":"BuildFix saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"label":"Fix","icon":"wrench","href":"/fix"}],"type":"dashboard-layout","appName":"Schema Builder","children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"justify":"between","children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"type":"icon","name":"wrench"},{"variant":"h2","type":"typography","content":"Invoke Tool"}]},{"icon":"wrench","type":"button","variant":"primary","action":"INVOKE","label":"Open"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","icon":"wrench","type":"empty-state","title":"Nothing open"}]}]}]]},{"from":"closed","to":"open","event":"INVOKE","effects":[["render-ui","modal",{"children":[{"type":"stack","direction":"horizontal","children":[{"name":"wrench","type":"icon"},{"variant":"h3","type":"typography","content":"Invoke Tool"}],"gap":"sm"},{"type":"divider"},{"fields":["toolName","args"],"cancelEvent":"CLOSE","type":"form-section","submitEvent":"SAVE","mode":"create"}],"gap":"md","type":"stack","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildFix",{"emit":{"failure":"BuildFixLoadFailed","success":"BuildFixLoaded"}}],["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","children":[{"gap":"md","direction":"horizontal","justify":"between","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"wrench"},{"variant":"h2","type":"typography","content":"Invoke Tool"}]},{"action":"INVOKE","type":"button","label":"Open","variant":"primary","icon":"wrench"}],"type":"stack"},{"type":"divider"},{"icon":"wrench","type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay."}],"type":"stack"}],"appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","icon":"hammer","href":"/build"},{"icon":"wrench","label":"Fix","href":"/fix"}],"type":"dashboard-layout"}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildFix","@payload.data",{"emit":{"failure":"BuildFixSaveFailed","success":"BuildFixSaved"}}],["render-ui","modal",null],["emit","INVOKED"],["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","icon":"hammer","href":"/build"},{"label":"Fix","icon":"wrench","href":"/fix"}],"children":[{"direction":"vertical","children":[{"direction":"horizontal","justify":"between","type":"stack","children":[{"direction":"horizontal","children":[{"type":"icon","name":"wrench"},{"content":"Invoke Tool","type":"typography","variant":"h2"}],"type":"stack","gap":"md"},{"label":"Open","action":"INVOKE","variant":"primary","icon":"wrench","type":"button"}],"gap":"md"},{"type":"divider"},{"icon":"wrench","title":"Nothing open","type":"empty-state","description":"Click Open to view details in a modal overlay."}],"type":"stack","gap":"lg"}],"appName":"Schema Builder"}]]}]},"scope":"collection"},{"name":"FixLoopFixCall","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"SAVE","scope":"internal"},{"event":"INVOKED","scope":"internal"},{"event":"INVOKE"},{"event":"BuildFixLoadFailed","description":"Fired when BuildFix fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixLoaded","description":"Fired when BuildFix finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"event":"BuildFixSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"INVOKE","name":"Invoke"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"INVOKED","name":"Invoked"},{"key":"BuildFixLoadFailed","name":"BuildFix load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixLoaded","name":"BuildFix loaded","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"key":"BuildFixSaveFailed","name":"BuildFix save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixSaved","name":"BuildFix saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","children":[{"children":[{"type":"stack","justify":"between","gap":"md","children":[{"children":[{"name":"wrench","type":"icon"},{"type":"typography","variant":"h2","content":"Invoke Tool"}],"type":"stack","gap":"md","direction":"horizontal"},{"icon":"wrench","variant":"primary","type":"button","action":"INVOKE","label":"Open"}],"direction":"horizontal"},{"type":"divider"},{"type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay.","icon":"wrench"}],"direction":"vertical","type":"stack","gap":"lg"}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"href":"/build","label":"Build","icon":"hammer"},{"label":"Fix","icon":"wrench","href":"/fix"}]}]]},{"from":"closed","to":"open","event":"INVOKE","effects":[["render-ui","modal",{"children":[{"children":[{"type":"icon","name":"wrench"},{"content":"Invoke Tool","variant":"h3","type":"typography"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"submitEvent":"SAVE","fields":["toolName","args"],"type":"form-section","cancelEvent":"CLOSE","mode":"create"}],"gap":"md","type":"stack","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"justify":"between","children":[{"direction":"horizontal","children":[{"type":"icon","name":"wrench"},{"type":"typography","content":"Invoke Tool","variant":"h2"}],"type":"stack","gap":"md"},{"variant":"primary","label":"Open","action":"INVOKE","type":"button","icon":"wrench"}],"direction":"horizontal","gap":"md","type":"stack"},{"type":"divider"},{"title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state","icon":"wrench"}]}],"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","icon":"hammer","href":"/build"},{"href":"/fix","icon":"wrench","label":"Fix"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildFix","@payload.data",{"emit":{"success":"BuildFixSaved","failure":"BuildFixSaveFailed"}}],["render-ui","modal",null],["emit","INVOKED"],["fetch","BuildFix",{"emit":{"failure":"BuildFixLoadFailed","success":"BuildFixLoaded"}}],["render-ui","main",{"children":[{"gap":"lg","type":"stack","children":[{"type":"stack","direction":"horizontal","children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"icon","name":"wrench"},{"content":"Invoke Tool","variant":"h2","type":"typography"}]},{"label":"Open","type":"button","variant":"primary","icon":"wrench","action":"INVOKE"}],"justify":"between","gap":"md"},{"type":"divider"},{"icon":"wrench","type":"empty-state","description":"Click Open to view details in a modal overlay.","title":"Nothing open"}],"direction":"vertical"}],"type":"dashboard-layout","appName":"Schema Builder","navItems":[{"icon":"clipboard-list","label":"Plan","href":"/plan"},{"label":"Build","href":"/build","icon":"hammer"},{"icon":"wrench","label":"Fix","href":"/fix"}]}]]}]},"scope":"collection"},{"name":"FixLoopCompletionFlow","category":"interaction","linkedEntity":"BuildFix","emits":[{"event":"SAVE","scope":"internal"},{"event":"GENERATED","scope":"internal"},{"event":"BuildFixLoadFailed","description":"Fired when BuildFix fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixLoaded","description":"Fired when BuildFix finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"event":"BuildFixSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildFixSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"GENERATE","name":"Generate"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"GENERATED","name":"Generated"},{"key":"BuildFixLoadFailed","name":"BuildFix load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixLoaded","name":"BuildFix loaded","payloadSchema":[{"name":"data","type":"[BuildFix]"}]},{"key":"BuildFixSaveFailed","name":"BuildFix save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildFixSaved","name":"BuildFix saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildFix",{"emit":{"success":"BuildFixLoaded","failure":"BuildFixLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"direction":"vertical","children":[{"children":[{"direction":"horizontal","gap":"md","children":[{"type":"icon","name":"sparkles"},{"variant":"h2","type":"typography","content":"BuildFix"}],"type":"stack"},{"icon":"sparkles","type":"button","label":"Open","action":"GENERATE","variant":"primary"}],"gap":"md","type":"stack","justify":"between","direction":"horizontal"},{"type":"divider"},{"icon":"sparkles","type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay."}],"gap":"lg","type":"stack"}],"navItems":[{"label":"Plan","href":"/plan","icon":"clipboard-list"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}]}]]},{"from":"closed","to":"open","event":"GENERATE","effects":[["render-ui","modal",{"direction":"vertical","children":[{"gap":"sm","children":[{"type":"icon","name":"sparkles"},{"type":"typography","variant":"h3","content":"BuildFix"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"badge","label":"@entity.provider"},{"label":"@entity.model","type":"badge"}]},{"cancelEvent":"CLOSE","submitEvent":"SAVE","type":"form-section","mode":"create","fields":["prompt"]}],"type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","BuildFix",{"emit":{"failure":"BuildFixLoadFailed","success":"BuildFixLoaded"}}],["render-ui","main",{"appName":"Schema Builder","navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"href":"/build","icon":"hammer","label":"Build"},{"icon":"wrench","href":"/fix","label":"Fix"}],"type":"dashboard-layout","children":[{"direction":"vertical","gap":"lg","children":[{"gap":"md","children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"type":"icon","name":"sparkles"},{"variant":"h2","type":"typography","content":"BuildFix"}]},{"type":"button","action":"GENERATE","variant":"primary","icon":"sparkles","label":"Open"}],"direction":"horizontal","justify":"between","type":"stack"},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","type":"empty-state","icon":"sparkles","title":"Nothing open"}],"type":"stack"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","BuildFix","@payload.data",{"emit":{"failure":"BuildFixSaveFailed","success":"BuildFixSaved"}}],["render-ui","modal",null],["emit","GENERATED"],["fetch","BuildFix",{"emit":{"failure":"BuildFixLoadFailed","success":"BuildFixLoaded"}}],["render-ui","main",{"appName":"Schema Builder","navItems":[{"href":"/plan","icon":"clipboard-list","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","icon":"wrench","label":"Fix"}],"children":[{"gap":"lg","type":"stack","children":[{"type":"stack","direction":"horizontal","children":[{"children":[{"type":"icon","name":"sparkles"},{"variant":"h2","type":"typography","content":"BuildFix"}],"direction":"horizontal","type":"stack","gap":"md"},{"icon":"sparkles","type":"button","label":"Open","action":"GENERATE","variant":"primary"}],"gap":"md","justify":"between"},{"type":"divider"},{"icon":"sparkles","title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state"}],"direction":"vertical"}],"type":"dashboard-layout"}]]}]},"scope":"collection"}],"pages":[{"name":"Fix","path":"/fix","traits":[{"ref":"FixLoop"}]}]},{"name":"BuildSessionOrbital","entity":{"name":"BuildSession","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"sessionId","type":"string"},{"name":"parentId","type":"string"},{"name":"label","type":"string"},{"name":"status","type":"string","default":"idle"},{"name":"createdAt","type":"string"}]},"traits":[{"name":"BuildSessionManager","category":"interaction","linkedEntity":"BuildSession","emits":[{"event":"FORK"},{"event":"LABEL"},{"event":"END"},{"event":"BuildSessionLoaded","description":"Fired when BuildSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"event":"BuildSessionLoadFailed","description":"Fired when BuildSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"FORKED","triggers":"INIT","source":{"kind":"trait","trait":"BuildSessionAgent"}},{"event":"LABELED","triggers":"INIT","source":{"kind":"trait","trait":"BuildSessionLabel"}},{"event":"ENDED","triggers":"INIT","source":{"kind":"trait","trait":"BuildSessionAgent"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"BuildSessionLoaded","name":"BuildSession loaded","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"key":"BuildSessionLoadFailed","name":"BuildSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"FORK","name":"Fork"},{"key":"LABEL","name":"Label"},{"key":"END","name":"End"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","BuildSession",{"emit":{"failure":"BuildSessionLoadFailed","success":"BuildSessionLoaded"}}],["render-ui","main",{"type":"stack","direction":"vertical","gap":"md","align":"center","className":"py-12","children":[{"type":"spinner"},{"content":"Loading…","type":"typography","color":"muted","variant":"caption"}]}]]},{"from":"browsing","to":"browsing","event":"BuildSessionLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"label":"Build","href":"/build","icon":"hammer"},{"href":"/fix","label":"Fix","icon":"wrench"}],"appName":"Schema Builder","children":[{"type":"stack","children":[{"direction":"horizontal","align":"center","gap":"md","children":[{"type":"stack","direction":"horizontal","children":[{"name":"terminal","type":"icon"},{"variant":"h2","content":"BuildSession Manager","type":"typography"}],"align":"center","gap":"sm"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"action":"FORK","type":"button","label":"Fork","variant":"secondary","icon":"git-branch"},{"label":"Label","variant":"secondary","type":"button","icon":"tag","action":"LABEL"},{"variant":"ghost","label":"End","action":"END","icon":"square","type":"button"}]}],"type":"stack","justify":"between"},{"type":"divider"},{"type":"data-grid","entity":"@payload.data","fields":[{"icon":"terminal","variant":"h4","name":"sessionId","label":"Session ID"},{"name":"status","variant":"badge","label":"Status"},{"label":"Label","variant":"caption","name":"label"}]}],"direction":"vertical","gap":"lg","className":"max-w-5xl mx-auto w-full"}]}]]},{"from":"browsing","to":"browsing","event":"BuildSessionLoadFailed","effects":[["render-ui","main",{"children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"variant":"h3","type":"typography","content":"Failed to load buildsession"},{"type":"typography","content":"@payload.error","variant":"body","color":"muted"},{"label":"Retry","action":"INIT","variant":"primary","icon":"rotate-ccw","type":"button"}],"gap":"md","type":"stack","direction":"vertical","align":"center","className":"py-12"}]]}]},"scope":"collection"},{"name":"BuildSessionLabel","category":"interaction","linkedEntity":"BuildSession","emits":[{"event":"LABELED"},{"event":"BuildSessionLoadFailed","description":"Fired when BuildSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildSessionLoaded","description":"Fired when BuildSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"event":"BuildSessionUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildSessionUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"LABEL","triggers":"LABEL","source":{"kind":"trait","trait":"BuildSessionManager"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LABEL","name":"Label"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LABELED","name":"Labeled"},{"key":"BuildSessionLoadFailed","name":"BuildSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildSessionLoaded","name":"BuildSession loaded","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"key":"BuildSessionUpdateFailed","name":"BuildSession update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildSessionUpdated","name":"BuildSession updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","BuildSession",{"emit":{"failure":"BuildSessionLoadFailed","success":"BuildSessionLoaded"}}]]},{"from":"closed","to":"open","event":"LABEL","effects":[["fetch","BuildSession",{"emit":{"failure":"BuildSessionLoadFailed","success":"BuildSessionLoaded"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"children":[{"name":"tag","type":"icon"},{"type":"typography","variant":"h3","content":"Label Session"}],"direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Session:"},{"label":"@entity.sessionId","type":"badge"}]},{"submitEvent":"SAVE","cancelEvent":"CLOSE","entity":"@entity","mode":"edit","fields":["label"],"type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","BuildSession","@payload.data",{"emit":{"success":"BuildSessionUpdated","failure":"BuildSessionUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","LABELED"]]}]},"scope":"collection"},{"name":"BuildSessionAgent","category":"interaction","linkedEntity":"BuildSession","emits":[{"event":"ENDED","scope":"external","payloadSchema":[{"name":"sessionId","type":"string"}]},{"event":"FORKED","scope":"external","payloadSchema":[{"name":"sessionId","type":"string"}]},{"event":"BuildSessionLoaded","description":"Fired when BuildSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"event":"BuildSessionLoadFailed","description":"Fired when BuildSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"ENDED","triggers":"INIT","source":{"kind":"trait","trait":"BuildSessionAgent"}},{"event":"FORKED","triggers":"INIT","source":{"kind":"trait","trait":"BuildSessionAgent"}},{"event":"FORK","triggers":"FORK","source":{"kind":"trait","trait":"BuildSessionManager"}},{"event":"END","triggers":"END","source":{"kind":"trait","trait":"BuildSessionManager"}}],"stateMachine":{"states":[{"name":"active","isInitial":true},{"name":"forked"},{"name":"ended"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"FORK","name":"Fork"},{"key":"DO_LABEL","name":"Do Label","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LABELED","name":"Labeled"},{"key":"END","name":"End"},{"key":"ENDED","name":"Ended"},{"key":"FORKED","name":"Forked"},{"key":"BuildSessionLoaded","name":"BuildSession loaded","payloadSchema":[{"name":"data","type":"[BuildSession]"}]},{"key":"BuildSessionLoadFailed","name":"BuildSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"active","to":"active","event":"INIT","effects":[["fetch","BuildSession",{"emit":{"success":"BuildSessionLoaded","failure":"BuildSessionLoadFailed"}}],["agent/session-id"],["set","@entity.createdAt","@now"],["render-ui","main",{"appName":"Schema Builder","type":"dashboard-layout","navItems":[{"href":"/plan","label":"Plan","icon":"clipboard-list"},{"icon":"hammer","label":"Build","href":"/build"},{"label":"Fix","href":"/fix","icon":"wrench"}],"children":[{"description":"Session is ready","title":"Session","type":"empty-state","icon":"git-branch"}]}]]},{"from":"active","to":"forked","event":"FORK","effects":[["set","@entity.parentId","@entity.sessionId"],["agent/fork"],["agent/session-id"],["persist","create","BuildSession",{"sessionId":"@entity.sessionId","status":"forked","parentId":"@entity.parentId","createdAt":"@now"},{"emit":{"success":"FORKED"}}]]},{"from":"active","to":"active","event":"DO_LABEL","effects":[["agent/label","@payload.data.label"],["set","@entity.label","@payload.data.label"]]},{"from":"active","to":"active","event":"LABELED","effects":[["agent/label","@entity.label"],["fetch","BuildSession",{"emit":{"failure":"BuildSessionLoadFailed","success":"BuildSessionLoaded"}}]]},{"from":"active","to":"ended","event":"END","effects":[["set","@entity.status","ended"],["emit","ENDED"]]},{"from":"forked","to":"forked","event":"FORK","effects":[["set","@entity.parentId","@entity.sessionId"],["agent/fork"],["agent/session-id"],["persist","create","BuildSession",{"status":"forked","createdAt":"@now","parentId":"@entity.parentId","sessionId":"@entity.sessionId"},{"emit":{"success":"FORKED"}}]]},{"from":"forked","to":"forked","event":"DO_LABEL","effects":[["agent/label","@payload.data.label"],["set","@entity.label","@payload.data.label"]]},{"from":"forked","to":"forked","event":"LABELED","effects":[["agent/label","@entity.label"],["fetch","BuildSession",{"emit":{"success":"BuildSessionLoaded","failure":"BuildSessionLoadFailed"}}]]},{"from":"forked","to":"ended","event":"END","effects":[["set","@entity.status","ended"],["emit","ENDED"]]},{"from":"ended","to":"active","event":"INIT","effects":[["fetch","BuildSession",{"emit":{"failure":"BuildSessionLoadFailed","success":"BuildSessionLoaded"}}],["agent/session-id"],["set","@entity.createdAt","@now"],["set","@entity.status","active"],["render-ui","main",{"type":"dashboard-layout","appName":"Schema Builder","children":[{"icon":"git-branch","description":"Session is ready","title":"Session","type":"empty-state"}],"navItems":[{"icon":"clipboard-list","href":"/plan","label":"Plan"},{"href":"/build","icon":"hammer","label":"Build"},{"href":"/fix","icon":"wrench","label":"Fix"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Session","path":"/session","traits":[{"ref":"BuildSessionManager"}]}]},{"name":"BuildTaskOrbital","uses":[{"from":"std/behaviors/std-tabs","as":"Tabs"}],"entity":{"name":"BuildTask","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"prompt","type":"string","default":""},{"name":"plan","type":"string"},{"name":"schema","type":"string"},{"name":"validationStatus","type":"string"},{"name":"buildPhase","type":"string"},{"name":"attempts","type":"number"},{"name":"sessionId","type":"string"},{"name":"error","type":"string","default":""}]},"traits":[{"ref":"Tabs.traits.TabContentTabs","name":"BuilderTabs","linkedEntity":"BuildTask"}],"pages":[{"name":"BuilderNav","path":"/builder/nav","traits":[{"ref":"BuilderTabs"}]}]},{"name":"BuildProgressOrbital","uses":[{"from":"std/behaviors/std-agent-step-progress","as":"AgentStepProgress"}],"entity":{"name":"BuildProgress","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"steps","type":"string","default":""},{"name":"currentStep","type":"number"},{"name":"totalSteps","type":"number"},{"name":"status","type":"string","default":"idle"}]},"traits":[{"ref":"AgentStepProgress.traits.AgentStepProgressProgress","name":"BuildStepProgress","linkedEntity":"BuildProgress"}],"pages":[{"name":"BuilderProgress","path":"/builder/progress","traits":[{"ref":"BuildStepProgress"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'BuildPlanOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-agent-step-progress',
+          'as': 'AgentStepProgress',
+        },
+        {
+          'from': 'std/behaviors/std-tabs',
+          'as': 'Tabs',
+        },
+      ],
+      entity: {
+        'name': 'BuildPlan',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'confidence',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'relevantMemories',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'input',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': 'circle',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'BuildPlanner',
+          'category': 'interaction',
+          'linkedEntity': 'BuildPlan',
+          'emits': [
+            {
+              'event': 'PLAN_READY',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PLAN_READY',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildPlanner',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'classifying',
+              },
+              {
+                'name': 'recalling',
+              },
+              {
+                'name': 'planning',
+              },
+              {
+                'name': 'ready',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PLAN',
+                'name': 'Plan',
+              },
+              {
+                'key': 'CLASSIFIED',
+                'name': 'Classified',
+                'payloadSchema': [
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIES_LOADED',
+                'name': 'Memories Loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'memories',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'count',
+                    'type': 'number',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PLAN_GENERATED',
+                'name': 'Plan Generated',
+                'payloadSchema': [
+                  {
+                    'name': 'steps',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'confidence',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'plan',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'PLAN_READY',
+                'name': 'Plan Ready',
+              },
+              {
+                'key': 'BuildPlanSaved',
+                'name': 'BuildPlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanSaveFailed',
+                'name': 'BuildPlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaved',
+                'name': 'Build loop saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaveFailed',
+                'name': 'Build loop save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaved',
+                'name': 'Build fix saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaveFailed',
+                'name': 'Build fix save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionUpdated',
+                'name': 'Build session updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionUpdateFailed',
+                'name': 'Build session update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'name': 'map',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Task Planner',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                      'content': 'Describe the task to plan',
+                                    },
+                                    {
+                                      'entity': '@entity',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'type': 'form-section',
+                                      'mode': 'edit',
+                                      'submitEvent': 'PLAN',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'vertical',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'classifying',
+                'event': 'PLAN',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'classifying',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Classify this task into exactly one category.\n',
+                      'Categories: ',
+                      'schema, component, trait, page, behavior',
+                      '\n',
+                      'Task: ',
+                      '@entity.task',
+                      '\n',
+                      'Return only the category name.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'tag',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Classifying task...',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'content': '@entity.task',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'classifying',
+                'to': 'recalling',
+                'event': 'CLASSIFIED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.category',
+                    '@payload.category',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'recalling',
+                  ],
+                  [
+                    'agent/recall',
+                    [
+                      'str/concat',
+                      '@entity.category',
+                      ' ',
+                      '@entity.task',
+                    ],
+                    5,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'name': 'brain',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Recalling relevant experience...',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'label': '@entity.category',
+                              'type': 'badge',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'classifying',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Planning Failed',
+                              'variant': 'h2',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': '@entity.error',
+                              'variant': 'error',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'variant': 'primary',
+                              'label': 'Try Again',
+                              'type': 'button',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'recalling',
+                'to': 'planning',
+                'event': 'MEMORIES_LOADED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.relevantMemories',
+                    '@payload.memories',
+                  ],
+                  [
+                    'set',
+                    '@entity.memoryCount',
+                    '@payload.count',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'planning',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\n',
+                      'Category: ',
+                      '@entity.category',
+                      '\n',
+                      'Relevant experience:\n',
+                      '@entity.relevantMemories',
+                      '\n\n',
+                      'Generate a numbered step-by-step execution plan. ',
+                      'Include a confidence score (0-100) for how likely this plan will succeed.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'cpu',
+                            },
+                            {
+                              'content': 'Generating plan...',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'type': 'stack',
+                              'justify': 'center',
+                              'children': [
+                                {
+                                  'type': 'badge',
+                                  'label': '@entity.category',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': '@entity.memoryCount',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'recalling',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Planning Failed',
+                              'variant': 'h2',
+                              'type': 'typography',
+                            },
+                            {
+                              'message': '@entity.error',
+                              'variant': 'error',
+                              'type': 'alert',
+                            },
+                            {
+                              'variant': 'primary',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'label': 'Try Again',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'ready',
+                'event': 'PLAN_GENERATED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.steps',
+                    '@payload.steps',
+                  ],
+                  [
+                    'set',
+                    '@entity.confidence',
+                    '@payload.confidence',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'ready',
+                  ],
+                  [
+                    'agent/memorize',
+                    [
+                      'str/concat',
+                      'Plan for ',
+                      '@entity.category',
+                      ' task: ',
+                      '@entity.task',
+                    ],
+                    'pattern-affinity',
+                  ],
+                  [
+                    'emit',
+                    'PLAN_READY',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'check-circle',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Plan Ready',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'New Plan',
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 3,
+                              'children': [
+                                {
+                                  'icon': 'tag',
+                                  'value': '@entity.category',
+                                  'type': 'stat-display',
+                                  'label': 'Category',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Confidence',
+                                  'value': '@entity.confidence',
+                                  'icon': 'target',
+                                },
+                                {
+                                  'label': 'Memories Used',
+                                  'icon': 'brain',
+                                  'type': 'stat-display',
+                                  'value': '@entity.memoryCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'content': 'Task',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                      'content': '@entity.task',
+                                    },
+                                    {
+                                      'type': 'divider',
+                                    },
+                                    {
+                                      'content': 'Execution Plan',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.steps',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Relevant Memories',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.relevantMemories',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Planning Failed',
+                              'variant': 'h2',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': '@entity.error',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'primary',
+                              'label': 'Try Again',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'align': 'center',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'ready',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.category',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.steps',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.confidence',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.relevantMemories',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.memoryCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'map',
+                                },
+                                {
+                                  'content': 'Task Planner',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': 'Describe the task to plan',
+                                    },
+                                    {
+                                      'type': 'form-section',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'entity': '@entity',
+                                      'mode': 'edit',
+                                      'submitEvent': 'PLAN',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerTaskInput',
+          'category': 'interaction',
+          'linkedEntity': 'BuildPlan',
+          'emits': [
+            {
+              'event': 'BuildPlanLoaded',
+              'description': 'Fired when BuildPlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildPlan]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanLoadFailed',
+              'description': 'Fired when BuildPlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NEW_TASK',
+                'name': 'New Task',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'PLAN',
+                'name': 'Plan',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanLoaded',
+                'name': 'BuildPlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildPlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanLoadFailed',
+                'name': 'BuildPlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'NEW_TASK',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'name': 'map',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'type': 'typography',
+                          'content': 'Describe the task to plan',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'PLAN',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'entity': '@entity',
+                          'fields': [
+                            'task',
+                          ],
+                          'mode': 'edit',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'PLAN',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerClassifierFlow',
+          'category': 'interaction',
+          'linkedEntity': 'BuildPlan',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'CLASSIFIED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'BuildPlanLoadFailed',
+              'description': 'Fired when BuildPlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanLoaded',
+              'description': 'Fired when BuildPlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildPlan]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CLASSIFY',
+                'name': 'Classify',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLASSIFIED',
+                'name': 'Classified',
+              },
+              {
+                'key': 'BuildPlanLoadFailed',
+                'name': 'BuildPlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanLoaded',
+                'name': 'BuildPlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildPlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanSaveFailed',
+                'name': 'BuildPlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanSaved',
+                'name': 'BuildPlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'failure': 'BuildPlanLoadFailed',
+                        'success': 'BuildPlanLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'tag',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'BuildPlan',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'icon': 'tag',
+                                  'action': 'CLASSIFY',
+                                  'label': 'Open',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                              'icon': 'tag',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CLASSIFY',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'tag',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'BuildPlan',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Categories:',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'type': 'badge',
+                              'label': 'schema',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'label': 'component',
+                              'type': 'badge',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'type': 'badge',
+                              'label': 'trait',
+                            },
+                            {
+                              'label': 'page',
+                              'type': 'badge',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'type': 'badge',
+                              'label': 'behavior',
+                            },
+                          ],
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'fields': [
+                            'input',
+                          ],
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'tag',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'BuildPlan',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'icon': 'tag',
+                                  'action': 'CLASSIFY',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'tag',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildPlan',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanSaved',
+                        'failure': 'BuildPlanSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'CLASSIFIED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'tag',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'BuildPlan',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'icon': 'tag',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'label': 'Open',
+                                  'action': 'CLASSIFY',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'tag',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerCompletionFlow',
+          'category': 'interaction',
+          'linkedEntity': 'BuildPlan',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'GENERATED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'BuildPlanLoadFailed',
+              'description': 'Fired when BuildPlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanLoaded',
+              'description': 'Fired when BuildPlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildPlan]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'GENERATE',
+                'name': 'Generate',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'GENERATED',
+                'name': 'Generated',
+              },
+              {
+                'key': 'BuildPlanLoadFailed',
+                'name': 'BuildPlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanLoaded',
+                'name': 'BuildPlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildPlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanSaveFailed',
+                'name': 'BuildPlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanSaved',
+                'name': 'BuildPlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.model',
+                    'claude-sonnet-4-20250514',
+                  ],
+                  [
+                    'set',
+                    '@entity.provider',
+                    'anthropic',
+                  ],
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'BuildPlan',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'action': 'GENERATE',
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'icon': 'sparkles',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                              'icon': 'sparkles',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'GENERATE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'sparkles',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'BuildPlan',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'badge',
+                              'label': '@entity.provider',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.model',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'fields': [
+                            'prompt',
+                          ],
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'BuildPlan',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'type': 'button',
+                                  'action': 'GENERATE',
+                                  'icon': 'sparkles',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildPlan',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanSaved',
+                        'failure': 'BuildPlanSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'GENERATED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'content': 'BuildPlan',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'icon': 'sparkles',
+                                  'action': 'GENERATE',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerMemoryLifecycle',
+          'category': 'interaction',
+          'linkedEntity': 'BuildPlan',
+          'emits': [
+            {
+              'event': 'BuildPlanLoaded',
+              'description': 'Fired when BuildPlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildPlan]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildPlanLoadFailed',
+              'description': 'Fired when BuildPlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'BuildPlanLoaded',
+                'name': 'BuildPlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildPlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildPlanLoadFailed',
+                'name': 'BuildPlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'BuildPlan',
+                  },
+                ],
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'BuildPlan',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'BuildPlan',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildPlan',
+                    {
+                      'emit': {
+                        'success': 'BuildPlanLoaded',
+                        'failure': 'BuildPlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                      ],
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildPlanLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'brain',
+                                    },
+                                    {
+                                      'content': 'BuildPlan Manager',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'fields': [
+                                {
+                                  'label': 'Content',
+                                  'variant': 'h4',
+                                  'name': 'content',
+                                  'icon': 'brain',
+                                },
+                                {
+                                  'name': 'category',
+                                  'variant': 'badge',
+                                  'label': 'Category',
+                                },
+                                {
+                                  'label': 'Strength',
+                                  'name': 'strength',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'itemActions': [
+                                {
+                                  'label': 'Pin',
+                                  'event': 'PIN',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Reinforce',
+                                  'event': 'REINFORCE',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Forget',
+                                  'variant': 'danger',
+                                  'event': 'FORGET',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildPlanLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'content': 'Failed to load buildplan',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'variant': 'body',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'PlanPage',
+          'path': '/plan',
+          'traits': [
+            {
+              'ref': 'BuildPlanner',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildLoopOrbital',
+      uses: [],
+      entity: {
+        'name': 'BuildLoop',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'plan',
+            'type': 'string',
+          },
+          {
+            'name': 'iterations',
+            'type': 'number',
+          },
+          {
+            'name': 'maxIterations',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'currentTool',
+            'type': 'string',
+          },
+          {
+            'name': 'lastToolResult',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+          },
+          {
+            'name': 'args',
+            'type': 'string',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'name': 'maxTokens',
+            'type': 'number',
+          },
+          {
+            'name': 'usage',
+            'type': 'number',
+          },
+          {
+            'name': 'current',
+            'type': 'number',
+          },
+          {
+            'name': 'max',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+          {
+            'name': 'lastCompactedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'SchemaBuilder',
+          'category': 'interaction',
+          'linkedEntity': 'BuildLoop',
+          'emits': [
+            {
+              'event': 'TOOL_LOOP_DONE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'schema',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'RESET',
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PLAN_READY',
+              'triggers': 'EXECUTE',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'BuildPlanOrbital',
+                'trait': 'BuildPlanner',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopStepProgress',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopContextMonitor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'planning',
+              },
+              {
+                'name': 'executing',
+              },
+              {
+                'name': 'checking',
+              },
+              {
+                'name': 'completed',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EXECUTE',
+                'name': 'Execute',
+              },
+              {
+                'key': 'PLAN_GENERATED',
+                'name': 'Plan Generated',
+                'payloadSchema': [
+                  {
+                    'name': 'plan',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TOOL_RESULT',
+                'name': 'Tool Result',
+                'payloadSchema': [
+                  {
+                    'name': 'output',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHECK_PASSED',
+                'name': 'Check Passed',
+                'payloadSchema': [
+                  {
+                    'name': 'result',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHECK_NEEDS_MORE',
+                'name': 'Check Needs More',
+                'payloadSchema': [
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MAX_ITERATIONS',
+                'name': 'Max Iterations',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'TOOL_LOOP_DONE',
+                'name': 'Tool Loop Done',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.maxIterations',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'repeat',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Tool Execution Loop',
+                                  'variant': 'h2',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'content': 'Describe the task to execute with tools',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'mode': 'edit',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'submitEvent': 'EXECUTE',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'planning',
+                'event': 'EXECUTE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'planning',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\n\nAvailable tools: ',
+                      [
+                        'str/join',
+                        [
+                          'agent/tools',
+                        ],
+                        ', ',
+                      ],
+                      '\n\nGenerate a step-by-step plan. Return the first tool to call and its arguments.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'href': '/fix',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'brain',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Planning execution...',
+                              'variant': 'h3',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.task',
+                              'variant': 'caption',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'executing',
+                'event': 'PLAN_GENERATED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.plan',
+                    '@payload.plan',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '@payload.toolName',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    [
+                      '+',
+                      '@entity.iterations',
+                      1,
+                    ],
+                  ],
+                  [
+                    'agent/invoke',
+                    '@payload.toolName',
+                    '@payload.toolArgs',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'tool',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Executing Tool',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': '@entity.maxIterations',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                      'content': 'Current Tool',
+                                    },
+                                    {
+                                      'variant': 'h4',
+                                      'content': '@entity.currentTool',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'spinner',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'content': 'Plan',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'content': '@entity.plan',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'x-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h2',
+                              'content': 'Loop Failed',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': '@entity.error',
+                              'variant': 'error',
+                            },
+                            {
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'value': '@entity.iterations',
+                                  'icon': 'repeat',
+                                  'type': 'stat-display',
+                                  'label': 'Iterations Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Allowed',
+                                  'value': '@entity.maxIterations',
+                                  'icon': 'shield',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'variant': 'primary',
+                              'label': 'Retry',
+                              'type': 'button',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'executing',
+                'to': 'checking',
+                'event': 'TOOL_RESULT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '@payload.output',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\nPlan: ',
+                      '@entity.plan',
+                      '\nTool output: ',
+                      '@payload.output',
+                      '\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'content': 'Checking result...',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'label': '@entity.iterations',
+                              'type': 'badge',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'executing',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'x-circle',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Loop Failed',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': '@entity.error',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'icon': 'repeat',
+                                  'label': 'Iterations Used',
+                                  'value': '@entity.iterations',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Allowed',
+                                  'icon': 'shield',
+                                  'value': '@entity.maxIterations',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'primary',
+                              'label': 'Retry',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'completed',
+                'event': 'CHECK_PASSED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.result',
+                    '@payload.result',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'completed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'check-circle',
+                                    },
+                                    {
+                                      'content': 'Loop Complete',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'New Task',
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'type': 'stack',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'icon': 'repeat',
+                                  'value': '@entity.iterations',
+                                  'type': 'stat-display',
+                                  'label': 'Iterations',
+                                },
+                                {
+                                  'label': 'Status',
+                                  'value': '@entity.status',
+                                  'type': 'stat-display',
+                                  'icon': 'check',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Task',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.task',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'type': 'divider',
+                                    },
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Result',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                      'content': '@entity.result',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'vertical',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'executing',
+                'event': 'CHECK_NEEDS_MORE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '@payload.toolName',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    [
+                      '+',
+                      '@entity.iterations',
+                      1,
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      '>=',
+                      [
+                        'agent/context-usage',
+                      ],
+                      0.8,
+                    ],
+                    [
+                      'agent/compact',
+                      'hybrid',
+                    ],
+                    [
+                      'log',
+                      'Context below compact threshold',
+                    ],
+                  ],
+                  [
+                    'agent/invoke',
+                    '@payload.toolName',
+                    '@payload.toolArgs',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'tool',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Executing Tool',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': '@entity.maxIterations',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                      'content': 'Current Tool',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.currentTool',
+                                      'variant': 'h4',
+                                    },
+                                    {
+                                      'type': 'spinner',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Plan',
+                                    },
+                                    {
+                                      'content': '@entity.plan',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'failed',
+                'event': 'MAX_ITERATIONS',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'x-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Loop Failed',
+                            },
+                            {
+                              'message': '@entity.error',
+                              'type': 'alert',
+                              'variant': 'error',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'icon': 'repeat',
+                                  'label': 'Iterations Used',
+                                  'value': '@entity.iterations',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.maxIterations',
+                                  'label': 'Max Allowed',
+                                  'icon': 'shield',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'label': 'Retry',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'completed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.plan',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.result',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'repeat',
+                                },
+                                {
+                                  'content': 'Tool Execution Loop',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Describe the task to execute with tools',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'submitEvent': 'EXECUTE',
+                                      'entity': '@entity',
+                                      'type': 'form-section',
+                                      'mode': 'edit',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.plan',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.result',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'repeat',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Tool Execution Loop',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'content': 'Describe the task to execute with tools',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'mode': 'edit',
+                                      'type': 'form-section',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'entity': '@entity',
+                                      'submitEvent': 'EXECUTE',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopStepProgress',
+          'category': 'interaction',
+          'linkedEntity': 'BuildLoop',
+          'emits': [
+            {
+              'event': 'RESET',
+            },
+            {
+              'event': 'BuildLoopLoaded',
+              'description': 'Fired when BuildLoop finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildLoop]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopLoadFailed',
+              'description': 'Fired when BuildLoop fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SchemaBuilder',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopContextMonitor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'in_progress',
+              },
+              {
+                'name': 'completed',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'ADVANCE',
+                'name': 'Advance',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'FAIL',
+                'name': 'Fail',
+              },
+              {
+                'key': 'BuildLoopLoaded',
+                'name': 'BuildLoop loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildLoop]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopLoadFailed',
+                'name': 'BuildLoop load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.totalSteps',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'success': 'BuildLoopLoaded',
+                        'failure': 'BuildLoopLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'BuildLoop',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'action': 'START',
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'type': 'button',
+                              'icon': 'play',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'in_progress',
+                'event': 'START',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'in_progress',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'loader',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'BuildLoop',
+                                },
+                                {
+                                  'variant': 'warning',
+                                  'type': 'badge',
+                                  'label': 'In Progress',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Current Step',
+                                  'value': '@entity.currentStep',
+                                },
+                                {
+                                  'value': '@entity.totalSteps',
+                                  'type': 'stat-display',
+                                  'label': 'Total Steps',
+                                },
+                              ],
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'label': 'Advance',
+                                  'icon': 'chevron-right',
+                                  'variant': 'primary',
+                                  'action': 'ADVANCE',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                  'label': 'Reset',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'BuildLoop',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'type': 'button',
+                              'action': 'START',
+                              'icon': 'play',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'in_progress',
+                'event': 'ADVANCE',
+                'guard': [
+                  '<',
+                  '@entity.currentStep',
+                  '@entity.totalSteps',
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    [
+                      '+',
+                      '@entity.currentStep',
+                      1,
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'loader',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'BuildLoop',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'In Progress',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.currentStep',
+                                  'label': 'Current Step',
+                                },
+                                {
+                                  'label': 'Total Steps',
+                                  'value': '@entity.totalSteps',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'action': 'ADVANCE',
+                                  'type': 'button',
+                                  'label': 'Advance',
+                                  'variant': 'primary',
+                                  'icon': 'chevron-right',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'completed',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'completed',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    '@entity.totalSteps',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'check-circle',
+                                },
+                                {
+                                  'content': 'BuildLoop',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'success',
+                                  'label': 'Completed',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.totalSteps',
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'success',
+                              'type': 'alert',
+                              'message': 'All steps completed successfully.',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'failed',
+                'event': 'FAIL',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'x-circle',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'BuildLoop',
+                                },
+                                {
+                                  'label': 'Failed',
+                                  'variant': 'danger',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': 'Pipeline failed at the current step.',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'value': '@entity.currentStep',
+                                  'label': 'Failed At Step',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'BuildLoop',
+                                },
+                                {
+                                  'label': 'Idle',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'START',
+                              'icon': 'play',
+                              'label': 'Start',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'href': '/fix',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'completed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'content': 'BuildLoop',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                            },
+                            {
+                              'label': 'Start',
+                              'type': 'button',
+                              'action': 'START',
+                              'icon': 'play',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'BuildLoop',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'action': 'START',
+                              'icon': 'play',
+                              'type': 'button',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopCompletionFlow',
+          'category': 'interaction',
+          'linkedEntity': 'BuildLoop',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'GENERATED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'BuildLoopLoadFailed',
+              'description': 'Fired when BuildLoop fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopLoaded',
+              'description': 'Fired when BuildLoop finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildLoop]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'GENERATE',
+                'name': 'Generate',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'GENERATED',
+                'name': 'Generated',
+              },
+              {
+                'key': 'BuildLoopLoadFailed',
+                'name': 'BuildLoop load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopLoaded',
+                'name': 'BuildLoop loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildLoop]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaveFailed',
+                'name': 'BuildLoop save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaved',
+                'name': 'BuildLoop saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.model',
+                    'claude-sonnet-4-20250514',
+                  ],
+                  [
+                    'set',
+                    '@entity.provider',
+                    'anthropic',
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopLoadFailed',
+                        'success': 'BuildLoopLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'BuildLoop',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'label': 'Open',
+                                  'type': 'button',
+                                  'action': 'GENERATE',
+                                  'icon': 'sparkles',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'icon': 'sparkles',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'GENERATE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'sparkles',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'BuildLoop',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'label': '@entity.provider',
+                              'type': 'badge',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.model',
+                            },
+                          ],
+                        },
+                        {
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'prompt',
+                          ],
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopLoadFailed',
+                        'success': 'BuildLoopLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'BuildLoop',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'icon': 'sparkles',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildLoop',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildLoopSaved',
+                        'failure': 'BuildLoopSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'GENERATED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopLoadFailed',
+                        'success': 'BuildLoopLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'BuildLoop',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'icon': 'sparkles',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'icon': 'sparkles',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopToolCallFlow',
+          'category': 'interaction',
+          'linkedEntity': 'BuildLoop',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'BuildLoopLoadFailed',
+              'description': 'Fired when BuildLoop fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopLoaded',
+              'description': 'Fired when BuildLoop finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildLoop]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'INVOKE',
+                'name': 'Invoke',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'INVOKED',
+                'name': 'Invoked',
+              },
+              {
+                'key': 'BuildLoopLoadFailed',
+                'name': 'BuildLoop load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopLoaded',
+                'name': 'BuildLoop loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildLoop]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaveFailed',
+                'name': 'BuildLoop save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopSaved',
+                'name': 'BuildLoop saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'success': 'BuildLoopLoaded',
+                        'failure': 'BuildLoopLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'action': 'INVOKE',
+                                  'type': 'button',
+                                  'icon': 'wrench',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'wrench',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'INVOKE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'wrench',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Invoke Tool',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'fields': [
+                            'toolName',
+                            'args',
+                          ],
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'success': 'BuildLoopLoaded',
+                        'failure': 'BuildLoopLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'href': '/fix',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'label': 'Open',
+                                  'action': 'INVOKE',
+                                  'icon': 'wrench',
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'title': 'Nothing open',
+                              'icon': 'wrench',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildLoop',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopSaveFailed',
+                        'success': 'BuildLoopSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'INVOKED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopLoadFailed',
+                        'success': 'BuildLoopLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Invoke Tool',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'icon': 'wrench',
+                                  'action': 'INVOKE',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'icon': 'wrench',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopContextMonitor',
+          'category': 'interaction',
+          'linkedEntity': 'BuildLoop',
+          'emits': [
+            {
+              'event': 'RESET',
+            },
+            {
+              'event': 'BuildLoopLoaded',
+              'description': 'Fired when BuildLoop finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildLoop]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoopLoadFailed',
+              'description': 'Fired when BuildLoop fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SchemaBuilder',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopStepProgress',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'normal',
+                'isInitial': true,
+              },
+              {
+                'name': 'warning',
+              },
+              {
+                'name': 'critical',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'UPDATE',
+                'name': 'Update',
+                'payloadSchema': [
+                  {
+                    'name': 'current',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPACT',
+                'name': 'Compact',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'BuildLoopLoaded',
+                'name': 'BuildLoop loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildLoop]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoopLoadFailed',
+                'name': 'BuildLoop load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.max',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'BuildLoop',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoopLoadFailed',
+                        'success': 'BuildLoopLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Reset',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'alert-triangle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'label': 'Compact',
+                                  'icon': 'minimize-2',
+                                  'action': 'COMPACT',
+                                },
+                                {
+                                  'icon': 'rotate-ccw',
+                                  'variant': 'ghost',
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'action': 'RESET',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Critical',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'variant': 'error',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'children': [
+                                {
+                                  'action': 'COMPACT',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                  'label': 'Compact Now',
+                                  'type': 'button',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'action': 'RESET',
+                              'type': 'button',
+                              'label': 'Reset',
+                              'icon': 'rotate-ccw',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'alert-triangle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                              'variant': 'warning',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                  'action': 'COMPACT',
+                                  'label': 'Compact',
+                                  'type': 'button',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                  'icon': 'rotate-ccw',
+                                  'variant': 'ghost',
+                                  'action': 'RESET',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'name': 'alert-octagon',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'type': 'badge',
+                                  'label': 'Critical',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'variant': 'error',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'action': 'COMPACT',
+                                  'label': 'Compact Now',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'label': 'Critical',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'action': 'COMPACT',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'label': 'Compact Now',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-triangle',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'warning',
+                              'type': 'alert',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'icon': 'minimize-2',
+                                  'label': 'Compact',
+                                  'action': 'COMPACT',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Build',
+          'path': '/build',
+          'traits': [
+            {
+              'ref': 'SchemaBuilder',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildFixOrbital',
+      uses: [],
+      entity: {
+        'name': 'BuildFix',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'target',
+            'type': 'string',
+          },
+          {
+            'name': 'validationErrors',
+            'type': 'string',
+          },
+          {
+            'name': 'fixAttempts',
+            'type': 'number',
+          },
+          {
+            'name': 'maxAttempts',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'currentFix',
+            'type': 'string',
+          },
+          {
+            'name': 'errorCount',
+            'type': 'number',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+          },
+          {
+            'name': 'args',
+            'type': 'string',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'FixLoop',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'FIX_SUCCEEDED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'target',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'FIX_FAILED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'target',
+                  'type': 'string',
+                },
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'RESET',
+            },
+          ],
+          'listens': [
+            {
+              'event': 'FIX_SUCCEEDED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'FixLoop',
+              },
+            },
+            {
+              'event': 'FIX_FAILED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'FixLoop',
+              },
+            },
+            {
+              'event': 'TOOL_LOOP_DONE',
+              'triggers': 'FIX',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'BuildLoopOrbital',
+                'trait': 'SchemaBuilder',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'FixLoopStepProgress',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'validating',
+              },
+              {
+                'name': 'fixing',
+              },
+              {
+                'name': 'applying',
+              },
+              {
+                'name': 'succeeded',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'FIX',
+                'name': 'Fix',
+              },
+              {
+                'key': 'VALIDATION_PASSED',
+                'name': 'Validation Passed',
+              },
+              {
+                'key': 'VALIDATION_ERRORS',
+                'name': 'Validation Errors',
+                'payloadSchema': [
+                  {
+                    'name': 'errors',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'count',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'EXCEEDED_ATTEMPTS',
+                'name': 'Exceeded Attempts',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FIX_GENERATED',
+                'name': 'Fix Generated',
+                'payloadSchema': [
+                  {
+                    'name': 'fix',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FIX_APPLIED',
+                'name': 'Fix Applied',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'FIX_SUCCEEDED',
+                'name': 'Fix Succeeded',
+              },
+              {
+                'key': 'FIX_FAILED',
+                'name': 'Fix Failed',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.maxAttempts',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'wrench',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Validation-Fix Loop',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'content': 'Enter the target to validate and auto-fix',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'mode': 'edit',
+                                      'fields': [
+                                        'target',
+                                      ],
+                                      'submitEvent': 'FIX',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'validating',
+                'event': 'FIX',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'validating',
+                  ],
+                  [
+                    'set',
+                    '@entity.fixAttempts',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.validationErrors',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.errorCount',
+                    0,
+                  ],
+                  [
+                    'agent/invoke',
+                    'validate-schema',
+                    {
+                      'target': '@entity.target',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'shield-check',
+                            },
+                            {
+                              'content': 'Validating...',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': '@entity.target',
+                                  'type': 'badge',
+                                },
+                                {
+                                  'label': '@entity.maxAttempts',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'justify': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'validating',
+                'to': 'succeeded',
+                'event': 'VALIDATION_PASSED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'succeeded',
+                  ],
+                  [
+                    'emit',
+                    'FIX_SUCCEEDED',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'href': '/fix',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'check-circle',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Validation Passed',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'New Target',
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'label': 'Fix Attempts',
+                                  'type': 'stat-display',
+                                  'icon': 'wrench',
+                                  'value': '@entity.fixAttempts',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Status',
+                                  'value': 'Passed',
+                                  'icon': 'check',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Target',
+                                    },
+                                    {
+                                      'content': '@entity.target',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'validating',
+                'to': 'fixing',
+                'event': 'VALIDATION_ERRORS',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.validationErrors',
+                    '@payload.errors',
+                  ],
+                  [
+                    'set',
+                    '@entity.errorCount',
+                    '@payload.count',
+                  ],
+                  [
+                    'set',
+                    '@entity.fixAttempts',
+                    [
+                      '+',
+                      '@entity.fixAttempts',
+                      1,
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'fixing',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Target: ',
+                      '@entity.target',
+                      '\n\nValidation errors:\n',
+                      '@payload.errors',
+                      '\n\nGenerate a fix that resolves these errors. Return only the fix content.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'cpu',
+                                    },
+                                    {
+                                      'content': 'Generating fix...',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': '@entity.fixAttempts',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Validation Errors',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'alert',
+                                      'message': '@entity.validationErrors',
+                                      'variant': 'error',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'validating',
+                'to': 'failed',
+                'event': 'EXCEEDED_ATTEMPTS',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'emit',
+                    'FIX_FAILED',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'x-circle',
+                            },
+                            {
+                              'content': 'Fix Loop Failed',
+                              'variant': 'h2',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': '@entity.error',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.fixAttempts',
+                                  'icon': 'wrench',
+                                  'type': 'stat-display',
+                                  'label': 'Attempts Used',
+                                },
+                                {
+                                  'label': 'Remaining Errors',
+                                  'type': 'stat-display',
+                                  'icon': 'alert-triangle',
+                                  'value': '@entity.errorCount',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Last Validation Errors',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.validationErrors',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'primary',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'label': 'Retry',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'align': 'center',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'fixing',
+                'to': 'applying',
+                'event': 'FIX_GENERATED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentFix',
+                    '@payload.fix',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'applying',
+                  ],
+                  [
+                    'agent/invoke',
+                    'apply-fix',
+                    {
+                      'fix': '@payload.fix',
+                      'target': '@entity.target',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'name': 'tool',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Applying fix...',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'content': 'Proposed Fix',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.currentFix',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                          'align': 'center',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'fixing',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'emit',
+                    'FIX_FAILED',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'x-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Fix Loop Failed',
+                            },
+                            {
+                              'message': '@entity.error',
+                              'type': 'alert',
+                              'variant': 'error',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'icon': 'wrench',
+                                  'label': 'Attempts Used',
+                                  'value': '@entity.fixAttempts',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Remaining Errors',
+                                  'icon': 'alert-triangle',
+                                  'value': '@entity.errorCount',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Last Validation Errors',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.validationErrors',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'label': 'Retry',
+                              'variant': 'primary',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'applying',
+                'to': 'validating',
+                'event': 'FIX_APPLIED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'validating',
+                  ],
+                  [
+                    'agent/invoke',
+                    'validate-schema',
+                    {
+                      'target': '@entity.target',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'shield-check',
+                            },
+                            {
+                              'content': 'Validating...',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': '@entity.target',
+                                  'type': 'badge',
+                                },
+                                {
+                                  'label': '@entity.maxAttempts',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'justify': 'center',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'applying',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'emit',
+                    'FIX_FAILED',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'x-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Fix Loop Failed',
+                            },
+                            {
+                              'message': '@entity.error',
+                              'variant': 'error',
+                              'type': 'alert',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Attempts Used',
+                                  'type': 'stat-display',
+                                  'icon': 'wrench',
+                                  'value': '@entity.fixAttempts',
+                                },
+                                {
+                                  'icon': 'alert-triangle',
+                                  'value': '@entity.errorCount',
+                                  'type': 'stat-display',
+                                  'label': 'Remaining Errors',
+                                },
+                              ],
+                              'cols': 2,
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Last Validation Errors',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.validationErrors',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'label': 'Retry',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'align': 'center',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'succeeded',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.target',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.validationErrors',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentFix',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.fixAttempts',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.errorCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'wrench',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Validation-Fix Loop',
+                                },
+                              ],
+                              'align': 'center',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'content': 'Enter the target to validate and auto-fix',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'fields': [
+                                        'target',
+                                      ],
+                                      'type': 'form-section',
+                                      'submitEvent': 'FIX',
+                                      'entity': '@entity',
+                                      'mode': 'edit',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.target',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.validationErrors',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentFix',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.fixAttempts',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.errorCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'wrench',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Validation-Fix Loop',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'content': 'Enter the target to validate and auto-fix',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'fields': [
+                                        'target',
+                                      ],
+                                      'mode': 'edit',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'submitEvent': 'FIX',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'FixLoopStepProgress',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'RESET',
+            },
+            {
+              'event': 'BuildFixLoaded',
+              'description': 'Fired when BuildFix finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildFix]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixLoadFailed',
+              'description': 'Fired when BuildFix fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'FixLoop',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'in_progress',
+              },
+              {
+                'name': 'completed',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'ADVANCE',
+                'name': 'Advance',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'FAIL',
+                'name': 'Fail',
+              },
+              {
+                'key': 'BuildFixLoaded',
+                'name': 'BuildFix loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildFix]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixLoadFailed',
+                'name': 'BuildFix load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.totalSteps',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'BuildFix',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'variant': 'primary',
+                              'type': 'button',
+                              'label': 'Start',
+                              'action': 'START',
+                              'icon': 'play',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'in_progress',
+                'event': 'START',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'in_progress',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'loader',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'BuildFix',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'In Progress',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'title': 'Fix',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Re-validate',
+                                },
+                              ],
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'align': 'center',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'label': 'Current Step',
+                                  'value': '@entity.currentStep',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.totalSteps',
+                                  'type': 'stat-display',
+                                  'label': 'Total Steps',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'label': 'Advance',
+                                  'action': 'ADVANCE',
+                                  'variant': 'primary',
+                                  'icon': 'chevron-right',
+                                  'type': 'button',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'label': 'Reset',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'BuildFix',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Idle',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'variant': 'primary',
+                              'icon': 'play',
+                              'label': 'Start',
+                              'type': 'button',
+                              'action': 'START',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'in_progress',
+                'event': 'ADVANCE',
+                'guard': [
+                  '<',
+                  '@entity.currentStep',
+                  '@entity.totalSteps',
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    [
+                      '+',
+                      '@entity.currentStep',
+                      1,
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'loader',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'BuildFix',
+                                },
+                                {
+                                  'label': 'In Progress',
+                                  'variant': 'warning',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'title': 'Validate',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Re-validate',
+                                },
+                              ],
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'label': 'Current Step',
+                                  'type': 'stat-display',
+                                  'value': '@entity.currentStep',
+                                },
+                                {
+                                  'label': 'Total Steps',
+                                  'type': 'stat-display',
+                                  'value': '@entity.totalSteps',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'action': 'ADVANCE',
+                                  'label': 'Advance',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'icon': 'chevron-right',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'completed',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'completed',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    '@entity.totalSteps',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'check-circle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'BuildFix',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'label': 'Completed',
+                                  'type': 'badge',
+                                  'variant': 'success',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.totalSteps',
+                              'steps': [
+                                {
+                                  'title': 'Validate',
+                                  'id': '0',
+                                },
+                                {
+                                  'title': 'Analyze',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Fix',
+                                  'id': '2',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                            },
+                            {
+                              'message': 'All steps completed successfully.',
+                              'variant': 'success',
+                              'type': 'alert',
+                            },
+                            {
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'failed',
+                'event': 'FAIL',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'x-circle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'BuildFix',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Failed',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'message': 'Pipeline failed at the current step.',
+                              'type': 'alert',
+                              'variant': 'error',
+                            },
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failed At Step',
+                                  'value': '@entity.currentStep',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'BuildFix',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Idle',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Re-validate',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'play',
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'action': 'START',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'completed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'BuildFix',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Analyze',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'play',
+                              'type': 'button',
+                              'label': 'Start',
+                              'action': 'START',
+                              'variant': 'primary',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'BuildFix',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Validate',
+                                },
+                                {
+                                  'title': 'Analyze',
+                                  'id': '1',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Fix',
+                                },
+                                {
+                                  'title': 'Re-validate',
+                                  'id': '3',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'label': 'Start',
+                              'variant': 'primary',
+                              'icon': 'play',
+                              'type': 'button',
+                              'action': 'START',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'FixLoopErrorsBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'BuildFixLoaded',
+              'description': 'Fired when BuildFix finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildFix]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixLoadFailed',
+              'description': 'Fired when BuildFix fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'BuildFixLoaded',
+                'name': 'BuildFix loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildFix]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixLoadFailed',
+                'name': 'BuildFix load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildFixLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'alert-triangle',
+                                    },
+                                    {
+                                      'content': 'Validation Errors',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'target',
+                                  'label': 'Target',
+                                  'variant': 'h4',
+                                  'icon': 'alert-triangle',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'errorCount',
+                                  'label': 'Error Count',
+                                },
+                                {
+                                  'name': 'status',
+                                  'label': 'Status',
+                                  'variant': 'caption',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'floating-action-button',
+                              'icon': 'plus',
+                              'action': 'INIT',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildFixLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'type': 'typography',
+                          'content': 'Failed to load buildfix',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'type': 'stack',
+                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'FixLoopValidateCall',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKE',
+            },
+            {
+              'event': 'BuildFixLoadFailed',
+              'description': 'Fired when BuildFix fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixLoaded',
+              'description': 'Fired when BuildFix finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildFix]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'INVOKE',
+                'name': 'Invoke',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'INVOKED',
+                'name': 'Invoked',
+              },
+              {
+                'key': 'BuildFixLoadFailed',
+                'name': 'BuildFix load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixLoaded',
+                'name': 'BuildFix loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildFix]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaveFailed',
+                'name': 'BuildFix save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaved',
+                'name': 'BuildFix saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'failure': 'BuildFixLoadFailed',
+                        'success': 'BuildFixLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'INVOKE',
+                                  'type': 'button',
+                                  'icon': 'wrench',
+                                  'variant': 'primary',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                              'icon': 'wrench',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'INVOKE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'wrench',
+                            },
+                            {
+                              'content': 'Invoke Tool',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'fields': [
+                            'toolName',
+                            'args',
+                          ],
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'href': '/build',
+                          'label': 'Build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'action': 'INVOKE',
+                                  'label': 'Open',
+                                  'icon': 'wrench',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'wrench',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildFix',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'BuildFixSaveFailed',
+                        'success': 'BuildFixSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'INVOKED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'label': 'Open',
+                                  'action': 'INVOKE',
+                                  'type': 'button',
+                                  'icon': 'wrench',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'wrench',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'FixLoopFixCall',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKE',
+            },
+            {
+              'event': 'BuildFixLoadFailed',
+              'description': 'Fired when BuildFix fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixLoaded',
+              'description': 'Fired when BuildFix finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildFix]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'INVOKE',
+                'name': 'Invoke',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'INVOKED',
+                'name': 'Invoked',
+              },
+              {
+                'key': 'BuildFixLoadFailed',
+                'name': 'BuildFix load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixLoaded',
+                'name': 'BuildFix loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildFix]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaveFailed',
+                'name': 'BuildFix save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaved',
+                'name': 'BuildFix saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'icon': 'wrench',
+                                  'variant': 'primary',
+                                  'action': 'INVOKE',
+                                  'label': 'Open',
+                                  'type': 'button',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'icon': 'wrench',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'label': 'Plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'INVOKE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'wrench',
+                            },
+                            {
+                              'content': 'Invoke Tool',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'fields': [
+                            'toolName',
+                            'args',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'icon': 'hammer',
+                          'href': '/build',
+                        },
+                        {
+                          'href': '/fix',
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Invoke Tool',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'icon': 'wrench',
+                                  'action': 'INVOKE',
+                                },
+                              ],
+                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'wrench',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildFix',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildFixSaved',
+                        'failure': 'BuildFixSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'INVOKED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'action': 'INVOKE',
+                                  'variant': 'primary',
+                                  'icon': 'wrench',
+                                  'type': 'button',
+                                  'label': 'Open',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'wrench',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'icon': 'wrench',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'FixLoopCompletionFlow',
+          'category': 'interaction',
+          'linkedEntity': 'BuildFix',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'GENERATED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'BuildFixLoadFailed',
+              'description': 'Fired when BuildFix fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixLoaded',
+              'description': 'Fired when BuildFix finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildFix]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildFixSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'GENERATE',
+                'name': 'Generate',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'GENERATED',
+                'name': 'Generated',
+              },
+              {
+                'key': 'BuildFixLoadFailed',
+                'name': 'BuildFix load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixLoaded',
+                'name': 'BuildFix loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildFix]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaveFailed',
+                'name': 'BuildFix save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildFixSaved',
+                'name': 'BuildFix saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.model',
+                    'claude-sonnet-4-20250514',
+                  ],
+                  [
+                    'set',
+                    '@entity.provider',
+                    'anthropic',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'BuildFix',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'icon': 'sparkles',
+                                  'type': 'button',
+                                  'action': 'GENERATE',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'GENERATE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'sparkles',
+                            },
+                            {
+                              'content': 'BuildFix',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'badge',
+                              'label': '@entity.provider',
+                            },
+                            {
+                              'label': '@entity.model',
+                              'type': 'badge',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'prompt',
+                          ],
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Plan',
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'href': '/build',
+                          'label': 'Build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'label': 'Fix',
+                          'href': '/fix',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'BuildFix',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'icon': 'sparkles',
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'BuildFix',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'BuildFixSaveFailed',
+                        'success': 'BuildFixSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'GENERATED',
+                  ],
+                  [
+                    'fetch',
+                    'BuildFix',
+                    {
+                      'emit': {
+                        'success': 'BuildFixLoaded',
+                        'failure': 'BuildFixLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/plan',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'BuildFix',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'icon': 'sparkles',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Fix',
+          'path': '/fix',
+          'traits': [
+            {
+              'ref': 'FixLoop',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildSessionOrbital',
+      uses: [],
+      entity: {
+        'name': 'BuildSession',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'BuildSessionManager',
+          'category': 'interaction',
+          'linkedEntity': 'BuildSession',
+          'emits': [
+            {
+              'event': 'FORK',
+            },
+            {
+              'event': 'LABEL',
+            },
+            {
+              'event': 'END',
+            },
+            {
+              'event': 'BuildSessionLoaded',
+              'description': 'Fired when BuildSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildSession]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionLoadFailed',
+              'description': 'Fired when BuildSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'FORKED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionAgent',
+              },
+            },
+            {
+              'event': 'LABELED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionLabel',
+              },
+            },
+            {
+              'event': 'ENDED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionAgent',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'BuildSessionLoaded',
+                'name': 'BuildSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionLoadFailed',
+                'name': 'BuildSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORK',
+                'name': 'Fork',
+              },
+              {
+                'key': 'LABEL',
+                'name': 'Label',
+              },
+              {
+                'key': 'END',
+                'name': 'End',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildSessionLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'terminal',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'BuildSession Manager',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'FORK',
+                                      'icon': 'git-branch',
+                                      'label': 'Fork',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'LABEL',
+                                      'variant': 'secondary',
+                                      'icon': 'tag',
+                                      'label': 'Label',
+                                    },
+                                    {
+                                      'variant': 'ghost',
+                                      'label': 'End',
+                                      'action': 'END',
+                                      'type': 'button',
+                                      'icon': 'square',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'sessionId',
+                                  'icon': 'terminal',
+                                  'variant': 'h4',
+                                  'label': 'Session ID',
+                                },
+                                {
+                                  'label': 'Status',
+                                  'variant': 'badge',
+                                  'name': 'status',
+                                },
+                                {
+                                  'label': 'Label',
+                                  'variant': 'caption',
+                                  'name': 'label',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'label': 'Build',
+                          'href': '/build',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildSessionLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': 'Failed to load buildsession',
+                          'variant': 'h3',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'variant': 'primary',
+                          'type': 'button',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildSessionLabel',
+          'category': 'interaction',
+          'linkedEntity': 'BuildSession',
+          'emits': [
+            {
+              'event': 'LABELED',
+            },
+            {
+              'event': 'BuildSessionLoadFailed',
+              'description': 'Fired when BuildSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionLoaded',
+              'description': 'Fired when BuildSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildSession]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'LABEL',
+              'triggers': 'LABEL',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LABEL',
+                'name': 'Label',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LABELED',
+                'name': 'Labeled',
+              },
+              {
+                'key': 'BuildSessionLoadFailed',
+                'name': 'BuildSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionLoaded',
+                'name': 'BuildSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionUpdateFailed',
+                'name': 'BuildSession update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionUpdated',
+                'name': 'BuildSession updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.sessionId',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'LABEL',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'tag',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Label Session',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Session:',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.sessionId',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'entity': '@entity',
+                          'mode': 'edit',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'label',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'BuildSession',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionUpdateFailed',
+                        'success': 'BuildSessionUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'LABELED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildSessionAgent',
+          'category': 'interaction',
+          'linkedEntity': 'BuildSession',
+          'emits': [
+            {
+              'event': 'ENDED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'sessionId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'FORKED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'sessionId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionLoaded',
+              'description': 'Fired when BuildSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BuildSession]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSessionLoadFailed',
+              'description': 'Fired when BuildSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ENDED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionAgent',
+              },
+            },
+            {
+              'event': 'FORKED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionAgent',
+              },
+            },
+            {
+              'event': 'FORK',
+              'triggers': 'FORK',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionManager',
+              },
+            },
+            {
+              'event': 'END',
+              'triggers': 'END',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildSessionManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'active',
+                'isInitial': true,
+              },
+              {
+                'name': 'forked',
+              },
+              {
+                'name': 'ended',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'FORK',
+                'name': 'Fork',
+              },
+              {
+                'key': 'DO_LABEL',
+                'name': 'Do Label',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LABELED',
+                'name': 'Labeled',
+              },
+              {
+                'key': 'END',
+                'name': 'End',
+              },
+              {
+                'key': 'ENDED',
+                'name': 'Ended',
+              },
+              {
+                'key': 'FORKED',
+                'name': 'Forked',
+              },
+              {
+                'key': 'BuildSessionLoaded',
+                'name': 'BuildSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[BuildSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSessionLoadFailed',
+                'name': 'BuildSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.sessionId',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '@now',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                          'href': '/plan',
+                        },
+                        {
+                          'icon': 'hammer',
+                          'label': 'Build',
+                          'href': '/build',
+                        },
+                        {
+                          'icon': 'wrench',
+                          'href': '/fix',
+                          'label': 'Fix',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'icon': 'git-branch',
+                          'description': 'Session is ready',
+                          'title': 'Session',
+                          'type': 'empty-state',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'forked',
+                'event': 'FORK',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.parentId',
+                    '@entity.sessionId',
+                  ],
+                  [
+                    'agent/fork',
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'BuildSession',
+                    {
+                      'status': 'forked',
+                      'parentId': '@entity.parentId',
+                      'createdAt': '@now',
+                      'sessionId': '@entity.sessionId',
+                    },
+                    {
+                      'emit': {
+                        'success': 'FORKED',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'DO_LABEL',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@payload.data.label',
+                  ],
+                  [
+                    'set',
+                    '@entity.label',
+                    '@payload.data.label',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'LABELED',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@entity.label',
+                  ],
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'ended',
+                'event': 'END',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'ended',
+                  ],
+                  [
+                    'emit',
+                    'ENDED',
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'FORK',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.parentId',
+                    '@entity.sessionId',
+                  ],
+                  [
+                    'agent/fork',
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'BuildSession',
+                    {
+                      'parentId': '@entity.parentId',
+                      'status': 'forked',
+                      'sessionId': '@entity.sessionId',
+                      'createdAt': '@now',
+                    },
+                    {
+                      'emit': {
+                        'success': 'FORKED',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'DO_LABEL',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@payload.data.label',
+                  ],
+                  [
+                    'set',
+                    '@entity.label',
+                    '@payload.data.label',
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'LABELED',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@entity.label',
+                  ],
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'ended',
+                'event': 'END',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'ended',
+                  ],
+                  [
+                    'emit',
+                    'ENDED',
+                  ],
+                ],
+              },
+              {
+                'from': 'ended',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'BuildSession',
+                    {
+                      'emit': {
+                        'failure': 'BuildSessionLoadFailed',
+                        'success': 'BuildSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '@now',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'active',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/plan',
+                          'icon': 'clipboard-list',
+                          'label': 'Plan',
+                        },
+                        {
+                          'href': '/build',
+                          'icon': 'hammer',
+                          'label': 'Build',
+                        },
+                        {
+                          'label': 'Fix',
+                          'href': '/fix',
+                          'icon': 'wrench',
+                        },
+                      ],
+                      'appName': 'Schema Builder',
+                      'children': [
+                        {
+                          'type': 'empty-state',
+                          'description': 'Session is ready',
+                          'title': 'Session',
+                          'icon': 'git-branch',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Session',
+          'path': '/session',
+          'traits': [
+            {
+              'ref': 'BuildSessionManager',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildTaskOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-tabs',
+          'as': 'Tabs',
+        },
+      ],
+      entity: {
+        'name': 'BuildTask',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'plan',
+            'type': 'string',
+          },
+          {
+            'name': 'schema',
+            'type': 'string',
+          },
+          {
+            'name': 'validationStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'buildPhase',
+            'type': 'string',
+          },
+          {
+            'name': 'attempts',
+            'type': 'number',
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'activeTab',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'items',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+          },
+        ],
+      } as Entity,
+      traits: [
+        makeTraitRef({
+          'ref': 'Tabs.traits.TabsItemTabs',
+          'name': 'BuilderTabs',
+          'linkedEntity': 'BuildTask',
+        }),
+      ],
+      pages: [
+        {
+          'name': 'BuilderNav',
+          'path': '/builder/nav',
+          'traits': [
+            {
+              'ref': 'BuilderTabs',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildProgressOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-agent-step-progress',
+          'as': 'AgentStepProgress',
+        },
+      ],
+      entity: {
+        'name': 'BuildProgress',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+        ],
+      } as Entity,
+      traits: [
+        makeTraitRef({
+          'ref': 'AgentStepProgress.traits.AgentStepProgressProgress',
+          'name': 'BuildStepProgress',
+          'linkedEntity': 'BuildProgress',
+        }),
+      ],
+      pages: [
+        {
+          'name': 'BuilderProgress',
+          'path': '/builder/progress',
+          'traits': [
+            {
+              'ref': 'BuildStepProgress',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

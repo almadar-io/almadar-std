@@ -84,9 +84,4574 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"SensorReadingOrbital","entity":{"name":"SensorReading","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"sensorId","type":"string","required":true},{"name":"value","type":"number","required":true},{"name":"unit","type":"string"},{"name":"timestamp","type":"string"}]},"traits":[{"name":"SensorReadingDisplay","category":"interaction","linkedEntity":"SensorReading","emits":[{"event":"SensorReadingLoaded","description":"Fired when SensorReading finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[SensorReading]"}]},{"event":"SensorReadingLoadFailed","description":"Fired when SensorReading fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeviceSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeviceUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeviceDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"SensorReadingLoaded","name":"SensorReading loaded","payloadSchema":[{"name":"data","type":"[SensorReading]"}]},{"key":"SensorReadingLoadFailed","name":"SensorReading load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceSaved","name":"Device saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DeviceSaveFailed","name":"Device save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceUpdated","name":"Device updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DeviceUpdateFailed","name":"Device update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceDeleted","name":"Device deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DeviceDeleteFailed","name":"Device delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","SensorReading",{"emit":{"failure":"SensorReadingLoadFailed","success":"SensorReadingLoaded"}}],["render-ui","main",{"appName":"IoT Dashboard","type":"dashboard-layout","children":[{"children":[{"children":[{"items":[{"href":"/","label":"Home"},{"label":"Sensor Readings"}],"type":"breadcrumb"},{"direction":"horizontal","justify":"between","type":"stack","children":[{"gap":"md","type":"stack","children":[{"name":"thermometer","type":"icon"},{"variant":"h2","content":"Sensor Readings","type":"typography"}],"direction":"horizontal"},{"action":"REFRESH","variant":"secondary","icon":"refresh-cw","type":"button","label":"Refresh"}],"gap":"md"},{"type":"divider"},{"children":[{"children":[{"type":"card","children":[{"children":[{"type":"typography","variant":"caption","content":"SensorId"},{"variant":"h3","content":"@entity.sensorId","type":"typography"}],"direction":"vertical","gap":"sm","type":"stack"}]},{"value":"@entity.value","type":"stat-display","label":"Value"},{"type":"card","children":[{"children":[{"variant":"caption","content":"Unit","type":"typography"},{"content":"@entity.unit","type":"typography","variant":"h3"}],"direction":"vertical","type":"stack","gap":"sm"}]},{"children":[{"direction":"vertical","gap":"sm","type":"stack","children":[{"type":"typography","variant":"caption","content":"Timestamp"},{"type":"typography","variant":"h3","content":"@entity.timestamp"}]}],"type":"card"}],"type":"simple-grid","cols":3}],"padding":"md","type":"box"},{"type":"divider"},{"children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"children":[{"content":"Graph View","type":"typography","variant":"caption"}],"type":"card"}],"gap":"md","type":"grid","cols":2},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}],"type":"line-chart"},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"height":200,"width":400}],"type":"stack","gap":"lg","direction":"vertical"}],"type":"scaled-diagram"}],"navItems":[{"icon":"layout-list","label":"Sensors","href":"/sensors"},{"label":"Devices","icon":"cpu","href":"/devices"},{"icon":"bell","label":"Alerts","href":"/alerts"}]}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","SensorReading",{"emit":{"success":"SensorReadingLoaded","failure":"SensorReadingLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/sensors","label":"Sensors","icon":"layout-list"},{"label":"Devices","icon":"cpu","href":"/devices"},{"label":"Alerts","href":"/alerts","icon":"bell"}],"type":"dashboard-layout","appName":"IoT Dashboard","children":[{"children":[{"gap":"lg","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Sensor Readings"}]},{"type":"stack","children":[{"direction":"horizontal","gap":"md","children":[{"name":"thermometer","type":"icon"},{"variant":"h2","content":"Sensor Readings","type":"typography"}],"type":"stack"},{"icon":"refresh-cw","variant":"secondary","type":"button","action":"REFRESH","label":"Refresh"}],"justify":"between","gap":"md","direction":"horizontal"},{"type":"divider"},{"children":[{"cols":3,"type":"simple-grid","children":[{"type":"card","children":[{"direction":"vertical","type":"stack","children":[{"type":"typography","content":"SensorId","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.sensorId"}],"gap":"sm"}]},{"value":"@entity.value","label":"Value","type":"stat-display"},{"children":[{"type":"stack","gap":"sm","direction":"vertical","children":[{"variant":"caption","type":"typography","content":"Unit"},{"type":"typography","content":"@entity.unit","variant":"h3"}]}],"type":"card"},{"type":"card","children":[{"direction":"vertical","gap":"sm","children":[{"type":"typography","variant":"caption","content":"Timestamp"},{"variant":"h3","content":"@entity.timestamp","type":"typography"}],"type":"stack"}]}]}],"padding":"md","type":"box"},{"type":"divider"},{"type":"grid","gap":"md","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"type":"card","children":[{"variant":"caption","content":"Graph View","type":"typography"}]}],"cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"type":"graph-view","width":400,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"height":200}],"type":"stack","direction":"vertical"}],"type":"scaled-diagram"}]}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","SensorReading",{"emit":{"failure":"SensorReadingLoadFailed","success":"SensorReadingLoaded"}}],["render-ui","main",{"children":[{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Sensor Readings"}]},{"gap":"md","direction":"horizontal","type":"stack","justify":"between","children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"type":"icon","name":"thermometer"},{"type":"typography","variant":"h2","content":"Sensor Readings"}]},{"label":"Refresh","type":"button","variant":"secondary","icon":"refresh-cw","action":"REFRESH"}]},{"type":"divider"},{"children":[{"cols":3,"type":"simple-grid","children":[{"type":"card","children":[{"gap":"sm","direction":"vertical","type":"stack","children":[{"type":"typography","variant":"caption","content":"SensorId"},{"variant":"h3","type":"typography","content":"@entity.sensorId"}]}]},{"value":"@entity.value","type":"stat-display","label":"Value"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"type":"typography","variant":"caption","content":"Unit"},{"variant":"h3","content":"@entity.unit","type":"typography"}]}]},{"type":"card","children":[{"type":"stack","direction":"vertical","children":[{"type":"typography","content":"Timestamp","variant":"caption"},{"content":"@entity.timestamp","type":"typography","variant":"h3"}],"gap":"sm"}]}]}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"children":[{"variant":"caption","type":"typography","content":"Graph View"}],"type":"card"}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"width":400,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view","height":200}]}],"type":"scaled-diagram"}],"navItems":[{"href":"/sensors","label":"Sensors","icon":"layout-list"},{"label":"Devices","icon":"cpu","href":"/devices"},{"icon":"bell","href":"/alerts","label":"Alerts"}],"appName":"IoT Dashboard","type":"dashboard-layout"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","SensorReading",{"emit":{"success":"SensorReadingLoaded","failure":"SensorReadingLoadFailed"}}],["render-ui","main",{"appName":"IoT Dashboard","children":[{"type":"scaled-diagram","children":[{"type":"stack","direction":"vertical","children":[{"items":[{"href":"/","label":"Home"},{"label":"Sensor Readings"}],"type":"breadcrumb"},{"type":"stack","gap":"md","direction":"horizontal","justify":"between","children":[{"type":"stack","children":[{"name":"thermometer","type":"icon"},{"type":"typography","content":"Sensor Readings","variant":"h2"}],"direction":"horizontal","gap":"md"},{"icon":"refresh-cw","variant":"secondary","action":"REFRESH","label":"Refresh","type":"button"}]},{"type":"divider"},{"padding":"md","children":[{"cols":3,"children":[{"type":"card","children":[{"type":"stack","children":[{"content":"SensorId","type":"typography","variant":"caption"},{"variant":"h3","content":"@entity.sensorId","type":"typography"}],"direction":"vertical","gap":"sm"}]},{"value":"@entity.value","label":"Value","type":"stat-display"},{"children":[{"type":"stack","children":[{"content":"Unit","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.unit","variant":"h3"}],"gap":"sm","direction":"vertical"}],"type":"card"},{"type":"card","children":[{"type":"stack","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Timestamp"},{"type":"typography","variant":"h3","content":"@entity.timestamp"}],"direction":"vertical"}]}],"type":"simple-grid"}],"type":"box"},{"type":"divider"},{"gap":"md","cols":2,"children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"children":[{"variant":"caption","type":"typography","content":"Graph View"}],"type":"card"}],"type":"grid"},{"data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"type":"graph-view","width":400,"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"height":200}],"gap":"lg"}]}],"type":"dashboard-layout","navItems":[{"label":"Sensors","href":"/sensors","icon":"layout-list"},{"icon":"cpu","href":"/devices","label":"Devices"},{"icon":"bell","label":"Alerts","href":"/alerts"}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","SensorReading",{"emit":{"failure":"SensorReadingLoadFailed","success":"SensorReadingLoaded"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"children":[{"items":[{"href":"/","label":"Home"},{"label":"Sensor Readings"}],"type":"breadcrumb"},{"gap":"md","children":[{"gap":"md","type":"stack","children":[{"type":"icon","name":"thermometer"},{"content":"Sensor Readings","type":"typography","variant":"h2"}],"direction":"horizontal"},{"type":"button","variant":"secondary","action":"REFRESH","icon":"refresh-cw","label":"Refresh"}],"direction":"horizontal","type":"stack","justify":"between"},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":3,"type":"simple-grid","children":[{"type":"card","children":[{"children":[{"variant":"caption","content":"SensorId","type":"typography"},{"type":"typography","content":"@entity.sensorId","variant":"h3"}],"type":"stack","gap":"sm","direction":"vertical"}]},{"type":"stat-display","label":"Value","value":"@entity.value"},{"type":"card","children":[{"type":"stack","gap":"sm","children":[{"content":"Unit","type":"typography","variant":"caption"},{"content":"@entity.unit","type":"typography","variant":"h3"}],"direction":"vertical"}]},{"children":[{"type":"stack","children":[{"type":"typography","variant":"caption","content":"Timestamp"},{"type":"typography","variant":"h3","content":"@entity.timestamp"}],"gap":"sm","direction":"vertical"}],"type":"card"}]}]},{"type":"divider"},{"gap":"md","children":[{"children":[{"content":"Chart View","variant":"caption","type":"typography"}],"type":"card"},{"type":"card","children":[{"content":"Graph View","variant":"caption","type":"typography"}]}],"type":"grid","cols":2},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view","width":400,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"height":200}],"direction":"vertical","type":"stack","gap":"lg"}]}],"appName":"IoT Dashboard","navItems":[{"href":"/sensors","label":"Sensors","icon":"layout-list"},{"href":"/devices","label":"Devices","icon":"cpu"},{"label":"Alerts","icon":"bell","href":"/alerts"}]}]]}]},"scope":"collection"}],"pages":[{"name":"SensorsPage","path":"/sensors","traits":[{"ref":"SensorReadingDisplay"}]}]},{"name":"DeviceOrbital","entity":{"name":"Device","collection":"devices","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"type","type":"string","required":true},{"name":"status","type":"string"},{"name":"lastSeen","type":"datetime"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"DeviceBrowse","category":"interaction","linkedEntity":"Device","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.type","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.lastSeen","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.type","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.lastSeen","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.type","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.lastSeen","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DeviceLoaded","description":"Fired when Device finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Device]"}]},{"event":"DeviceLoadFailed","description":"Fired when Device fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"DEVICE_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"DeviceCreate"}},{"event":"DEVICE_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"DeviceEdit"}},{"event":"DEVICE_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"DeviceDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DeviceLoaded","name":"Device loaded","payloadSchema":[{"name":"data","type":"[Device]"}]},{"key":"DeviceLoadFailed","name":"Device load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"}}],["render-ui","main",{"align":"center","direction":"vertical","gap":"md","className":"py-12","children":[{"type":"spinner"},{"type":"typography","content":"Loading…","variant":"caption","color":"muted"}],"type":"stack"}]]},{"from":"browsing","to":"browsing","event":"DeviceLoaded","effects":[["render-ui","main",{"appName":"IoT Dashboard","children":[{"direction":"vertical","gap":"lg","className":"max-w-5xl mx-auto w-full","type":"stack","children":[{"align":"center","direction":"horizontal","type":"stack","justify":"between","gap":"md","children":[{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":[{"name":"cpu","type":"icon"},{"variant":"h2","type":"typography","content":"Devices"}]},{"type":"stack","gap":"sm","direction":"horizontal","children":[{"label":"Create Device","variant":"primary","icon":"plus","action":"CREATE","type":"button"}]}]},{"type":"divider"},{"entity":"@payload.data","cols":3,"fields":[{"icon":"cpu","variant":"h3","name":"name"},{"name":"status","variant":"badge"},{"variant":"body","name":"type"},{"variant":"caption","label":"Last Seen","name":"lastSeen","format":"date"}],"gap":"md","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"label":"Edit","variant":"ghost","event":"EDIT"},{"variant":"danger","event":"DELETE","label":"Delete"}],"type":"data-grid"}]}],"type":"dashboard-layout","navItems":[{"href":"/sensors","icon":"layout-list","label":"Sensors"},{"label":"Devices","href":"/devices","icon":"cpu"},{"icon":"bell","href":"/alerts","label":"Alerts"}]}]]},{"from":"browsing","to":"browsing","event":"DeviceLoadFailed","effects":[["render-ui","main",{"direction":"vertical","className":"py-12","type":"stack","align":"center","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"type":"typography","content":"Failed to load device","variant":"h3"},{"content":"@payload.error","variant":"body","type":"typography","color":"muted"},{"variant":"primary","type":"button","label":"Retry","action":"INIT","icon":"rotate-ccw"}],"gap":"md"}]]}]},"scope":"collection"},{"name":"DeviceCreate","category":"interaction","linkedEntity":"Device","emits":[{"event":"DEVICE_CREATED"},{"event":"DeviceLoadFailed","description":"Fired when Device fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceLoaded","description":"Fired when Device finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Device]"}]},{"event":"DeviceSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"DeviceBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DEVICE_CREATED","name":"Device Created"},{"key":"DeviceLoadFailed","name":"Device load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceLoaded","name":"Device loaded","payloadSchema":[{"name":"data","type":"[Device]"}]},{"key":"DeviceSaveFailed","name":"Device save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceSaved","name":"Device saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Device",{"emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"}}],["render-ui","modal",{"direction":"vertical","children":[{"gap":"sm","children":[{"type":"icon","name":"plus-circle"},{"variant":"h3","type":"typography","content":"Create Device"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"fields":["name","type","status","lastSeen"],"mode":"create","type":"form-section","submitEvent":"SAVE","cancelEvent":"CLOSE"}],"type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Device","@payload.data",{"emit":{"success":"DeviceSaved","failure":"DeviceSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","DEVICE_CREATED"]]}]},"scope":"collection"},{"name":"DeviceEdit","category":"interaction","linkedEntity":"Device","emits":[{"event":"DEVICE_UPDATED"},{"event":"DeviceLoadFailed","description":"Fired when Device fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceLoaded","description":"Fired when Device finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Device]"}]},{"event":"DeviceUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"DeviceView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"DeviceBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Device"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DEVICE_UPDATED","name":"Device Updated"},{"key":"DeviceLoadFailed","name":"Device load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceLoaded","name":"Device loaded","payloadSchema":[{"name":"data","type":"[Device]"}]},{"key":"DeviceUpdateFailed","name":"Device update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceUpdated","name":"Device updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Device",{"emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Device",{"id":"@payload.id","emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}],["render-ui","modal",{"children":[{"type":"stack","direction":"horizontal","children":[{"name":"edit","type":"icon"},{"variant":"h3","type":"typography","content":"Edit Device"}],"gap":"sm"},{"type":"divider"},{"submitEvent":"SAVE","type":"form-section","mode":"edit","entity":"@payload.row","cancelEvent":"CLOSE","fields":["name","type","status","lastSeen"]}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Device","@payload.data",{"emit":{"failure":"DeviceUpdateFailed","success":"DeviceUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","DEVICE_UPDATED"]]}]},"scope":"collection"},{"name":"DeviceView","category":"interaction","linkedEntity":"Device","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeviceLoaded","description":"Fired when Device finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Device]"}]},{"event":"DeviceLoadFailed","description":"Fired when Device fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"DeviceBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"DeviceLoaded","name":"Device loaded","payloadSchema":[{"name":"data","type":"[Device]"}]},{"key":"DeviceLoadFailed","name":"Device load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Device",{"emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Device",{"id":"@payload.id","emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}],["render-ui","modal",{"children":[{"gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.name"}],"type":"stack","align":"center"},{"type":"divider"},{"direction":"horizontal","children":[{"content":"Name","type":"typography","variant":"caption"},{"variant":"body","content":"@entity.name","type":"typography"}],"type":"stack","gap":"md"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"variant":"caption","type":"typography","content":"Type"},{"content":"@entity.type","type":"typography","variant":"body"}]},{"children":[{"content":"Status","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.status","variant":"body"}],"direction":"horizontal","gap":"md","type":"stack"},{"direction":"horizontal","gap":"md","children":[{"content":"Last Seen","type":"typography","variant":"caption"},{"content":"@entity.lastSeen","type":"typography","variant":"body"}],"type":"stack"},{"type":"divider"},{"justify":"end","direction":"horizontal","children":[{"action":"EDIT","icon":"edit","type":"button","label":"Edit","variant":"primary"},{"action":"CLOSE","variant":"ghost","type":"button","label":"Close"}],"gap":"sm","type":"stack"}],"direction":"vertical","type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"DeviceDelete","category":"interaction","linkedEntity":"Device","emits":[{"event":"DEVICE_DELETED"},{"event":"DeviceDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeviceLoadFailed","description":"Fired when Device fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeviceLoaded","description":"Fired when Device finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Device]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"DeviceBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"DEVICE_DELETED","name":"Device Deleted"},{"key":"DeviceDeleteFailed","name":"Device delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceDeleted","name":"Device deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DeviceLoadFailed","name":"Device load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeviceLoaded","name":"Device loaded","payloadSchema":[{"name":"data","type":"[Device]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Device",{"emit":{"failure":"DeviceLoadFailed","success":"DeviceLoaded"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","children":[{"direction":"horizontal","gap":"sm","align":"center","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"Delete Device","variant":"h3"}],"type":"stack"},{"type":"divider"},{"type":"alert","message":"This action cannot be undone.","variant":"error"},{"type":"stack","direction":"horizontal","justify":"end","children":[{"action":"CANCEL","label":"Cancel","type":"button","variant":"ghost"},{"type":"button","icon":"check","label":"Delete","action":"CONFIRM_DELETE","variant":"danger"}],"gap":"sm"}],"type":"stack"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Device","@entity.pendingId",{"emit":{"success":"DeviceDeleted","failure":"DeviceDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"}}],["emit","DEVICE_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Device",{"emit":{"success":"DeviceLoaded","failure":"DeviceLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Devices","path":"/devices","traits":[{"ref":"DeviceBrowse"},{"ref":"DeviceCreate"},{"ref":"DeviceEdit"},{"ref":"DeviceView"},{"ref":"DeviceDelete"}]}]},{"name":"DeviceAlertOrbital","entity":{"name":"DeviceAlert","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"deviceId","type":"string","required":true},{"name":"severity","type":"string","required":true},{"name":"message","type":"string"},{"name":"acknowledged","type":"boolean"},{"name":"failureCount","type":"number"},{"name":"successCount","type":"number"},{"name":"threshold","type":"number"}]},"traits":[{"name":"DeviceAlertCircuitBreaker","category":"interaction","linkedEntity":"DeviceAlert","emits":[{"event":"DeviceAlertLoaded","description":"Fired when DeviceAlert finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[DeviceAlert]"}]},{"event":"DeviceAlertLoadFailed","description":"Fired when DeviceAlert fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"},{"name":"halfOpen"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"FAILURE","name":"Failure"},{"key":"SUCCESS","name":"Success"},{"key":"TIMEOUT","name":"Timeout"},{"key":"RESET","name":"Reset"},{"key":"DeviceAlertLoaded","name":"DeviceAlert loaded","payloadSchema":[{"name":"data","type":"[DeviceAlert]"}]},{"key":"DeviceAlertLoadFailed","name":"DeviceAlert load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","DeviceAlert",{"emit":{"failure":"DeviceAlertLoadFailed","success":"DeviceAlertLoaded"}}],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"align":"center","gap":"md","direction":"horizontal","type":"stack","justify":"between","children":[{"direction":"horizontal","align":"center","children":[{"name":"bell","type":"icon"},{"type":"typography","content":"DeviceAlert","variant":"h2"}],"type":"stack","gap":"md"},{"status":"online","type":"status-dot","pulse":false,"label":"Circuit Closed"}]},{"type":"divider"},{"message":"Service is healthy. All requests are being processed.","variant":"success","type":"alert"},{"cols":2,"type":"simple-grid","children":[{"type":"stat-display","label":"Failures","value":"@entity.failureCount"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}]},{"max":"@entity.threshold","value":"@entity.failureCount","type":"meter","min":0}]}],"appName":"IoT Dashboard","navItems":[{"icon":"layout-list","label":"Sensors","href":"/sensors"},{"icon":"cpu","label":"Devices","href":"/devices"},{"href":"/alerts","icon":"bell","label":"Alerts"}],"type":"dashboard-layout"}]]},{"from":"closed","to":"open","event":"FAILURE","effects":[["render-ui","main",{"children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"md","type":"stack","align":"center","justify":"between","children":[{"gap":"md","align":"center","type":"stack","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h2","content":"DeviceAlert"}],"direction":"horizontal"},{"type":"status-dot","status":"critical","label":"Circuit Open","pulse":true}]},{"type":"divider"},{"variant":"error","message":"Circuit is open. Requests are being rejected to prevent cascading failures.","type":"alert"},{"cols":2,"children":[{"label":"Failures","value":"@entity.failureCount","type":"stat-display"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}],"type":"simple-grid"},{"max":"@entity.threshold","type":"meter","min":0,"value":"@entity.failureCount"},{"type":"button","variant":"ghost","icon":"rotate-ccw","action":"RESET","label":"Reset"}]}],"navItems":[{"href":"/sensors","icon":"layout-list","label":"Sensors"},{"href":"/devices","icon":"cpu","label":"Devices"},{"href":"/alerts","label":"Alerts","icon":"bell"}],"type":"dashboard-layout","appName":"IoT Dashboard"}]]},{"from":"closed","to":"closed","event":"SUCCESS","effects":[["render-ui","main",{"navItems":[{"label":"Sensors","icon":"layout-list","href":"/sensors"},{"href":"/devices","label":"Devices","icon":"cpu"},{"icon":"bell","label":"Alerts","href":"/alerts"}],"type":"dashboard-layout","appName":"IoT Dashboard","children":[{"children":[{"children":[{"children":[{"type":"icon","name":"bell"},{"variant":"h2","type":"typography","content":"DeviceAlert"}],"gap":"md","type":"stack","direction":"horizontal","align":"center"},{"type":"status-dot","pulse":false,"label":"Circuit Closed","status":"online"}],"gap":"md","direction":"horizontal","align":"center","justify":"between","type":"stack"},{"type":"divider"},{"variant":"success","message":"Service is healthy. All requests are being processed.","type":"alert"},{"children":[{"value":"@entity.failureCount","label":"Failures","type":"stat-display"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}],"cols":2,"type":"simple-grid"},{"value":"@entity.failureCount","max":"@entity.threshold","type":"meter","min":0}],"direction":"vertical","type":"stack","gap":"lg"}]}]]},{"from":"open","to":"halfOpen","event":"TIMEOUT","effects":[["render-ui","main",{"navItems":[{"label":"Sensors","href":"/sensors","icon":"layout-list"},{"label":"Devices","icon":"cpu","href":"/devices"},{"icon":"bell","label":"Alerts","href":"/alerts"}],"children":[{"direction":"vertical","gap":"lg","children":[{"align":"center","type":"stack","direction":"horizontal","gap":"md","justify":"between","children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"name":"activity","type":"icon"},{"type":"typography","variant":"h2","content":"DeviceAlert"}],"align":"center"},{"type":"status-dot","label":"Circuit Half-Open","pulse":true,"status":"warning"}]},{"type":"divider"},{"variant":"warning","type":"alert","message":"Testing recovery. Limited requests are being allowed through."},{"type":"simple-grid","cols":2,"children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"value":"@entity.successCount","label":"Successes","type":"stat-display"}]}],"type":"stack"}],"appName":"IoT Dashboard","type":"dashboard-layout"}]]},{"from":"open","to":"closed","event":"RESET","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Sensors","icon":"layout-list","href":"/sensors"},{"label":"Devices","href":"/devices","icon":"cpu"},{"label":"Alerts","href":"/alerts","icon":"bell"}],"children":[{"type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","align":"center","justify":"between","gap":"md","children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"type":"icon","name":"bell"},{"type":"typography","variant":"h2","content":"DeviceAlert"}],"align":"center"},{"type":"status-dot","status":"online","pulse":false,"label":"Circuit Closed"}]},{"type":"divider"},{"type":"alert","variant":"success","message":"Service is healthy. All requests are being processed."},{"cols":2,"type":"simple-grid","children":[{"label":"Failures","value":"@entity.failureCount","type":"stat-display"},{"value":"@entity.successCount","label":"Successes","type":"stat-display"}]},{"max":"@entity.threshold","type":"meter","value":"@entity.failureCount","min":0}],"gap":"lg"}],"appName":"IoT Dashboard"}]]},{"from":"halfOpen","to":"closed","event":"SUCCESS","effects":[["render-ui","main",{"children":[{"children":[{"gap":"md","align":"center","type":"stack","direction":"horizontal","justify":"between","children":[{"gap":"md","align":"center","children":[{"type":"icon","name":"bell"},{"type":"typography","content":"DeviceAlert","variant":"h2"}],"type":"stack","direction":"horizontal"},{"type":"status-dot","pulse":false,"label":"Circuit Closed","status":"online"}]},{"type":"divider"},{"type":"alert","variant":"success","message":"Service is healthy. All requests are being processed."},{"type":"simple-grid","children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"value":"@entity.successCount","type":"stat-display","label":"Successes"}],"cols":2},{"min":0,"value":"@entity.failureCount","max":"@entity.threshold","type":"meter"}],"direction":"vertical","type":"stack","gap":"lg"}],"navItems":[{"icon":"layout-list","label":"Sensors","href":"/sensors"},{"label":"Devices","icon":"cpu","href":"/devices"},{"href":"/alerts","icon":"bell","label":"Alerts"}],"appName":"IoT Dashboard","type":"dashboard-layout"}]]},{"from":"halfOpen","to":"open","event":"FAILURE","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Sensors","icon":"layout-list","href":"/sensors"},{"icon":"cpu","href":"/devices","label":"Devices"},{"label":"Alerts","icon":"bell","href":"/alerts"}],"children":[{"children":[{"direction":"horizontal","align":"center","type":"stack","justify":"between","children":[{"align":"center","type":"stack","gap":"md","children":[{"type":"icon","name":"alert-triangle"},{"variant":"h2","type":"typography","content":"DeviceAlert"}],"direction":"horizontal"},{"type":"status-dot","status":"critical","pulse":true,"label":"Circuit Open"}],"gap":"md"},{"type":"divider"},{"message":"Circuit is open. Requests are being rejected to prevent cascading failures.","type":"alert","variant":"error"},{"cols":2,"children":[{"value":"@entity.failureCount","type":"stat-display","label":"Failures"},{"type":"stat-display","label":"Successes","value":"@entity.successCount"}],"type":"simple-grid"},{"min":0,"max":"@entity.threshold","type":"meter","value":"@entity.failureCount"},{"action":"RESET","label":"Reset","variant":"ghost","type":"button","icon":"rotate-ccw"}],"direction":"vertical","gap":"lg","type":"stack"}],"appName":"IoT Dashboard"}]]},{"from":"halfOpen","to":"closed","event":"RESET","effects":[["render-ui","main",{"navItems":[{"href":"/sensors","label":"Sensors","icon":"layout-list"},{"href":"/devices","icon":"cpu","label":"Devices"},{"icon":"bell","label":"Alerts","href":"/alerts"}],"type":"dashboard-layout","appName":"IoT Dashboard","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"children":[{"align":"center","direction":"horizontal","gap":"md","children":[{"name":"bell","type":"icon"},{"type":"typography","content":"DeviceAlert","variant":"h2"}],"type":"stack"},{"type":"status-dot","label":"Circuit Closed","status":"online","pulse":false}],"direction":"horizontal","gap":"md","type":"stack","align":"center","justify":"between"},{"type":"divider"},{"type":"alert","variant":"success","message":"Service is healthy. All requests are being processed."},{"children":[{"label":"Failures","type":"stat-display","value":"@entity.failureCount"},{"label":"Successes","value":"@entity.successCount","type":"stat-display"}],"type":"simple-grid","cols":2},{"min":0,"max":"@entity.threshold","type":"meter","value":"@entity.failureCount"}]}]}]]}]},"scope":"collection"}],"pages":[{"name":"Alerts","path":"/alerts","traits":[{"ref":"DeviceAlertCircuitBreaker"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'SensorReadingOrbital',
+      uses: [],
+      entity: {
+        'name': 'SensorReading',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sensorId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unit',
+            'type': 'string',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'SensorReadingDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'SensorReading',
+          'emits': [
+            {
+              'event': 'SensorReadingLoaded',
+              'description': 'Fired when SensorReading finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[SensorReading]',
+                },
+              ],
+            },
+            {
+              'event': 'SensorReadingLoadFailed',
+              'description': 'Fired when SensorReading fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'SensorReadingLoaded',
+                'name': 'SensorReading loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[SensorReading]',
+                  },
+                ],
+              },
+              {
+                'key': 'SensorReadingLoadFailed',
+                'name': 'SensorReading load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceSaved',
+                'name': 'Device saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceSaveFailed',
+                'name': 'Device save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceUpdated',
+                'name': 'Device updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceUpdateFailed',
+                'name': 'Device update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceDeleted',
+                'name': 'Device deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceDeleteFailed',
+                'name': 'Device delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.sensorId',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.timestamp',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.unit',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.value',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'SensorReading',
+                    {
+                      'emit': {
+                        'success': 'SensorReadingLoaded',
+                        'failure': 'SensorReadingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Sensor Readings',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'thermometer',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Sensor Readings',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'SensorId',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.sensorId',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.value',
+                                          'label': 'Value',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.unit',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.timestamp',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                          'label': 'Sensors',
+                        },
+                        {
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                          'href': '/devices',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'SensorReading',
+                    {
+                      'emit': {
+                        'failure': 'SensorReadingLoadFailed',
+                        'success': 'SensorReadingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Sensor Readings',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'thermometer',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Sensor Readings',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'SensorId',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.sensorId',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'label': 'Value',
+                                          'value': '@entity.value',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'content': 'Unit',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                        },
+                        {
+                          'label': 'Devices',
+                          'icon': 'cpu',
+                          'href': '/devices',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'SensorReading',
+                    {
+                      'emit': {
+                        'success': 'SensorReadingLoaded',
+                        'failure': 'SensorReadingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'icon': 'layout-list',
+                          'href': '/sensors',
+                        },
+                        {
+                          'href': '/devices',
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Sensor Readings',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'thermometer',
+                                        },
+                                        {
+                                          'content': 'Sensor Readings',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'SensorId',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.sensorId',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'label': 'Value',
+                                          'value': '@entity.value',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Unit',
+                                                },
+                                                {
+                                                  'content': '@entity.unit',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Timestamp',
+                                                },
+                                                {
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'SensorReading',
+                    {
+                      'emit': {
+                        'failure': 'SensorReadingLoadFailed',
+                        'success': 'SensorReadingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                        },
+                        {
+                          'label': 'Devices',
+                          'icon': 'cpu',
+                          'href': '/devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Sensor Readings',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'thermometer',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Sensor Readings',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'SensorId',
+                                                },
+                                                {
+                                                  'content': '@entity.sensorId',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Value',
+                                          'value': '@entity.value',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Unit',
+                                                },
+                                                {
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Timestamp',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.timestamp',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'SensorReading',
+                    {
+                      'emit': {
+                        'success': 'SensorReadingLoaded',
+                        'failure': 'SensorReadingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'IoT Dashboard',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Sensor Readings',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'thermometer',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Sensor Readings',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'SensorId',
+                                                },
+                                                {
+                                                  'content': '@entity.sensorId',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'value': '@entity.value',
+                                          'label': 'Value',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Unit',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.unit',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Timestamp',
+                                                },
+                                                {
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'width': 400,
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                          'label': 'Sensors',
+                        },
+                        {
+                          'href': '/devices',
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'SensorsPage',
+          'path': '/sensors',
+          'traits': [
+            {
+              'ref': 'SensorReadingDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'DeviceOrbital',
+      uses: [],
+      entity: {
+        'name': 'Device',
+        'collection': 'devices',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'lastSeen',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DeviceBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Device',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.type',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastSeen',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.type',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastSeen',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.type',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastSeen',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoaded',
+              'description': 'Fired when Device finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Device]',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoadFailed',
+              'description': 'Fired when Device fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DEVICE_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceCreate',
+              },
+            },
+            {
+              'event': 'DEVICE_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceEdit',
+              },
+            },
+            {
+              'event': 'DEVICE_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DeviceLoaded',
+                'name': 'Device loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Device]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoadFailed',
+                'name': 'Device load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'align': 'center',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'DeviceLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'cpu',
+                                    },
+                                    {
+                                      'content': 'Devices',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'label': 'Create Device',
+                                      'variant': 'primary',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 3,
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'icon': 'cpu',
+                                  'name': 'name',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'type',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'format': 'date',
+                                  'name': 'lastSeen',
+                                  'label': 'Last Seen',
+                                },
+                              ],
+                            },
+                          ],
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'cpu',
+                          'href': '/devices',
+                          'label': 'Devices',
+                        },
+                        {
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'DeviceLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load device',
+                          'type': 'typography',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'type': 'button',
+                          'label': 'Retry',
+                        },
+                      ],
+                      'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DeviceCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Device',
+          'emits': [
+            {
+              'event': 'DEVICE_CREATED',
+            },
+            {
+              'event': 'DeviceLoadFailed',
+              'description': 'Fired when Device fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoaded',
+              'description': 'Fired when Device finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Device]',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DEVICE_CREATED',
+                'name': 'Device Created',
+              },
+              {
+                'key': 'DeviceLoadFailed',
+                'name': 'Device load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoaded',
+                'name': 'Device loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Device]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceSaveFailed',
+                'name': 'Device save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceSaved',
+                'name': 'Device saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Create Device',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'name',
+                            'type',
+                            'status',
+                            'lastSeen',
+                          ],
+                          'type': 'form-section',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Device',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'DeviceSaved',
+                        'failure': 'DeviceSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEVICE_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DeviceEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Device',
+          'emits': [
+            {
+              'event': 'DEVICE_UPDATED',
+            },
+            {
+              'event': 'DeviceLoadFailed',
+              'description': 'Fired when Device fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoaded',
+              'description': 'Fired when Device finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Device]',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Device',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DEVICE_UPDATED',
+                'name': 'Device Updated',
+              },
+              {
+                'key': 'DeviceLoadFailed',
+                'name': 'Device load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoaded',
+                'name': 'Device loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Device]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceUpdateFailed',
+                'name': 'Device update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceUpdated',
+                'name': 'Device updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Edit Device',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'name',
+                            'type',
+                            'status',
+                            'lastSeen',
+                          ],
+                          'entity': '@payload.row',
+                          'type': 'form-section',
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Device',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'DeviceUpdated',
+                        'failure': 'DeviceUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEVICE_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DeviceView',
+          'category': 'interaction',
+          'linkedEntity': 'Device',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoaded',
+              'description': 'Fired when Device finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Device]',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoadFailed',
+              'description': 'Fired when Device fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DeviceLoaded',
+                'name': 'Device loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Device]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoadFailed',
+                'name': 'Device load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.lastSeen',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.type',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Name',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.name',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Type',
+                            },
+                            {
+                              'content': '@entity.type',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Last Seen',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.lastSeen',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'label': 'Edit',
+                              'action': 'EDIT',
+                              'icon': 'edit',
+                              'variant': 'primary',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                              'variant': 'ghost',
+                            },
+                          ],
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DeviceDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Device',
+          'emits': [
+            {
+              'event': 'DEVICE_DELETED',
+            },
+            {
+              'event': 'DeviceDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoadFailed',
+              'description': 'Fired when Device fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceLoaded',
+              'description': 'Fired when Device finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Device]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DeviceBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'DEVICE_DELETED',
+                'name': 'Device Deleted',
+              },
+              {
+                'key': 'DeviceDeleteFailed',
+                'name': 'Device delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceDeleted',
+                'name': 'Device deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoadFailed',
+                'name': 'Device load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceLoaded',
+                'name': 'Device loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Device]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Device',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                          'variant': 'error',
+                        },
+                        {
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Device',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'DeviceDeleteFailed',
+                        'success': 'DeviceDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEVICE_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Device',
+                    {
+                      'emit': {
+                        'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Devices',
+          'path': '/devices',
+          'traits': [
+            {
+              'ref': 'DeviceBrowse',
+            },
+            {
+              'ref': 'DeviceCreate',
+            },
+            {
+              'ref': 'DeviceEdit',
+            },
+            {
+              'ref': 'DeviceView',
+            },
+            {
+              'ref': 'DeviceDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'DeviceAlertOrbital',
+      uses: [],
+      entity: {
+        'name': 'DeviceAlert',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'deviceId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'acknowledged',
+            'type': 'boolean',
+          },
+          {
+            'name': 'failureCount',
+            'type': 'number',
+          },
+          {
+            'name': 'successCount',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DeviceAlertCircuitBreaker',
+          'category': 'interaction',
+          'linkedEntity': 'DeviceAlert',
+          'emits': [
+            {
+              'event': 'DeviceAlertLoaded',
+              'description': 'Fired when DeviceAlert finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[DeviceAlert]',
+                },
+              ],
+            },
+            {
+              'event': 'DeviceAlertLoadFailed',
+              'description': 'Fired when DeviceAlert fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+              {
+                'name': 'halfOpen',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'FAILURE',
+                'name': 'Failure',
+              },
+              {
+                'key': 'SUCCESS',
+                'name': 'Success',
+              },
+              {
+                'key': 'TIMEOUT',
+                'name': 'Timeout',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'DeviceAlertLoaded',
+                'name': 'DeviceAlert loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[DeviceAlert]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeviceAlertLoadFailed',
+                'name': 'DeviceAlert load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.failureCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.successCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.threshold',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'DeviceAlert',
+                    {
+                      'emit': {
+                        'failure': 'DeviceAlertLoadFailed',
+                        'success': 'DeviceAlertLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'label': 'Devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'bell',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'DeviceAlert',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'pulse': false,
+                                  'status': 'online',
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Closed',
+                                },
+                              ],
+                              'align': 'center',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'meter',
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'FAILURE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'alert-triangle',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'DeviceAlert',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'align': 'center',
+                                },
+                                {
+                                  'status': 'critical',
+                                  'label': 'Circuit Open',
+                                  'pulse': true,
+                                  'type': 'status-dot',
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                              'variant': 'error',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'value': '@entity.successCount',
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'meter',
+                              'min': 0,
+                              'max': '@entity.threshold',
+                              'value': '@entity.failureCount',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'SUCCESS',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'label': 'Devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'bell',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'DeviceAlert',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                              'cols': 2,
+                            },
+                            {
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                              'type': 'meter',
+                              'max': '@entity.threshold',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'halfOpen',
+                'event': 'TIMEOUT',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'activity',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'DeviceAlert',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'status': 'warning',
+                                  'label': 'Circuit Half-Open',
+                                  'type': 'status-dot',
+                                  'pulse': true,
+                                },
+                              ],
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Testing recovery. Limited requests are being allowed through.',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                          'href': '/devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'IoT Dashboard',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'bell',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'DeviceAlert',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/sensors',
+                          'label': 'Sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'closed',
+                'event': 'SUCCESS',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'bell',
+                                    },
+                                    {
+                                      'content': 'DeviceAlert',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                },
+                                {
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'success',
+                              'type': 'alert',
+                              'message': 'Service is healthy. All requests are being processed.',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'value': '@entity.successCount',
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'meter',
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/sensors',
+                          'label': 'Sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                          'href': '/alerts',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'open',
+                'event': 'FAILURE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'alert-triangle',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'DeviceAlert',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'pulse': true,
+                                  'label': 'Circuit Open',
+                                  'type': 'status-dot',
+                                  'status': 'critical',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
+                              'min': 0,
+                            },
+                            {
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Devices',
+                          'href': '/devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'halfOpen',
+                'to': 'closed',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'bell',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'DeviceAlert',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'status': 'online',
+                                  'type': 'status-dot',
+                                  'pulse': false,
+                                  'label': 'Circuit Closed',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                },
+                              ],
+                            },
+                            {
+                              'min': 0,
+                              'max': '@entity.threshold',
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'IoT Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Devices',
+                          'href': '/devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Alerts',
+          'path': '/alerts',
+          'traits': [
+            {
+              'ref': 'DeviceAlertCircuitBreaker',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

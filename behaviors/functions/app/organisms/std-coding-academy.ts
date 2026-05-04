@@ -84,9 +84,2310 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"SeqChallengeOrbital","entity":{"name":"SeqChallenge","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string","default":"easy"},{"name":"score","type":"number","default":0},{"name":"completed","type":"boolean","default":false},{"name":"level","type":"number","default":1}]},"traits":[{"name":"SeqChallengeSequencerGame","category":"interaction","linkedEntity":"SeqChallenge","emits":[{"event":"SeqChallengeLoaded","description":"Fired when SeqChallenge finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"event":"SeqChallengeLoadFailed","description":"Fired when SeqChallenge fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"SeqChallengeLoaded","name":"SeqChallenge loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"key":"SeqChallengeLoadFailed","name":"SeqChallenge load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","SeqChallenge",{"emit":{"failure":"SeqChallengeLoadFailed","success":"SeqChallengeLoaded"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Coding Academy","children":[{"type":"game-menu","title":"Sequencer Challenge","menuItems":[{"label":"Start","event":"START","variant":"primary"}]}]}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"appName":"Coding Academy","children":[{"type":"stack","children":[{"type":"game-hud","stats":[{"label":"Score","value":"@entity.score"},{"label":"Level","value":"@entity.level"}]},{"entity":"SeqChallenge","completeEvent":"COMPLETE","type":"sequencer-board"}],"direction":"vertical","gap":"md"}],"type":"game-shell","showTopBar":true}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"children":[{"type":"game-over-screen","menuItems":[{"label":"Play Again","event":"RESTART","variant":"primary"}],"title":"Well Done!"}],"appName":"Coding Academy","type":"game-shell","showTopBar":true}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"showTopBar":true,"children":[{"type":"game-menu","menuItems":[{"variant":"primary","event":"START","label":"Start"}],"title":"Sequencer Challenge"}],"type":"game-shell","appName":"Coding Academy"}]]}]},"scope":"collection"}],"pages":[{"name":"SequencerPage","path":"/sequencer","traits":[{"ref":"SeqChallengeSequencerGame"}]}]},{"name":"BuildChallengeOrbital","entity":{"name":"BuildChallenge","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string","default":"easy"},{"name":"score","type":"number","default":0},{"name":"completed","type":"boolean","default":false},{"name":"level","type":"number","default":1}]},"traits":[{"name":"BuildChallengeBuilderGame","category":"interaction","linkedEntity":"BuildChallenge","emits":[{"event":"BuildChallengeLoaded","description":"Fired when BuildChallenge finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"event":"BuildChallengeLoadFailed","description":"Fired when BuildChallenge fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"BuildChallengeLoaded","name":"BuildChallenge loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"key":"BuildChallengeLoadFailed","name":"BuildChallenge load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","BuildChallenge",{"emit":{"failure":"BuildChallengeLoadFailed","success":"BuildChallengeLoaded"}}],["render-ui","main",{"type":"game-shell","showTopBar":true,"appName":"Coding Academy","children":[{"menuItems":[{"event":"START","variant":"primary","label":"Start"}],"title":"Builder Challenge","type":"game-menu"}]}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"type":"game-shell","children":[{"children":[{"stats":[{"value":"@entity.score","label":"Score"},{"label":"Level","value":"@entity.level"}],"type":"game-hud"},{"entity":"BuildChallenge","completeEvent":"COMPLETE","type":"builder-board"}],"type":"stack","gap":"md","direction":"vertical"}],"appName":"Coding Academy","showTopBar":true}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"type":"game-shell","children":[{"title":"Well Done!","menuItems":[{"event":"RESTART","label":"Play Again","variant":"primary"}],"type":"game-over-screen"}],"showTopBar":true,"appName":"Coding Academy"}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"children":[{"menuItems":[{"variant":"primary","event":"START","label":"Start"}],"type":"game-menu","title":"Builder Challenge"}],"showTopBar":true,"type":"game-shell","appName":"Coding Academy"}]]}]},"scope":"collection"}],"pages":[{"name":"Builder","path":"/builder","traits":[{"ref":"BuildChallengeBuilderGame"}]}]},{"name":"EventChallengeOrbital","entity":{"name":"EventChallenge","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string","default":"easy"},{"name":"score","type":"number","default":0},{"name":"completed","type":"boolean","default":false},{"name":"level","type":"number","default":1}]},"traits":[{"name":"EventChallengeEventHandlerGame","category":"interaction","linkedEntity":"EventChallenge","emits":[{"event":"EventChallengeLoaded","description":"Fired when EventChallenge finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"event":"EventChallengeLoadFailed","description":"Fired when EventChallenge fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"EventChallengeLoaded","name":"EventChallenge loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"difficulty","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"key":"EventChallengeLoadFailed","name":"EventChallenge load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","EventChallenge",{"emit":{"success":"EventChallengeLoaded","failure":"EventChallengeLoadFailed"}}],["render-ui","main",{"children":[{"type":"game-menu","menuItems":[{"event":"START","variant":"primary","label":"Start"}],"title":"Event Handler Challenge"}],"type":"game-shell","appName":"Coding Academy","showTopBar":true}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"appName":"Coding Academy","showTopBar":true,"children":[{"children":[{"type":"game-hud","stats":[{"label":"Score","value":"@entity.score"},{"value":"@entity.level","label":"Level"}]},{"completeEvent":"COMPLETE","entity":"EventChallenge","type":"event-handler-board"}],"direction":"vertical","gap":"md","type":"stack"}],"type":"game-shell"}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"children":[{"type":"game-over-screen","title":"Well Done!","menuItems":[{"event":"RESTART","label":"Play Again","variant":"primary"}]}],"appName":"Coding Academy","showTopBar":true,"type":"game-shell"}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Coding Academy","children":[{"menuItems":[{"event":"START","label":"Start","variant":"primary"}],"type":"game-menu","title":"Event Handler Challenge"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Events","path":"/events","traits":[{"ref":"EventChallengeEventHandlerGame"}]}]},{"name":"StudentProgressOrbital","entity":{"name":"StudentProgress","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"totalLessons","type":"number"},{"name":"completedLessons","type":"number"},{"name":"averageScore","type":"number"},{"name":"streak","type":"number"}]},"traits":[{"name":"StudentProgressDisplay","category":"interaction","linkedEntity":"StudentProgress","emits":[{"event":"StudentProgressLoaded","description":"Fired when StudentProgress finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"totalLessons","type":"number"},{"name":"completedLessons","type":"number"},{"name":"averageScore","type":"number"},{"name":"streak","type":"number"}]},{"event":"StudentProgressLoadFailed","description":"Fired when StudentProgress fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"StudentProgressLoaded","name":"StudentProgress loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"totalLessons","type":"number"},{"name":"completedLessons","type":"number"},{"name":"averageScore","type":"number"},{"name":"streak","type":"number"}]},{"key":"StudentProgressLoadFailed","name":"StudentProgress load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","StudentProgress",{"emit":{"success":"StudentProgressLoaded","failure":"StudentProgressLoadFailed"}}],["render-ui","main",{"type":"game-shell","showTopBar":true,"appName":"Coding Academy","children":[{"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Progress"}]},{"direction":"horizontal","children":[{"gap":"md","direction":"horizontal","children":[{"type":"icon","name":"trending-up"},{"variant":"h2","type":"typography","content":"Progress"}],"type":"stack"},{"action":"REFRESH","variant":"secondary","icon":"refresh-cw","type":"button","label":"Refresh"}],"justify":"between","type":"stack","gap":"md"},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":3,"children":[{"label":"TotalLessons","type":"stat-display","value":"@entity.totalLessons"},{"label":"CompletedLessons","value":"@entity.completedLessons","type":"stat-display"},{"value":"@entity.averageScore","type":"stat-display","label":"AverageScore"},{"value":"@entity.streak","type":"stat-display","label":"Streak"}],"type":"simple-grid"}]},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"children":[{"type":"typography","variant":"caption","content":"Chart View"}],"type":"card"},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}]},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"width":400,"height":200,"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}]}],"type":"scaled-diagram"}]}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","StudentProgress",{"emit":{"failure":"StudentProgressLoadFailed","success":"StudentProgressLoaded"}}],["render-ui","main",{"showTopBar":true,"appName":"Coding Academy","type":"game-shell","children":[{"children":[{"direction":"vertical","gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Progress"}],"type":"breadcrumb"},{"justify":"between","gap":"md","children":[{"children":[{"name":"trending-up","type":"icon"},{"content":"Progress","variant":"h2","type":"typography"}],"type":"stack","gap":"md","direction":"horizontal"},{"label":"Refresh","type":"button","icon":"refresh-cw","action":"REFRESH","variant":"secondary"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"box","padding":"md","children":[{"children":[{"label":"TotalLessons","type":"stat-display","value":"@entity.totalLessons"},{"label":"CompletedLessons","value":"@entity.completedLessons","type":"stat-display"},{"label":"AverageScore","value":"@entity.averageScore","type":"stat-display"},{"type":"stat-display","label":"Streak","value":"@entity.streak"}],"type":"simple-grid","cols":3}]},{"type":"divider"},{"children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}],"type":"grid","cols":2,"gap":"md"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"height":200,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"type":"graph-view","edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400}],"type":"stack"}],"type":"scaled-diagram"}]}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","StudentProgress",{"emit":{"success":"StudentProgressLoaded","failure":"StudentProgressLoadFailed"}}],["render-ui","main",{"type":"game-shell","children":[{"type":"scaled-diagram","children":[{"children":[{"items":[{"label":"Home","href":"/"},{"label":"Progress"}],"type":"breadcrumb"},{"direction":"horizontal","children":[{"children":[{"type":"icon","name":"trending-up"},{"type":"typography","variant":"h2","content":"Progress"}],"type":"stack","direction":"horizontal","gap":"md"},{"action":"REFRESH","label":"Refresh","type":"button","icon":"refresh-cw","variant":"secondary"}],"gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"type":"box","padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"type":"stat-display","label":"TotalLessons","value":"@entity.totalLessons"},{"type":"stat-display","label":"CompletedLessons","value":"@entity.completedLessons"},{"label":"AverageScore","type":"stat-display","value":"@entity.averageScore"},{"label":"Streak","type":"stat-display","value":"@entity.streak"}]}]},{"type":"divider"},{"gap":"md","cols":2,"type":"grid","children":[{"children":[{"type":"typography","variant":"caption","content":"Chart View"}],"type":"card"},{"children":[{"variant":"caption","type":"typography","content":"Graph View"}],"type":"card"}]},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400,"type":"graph-view","height":200,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}],"gap":"lg","type":"stack","direction":"vertical"}]}],"showTopBar":true,"appName":"Coding Academy"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","StudentProgress",{"emit":{"success":"StudentProgressLoaded","failure":"StudentProgressLoadFailed"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Coding Academy","children":[{"type":"scaled-diagram","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Progress"}]},{"children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"name":"trending-up","type":"icon"},{"type":"typography","content":"Progress","variant":"h2"}]},{"action":"REFRESH","type":"button","variant":"secondary","icon":"refresh-cw","label":"Refresh"}],"direction":"horizontal","justify":"between","type":"stack","gap":"md"},{"type":"divider"},{"padding":"md","children":[{"cols":3,"children":[{"type":"stat-display","label":"TotalLessons","value":"@entity.totalLessons"},{"value":"@entity.completedLessons","type":"stat-display","label":"CompletedLessons"},{"label":"AverageScore","type":"stat-display","value":"@entity.averageScore"},{"value":"@entity.streak","type":"stat-display","label":"Streak"}],"type":"simple-grid"}],"type":"box"},{"type":"divider"},{"cols":2,"gap":"md","type":"grid","children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}]},{"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"height":200,"type":"graph-view","width":400,"nodes":[{"label":"Start","id":"a"},{"label":"Process","id":"b"},{"label":"End","id":"c"}]}]}]}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","StudentProgress",{"emit":{"failure":"StudentProgressLoadFailed","success":"StudentProgressLoaded"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Progress"}]},{"children":[{"gap":"md","children":[{"name":"trending-up","type":"icon"},{"variant":"h2","content":"Progress","type":"typography"}],"type":"stack","direction":"horizontal"},{"variant":"secondary","icon":"refresh-cw","action":"REFRESH","label":"Refresh","type":"button"}],"justify":"between","type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"label":"TotalLessons","type":"stat-display","value":"@entity.totalLessons"},{"label":"CompletedLessons","type":"stat-display","value":"@entity.completedLessons"},{"label":"AverageScore","type":"stat-display","value":"@entity.averageScore"},{"value":"@entity.streak","label":"Streak","type":"stat-display"}]}],"type":"box"},{"type":"divider"},{"type":"grid","gap":"md","children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}],"cols":2},{"type":"line-chart","data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"width":400,"height":200,"type":"graph-view","edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}]}],"type":"stack"}]}],"appName":"Coding Academy"}]]}]},"scope":"collection"}],"pages":[{"name":"Progress","path":"/progress","traits":[{"ref":"StudentProgressDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'SeqChallengeOrbital',
+      uses: [],
+      entity: {
+        'name': 'SeqChallenge',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'SeqChallengeSequencerGame',
+          'category': 'interaction',
+          'linkedEntity': 'SeqChallenge',
+          'emits': [
+            {
+              'event': 'SeqChallengeLoaded',
+              'description': 'Fired when SeqChallenge finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'difficulty',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'SeqChallengeLoadFailed',
+              'description': 'Fired when SeqChallenge fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'SeqChallengeLoaded',
+                'name': 'SeqChallenge loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'difficulty',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'SeqChallengeLoadFailed',
+                'name': 'SeqChallenge load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.level',
+                    1,
+                  ],
+                  [
+                    'set',
+                    '@entity.score',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'SeqChallenge',
+                    {
+                      'emit': {
+                        'success': 'SeqChallengeLoaded',
+                        'failure': 'SeqChallengeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'title': 'Sequencer Challenge',
+                          'menuItems': [
+                            {
+                              'label': 'Start',
+                              'variant': 'primary',
+                              'event': 'START',
+                            },
+                          ],
+                        },
+                      ],
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'game-hud',
+                              'stats': [
+                                {
+                                  'label': 'Score',
+                                  'value': '@entity.score',
+                                },
+                                {
+                                  'label': 'Level',
+                                  'value': '@entity.level',
+                                },
+                              ],
+                            },
+                            {
+                              'completeEvent': 'COMPLETE',
+                              'entity': 'SeqChallenge',
+                              'type': 'sequencer-board',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'event': 'RESTART',
+                              'label': 'Play Again',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'title': 'Sequencer Challenge',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'label': 'Start',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'game-menu',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'SequencerPage',
+          'path': '/sequencer',
+          'traits': [
+            {
+              'ref': 'SeqChallengeSequencerGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BuildChallengeOrbital',
+      uses: [],
+      entity: {
+        'name': 'BuildChallenge',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'BuildChallengeBuilderGame',
+          'category': 'interaction',
+          'linkedEntity': 'BuildChallenge',
+          'emits': [
+            {
+              'event': 'BuildChallengeLoaded',
+              'description': 'Fired when BuildChallenge finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'difficulty',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'BuildChallengeLoadFailed',
+              'description': 'Fired when BuildChallenge fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'BuildChallengeLoaded',
+                'name': 'BuildChallenge loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'difficulty',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildChallengeLoadFailed',
+                'name': 'BuildChallenge load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.level',
+                    1,
+                  ],
+                  [
+                    'set',
+                    '@entity.score',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'BuildChallenge',
+                    {
+                      'emit': {
+                        'success': 'BuildChallengeLoaded',
+                        'failure': 'BuildChallengeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'event': 'START',
+                              'label': 'Start',
+                            },
+                          ],
+                          'title': 'Builder Challenge',
+                          'type': 'game-menu',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'stats': [
+                                {
+                                  'value': '@entity.score',
+                                  'label': 'Score',
+                                },
+                                {
+                                  'label': 'Level',
+                                  'value': '@entity.level',
+                                },
+                              ],
+                              'type': 'game-hud',
+                            },
+                            {
+                              'type': 'builder-board',
+                              'entity': 'BuildChallenge',
+                              'completeEvent': 'COMPLETE',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'event': 'RESTART',
+                              'label': 'Play Again',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'title': 'Builder Challenge',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'variant': 'primary',
+                              'label': 'Start',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Builder',
+          'path': '/builder',
+          'traits': [
+            {
+              'ref': 'BuildChallengeBuilderGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'EventChallengeOrbital',
+      uses: [],
+      entity: {
+        'name': 'EventChallenge',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'EventChallengeEventHandlerGame',
+          'category': 'interaction',
+          'linkedEntity': 'EventChallenge',
+          'emits': [
+            {
+              'event': 'EventChallengeLoaded',
+              'description': 'Fired when EventChallenge finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'difficulty',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'EventChallengeLoadFailed',
+              'description': 'Fired when EventChallenge fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'EventChallengeLoaded',
+                'name': 'EventChallenge loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'difficulty',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'EventChallengeLoadFailed',
+                'name': 'EventChallenge load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.level',
+                    1,
+                  ],
+                  [
+                    'set',
+                    '@entity.score',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'EventChallenge',
+                    {
+                      'emit': {
+                        'success': 'EventChallengeLoaded',
+                        'failure': 'EventChallengeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'event': 'START',
+                            },
+                          ],
+                          'type': 'game-menu',
+                          'title': 'Event Handler Challenge',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'stats': [
+                                {
+                                  'label': 'Score',
+                                  'value': '@entity.score',
+                                },
+                                {
+                                  'value': '@entity.level',
+                                  'label': 'Level',
+                                },
+                              ],
+                              'type': 'game-hud',
+                            },
+                            {
+                              'type': 'event-handler-board',
+                              'completeEvent': 'COMPLETE',
+                              'entity': 'EventChallenge',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'event': 'RESTART',
+                              'label': 'Play Again',
+                            },
+                          ],
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'label': 'Start',
+                              'event': 'START',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'game-menu',
+                          'title': 'Event Handler Challenge',
+                        },
+                      ],
+                      'appName': 'Coding Academy',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Events',
+          'path': '/events',
+          'traits': [
+            {
+              'ref': 'EventChallengeEventHandlerGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'StudentProgressOrbital',
+      uses: [],
+      entity: {
+        'name': 'StudentProgress',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalLessons',
+            'type': 'number',
+          },
+          {
+            'name': 'completedLessons',
+            'type': 'number',
+          },
+          {
+            'name': 'averageScore',
+            'type': 'number',
+          },
+          {
+            'name': 'streak',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'StudentProgressDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'StudentProgress',
+          'emits': [
+            {
+              'event': 'StudentProgressLoaded',
+              'description': 'Fired when StudentProgress finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'totalLessons',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completedLessons',
+                  'type': 'number',
+                },
+                {
+                  'name': 'averageScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'streak',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'StudentProgressLoadFailed',
+              'description': 'Fired when StudentProgress fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'StudentProgressLoaded',
+                'name': 'StudentProgress loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'totalLessons',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completedLessons',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'averageScore',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'streak',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'StudentProgressLoadFailed',
+                'name': 'StudentProgress load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.averageScore',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.completedLessons',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.streak',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalLessons',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'StudentProgress',
+                    {
+                      'emit': {
+                        'failure': 'StudentProgressLoadFailed',
+                        'success': 'StudentProgressLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Progress',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'trending-up',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Progress',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'CompletedLessons',
+                                          'value': '@entity.completedLessons',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'AverageScore',
+                                          'type': 'stat-display',
+                                          'value': '@entity.averageScore',
+                                        },
+                                        {
+                                          'label': 'Streak',
+                                          'type': 'stat-display',
+                                          'value': '@entity.streak',
+                                        },
+                                      ],
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'StudentProgress',
+                    {
+                      'emit': {
+                        'failure': 'StudentProgressLoadFailed',
+                        'success': 'StudentProgressLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Progress',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'trending-up',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Progress',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
+                                        },
+                                        {
+                                          'value': '@entity.completedLessons',
+                                          'type': 'stat-display',
+                                          'label': 'CompletedLessons',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'AverageScore',
+                                          'value': '@entity.averageScore',
+                                        },
+                                        {
+                                          'value': '@entity.streak',
+                                          'label': 'Streak',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'StudentProgress',
+                    {
+                      'emit': {
+                        'success': 'StudentProgressLoaded',
+                        'failure': 'StudentProgressLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Progress',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'trending-up',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Progress',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
+                                        },
+                                        {
+                                          'label': 'CompletedLessons',
+                                          'value': '@entity.completedLessons',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.averageScore',
+                                          'label': 'AverageScore',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.streak',
+                                          'label': 'Streak',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'StudentProgress',
+                    {
+                      'emit': {
+                        'success': 'StudentProgressLoaded',
+                        'failure': 'StudentProgressLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Progress',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'trending-up',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Progress',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
+                                        },
+                                        {
+                                          'label': 'CompletedLessons',
+                                          'type': 'stat-display',
+                                          'value': '@entity.completedLessons',
+                                        },
+                                        {
+                                          'value': '@entity.averageScore',
+                                          'label': 'AverageScore',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'Streak',
+                                          'type': 'stat-display',
+                                          'value': '@entity.streak',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'StudentProgress',
+                    {
+                      'emit': {
+                        'failure': 'StudentProgressLoadFailed',
+                        'success': 'StudentProgressLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Coding Academy',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Progress',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'name': 'trending-up',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Progress',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
+                                        },
+                                        {
+                                          'value': '@entity.completedLessons',
+                                          'label': 'CompletedLessons',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'AverageScore',
+                                          'value': '@entity.averageScore',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Streak',
+                                          'value': '@entity.streak',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Progress',
+          'path': '/progress',
+          'traits': [
+            {
+              'ref': 'StudentProgressDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

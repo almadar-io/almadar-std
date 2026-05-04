@@ -114,9 +114,4699 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ChatMessageOrbital","entity":{"name":"ChatMessage","collection":"chatmessages","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"sender","type":"string","required":true},{"name":"content","type":"string","required":true},{"name":"channel","type":"string"},{"name":"timestamp","type":"datetime"}]},"traits":[{"name":"ChatMessageBrowse","category":"interaction","linkedEntity":"ChatMessage","emits":[{"event":"COMPOSE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.sender","type":"string","required":true},{"name":"row.content","type":"string","required":true},{"name":"row.channel","type":"string"},{"name":"row.timestamp","type":"datetime"}]},{"event":"ChatMessageLoaded","description":"Fired when ChatMessage finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"event":"ChatMessageLoadFailed","description":"Fired when ChatMessage fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChatMessageSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChatMessageSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChannelSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChannelUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChannelDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"SEND","triggers":"INIT","source":{"kind":"trait","trait":"ChatMessageCompose"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ChatMessageLoaded","name":"ChatMessage loaded","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"key":"ChatMessageLoadFailed","name":"ChatMessage load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"COMPOSE","name":"Compose"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"ChatMessage"}]},{"key":"ChatMessageSaved","name":"ChatMessage saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ChatMessageSaveFailed","name":"ChatMessage save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelSaved","name":"Channel saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ChannelSaveFailed","name":"Channel save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelUpdated","name":"Channel updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ChannelUpdateFailed","name":"Channel update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelDeleted","name":"Channel deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ChannelDeleteFailed","name":"Channel delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","ChatMessage",{"emit":{"success":"ChatMessageLoaded","failure":"ChatMessageLoadFailed"}}],["render-ui","main",{"type":"stack","className":"py-12","gap":"md","align":"center","children":[{"type":"spinner"},{"content":"Loading…","variant":"caption","color":"muted","type":"typography"}],"direction":"vertical"}]]},{"from":"browsing","to":"browsing","event":"ChatMessageLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"Realtime Chat","navItems":[{"icon":"layout-list","label":"Chat","href":"/chat"},{"href":"/channels","label":"Channels","icon":"hash"},{"label":"Online","href":"/online","icon":"layout-list"}],"children":[{"className":"max-w-5xl mx-auto w-full","children":[{"justify":"between","gap":"md","align":"center","direction":"horizontal","children":[{"type":"stack","direction":"horizontal","gap":"sm","children":[{"name":"message-circle","type":"icon"},{"type":"typography","variant":"h2","content":"Chat"}],"align":"center"},{"type":"stack","direction":"horizontal","children":[{"type":"button","label":"Compose","icon":"edit","action":"COMPOSE","variant":"primary"}],"gap":"sm"}],"type":"stack"},{"type":"divider"},{"entity":"@payload.data","type":"data-list","fields":[{"variant":"h4","name":"sender"},{"name":"content","variant":"body"},{"variant":"caption","format":"date","name":"timestamp"}],"variant":"message","gap":"sm","senderField":"sender","itemActions":[{"event":"VIEW","label":"View","variant":"ghost"}]}],"type":"stack","gap":"lg","direction":"vertical"}]}]]},{"from":"browsing","to":"browsing","event":"ChatMessageLoadFailed","effects":[["render-ui","main",{"type":"stack","gap":"md","align":"center","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"variant":"h3","content":"Failed to load chatmessage","type":"typography"},{"variant":"body","color":"muted","content":"@payload.error","type":"typography"},{"label":"Retry","variant":"primary","type":"button","icon":"rotate-ccw","action":"INIT"}],"className":"py-12","direction":"vertical"}]]}]},"scope":"collection"},{"name":"ChatMessageCompose","category":"interaction","linkedEntity":"ChatMessage","emits":[{"event":"SEND"},{"event":"ChatMessageLoadFailed","description":"Fired when ChatMessage fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChatMessageLoaded","description":"Fired when ChatMessage finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"event":"ChatMessageSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChatMessageSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"COMPOSE","triggers":"COMPOSE","source":{"kind":"trait","trait":"ChatMessageBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"COMPOSE","name":"Compose"},{"key":"CLOSE","name":"Close"},{"key":"SEND","name":"Send","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"ChatMessageLoadFailed","name":"ChatMessage load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChatMessageLoaded","name":"ChatMessage loaded","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"key":"ChatMessageSaveFailed","name":"ChatMessage save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChatMessageSaved","name":"ChatMessage saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","ChatMessage",{"emit":{"failure":"ChatMessageLoadFailed","success":"ChatMessageLoaded"}}]]},{"from":"closed","to":"open","event":"COMPOSE","effects":[["render-ui","modal",{"direction":"vertical","type":"stack","gap":"md","children":[{"direction":"horizontal","gap":"sm","children":[{"name":"edit","type":"icon"},{"type":"typography","variant":"h3","content":"New ChatMessage"}],"type":"stack"},{"type":"divider"},{"mode":"create","type":"form-section","submitEvent":"SEND","cancelEvent":"CLOSE","fields":["sender","content","channel","timestamp"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SEND","effects":[["persist","create","ChatMessage","@payload.data",{"emit":{"failure":"ChatMessageSaveFailed","success":"ChatMessageSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"ChatMessageView","category":"interaction","linkedEntity":"ChatMessage","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChatMessageLoaded","description":"Fired when ChatMessage finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"event":"ChatMessageLoadFailed","description":"Fired when ChatMessage fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"ChatMessageBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"ChatMessageLoaded","name":"ChatMessage loaded","payloadSchema":[{"name":"data","type":"[ChatMessage]"}]},{"key":"ChatMessageLoadFailed","name":"ChatMessage load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","ChatMessage",{"emit":{"success":"ChatMessageLoaded","failure":"ChatMessageLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","ChatMessage",{"id":"@payload.id","emit":{"success":"ChatMessageLoaded","failure":"ChatMessageLoadFailed"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"type":"stack","align":"center","children":[{"type":"icon","name":"eye"},{"variant":"h3","content":"@entity.sender","type":"typography"}],"gap":"sm","direction":"horizontal"},{"type":"divider"},{"direction":"horizontal","gap":"md","children":[{"variant":"caption","content":"Sender","type":"typography"},{"content":"@entity.sender","variant":"body","type":"typography"}],"type":"stack"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"typography","content":"Content","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.content"}]},{"type":"stack","gap":"md","children":[{"content":"Channel","variant":"caption","type":"typography"},{"type":"typography","content":"@entity.channel","variant":"body"}],"direction":"horizontal"},{"direction":"horizontal","gap":"md","children":[{"variant":"caption","content":"Timestamp","type":"typography"},{"type":"typography","variant":"body","content":"@entity.timestamp"}],"type":"stack"},{"type":"divider"},{"children":[{"type":"button","label":"Close","variant":"ghost","action":"CLOSE"}],"direction":"horizontal","type":"stack","justify":"end","gap":"sm"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"ChatPage","path":"/chat","traits":[{"ref":"ChatMessageBrowse"},{"ref":"ChatMessageCompose"},{"ref":"ChatMessageView"}]}]},{"name":"ChannelOrbital","entity":{"name":"Channel","collection":"channels","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"description","type":"string"},{"name":"memberCount","type":"number"},{"name":"isPrivate","type":"boolean"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"ChannelBrowse","category":"interaction","linkedEntity":"Channel","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.memberCount","type":"number"},{"name":"row.isPrivate","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.memberCount","type":"number"},{"name":"row.isPrivate","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.memberCount","type":"number"},{"name":"row.isPrivate","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"ChannelLoaded","description":"Fired when Channel finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"event":"ChannelLoadFailed","description":"Fired when Channel fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"CHANNEL_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"ChannelCreate"}},{"event":"CHANNEL_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"ChannelEdit"}},{"event":"CHANNEL_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"ChannelDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ChannelLoaded","name":"Channel loaded","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"key":"ChannelLoadFailed","name":"Channel load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Channel",{"emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}],["render-ui","main",{"direction":"vertical","align":"center","type":"stack","gap":"md","className":"py-12","children":[{"type":"spinner"},{"type":"typography","content":"Loading…","color":"muted","variant":"caption"}]}]]},{"from":"browsing","to":"browsing","event":"ChannelLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"Realtime Chat","children":[{"className":"max-w-5xl mx-auto w-full","gap":"lg","type":"stack","children":[{"children":[{"children":[{"type":"icon","name":"hash"},{"content":"Channels","variant":"h2","type":"typography"}],"align":"center","type":"stack","direction":"horizontal","gap":"sm"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"icon":"plus","type":"button","label":"Create Channel","action":"CREATE","variant":"primary"}]}],"justify":"between","gap":"md","type":"stack","direction":"horizontal","align":"center"},{"type":"divider"},{"fields":[{"variant":"h3","icon":"hash","name":"name"},{"format":"number","variant":"badge","name":"memberCount","label":"Members"},{"name":"description","variant":"body"},{"label":"Private","name":"isPrivate","variant":"body","format":"boolean"}],"variant":"card","type":"data-list","itemActions":[{"variant":"ghost","event":"VIEW","label":"View"},{"variant":"ghost","label":"Edit","event":"EDIT"},{"variant":"danger","label":"Delete","event":"DELETE"}],"gap":"sm","entity":"@payload.data"}],"direction":"vertical"}],"navItems":[{"href":"/chat","label":"Chat","icon":"layout-list"},{"label":"Channels","icon":"hash","href":"/channels"},{"href":"/online","icon":"layout-list","label":"Online"}]}]]},{"from":"browsing","to":"browsing","event":"ChannelLoadFailed","effects":[["render-ui","main",{"align":"center","className":"py-12","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"variant":"h3","type":"typography","content":"Failed to load channel"},{"color":"muted","type":"typography","content":"@payload.error","variant":"body"},{"action":"INIT","icon":"rotate-ccw","type":"button","label":"Retry","variant":"primary"}],"type":"stack","direction":"vertical","gap":"md"}]]}]},"scope":"collection"},{"name":"ChannelCreate","category":"interaction","linkedEntity":"Channel","emits":[{"event":"CHANNEL_CREATED"},{"event":"ChannelLoadFailed","description":"Fired when Channel fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelLoaded","description":"Fired when Channel finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"event":"ChannelSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"ChannelBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CHANNEL_CREATED","name":"Channel Created"},{"key":"ChannelLoadFailed","name":"Channel load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelLoaded","name":"Channel loaded","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"key":"ChannelSaveFailed","name":"Channel save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelSaved","name":"Channel saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Channel",{"emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Channel",{"emit":{"failure":"ChannelLoadFailed","success":"ChannelLoaded"}}],["render-ui","modal",{"type":"stack","children":[{"children":[{"type":"icon","name":"plus-circle"},{"variant":"h3","type":"typography","content":"Create Channel"}],"gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"cancelEvent":"CLOSE","type":"form-section","mode":"create","submitEvent":"SAVE","fields":["name","description","memberCount","isPrivate"]}],"direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Channel","@payload.data",{"emit":{"failure":"ChannelSaveFailed","success":"ChannelSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CHANNEL_CREATED"]]}]},"scope":"collection"},{"name":"ChannelEdit","category":"interaction","linkedEntity":"Channel","emits":[{"event":"CHANNEL_UPDATED"},{"event":"ChannelLoadFailed","description":"Fired when Channel fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelLoaded","description":"Fired when Channel finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"event":"ChannelUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ChannelView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ChannelBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Channel"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CHANNEL_UPDATED","name":"Channel Updated"},{"key":"ChannelLoadFailed","name":"Channel load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelLoaded","name":"Channel loaded","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"key":"ChannelUpdateFailed","name":"Channel update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelUpdated","name":"Channel updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Channel",{"emit":{"failure":"ChannelLoadFailed","success":"ChannelLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Channel",{"id":"@payload.id","emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}],["render-ui","modal",{"direction":"vertical","type":"stack","gap":"md","children":[{"children":[{"type":"icon","name":"edit"},{"content":"Edit Channel","type":"typography","variant":"h3"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"form-section","entity":"@payload.row","mode":"edit","submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["name","description","memberCount","isPrivate"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Channel","@payload.data",{"emit":{"success":"ChannelUpdated","failure":"ChannelUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CHANNEL_UPDATED"]]}]},"scope":"collection"},{"name":"ChannelView","category":"interaction","linkedEntity":"Channel","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChannelLoaded","description":"Fired when Channel finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"event":"ChannelLoadFailed","description":"Fired when Channel fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"ChannelBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"ChannelLoaded","name":"Channel loaded","payloadSchema":[{"name":"data","type":"[Channel]"}]},{"key":"ChannelLoadFailed","name":"Channel load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Channel",{"emit":{"failure":"ChannelLoadFailed","success":"ChannelLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Channel",{"id":"@payload.id","emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"children":[{"name":"eye","type":"icon"},{"content":"@entity.name","variant":"h3","type":"typography"}],"type":"stack","direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"gap":"md","children":[{"type":"typography","content":"Name","variant":"caption"},{"type":"typography","content":"@entity.name","variant":"body"}],"type":"stack","direction":"horizontal"},{"children":[{"variant":"caption","content":"Description","type":"typography"},{"variant":"body","content":"@entity.description","type":"typography"}],"type":"stack","direction":"horizontal","gap":"md"},{"children":[{"content":"Member Count","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.memberCount","variant":"body"}],"gap":"md","type":"stack","direction":"horizontal"},{"gap":"md","direction":"horizontal","type":"stack","children":[{"content":"Is Private","type":"typography","variant":"caption"},{"variant":"body","content":"@entity.isPrivate","type":"typography"}]},{"type":"divider"},{"children":[{"label":"Edit","action":"EDIT","variant":"primary","type":"button","icon":"edit"},{"type":"button","label":"Close","action":"CLOSE","variant":"ghost"}],"direction":"horizontal","type":"stack","justify":"end","gap":"sm"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"ChannelDelete","category":"interaction","linkedEntity":"Channel","emits":[{"event":"CHANNEL_DELETED"},{"event":"ChannelDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ChannelLoadFailed","description":"Fired when Channel fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ChannelLoaded","description":"Fired when Channel finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Channel]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"ChannelBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"CHANNEL_DELETED","name":"Channel Deleted"},{"key":"ChannelDeleteFailed","name":"Channel delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelDeleted","name":"Channel deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ChannelLoadFailed","name":"Channel load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ChannelLoaded","name":"Channel loaded","payloadSchema":[{"name":"data","type":"[Channel]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Channel",{"emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Channel",{"id":"@payload.id","emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}],["render-ui","modal",{"direction":"vertical","gap":"md","type":"stack","children":[{"type":"stack","children":[{"name":"alert-triangle","type":"icon"},{"variant":"h3","type":"typography","content":"Delete Channel"}],"direction":"horizontal","align":"center","gap":"sm"},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"justify":"end","type":"stack","gap":"sm","direction":"horizontal","children":[{"label":"Cancel","variant":"ghost","type":"button","action":"CANCEL"},{"label":"Delete","variant":"danger","type":"button","action":"CONFIRM_DELETE","icon":"check"}]}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Channel","@entity.pendingId",{"emit":{"failure":"ChannelDeleteFailed","success":"ChannelDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Channel",{"emit":{"failure":"ChannelLoadFailed","success":"ChannelLoaded"}}],["emit","CHANNEL_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Channel",{"emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Channel",{"emit":{"success":"ChannelLoaded","failure":"ChannelLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Channels","path":"/channels","traits":[{"ref":"ChannelBrowse"},{"ref":"ChannelCreate"},{"ref":"ChannelEdit"},{"ref":"ChannelView"},{"ref":"ChannelDelete"}]}]},{"name":"OnlineUserOrbital","entity":{"name":"OnlineUser","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"username","type":"string","required":true},{"name":"status","type":"string"},{"name":"lastActive","type":"datetime"},{"name":"avatar","type":"string"}]},"traits":[{"name":"OnlineUserDisplay","category":"interaction","linkedEntity":"OnlineUser","emits":[{"event":"OnlineUserLoaded","description":"Fired when OnlineUser finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OnlineUser]"}]},{"event":"OnlineUserLoadFailed","description":"Fired when OnlineUser fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"OnlineUserLoaded","name":"OnlineUser loaded","payloadSchema":[{"name":"data","type":"[OnlineUser]"}]},{"key":"OnlineUserLoadFailed","name":"OnlineUser load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","OnlineUser",{"emit":{"success":"OnlineUserLoaded","failure":"OnlineUserLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Chat","href":"/chat","icon":"layout-list"},{"label":"Channels","href":"/channels","icon":"hash"},{"label":"Online","icon":"layout-list","href":"/online"}],"children":[{"type":"scaled-diagram","children":[{"gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Online Users"}],"type":"breadcrumb"},{"justify":"between","children":[{"children":[{"name":"users","type":"icon"},{"content":"Online Users","variant":"h2","type":"typography"}],"type":"stack","direction":"horizontal","gap":"md"},{"action":"REFRESH","type":"button","icon":"refresh-cw","variant":"secondary","label":"Refresh"}],"type":"stack","gap":"md","direction":"horizontal"},{"type":"divider"},{"children":[{"children":[{"type":"card","children":[{"type":"stack","gap":"sm","direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Username"},{"variant":"h3","content":"@entity.username","type":"typography"}]}]},{"children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"variant":"caption","content":"Status","type":"typography"},{"variant":"h3","type":"typography","content":"@entity.status"}]}],"type":"card"},{"children":[{"children":[{"type":"typography","variant":"caption","content":"LastActive"},{"type":"typography","variant":"h3","content":"@entity.lastActive"}],"gap":"sm","type":"stack","direction":"vertical"}],"type":"card"},{"type":"card","children":[{"direction":"vertical","type":"stack","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Avatar"},{"type":"typography","content":"@entity.avatar","variant":"h3"}]}]}],"type":"simple-grid","cols":3}],"type":"box","padding":"md"},{"type":"divider"},{"children":[{"type":"card","children":[{"content":"Chart View","variant":"caption","type":"typography"}]},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}],"type":"grid","cols":2,"gap":"md"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}]},{"items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"width":400,"height":200,"type":"graph-view"}],"type":"stack","direction":"vertical"}]}],"appName":"Realtime Chat"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","OnlineUser",{"emit":{"success":"OnlineUserLoaded","failure":"OnlineUserLoadFailed"}}],["render-ui","main",{"appName":"Realtime Chat","type":"dashboard-layout","navItems":[{"label":"Chat","icon":"layout-list","href":"/chat"},{"label":"Channels","href":"/channels","icon":"hash"},{"href":"/online","icon":"layout-list","label":"Online"}],"children":[{"type":"scaled-diagram","children":[{"direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Online Users"}]},{"direction":"horizontal","justify":"between","type":"stack","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"users"},{"type":"typography","content":"Online Users","variant":"h2"}]},{"type":"button","action":"REFRESH","icon":"refresh-cw","label":"Refresh","variant":"secondary"}],"gap":"md"},{"type":"divider"},{"children":[{"type":"simple-grid","cols":3,"children":[{"type":"card","children":[{"direction":"vertical","type":"stack","gap":"sm","children":[{"type":"typography","content":"Username","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.username"}]}]},{"type":"card","children":[{"children":[{"variant":"caption","type":"typography","content":"Status"},{"content":"@entity.status","type":"typography","variant":"h3"}],"gap":"sm","type":"stack","direction":"vertical"}]},{"children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"variant":"caption","content":"LastActive","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.lastActive"}]}],"type":"card"},{"type":"card","children":[{"gap":"sm","type":"stack","children":[{"variant":"caption","content":"Avatar","type":"typography"},{"content":"@entity.avatar","type":"typography","variant":"h3"}],"direction":"vertical"}]}]}],"type":"box","padding":"md"},{"type":"divider"},{"cols":2,"type":"grid","gap":"md","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"children":[{"content":"Graph View","type":"typography","variant":"caption"}],"type":"card"}]},{"data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"type":"graph-view","width":400,"height":200,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}]}],"gap":"lg","type":"stack"}]}]}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","OnlineUser",{"emit":{"failure":"OnlineUserLoadFailed","success":"OnlineUserLoaded"}}],["render-ui","main",{"children":[{"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Online Users"}]},{"children":[{"direction":"horizontal","children":[{"type":"icon","name":"users"},{"variant":"h2","type":"typography","content":"Online Users"}],"gap":"md","type":"stack"},{"icon":"refresh-cw","action":"REFRESH","label":"Refresh","type":"button","variant":"secondary"}],"direction":"horizontal","type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"type":"box","padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"type":"card","children":[{"type":"stack","children":[{"variant":"caption","content":"Username","type":"typography"},{"variant":"h3","type":"typography","content":"@entity.username"}],"direction":"vertical","gap":"sm"}]},{"children":[{"type":"stack","direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Status"},{"content":"@entity.status","type":"typography","variant":"h3"}],"gap":"sm"}],"type":"card"},{"children":[{"children":[{"variant":"caption","content":"LastActive","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.lastActive"}],"gap":"sm","type":"stack","direction":"vertical"}],"type":"card"},{"type":"card","children":[{"gap":"sm","direction":"vertical","type":"stack","children":[{"variant":"caption","content":"Avatar","type":"typography"},{"variant":"h3","type":"typography","content":"@entity.avatar"}]}]}]}]},{"type":"divider"},{"gap":"md","type":"grid","cols":2,"children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"type":"card","children":[{"type":"typography","variant":"caption","content":"Graph View"}]}]},{"data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400,"height":200,"type":"graph-view"}]}],"type":"scaled-diagram"}],"navItems":[{"href":"/chat","icon":"layout-list","label":"Chat"},{"icon":"hash","label":"Channels","href":"/channels"},{"label":"Online","href":"/online","icon":"layout-list"}],"appName":"Realtime Chat","type":"dashboard-layout"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","OnlineUser",{"emit":{"success":"OnlineUserLoaded","failure":"OnlineUserLoadFailed"}}],["render-ui","main",{"navItems":[{"label":"Chat","href":"/chat","icon":"layout-list"},{"label":"Channels","href":"/channels","icon":"hash"},{"icon":"layout-list","href":"/online","label":"Online"}],"appName":"Realtime Chat","children":[{"children":[{"direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Online Users"}]},{"direction":"horizontal","justify":"between","type":"stack","gap":"md","children":[{"children":[{"type":"icon","name":"users"},{"content":"Online Users","variant":"h2","type":"typography"}],"gap":"md","direction":"horizontal","type":"stack"},{"action":"REFRESH","label":"Refresh","type":"button","variant":"secondary","icon":"refresh-cw"}]},{"type":"divider"},{"children":[{"children":[{"type":"card","children":[{"direction":"vertical","type":"stack","children":[{"type":"typography","variant":"caption","content":"Username"},{"type":"typography","variant":"h3","content":"@entity.username"}],"gap":"sm"}]},{"children":[{"direction":"vertical","type":"stack","children":[{"content":"Status","type":"typography","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.status"}],"gap":"sm"}],"type":"card"},{"children":[{"type":"stack","children":[{"content":"LastActive","type":"typography","variant":"caption"},{"content":"@entity.lastActive","type":"typography","variant":"h3"}],"gap":"sm","direction":"vertical"}],"type":"card"},{"type":"card","children":[{"direction":"vertical","gap":"sm","type":"stack","children":[{"variant":"caption","type":"typography","content":"Avatar"},{"content":"@entity.avatar","type":"typography","variant":"h3"}]}]}],"type":"simple-grid","cols":3}],"type":"box","padding":"md"},{"type":"divider"},{"cols":2,"type":"grid","gap":"md","children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}]},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"width":400,"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"type":"graph-view","height":200}],"type":"stack","gap":"lg"}],"type":"scaled-diagram"}],"type":"dashboard-layout"}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","OnlineUser",{"emit":{"failure":"OnlineUserLoadFailed","success":"OnlineUserLoaded"}}],["render-ui","main",{"appName":"Realtime Chat","navItems":[{"icon":"layout-list","href":"/chat","label":"Chat"},{"icon":"hash","label":"Channels","href":"/channels"},{"icon":"layout-list","label":"Online","href":"/online"}],"type":"dashboard-layout","children":[{"children":[{"gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Online Users"}]},{"direction":"horizontal","gap":"md","type":"stack","children":[{"gap":"md","type":"stack","children":[{"name":"users","type":"icon"},{"variant":"h2","type":"typography","content":"Online Users"}],"direction":"horizontal"},{"icon":"refresh-cw","type":"button","label":"Refresh","action":"REFRESH","variant":"secondary"}],"justify":"between"},{"type":"divider"},{"type":"box","children":[{"type":"simple-grid","cols":3,"children":[{"children":[{"children":[{"content":"Username","type":"typography","variant":"caption"},{"variant":"h3","content":"@entity.username","type":"typography"}],"direction":"vertical","type":"stack","gap":"sm"}],"type":"card"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"type":"typography","variant":"caption","content":"Status"},{"type":"typography","content":"@entity.status","variant":"h3"}]}]},{"type":"card","children":[{"type":"stack","direction":"vertical","children":[{"content":"LastActive","type":"typography","variant":"caption"},{"type":"typography","variant":"h3","content":"@entity.lastActive"}],"gap":"sm"}]},{"type":"card","children":[{"type":"stack","gap":"sm","children":[{"variant":"caption","content":"Avatar","type":"typography"},{"variant":"h3","content":"@entity.avatar","type":"typography"}],"direction":"vertical"}]}]}],"padding":"md"},{"type":"divider"},{"children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"children":[{"variant":"caption","content":"Graph View","type":"typography"}],"type":"card"}],"cols":2,"gap":"md","type":"grid"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"width":400,"height":200,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}]}],"type":"stack","direction":"vertical"}],"type":"scaled-diagram"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Online","path":"/online","traits":[{"ref":"OnlineUserDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ChatMessageOrbital',
+      uses: [],
+      entity: {
+        'name': 'ChatMessage',
+        'collection': 'chatmessages',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sender',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'channel',
+            'type': 'string',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ChatMessageBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'ChatMessage',
+          'emits': [
+            {
+              'event': 'COMPOSE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.sender',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.channel',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.timestamp',
+                  'type': 'datetime',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageLoaded',
+              'description': 'Fired when ChatMessage finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ChatMessage]',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageLoadFailed',
+              'description': 'Fired when ChatMessage fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'SEND',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChatMessageCompose',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ChatMessageLoaded',
+                'name': 'ChatMessage loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ChatMessage]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageLoadFailed',
+                'name': 'ChatMessage load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'ChatMessage',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageSaved',
+                'name': 'ChatMessage saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageSaveFailed',
+                'name': 'ChatMessage save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelSaved',
+                'name': 'Channel saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelSaveFailed',
+                'name': 'Channel save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelUpdated',
+                'name': 'Channel updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelUpdateFailed',
+                'name': 'Channel update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelDeleted',
+                'name': 'Channel deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelDeleteFailed',
+                'name': 'Channel delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ChatMessage',
+                    {
+                      'emit': {
+                        'success': 'ChatMessageLoaded',
+                        'failure': 'ChatMessageLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                        },
+                      ],
+                      'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ChatMessageLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'message-circle',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Chat',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'action': 'COMPOSE',
+                                      'variant': 'primary',
+                                      'label': 'Compose',
+                                      'icon': 'edit',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-list',
+                              'fields': [
+                                {
+                                  'variant': 'h4',
+                                  'name': 'sender',
+                                },
+                                {
+                                  'name': 'content',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'name': 'timestamp',
+                                  'variant': 'caption',
+                                  'format': 'date',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'gap': 'sm',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                              ],
+                              'variant': 'message',
+                              'senderField': 'sender',
+                            },
+                          ],
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'hash',
+                          'label': 'Channels',
+                          'href': '/channels',
+                        },
+                        {
+                          'href': '/online',
+                          'label': 'Online',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ChatMessageLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load chatmessage',
+                          'type': 'typography',
+                        },
+                        {
+                          'variant': 'body',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'type': 'button',
+                          'label': 'Retry',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChatMessageCompose',
+          'category': 'interaction',
+          'linkedEntity': 'ChatMessage',
+          'emits': [
+            {
+              'event': 'SEND',
+            },
+            {
+              'event': 'ChatMessageLoadFailed',
+              'description': 'Fired when ChatMessage fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageLoaded',
+              'description': 'Fired when ChatMessage finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ChatMessage]',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'COMPOSE',
+              'triggers': 'COMPOSE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChatMessageBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SEND',
+                'name': 'Send',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageLoadFailed',
+                'name': 'ChatMessage load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageLoaded',
+                'name': 'ChatMessage loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ChatMessage]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageSaveFailed',
+                'name': 'ChatMessage save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageSaved',
+                'name': 'ChatMessage saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ChatMessage',
+                    {
+                      'emit': {
+                        'failure': 'ChatMessageLoadFailed',
+                        'success': 'ChatMessageLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'COMPOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'content': 'New ChatMessage',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'sender',
+                            'content',
+                            'channel',
+                            'timestamp',
+                          ],
+                          'submitEvent': 'SEND',
+                          'mode': 'create',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SEND',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'ChatMessage',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ChatMessageSaveFailed',
+                        'success': 'ChatMessageSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChatMessageView',
+          'category': 'interaction',
+          'linkedEntity': 'ChatMessage',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageLoaded',
+              'description': 'Fired when ChatMessage finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ChatMessage]',
+                },
+              ],
+            },
+            {
+              'event': 'ChatMessageLoadFailed',
+              'description': 'Fired when ChatMessage fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChatMessageBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'ChatMessageLoaded',
+                'name': 'ChatMessage loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ChatMessage]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChatMessageLoadFailed',
+                'name': 'ChatMessage load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.channel',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.content',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.sender',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.timestamp',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'ChatMessage',
+                    {
+                      'emit': {
+                        'success': 'ChatMessageLoaded',
+                        'failure': 'ChatMessageLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'ChatMessage',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ChatMessageLoadFailed',
+                        'success': 'ChatMessageLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.sender',
+                            },
+                          ],
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Sender',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.sender',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Content',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.content',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Channel',
+                            },
+                            {
+                              'content': '@entity.channel',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Timestamp',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.timestamp',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ChatPage',
+          'path': '/chat',
+          'traits': [
+            {
+              'ref': 'ChatMessageBrowse',
+            },
+            {
+              'ref': 'ChatMessageCompose',
+            },
+            {
+              'ref': 'ChatMessageView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ChannelOrbital',
+      uses: [],
+      entity: {
+        'name': 'Channel',
+        'collection': 'channels',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'memberCount',
+            'type': 'number',
+          },
+          {
+            'name': 'isPrivate',
+            'type': 'boolean',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ChannelBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Channel',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.memberCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.isPrivate',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.memberCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.isPrivate',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.memberCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.isPrivate',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoaded',
+              'description': 'Fired when Channel finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Channel]',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoadFailed',
+              'description': 'Fired when Channel fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CHANNEL_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelCreate',
+              },
+            },
+            {
+              'event': 'CHANNEL_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelEdit',
+              },
+            },
+            {
+              'event': 'CHANNEL_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ChannelLoaded',
+                'name': 'Channel loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Channel]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoadFailed',
+                'name': 'Channel load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ChannelLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'hash',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Channels',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'label': 'Create Channel',
+                                      'variant': 'primary',
+                                      'action': 'CREATE',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'justify': 'between',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'fields': [
+                                {
+                                  'icon': 'hash',
+                                  'name': 'name',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'label': 'Members',
+                                  'name': 'memberCount',
+                                  'format': 'number',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'description',
+                                },
+                                {
+                                  'label': 'Private',
+                                  'format': 'boolean',
+                                  'variant': 'body',
+                                  'name': 'isPrivate',
+                                },
+                              ],
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'label': 'Chat',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Channels',
+                          'href': '/channels',
+                          'icon': 'hash',
+                        },
+                        {
+                          'label': 'Online',
+                          'icon': 'layout-list',
+                          'href': '/online',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ChannelLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load channel',
+                        },
+                        {
+                          'color': 'muted',
+                          'variant': 'body',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'type': 'button',
+                          'label': 'Retry',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChannelCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Channel',
+          'emits': [
+            {
+              'event': 'CHANNEL_CREATED',
+            },
+            {
+              'event': 'ChannelLoadFailed',
+              'description': 'Fired when Channel fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoaded',
+              'description': 'Fired when Channel finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Channel]',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHANNEL_CREATED',
+                'name': 'Channel Created',
+              },
+              {
+                'key': 'ChannelLoadFailed',
+                'name': 'Channel load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoaded',
+                'name': 'Channel loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Channel]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelSaveFailed',
+                'name': 'Channel save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelSaved',
+                'name': 'Channel saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Create Channel',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'name',
+                            'description',
+                            'memberCount',
+                            'isPrivate',
+                          ],
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Channel',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ChannelSaved',
+                        'failure': 'ChannelSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CHANNEL_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChannelEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Channel',
+          'emits': [
+            {
+              'event': 'CHANNEL_UPDATED',
+            },
+            {
+              'event': 'ChannelLoadFailed',
+              'description': 'Fired when Channel fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoaded',
+              'description': 'Fired when Channel finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Channel]',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Channel',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHANNEL_UPDATED',
+                'name': 'Channel Updated',
+              },
+              {
+                'key': 'ChannelLoadFailed',
+                'name': 'Channel load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoaded',
+                'name': 'Channel loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Channel]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelUpdateFailed',
+                'name': 'Channel update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelUpdated',
+                'name': 'Channel updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Edit Channel',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'name',
+                            'description',
+                            'memberCount',
+                            'isPrivate',
+                          ],
+                          'submitEvent': 'SAVE',
+                          'mode': 'edit',
+                          'entity': '@payload.row',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Channel',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ChannelUpdateFailed',
+                        'success': 'ChannelUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CHANNEL_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChannelView',
+          'category': 'interaction',
+          'linkedEntity': 'Channel',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoaded',
+              'description': 'Fired when Channel finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Channel]',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoadFailed',
+              'description': 'Fired when Channel fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'ChannelLoaded',
+                'name': 'Channel loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Channel]',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoadFailed',
+                'name': 'Channel load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.description',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.isPrivate',
+                    false,
+                  ],
+                  [
+                    'set',
+                    '@entity.memberCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.name',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Description',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.description',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Member Count',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.memberCount',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Is Private',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.isPrivate',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                            },
+                            {
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Close',
+                            },
+                          ],
+                          'justify': 'end',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ChannelDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Channel',
+          'emits': [
+            {
+              'event': 'CHANNEL_DELETED',
+            },
+            {
+              'event': 'ChannelDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoadFailed',
+              'description': 'Fired when Channel fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ChannelLoaded',
+              'description': 'Fired when Channel finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Channel]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ChannelBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'CHANNEL_DELETED',
+                'name': 'Channel Deleted',
+              },
+              {
+                'key': 'ChannelDeleteFailed',
+                'name': 'Channel delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelDeleted',
+                'name': 'Channel deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoadFailed',
+                'name': 'Channel load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ChannelLoaded',
+                'name': 'Channel loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Channel]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Channel',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'label': 'Delete',
+                            },
+                          ],
+                          'type': 'stack',
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Channel',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'ChannelDeleteFailed',
+                        'success': 'ChannelDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CHANNEL_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Channel',
+                    {
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Channels',
+          'path': '/channels',
+          'traits': [
+            {
+              'ref': 'ChannelBrowse',
+            },
+            {
+              'ref': 'ChannelCreate',
+            },
+            {
+              'ref': 'ChannelEdit',
+            },
+            {
+              'ref': 'ChannelView',
+            },
+            {
+              'ref': 'ChannelDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'OnlineUserOrbital',
+      uses: [],
+      entity: {
+        'name': 'OnlineUser',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'username',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'lastActive',
+            'type': 'datetime',
+          },
+          {
+            'name': 'avatar',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'OnlineUserDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'OnlineUser',
+          'emits': [
+            {
+              'event': 'OnlineUserLoaded',
+              'description': 'Fired when OnlineUser finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OnlineUser]',
+                },
+              ],
+            },
+            {
+              'event': 'OnlineUserLoadFailed',
+              'description': 'Fired when OnlineUser fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'OnlineUserLoaded',
+                'name': 'OnlineUser loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OnlineUser]',
+                  },
+                ],
+              },
+              {
+                'key': 'OnlineUserLoadFailed',
+                'name': 'OnlineUser load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.avatar',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastActive',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.username',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'OnlineUser',
+                    {
+                      'emit': {
+                        'success': 'OnlineUserLoaded',
+                        'failure': 'OnlineUserLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Realtime Chat',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'href': '/chat',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/channels',
+                          'icon': 'hash',
+                          'label': 'Channels',
+                        },
+                        {
+                          'label': 'Online',
+                          'href': '/online',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Online Users',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'users',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Online Users',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Username',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.username',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'LastActive',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.lastActive',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Avatar',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.avatar',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'OnlineUser',
+                    {
+                      'emit': {
+                        'failure': 'OnlineUserLoadFailed',
+                        'success': 'OnlineUserLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/channels',
+                          'icon': 'hash',
+                          'label': 'Channels',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Online',
+                          'href': '/online',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Online Users',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'users',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Online Users',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Username',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.username',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'LastActive',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.lastActive',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Avatar',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.avatar',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'cols': 2,
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OnlineUser',
+                    {
+                      'emit': {
+                        'failure': 'OnlineUserLoadFailed',
+                        'success': 'OnlineUserLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Realtime Chat',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Online Users',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'users',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Online Users',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Username',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.username',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'LastActive',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.lastActive',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Avatar',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.avatar',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'cols': 2,
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'layout-list',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/channels',
+                          'label': 'Channels',
+                          'icon': 'hash',
+                        },
+                        {
+                          'label': 'Online',
+                          'href': '/online',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'OnlineUser',
+                    {
+                      'emit': {
+                        'failure': 'OnlineUserLoadFailed',
+                        'success': 'OnlineUserLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Chat',
+                          'href': '/chat',
+                        },
+                        {
+                          'icon': 'hash',
+                          'label': 'Channels',
+                          'href': '/channels',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Online',
+                          'href': '/online',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Realtime Chat',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Online Users',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'users',
+                                        },
+                                        {
+                                          'content': 'Online Users',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Username',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.username',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Status',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'LastActive',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.lastActive',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Avatar',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.avatar',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'OnlineUser',
+                    {
+                      'emit': {
+                        'failure': 'OnlineUserLoadFailed',
+                        'success': 'OnlineUserLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Online Users',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'users',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Online Users',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Username',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.username',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Status',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'LastActive',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.lastActive',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Avatar',
+                                                },
+                                                {
+                                                  'content': '@entity.avatar',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'href': '/chat',
+                          'label': 'Chat',
+                        },
+                        {
+                          'href': '/channels',
+                          'icon': 'hash',
+                          'label': 'Channels',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/online',
+                          'label': 'Online',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Online',
+          'path': '/online',
+          'traits': [
+            {
+              'ref': 'OnlineUserDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

@@ -137,16 +137,5599 @@ export function stdCmsPage(params: StdCmsParams): PageRefObject {
   });
 }
 
-/** Whole-orbital descriptor (3 orbitals). */
+/** Whole-orbital descriptor (4 orbitals). */
 export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ArticleOrbital","entity":{"name":"Article","collection":"articles","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"slug","type":"string","required":true},{"name":"content","type":"string"},{"name":"author","type":"string"},{"name":"status","type":"string","default":"draft","values":["draft","review","published","archived"]},{"name":"publishedAt","type":"datetime"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"ArticleBrowse","category":"interaction","linkedEntity":"Article","emits":[{"event":"PUBLISH","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CATEGORIZE","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.author","type":"string"},{"name":"row.status","type":"string"},{"name":"row.publishedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.author","type":"string"},{"name":"row.status","type":"string"},{"name":"row.publishedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.author","type":"string"},{"name":"row.status","type":"string"},{"name":"row.publishedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"ArticleLoaded","description":"Fired when Article finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Article]"}]},{"event":"ArticleLoadFailed","description":"Fired when Article fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MediaAssetSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"MediaAssetSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategorySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CategorySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CategoryUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CategoryDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"ARTICLE_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"ArticleCreate"}},{"event":"ARTICLE_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"ArticleEdit"}},{"event":"ARTICLE_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"ArticleDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ArticleLoaded","name":"Article loaded","payloadSchema":[{"name":"data","type":"[Article]"}]},{"key":"ArticleLoadFailed","name":"Article load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PUBLISH","name":"Publish"},{"key":"CATEGORIZE","name":"Categorize"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Article"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Article"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Article"}]},{"key":"ArticleSaved","name":"Article saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ArticleSaveFailed","name":"Article save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleUpdated","name":"Article updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ArticleUpdateFailed","name":"Article update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleDeleted","name":"Article deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ArticleDeleteFailed","name":"Article delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MediaAssetSaved","name":"Media asset saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"MediaAssetSaveFailed","name":"Media asset save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategorySaved","name":"Category saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CategorySaveFailed","name":"Category save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryUpdated","name":"Category updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CategoryUpdateFailed","name":"Category update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryDeleted","name":"Category deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CategoryDeleteFailed","name":"Category delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}],["render-ui","main",{"type":"stack","align":"center","direction":"vertical","className":"py-12","gap":"md","children":[{"type":"spinner"},{"content":"Loading…","type":"typography","variant":"caption","color":"muted"}]}]]},{"from":"browsing","to":"browsing","event":"ArticleLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/articles","icon":"file-text","label":"Articles"},{"icon":"image","label":"Media","href":"/media"},{"icon":"folder","label":"Categories","href":"/categories"}],"appName":"CmsApp","children":[{"direction":"vertical","className":"max-w-5xl mx-auto w-full","children":[{"justify":"between","direction":"horizontal","gap":"md","type":"stack","align":"center","children":[{"children":[{"name":"file-text","type":"icon"},{"type":"typography","variant":"h2","content":"Articles"}],"direction":"horizontal","align":"center","gap":"sm","type":"stack"},{"gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"button","action":"CREATE","icon":"plus","variant":"primary","label":"Create Article"}]}]},{"type":"divider"},{"variant":"card","entity":"@payload.data","itemActions":[{"event":"VIEW","label":"View","variant":"ghost"},{"variant":"ghost","label":"Edit","event":"EDIT"},{"label":"Delete","event":"DELETE","variant":"danger"}],"gap":"sm","type":"data-list","fields":[{"variant":"h3","icon":"file-text","name":"title"},{"name":"status","variant":"badge"},{"variant":"body","name":"author"},{"name":"slug","variant":"caption"},{"variant":"caption","name":"publishedAt","format":"date","label":"Published"}]}],"type":"stack","gap":"lg"}]}]]},{"from":"browsing","to":"browsing","event":"ArticleLoadFailed","effects":[["render-ui","main",{"direction":"vertical","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"variant":"h3","content":"Failed to load article","type":"typography"},{"type":"typography","content":"@payload.error","color":"muted","variant":"body"},{"type":"button","action":"INIT","icon":"rotate-ccw","label":"Retry","variant":"primary"}],"align":"center","type":"stack","className":"py-12","gap":"md"}]]}]},"scope":"collection"},{"name":"ArticleCreate","category":"interaction","linkedEntity":"Article","emits":[{"event":"ARTICLE_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleLoadFailed","description":"Fired when Article fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleLoaded","description":"Fired when Article finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Article]"}]},{"event":"ArticleSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"ARTICLE_CREATED","name":"Article Created"},{"key":"ArticleLoadFailed","name":"Article load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleLoaded","name":"Article loaded","payloadSchema":[{"name":"data","type":"[Article]"}]},{"key":"ArticleSaveFailed","name":"Article save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleSaved","name":"Article saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Article",{"emit":{"failure":"ArticleLoadFailed","success":"ArticleLoaded"}}],["render-ui","modal",{"type":"stack","direction":"vertical","children":[{"gap":"sm","children":[{"type":"icon","name":"plus-circle"},{"content":"Create Article","type":"typography","variant":"h3"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"fields":["title","slug","content","author","status","publishedAt"],"type":"form-section","cancelEvent":"CLOSE","mode":"create","submitEvent":"SAVE"}],"gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Article","@payload.data",{"emit":{"failure":"ArticleSaveFailed","success":"ArticleSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","ARTICLE_CREATED"]]}]},"scope":"collection"},{"name":"ArticleEdit","category":"interaction","linkedEntity":"Article","emits":[{"event":"ARTICLE_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleLoadFailed","description":"Fired when Article fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleLoaded","description":"Fired when Article finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Article]"}]},{"event":"ArticleUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ArticleView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Article"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"ARTICLE_UPDATED","name":"Article Updated"},{"key":"ArticleLoadFailed","name":"Article load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleLoaded","name":"Article loaded","payloadSchema":[{"name":"data","type":"[Article]"}]},{"key":"ArticleUpdateFailed","name":"Article update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleUpdated","name":"Article updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Article",{"id":"@payload.id","emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}],["render-ui","modal",{"gap":"md","type":"stack","children":[{"gap":"sm","direction":"horizontal","type":"stack","children":[{"name":"edit","type":"icon"},{"content":"Edit Article","variant":"h3","type":"typography"}]},{"type":"divider"},{"cancelEvent":"CLOSE","type":"form-section","entity":"@payload.row","mode":"edit","submitEvent":"SAVE","fields":["title","slug","content","author","status","publishedAt"]}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Article","@payload.data",{"emit":{"failure":"ArticleUpdateFailed","success":"ArticleUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","ARTICLE_UPDATED"]]}]},"scope":"collection"},{"name":"ArticleView","category":"interaction","linkedEntity":"Article","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleLoaded","description":"Fired when Article finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Article]"}]},{"event":"ArticleLoadFailed","description":"Fired when Article fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"ArticleLoaded","name":"Article loaded","payloadSchema":[{"name":"data","type":"[Article]"}]},{"key":"ArticleLoadFailed","name":"Article load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Article",{"emit":{"failure":"ArticleLoadFailed","success":"ArticleLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","children":[{"children":[{"name":"eye","type":"icon"},{"content":"@entity.title","variant":"h3","type":"typography"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"gap":"md","children":[{"content":"Title","type":"typography","variant":"caption"},{"content":"@entity.title","variant":"body","type":"typography"}],"direction":"horizontal","type":"stack"},{"type":"stack","gap":"md","children":[{"variant":"caption","content":"Slug","type":"typography"},{"content":"@entity.slug","variant":"body","type":"typography"}],"direction":"horizontal"},{"gap":"md","type":"stack","children":[{"content":"Content","variant":"caption","type":"typography"},{"type":"typography","content":"@entity.content","variant":"body"}],"direction":"horizontal"},{"gap":"md","children":[{"type":"typography","variant":"caption","content":"Author"},{"content":"@entity.author","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal"},{"type":"stack","gap":"md","direction":"horizontal","children":[{"variant":"caption","content":"Status","type":"typography"},{"type":"typography","variant":"body","content":"@entity.status"}]},{"gap":"md","children":[{"type":"typography","variant":"caption","content":"Published At"},{"content":"@entity.publishedAt","type":"typography","variant":"body"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"gap":"sm","justify":"end","type":"stack","children":[{"action":"EDIT","type":"button","label":"Edit","variant":"primary","icon":"edit"},{"action":"CLOSE","label":"Close","variant":"ghost","type":"button"}],"direction":"horizontal"}],"direction":"vertical","type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"ArticleDelete","category":"interaction","linkedEntity":"Article","emits":[{"event":"ARTICLE_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ArticleLoadFailed","description":"Fired when Article fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ArticleLoaded","description":"Fired when Article finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Article]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"ARTICLE_DELETED","name":"Article Deleted"},{"key":"ArticleDeleteFailed","name":"Article delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleDeleted","name":"Article deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ArticleLoadFailed","name":"Article load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ArticleLoaded","name":"Article loaded","payloadSchema":[{"name":"data","type":"[Article]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Article",{"emit":{"failure":"ArticleLoadFailed","success":"ArticleLoaded"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"children":[{"type":"icon","name":"alert-triangle"},{"variant":"h3","content":"Delete Article","type":"typography"}],"align":"center","type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"message":"This action cannot be undone.","type":"alert","variant":"error"},{"gap":"sm","type":"stack","direction":"horizontal","justify":"end","children":[{"action":"CANCEL","label":"Cancel","type":"button","variant":"ghost"},{"type":"button","variant":"danger","label":"Delete","icon":"check","action":"CONFIRM_DELETE"}]}],"type":"stack"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Article","@entity.pendingId",{"emit":{"failure":"ArticleDeleteFailed","success":"ArticleDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}],["emit","ARTICLE_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Article",{"emit":{"success":"ArticleLoaded","failure":"ArticleLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Article",{"emit":{"failure":"ArticleLoadFailed","success":"ArticleLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"ArticlesPage","path":"/articles","traits":[{"ref":"ArticleBrowse"},{"ref":"ArticleCreate"},{"ref":"ArticleEdit"},{"ref":"ArticleView"},{"ref":"ArticleDelete"}]}]},{"name":"MediaAssetOrbital","entity":{"name":"MediaAsset","collection":"mediaassets","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"fileName","type":"string","required":true},{"name":"fileType","type":"string","required":true},{"name":"fileSize","type":"number"},{"name":"url","type":"string"},{"name":"altText","type":"string"},{"name":"uploadedAt","type":"datetime"}]},"traits":[{"name":"MediaAssetBrowse","category":"interaction","linkedEntity":"MediaAsset","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.fileName","type":"string","required":true},{"name":"row.fileType","type":"string","required":true},{"name":"row.fileSize","type":"number"},{"name":"row.url","type":"string"},{"name":"row.altText","type":"string"},{"name":"row.uploadedAt","type":"datetime"}]},{"event":"MediaAssetLoaded","description":"Fired when MediaAsset finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"event":"MediaAssetLoadFailed","description":"Fired when MediaAsset fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PUBLISH","triggers":"INIT","source":{"kind":"orbital","orbital":"ArticleOrbital","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"MediaAssetLoaded","name":"MediaAsset loaded","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"key":"MediaAssetLoadFailed","name":"MediaAsset load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","MediaAsset",{"emit":{"success":"MediaAssetLoaded","failure":"MediaAssetLoadFailed"}}],["render-ui","main",{"children":[{"type":"spinner"},{"type":"typography","variant":"caption","color":"muted","content":"Loading…"}],"gap":"md","align":"center","direction":"vertical","type":"stack","className":"py-12"}]]},{"from":"browsing","to":"browsing","event":"MediaAssetLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"CmsApp","navItems":[{"href":"/articles","icon":"file-text","label":"Articles"},{"icon":"image","label":"Media","href":"/media"},{"href":"/categories","icon":"folder","label":"Categories"}],"children":[{"children":[{"direction":"horizontal","align":"center","type":"stack","justify":"between","children":[{"align":"center","children":[{"name":"image","type":"icon"},{"variant":"h2","type":"typography","content":"Media Library"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"stack","direction":"horizontal","children":[{"action":"CREATE","type":"button","label":"Create MediaAsset","icon":"plus","variant":"primary"}],"gap":"sm"}],"gap":"md"},{"type":"divider"},{"entity":"@payload.data","fields":[{"name":"fileName","icon":"image","variant":"h3","label":"File"},{"variant":"badge","name":"fileType","label":"Type"},{"name":"fileSize","format":"number","variant":"body","label":"Size"},{"variant":"caption","name":"altText","label":"Alt Text"}],"cols":3,"gap":"md","type":"data-grid","itemActions":[{"variant":"ghost","event":"VIEW","label":"View"}]}],"gap":"lg","className":"max-w-5xl mx-auto w-full","direction":"vertical","type":"stack"}]}]]},{"from":"browsing","to":"browsing","event":"MediaAssetLoadFailed","effects":[["render-ui","main",{"direction":"vertical","align":"center","className":"py-12","gap":"md","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"content":"Failed to load mediaasset","type":"typography","variant":"h3"},{"content":"@payload.error","color":"muted","variant":"body","type":"typography"},{"icon":"rotate-ccw","type":"button","label":"Retry","variant":"primary","action":"INIT"}],"type":"stack"}]]}]},"scope":"collection"},{"name":"MediaAssetCreate","category":"interaction","linkedEntity":"MediaAsset","emits":[{"event":"MediaAssetLoadFailed","description":"Fired when MediaAsset fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MediaAssetLoaded","description":"Fired when MediaAsset finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"event":"MediaAssetSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"MediaAssetSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"MediaAssetBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"MediaAssetLoadFailed","name":"MediaAsset load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MediaAssetLoaded","name":"MediaAsset loaded","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"key":"MediaAssetSaveFailed","name":"MediaAsset save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MediaAssetSaved","name":"MediaAsset saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","MediaAsset",{"emit":{"success":"MediaAssetLoaded","failure":"MediaAssetLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","MediaAsset",{"emit":{"failure":"MediaAssetLoadFailed","success":"MediaAssetLoaded"}}],["render-ui","modal",{"children":[{"children":[{"type":"icon","name":"plus-circle"},{"content":"New MediaAsset","variant":"h3","type":"typography"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"mode":"create","submitEvent":"SAVE","type":"form-section","fields":["fileName","fileType","fileSize","url","altText","uploadedAt"],"cancelEvent":"CLOSE"}],"direction":"vertical","gap":"md","type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","MediaAsset","@payload.data",{"emit":{"failure":"MediaAssetSaveFailed","success":"MediaAssetSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"MediaAssetView","category":"interaction","linkedEntity":"MediaAsset","emits":[{"event":"MediaAssetLoaded","description":"Fired when MediaAsset finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"event":"MediaAssetLoadFailed","description":"Fired when MediaAsset fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"MediaAssetBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"MediaAssetLoaded","name":"MediaAsset loaded","payloadSchema":[{"name":"data","type":"[MediaAsset]"}]},{"key":"MediaAssetLoadFailed","name":"MediaAsset load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","MediaAsset",{"emit":{"failure":"MediaAssetLoadFailed","success":"MediaAssetLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","MediaAsset",{"id":"@payload.id","emit":{"failure":"MediaAssetLoadFailed","success":"MediaAssetLoaded"}}],["render-ui","modal",{"direction":"vertical","gap":"md","type":"stack","children":[{"gap":"sm","align":"center","children":[{"name":"eye","type":"icon"},{"content":"@entity.fileName","variant":"h3","type":"typography"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"stack","children":[{"content":"File Name","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.fileName","variant":"body"}],"direction":"horizontal","gap":"md"},{"children":[{"content":"File Type","variant":"caption","type":"typography"},{"type":"typography","variant":"body","content":"@entity.fileType"}],"type":"stack","direction":"horizontal","gap":"md"},{"direction":"horizontal","children":[{"type":"typography","variant":"caption","content":"File Size"},{"content":"@entity.fileSize","variant":"body","type":"typography"}],"gap":"md","type":"stack"},{"type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Url"},{"type":"typography","variant":"body","content":"@entity.url"}],"direction":"horizontal"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"typography","variant":"caption","content":"Alt Text"},{"variant":"body","type":"typography","content":"@entity.altText"}]},{"direction":"horizontal","type":"stack","children":[{"content":"Uploaded At","variant":"caption","type":"typography"},{"type":"typography","content":"@entity.uploadedAt","variant":"body"}],"gap":"md"},{"type":"divider"},{"type":"stack","gap":"sm","justify":"end","children":[{"variant":"ghost","label":"Close","action":"CLOSE","type":"button"}],"direction":"horizontal"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"Media","path":"/media","traits":[{"ref":"MediaAssetBrowse"},{"ref":"MediaAssetCreate"},{"ref":"MediaAssetView"}]}]},{"name":"CategoryOrbital","entity":{"name":"Category","collection":"categorys","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"slug","type":"string","required":true},{"name":"description","type":"string"},{"name":"parentCategory","type":"string"},{"name":"articleCount","type":"number"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"CategoryBrowse","category":"interaction","linkedEntity":"Category","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.parentCategory","type":"string"},{"name":"row.articleCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.parentCategory","type":"string"},{"name":"row.articleCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.slug","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.parentCategory","type":"string"},{"name":"row.articleCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"CategoryLoaded","description":"Fired when Category finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Category]"}]},{"event":"CategoryLoadFailed","description":"Fired when Category fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"CATEGORY_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"CategoryCreate"}},{"event":"CATEGORY_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"CategoryEdit"}},{"event":"CATEGORY_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"CategoryDelete"}},{"event":"CATEGORIZE","triggers":"INIT","source":{"kind":"orbital","orbital":"ArticleOrbital","trait":"ArticleBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CategoryLoaded","name":"Category loaded","payloadSchema":[{"name":"data","type":"[Category]"}]},{"key":"CategoryLoadFailed","name":"Category load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}],["render-ui","main",{"direction":"vertical","className":"py-12","align":"center","children":[{"type":"spinner"},{"content":"Loading…","color":"muted","type":"typography","variant":"caption"}],"gap":"md","type":"stack"}]]},{"from":"browsing","to":"browsing","event":"CategoryLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Articles","href":"/articles","icon":"file-text"},{"label":"Media","href":"/media","icon":"image"},{"href":"/categories","icon":"folder","label":"Categories"}],"appName":"CmsApp","children":[{"type":"stack","direction":"vertical","children":[{"direction":"horizontal","type":"stack","gap":"md","align":"center","children":[{"align":"center","type":"stack","children":[{"name":"folder","type":"icon"},{"content":"Categories","variant":"h2","type":"typography"}],"direction":"horizontal","gap":"sm"},{"children":[{"type":"button","label":"Create Category","action":"CREATE","icon":"plus","variant":"primary"}],"type":"stack","gap":"sm","direction":"horizontal"}],"justify":"between"},{"type":"divider"},{"entity":"@payload.data","fields":[{"variant":"h3","icon":"folder","name":"name"},{"label":"Articles","format":"number","name":"articleCount","variant":"badge"},{"name":"description","variant":"body"},{"name":"slug","variant":"caption"}],"type":"data-list","variant":"card","gap":"sm","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"event":"EDIT","label":"Edit","variant":"ghost"},{"event":"DELETE","label":"Delete","variant":"danger"}]}],"gap":"lg","className":"max-w-5xl mx-auto w-full"}]}]]},{"from":"browsing","to":"browsing","event":"CategoryLoadFailed","effects":[["render-ui","main",{"direction":"vertical","gap":"md","type":"stack","align":"center","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"variant":"h3","type":"typography","content":"Failed to load category"},{"type":"typography","color":"muted","variant":"body","content":"@payload.error"},{"variant":"primary","action":"INIT","type":"button","icon":"rotate-ccw","label":"Retry"}],"className":"py-12"}]]}]},"scope":"collection"},{"name":"CategoryCreate","category":"interaction","linkedEntity":"Category","emits":[{"event":"CATEGORY_CREATED"},{"event":"CategoryLoadFailed","description":"Fired when Category fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryLoaded","description":"Fired when Category finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Category]"}]},{"event":"CategorySaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategorySaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"CategoryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CATEGORY_CREATED","name":"Category Created"},{"key":"CategoryLoadFailed","name":"Category load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryLoaded","name":"Category loaded","payloadSchema":[{"name":"data","type":"[Category]"}]},{"key":"CategorySaveFailed","name":"Category save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategorySaved","name":"Category saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}],["render-ui","modal",{"direction":"vertical","children":[{"type":"stack","gap":"sm","children":[{"name":"plus-circle","type":"icon"},{"type":"typography","variant":"h3","content":"Create Category"}],"direction":"horizontal"},{"type":"divider"},{"fields":["name","slug","description","parentCategory","articleCount"],"mode":"create","submitEvent":"SAVE","cancelEvent":"CLOSE","type":"form-section"}],"type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Category","@payload.data",{"emit":{"success":"CategorySaved","failure":"CategorySaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CATEGORY_CREATED"]]}]},"scope":"collection"},{"name":"CategoryEdit","category":"interaction","linkedEntity":"Category","emits":[{"event":"CATEGORY_UPDATED"},{"event":"CategoryLoadFailed","description":"Fired when Category fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryLoaded","description":"Fired when Category finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Category]"}]},{"event":"CategoryUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"CategoryView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"CategoryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Category"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CATEGORY_UPDATED","name":"Category Updated"},{"key":"CategoryLoadFailed","name":"Category load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryLoaded","name":"Category loaded","payloadSchema":[{"name":"data","type":"[Category]"}]},{"key":"CategoryUpdateFailed","name":"Category update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryUpdated","name":"Category updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Category",{"id":"@payload.id","emit":{"success":"CategoryLoaded","failure":"CategoryLoadFailed"}}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"type":"stack","children":[{"type":"icon","name":"edit"},{"type":"typography","variant":"h3","content":"Edit Category"}],"gap":"sm","direction":"horizontal"},{"type":"divider"},{"entity":"@payload.row","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["name","slug","description","parentCategory","articleCount"],"mode":"edit","type":"form-section"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Category","@payload.data",{"emit":{"failure":"CategoryUpdateFailed","success":"CategoryUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CATEGORY_UPDATED"]]}]},"scope":"collection"},{"name":"CategoryView","category":"interaction","linkedEntity":"Category","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CategoryLoaded","description":"Fired when Category finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Category]"}]},{"event":"CategoryLoadFailed","description":"Fired when Category fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"CategoryBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"CategoryLoaded","name":"Category loaded","payloadSchema":[{"name":"data","type":"[Category]"}]},{"key":"CategoryLoadFailed","name":"Category load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Category",{"emit":{"success":"CategoryLoaded","failure":"CategoryLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Category",{"id":"@payload.id","emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"type":"stack","gap":"sm","align":"center","children":[{"type":"icon","name":"eye"},{"content":"@entity.name","variant":"h3","type":"typography"}],"direction":"horizontal"},{"type":"divider"},{"gap":"md","type":"stack","children":[{"content":"Name","type":"typography","variant":"caption"},{"content":"@entity.name","type":"typography","variant":"body"}],"direction":"horizontal"},{"children":[{"variant":"caption","content":"Slug","type":"typography"},{"variant":"body","content":"@entity.slug","type":"typography"}],"direction":"horizontal","gap":"md","type":"stack"},{"children":[{"type":"typography","content":"Description","variant":"caption"},{"variant":"body","content":"@entity.description","type":"typography"}],"direction":"horizontal","type":"stack","gap":"md"},{"children":[{"type":"typography","variant":"caption","content":"Parent Category"},{"type":"typography","variant":"body","content":"@entity.parentCategory"}],"direction":"horizontal","type":"stack","gap":"md"},{"children":[{"content":"Article Count","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.articleCount"}],"direction":"horizontal","type":"stack","gap":"md"},{"type":"divider"},{"type":"stack","gap":"sm","direction":"horizontal","justify":"end","children":[{"action":"EDIT","type":"button","variant":"primary","icon":"edit","label":"Edit"},{"label":"Close","action":"CLOSE","type":"button","variant":"ghost"}]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"CategoryDelete","category":"interaction","linkedEntity":"Category","emits":[{"event":"CATEGORY_DELETED"},{"event":"CategoryDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CategoryLoadFailed","description":"Fired when Category fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CategoryLoaded","description":"Fired when Category finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Category]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"CategoryBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"CATEGORY_DELETED","name":"Category Deleted"},{"key":"CategoryDeleteFailed","name":"Category delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryDeleted","name":"Category deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CategoryLoadFailed","name":"Category load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CategoryLoaded","name":"Category loaded","payloadSchema":[{"name":"data","type":"[Category]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Category",{"emit":{"success":"CategoryLoaded","failure":"CategoryLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","children":[{"gap":"sm","children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","variant":"h3","content":"Delete Category"}],"type":"stack","direction":"horizontal","align":"center"},{"type":"divider"},{"type":"alert","message":"This action cannot be undone.","variant":"error"},{"children":[{"variant":"ghost","action":"CANCEL","type":"button","label":"Cancel"},{"label":"Delete","action":"CONFIRM_DELETE","type":"button","variant":"danger","icon":"check"}],"type":"stack","direction":"horizontal","justify":"end","gap":"sm"}],"type":"stack","gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Category","@entity.pendingId",{"emit":{"success":"CategoryDeleted","failure":"CategoryDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Category",{"emit":{"success":"CategoryLoaded","failure":"CategoryLoadFailed"}}],["emit","CATEGORY_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Category",{"emit":{"success":"CategoryLoaded","failure":"CategoryLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Category",{"emit":{"failure":"CategoryLoadFailed","success":"CategoryLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"Categories","path":"/categories","traits":[{"ref":"CategoryBrowse"},{"ref":"CategoryCreate"},{"ref":"CategoryEdit"},{"ref":"CategoryView"},{"ref":"CategoryDelete"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ArticleOrbital',
+      uses: [],
+      entity: {
+        'name': 'Article',
+        'collection': 'articles',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'review',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'name': 'publishedAt',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ArticleBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Article',
+          'emits': [
+            {
+              'event': 'PUBLISH',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CATEGORIZE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.publishedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.publishedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.publishedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoaded',
+              'description': 'Fired when Article finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Article]',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoadFailed',
+              'description': 'Fired when Article fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategorySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategorySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ARTICLE_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleCreate',
+              },
+            },
+            {
+              'event': 'ARTICLE_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleEdit',
+              },
+            },
+            {
+              'event': 'ARTICLE_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ArticleLoaded',
+                'name': 'Article loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Article]',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoadFailed',
+                'name': 'Article load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PUBLISH',
+                'name': 'Publish',
+              },
+              {
+                'key': 'CATEGORIZE',
+                'name': 'Categorize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Article',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Article',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Article',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleSaved',
+                'name': 'Article saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleSaveFailed',
+                'name': 'Article save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleUpdated',
+                'name': 'Article updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleUpdateFailed',
+                'name': 'Article update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleDeleted',
+                'name': 'Article deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleDeleteFailed',
+                'name': 'Article delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetSaved',
+                'name': 'Media asset saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetSaveFailed',
+                'name': 'Media asset save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategorySaved',
+                'name': 'Category saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategorySaveFailed',
+                'name': 'Category save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryUpdated',
+                'name': 'Category updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryUpdateFailed',
+                'name': 'Category update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryDeleted',
+                'name': 'Category deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryDeleteFailed',
+                'name': 'Category delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'variant': 'caption',
+                          'type': 'typography',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ArticleLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'CmsApp',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'file-text',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Articles',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'label': 'Create Article',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                },
+                              ],
+                              'type': 'data-list',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'title',
+                                  'variant': 'h3',
+                                  'icon': 'file-text',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'author',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'slug',
+                                },
+                                {
+                                  'name': 'publishedAt',
+                                  'format': 'date',
+                                  'variant': 'caption',
+                                  'label': 'Published',
+                                },
+                              ],
+                              'variant': 'card',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'CMS Hub',
+                          'icon': 'layout-grid',
+                          'href': '/cms-hub',
+                        },
+                        {
+                          'href': '/articles',
+                          'icon': 'file-text',
+                          'label': 'Articles',
+                        },
+                        {
+                          'label': 'Media',
+                          'href': '/media',
+                          'icon': 'image',
+                        },
+                        {
+                          'icon': 'folder',
+                          'label': 'Categories',
+                          'href': '/categories',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ArticleLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load article',
+                          'type': 'typography',
+                        },
+                        {
+                          'color': 'muted',
+                          'variant': 'body',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'type': 'button',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ArticleCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Article',
+          'emits': [
+            {
+              'event': 'ARTICLE_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoadFailed',
+              'description': 'Fired when Article fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoaded',
+              'description': 'Fired when Article finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Article]',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'ARTICLE_CREATED',
+                'name': 'Article Created',
+              },
+              {
+                'key': 'ArticleLoadFailed',
+                'name': 'Article load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoaded',
+                'name': 'Article loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Article]',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleSaveFailed',
+                'name': 'Article save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleSaved',
+                'name': 'Article saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Create Article',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'fields': [
+                            'title',
+                            'slug',
+                            'content',
+                            'author',
+                            'status',
+                            'publishedAt',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Article',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ArticleSaveFailed',
+                        'success': 'ArticleSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ARTICLE_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ArticleEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Article',
+          'emits': [
+            {
+              'event': 'ARTICLE_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoadFailed',
+              'description': 'Fired when Article fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoaded',
+              'description': 'Fired when Article finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Article]',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Article',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'ARTICLE_UPDATED',
+                'name': 'Article Updated',
+              },
+              {
+                'key': 'ArticleLoadFailed',
+                'name': 'Article load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoaded',
+                'name': 'Article loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Article]',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleUpdateFailed',
+                'name': 'Article update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleUpdated',
+                'name': 'Article updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Edit Article',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'title',
+                            'slug',
+                            'content',
+                            'author',
+                            'status',
+                            'publishedAt',
+                          ],
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Article',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ArticleUpdated',
+                        'failure': 'ArticleUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ARTICLE_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ArticleView',
+          'category': 'interaction',
+          'linkedEntity': 'Article',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoaded',
+              'description': 'Fired when Article finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Article]',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoadFailed',
+              'description': 'Fired when Article fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Article',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'ArticleLoaded',
+                'name': 'Article loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Article]',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoadFailed',
+                'name': 'Article load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.title',
+                    '@payload.row.title',
+                  ],
+                  [
+                    'set',
+                    '@entity.slug',
+                    '@payload.row.slug',
+                  ],
+                  [
+                    'set',
+                    '@entity.content',
+                    '@payload.row.content',
+                  ],
+                  [
+                    'set',
+                    '@entity.author',
+                    '@payload.row.author',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '@payload.row.status',
+                  ],
+                  [
+                    'set',
+                    '@entity.publishedAt',
+                    '@payload.row.publishedAt',
+                  ],
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.title',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Title',
+                            },
+                            {
+                              'content': '@entity.title',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Slug',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.slug',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Content',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.content',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Author',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.author',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Status',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Published At',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.publishedAt',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'icon': 'edit',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'action': 'EDIT',
+                              'type': 'button',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                            },
+                          ],
+                          'justify': 'end',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ArticleDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Article',
+          'emits': [
+            {
+              'event': 'ARTICLE_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoadFailed',
+              'description': 'Fired when Article fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ArticleLoaded',
+              'description': 'Fired when Article finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Article]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'ARTICLE_DELETED',
+                'name': 'Article Deleted',
+              },
+              {
+                'key': 'ArticleDeleteFailed',
+                'name': 'Article delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleDeleted',
+                'name': 'Article deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoadFailed',
+                'name': 'Article load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ArticleLoaded',
+                'name': 'Article loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Article]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Delete Article',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'message': 'This action cannot be undone.',
+                          'variant': 'error',
+                          'type': 'alert',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CANCEL',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Cancel',
+                            },
+                            {
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                            },
+                          ],
+                          'justify': 'end',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Article',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'ArticleDeleted',
+                        'failure': 'ArticleDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ARTICLE_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Article',
+                    {
+                      'emit': {
+                        'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ArticlesPage',
+          'path': '/articles',
+          'traits': [
+            {
+              'ref': 'ArticleBrowse',
+            },
+            {
+              'ref': 'ArticleCreate',
+            },
+            {
+              'ref': 'ArticleEdit',
+            },
+            {
+              'ref': 'ArticleView',
+            },
+            {
+              'ref': 'ArticleDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'MediaAssetOrbital',
+      uses: [],
+      entity: {
+        'name': 'MediaAsset',
+        'collection': 'mediaassets',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'fileName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'fileType',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'fileSize',
+            'type': 'number',
+          },
+          {
+            'name': 'url',
+            'type': 'string',
+          },
+          {
+            'name': 'altText',
+            'type': 'string',
+          },
+          {
+            'name': 'uploadedAt',
+            'type': 'datetime',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'MediaAssetBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'MediaAsset',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.fileName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.fileType',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.fileSize',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.url',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.altText',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.uploadedAt',
+                  'type': 'datetime',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetLoaded',
+              'description': 'Fired when MediaAsset finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MediaAsset]',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetLoadFailed',
+              'description': 'Fired when MediaAsset fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PUBLISH',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'ArticleOrbital',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'MediaAssetLoaded',
+                'name': 'MediaAsset loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[MediaAsset]',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetLoadFailed',
+                'name': 'MediaAsset load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'MediaAsset',
+                    {
+                      'emit': {
+                        'failure': 'MediaAssetLoadFailed',
+                        'success': 'MediaAssetLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'MediaAssetLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'layout-grid',
+                          'label': 'CMS Hub',
+                          'href': '/cms-hub',
+                        },
+                        {
+                          'href': '/articles',
+                          'label': 'Articles',
+                          'icon': 'file-text',
+                        },
+                        {
+                          'href': '/media',
+                          'label': 'Media',
+                          'icon': 'image',
+                        },
+                        {
+                          'icon': 'folder',
+                          'href': '/categories',
+                          'label': 'Categories',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'CmsApp',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'image',
+                                    },
+                                    {
+                                      'content': 'Media Library',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                      'label': 'Create MediaAsset',
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 3,
+                              'type': 'data-grid',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'label': 'File',
+                                  'variant': 'h3',
+                                  'name': 'fileName',
+                                  'icon': 'image',
+                                },
+                                {
+                                  'name': 'fileType',
+                                  'label': 'Type',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'fileSize',
+                                  'format': 'number',
+                                  'label': 'Size',
+                                },
+                                {
+                                  'name': 'altText',
+                                  'label': 'Alt Text',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'gap': 'md',
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'MediaAssetLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'content': 'Failed to load mediaasset',
+                          'variant': 'h3',
+                          'type': 'typography',
+                        },
+                        {
+                          'color': 'muted',
+                          'variant': 'body',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                        },
+                        {
+                          'type': 'button',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'MediaAssetCreate',
+          'category': 'interaction',
+          'linkedEntity': 'MediaAsset',
+          'emits': [
+            {
+              'event': 'MediaAssetLoadFailed',
+              'description': 'Fired when MediaAsset fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetLoaded',
+              'description': 'Fired when MediaAsset finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MediaAsset]',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MediaAssetBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetLoadFailed',
+                'name': 'MediaAsset load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetLoaded',
+                'name': 'MediaAsset loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[MediaAsset]',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetSaveFailed',
+                'name': 'MediaAsset save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetSaved',
+                'name': 'MediaAsset saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'MediaAsset',
+                    {
+                      'emit': {
+                        'success': 'MediaAssetLoaded',
+                        'failure': 'MediaAssetLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'MediaAsset',
+                    {
+                      'emit': {
+                        'success': 'MediaAssetLoaded',
+                        'failure': 'MediaAssetLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'content': 'New MediaAsset',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'fileName',
+                            'fileType',
+                            'fileSize',
+                            'url',
+                            'altText',
+                            'uploadedAt',
+                          ],
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'MediaAsset',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'MediaAssetSaved',
+                        'failure': 'MediaAssetSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'MediaAssetView',
+          'category': 'interaction',
+          'linkedEntity': 'MediaAsset',
+          'emits': [
+            {
+              'event': 'MediaAssetLoaded',
+              'description': 'Fired when MediaAsset finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MediaAsset]',
+                },
+              ],
+            },
+            {
+              'event': 'MediaAssetLoadFailed',
+              'description': 'Fired when MediaAsset fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'MediaAssetBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'MediaAsset',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'MediaAssetLoaded',
+                'name': 'MediaAsset loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[MediaAsset]',
+                  },
+                ],
+              },
+              {
+                'key': 'MediaAssetLoadFailed',
+                'name': 'MediaAsset load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'MediaAsset',
+                    {
+                      'emit': {
+                        'success': 'MediaAssetLoaded',
+                        'failure': 'MediaAssetLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.fileName',
+                    '@payload.row.fileName',
+                  ],
+                  [
+                    'set',
+                    '@entity.fileType',
+                    '@payload.row.fileType',
+                  ],
+                  [
+                    'set',
+                    '@entity.fileSize',
+                    '@payload.row.fileSize',
+                  ],
+                  [
+                    'set',
+                    '@entity.url',
+                    '@payload.row.url',
+                  ],
+                  [
+                    'set',
+                    '@entity.altText',
+                    '@payload.row.altText',
+                  ],
+                  [
+                    'set',
+                    '@entity.uploadedAt',
+                    '@payload.row.uploadedAt',
+                  ],
+                  [
+                    'fetch',
+                    'MediaAsset',
+                    {
+                      'emit': {
+                        'success': 'MediaAssetLoaded',
+                        'failure': 'MediaAssetLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.fileName',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'File Name',
+                            },
+                            {
+                              'content': '@entity.fileName',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'File Type',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.fileType',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'File Size',
+                            },
+                            {
+                              'content': '@entity.fileSize',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Url',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.url',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Alt Text',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.altText',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'content': 'Uploaded At',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.uploadedAt',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'label': 'Close',
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Media',
+          'path': '/media',
+          'traits': [
+            {
+              'ref': 'MediaAssetBrowse',
+            },
+            {
+              'ref': 'MediaAssetCreate',
+            },
+            {
+              'ref': 'MediaAssetView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'CategoryOrbital',
+      uses: [],
+      entity: {
+        'name': 'Category',
+        'collection': 'categorys',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'parentCategory',
+            'type': 'string',
+          },
+          {
+            'name': 'articleCount',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'CategoryBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Category',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.parentCategory',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.articleCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.parentCategory',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.articleCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.slug',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.parentCategory',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.articleCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoaded',
+              'description': 'Fired when Category finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Category]',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoadFailed',
+              'description': 'Fired when Category fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CATEGORY_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryCreate',
+              },
+            },
+            {
+              'event': 'CATEGORY_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryEdit',
+              },
+            },
+            {
+              'event': 'CATEGORY_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryDelete',
+              },
+            },
+            {
+              'event': 'CATEGORIZE',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'ArticleOrbital',
+                'trait': 'ArticleBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CategoryLoaded',
+                'name': 'Category loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Category]',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoadFailed',
+                'name': 'Category load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CategoryLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/cms-hub',
+                          'icon': 'layout-grid',
+                          'label': 'CMS Hub',
+                        },
+                        {
+                          'href': '/articles',
+                          'label': 'Articles',
+                          'icon': 'file-text',
+                        },
+                        {
+                          'href': '/media',
+                          'icon': 'image',
+                          'label': 'Media',
+                        },
+                        {
+                          'icon': 'folder',
+                          'label': 'Categories',
+                          'href': '/categories',
+                        },
+                      ],
+                      'appName': 'CmsApp',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'folder',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Categories',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'icon': 'plus',
+                                      'label': 'Create Category',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-list',
+                              'gap': 'sm',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                                {
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'variant': 'card',
+                              'fields': [
+                                {
+                                  'name': 'name',
+                                  'icon': 'folder',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'label': 'Articles',
+                                  'format': 'number',
+                                  'name': 'articleCount',
+                                },
+                                {
+                                  'name': 'description',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'name': 'slug',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CategoryLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load category',
+                          'type': 'typography',
+                        },
+                        {
+                          'color': 'muted',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'variant': 'body',
+                        },
+                        {
+                          'action': 'INIT',
+                          'label': 'Retry',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CategoryCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Category',
+          'emits': [
+            {
+              'event': 'CATEGORY_CREATED',
+            },
+            {
+              'event': 'CategoryLoadFailed',
+              'description': 'Fired when Category fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoaded',
+              'description': 'Fired when Category finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Category]',
+                },
+              ],
+            },
+            {
+              'event': 'CategorySaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategorySaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CATEGORY_CREATED',
+                'name': 'Category Created',
+              },
+              {
+                'key': 'CategoryLoadFailed',
+                'name': 'Category load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoaded',
+                'name': 'Category loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Category]',
+                  },
+                ],
+              },
+              {
+                'key': 'CategorySaveFailed',
+                'name': 'Category save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategorySaved',
+                'name': 'Category saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Create Category',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'fields': [
+                            'name',
+                            'slug',
+                            'description',
+                            'parentCategory',
+                            'articleCount',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Category',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'CategorySaveFailed',
+                        'success': 'CategorySaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CATEGORY_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CategoryEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Category',
+          'emits': [
+            {
+              'event': 'CATEGORY_UPDATED',
+            },
+            {
+              'event': 'CategoryLoadFailed',
+              'description': 'Fired when Category fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoaded',
+              'description': 'Fired when Category finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Category]',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Category',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CATEGORY_UPDATED',
+                'name': 'Category Updated',
+              },
+              {
+                'key': 'CategoryLoadFailed',
+                'name': 'Category load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoaded',
+                'name': 'Category loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Category]',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryUpdateFailed',
+                'name': 'Category update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryUpdated',
+                'name': 'Category updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'content': 'Edit Category',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'fields': [
+                            'name',
+                            'slug',
+                            'description',
+                            'parentCategory',
+                            'articleCount',
+                          ],
+                          'mode': 'edit',
+                          'entity': '@payload.row',
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Category',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'CategoryUpdateFailed',
+                        'success': 'CategoryUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CATEGORY_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CategoryView',
+          'category': 'interaction',
+          'linkedEntity': 'Category',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoaded',
+              'description': 'Fired when Category finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Category]',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoadFailed',
+              'description': 'Fired when Category fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Category',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'CategoryLoaded',
+                'name': 'Category loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Category]',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoadFailed',
+                'name': 'Category load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'failure': 'CategoryLoadFailed',
+                        'success': 'CategoryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.name',
+                    '@payload.row.name',
+                  ],
+                  [
+                    'set',
+                    '@entity.slug',
+                    '@payload.row.slug',
+                  ],
+                  [
+                    'set',
+                    '@entity.description',
+                    '@payload.row.description',
+                  ],
+                  [
+                    'set',
+                    '@entity.parentCategory',
+                    '@payload.row.parentCategory',
+                  ],
+                  [
+                    'set',
+                    '@entity.articleCount',
+                    '@payload.row.articleCount',
+                  ],
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.name',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Slug',
+                            },
+                            {
+                              'content': '@entity.slug',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Description',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.description',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'content': 'Parent Category',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.parentCategory',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Article Count',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.articleCount',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'icon': 'edit',
+                              'type': 'button',
+                              'variant': 'primary',
+                              'label': 'Edit',
+                              'action': 'EDIT',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                              'type': 'button',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'justify': 'end',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CategoryDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Category',
+          'emits': [
+            {
+              'event': 'CATEGORY_DELETED',
+            },
+            {
+              'event': 'CategoryDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoadFailed',
+              'description': 'Fired when Category fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CategoryLoaded',
+              'description': 'Fired when Category finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Category]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CategoryBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'CATEGORY_DELETED',
+                'name': 'Category Deleted',
+              },
+              {
+                'key': 'CategoryDeleteFailed',
+                'name': 'Category delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryDeleted',
+                'name': 'Category deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoadFailed',
+                'name': 'Category load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CategoryLoaded',
+                'name': 'Category loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Category]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'failure': 'CategoryLoadFailed',
+                        'success': 'CategoryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Delete Category',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                          'variant': 'error',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                              'type': 'button',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
+                              'label': 'Delete',
+                              'icon': 'check',
+                            },
+                          ],
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Category',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'CategoryDeleted',
+                        'failure': 'CategoryDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CATEGORY_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Category',
+                    {
+                      'emit': {
+                        'failure': 'CategoryLoadFailed',
+                        'success': 'CategoryLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Categories',
+          'path': '/categories',
+          'traits': [
+            {
+              'ref': 'CategoryBrowse',
+            },
+            {
+              'ref': 'CategoryCreate',
+            },
+            {
+              'ref': 'CategoryEdit',
+            },
+            {
+              'ref': 'CategoryView',
+            },
+            {
+              'ref': 'CategoryDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'CmsHubOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-tabs',
+          'as': 'Tabs',
+        },
+      ],
+      entity: {
+        'name': 'CmsHub',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'section',
+            'type': 'string',
+            'default': 'articles',
+          },
+        ],
+      } as Entity,
+      traits: [
+        makeTraitRef({
+          'ref': 'Tabs.traits.TabsItemTabs',
+          'name': 'CmsHubTabs',
+          'config': {
+            'defaultTab': 'articles',
+            'variant': 'underline',
+            'tabs': [
+              {
+                'label': 'Articles',
+                'icon': 'file-text',
+                'id': 'articles',
+              },
+              {
+                'icon': 'image',
+                'label': 'Media',
+                'id': 'media',
+              },
+              {
+                'label': 'Categories',
+                'icon': 'folder',
+                'id': 'categories',
+              },
+            ],
+          },
+        }),
+        {
+          'name': 'CmsHubLayout',
+          'category': 'interaction',
+          'linkedEntity': 'CmsHub',
+          'listens': [
+            {
+              'event': 'TAB_CHANGED',
+              'triggers': 'SECTION_CHANGED',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CmsHubTabs',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'viewing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SECTION_CHANGED',
+                'name': 'Section Changed',
+                'payloadSchema': [
+                  {
+                    'name': 'tabId',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'viewing',
+                'to': 'viewing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.section',
+                    'articles',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CmsApp',
+                      'navItems': [
+                        {
+                          'label': 'CMS Hub',
+                          'href': '/cms-hub',
+                          'icon': 'layout-grid',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'href': '/articles',
+                          'label': 'Articles',
+                        },
+                        {
+                          'icon': 'image',
+                          'label': 'Media',
+                          'href': '/media',
+                        },
+                        {
+                          'label': 'Categories',
+                          'href': '/categories',
+                          'icon': 'folder',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'layout-grid',
+                                },
+                                {
+                                  'content': 'CMS Hub',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            '@trait.CmsHubTabs',
+                            {
+                              'className': 'p-4 border rounded-md',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'typography',
+                                  'variant': 'overline',
+                                  'content': 'Active section',
+                                  'color': 'secondary',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': '@entity.section',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'viewing',
+                'to': 'viewing',
+                'event': 'SECTION_CHANGED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.section',
+                    '@payload.tabId',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CmsApp',
+                      'navItems': [
+                        {
+                          'icon': 'layout-grid',
+                          'label': 'CMS Hub',
+                          'href': '/cms-hub',
+                        },
+                        {
+                          'href': '/articles',
+                          'label': 'Articles',
+                          'icon': 'file-text',
+                        },
+                        {
+                          'href': '/media',
+                          'label': 'Media',
+                          'icon': 'image',
+                        },
+                        {
+                          'label': 'Categories',
+                          'icon': 'folder',
+                          'href': '/categories',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'layout-grid',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'CMS Hub',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            '@trait.CmsHubTabs',
+                            {
+                              'gap': 'sm',
+                              'className': 'p-4 border rounded-md',
+                              'children': [
+                                {
+                                  'variant': 'overline',
+                                  'type': 'typography',
+                                  'color': 'secondary',
+                                  'content': 'Active section',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                  'content': '@entity.section',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'CmsHubPage',
+          'path': '/cms-hub',
+          'traits': [
+            {
+              'ref': 'CmsHubLayout',
+            },
+            {
+              'ref': 'CmsHubTabs',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

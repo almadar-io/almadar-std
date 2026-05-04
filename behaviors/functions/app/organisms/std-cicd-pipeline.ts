@@ -144,9 +144,4462 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"BuildOrbital","entity":{"name":"Build","collection":"builds","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"branch","type":"string","required":true},{"name":"status","type":"string","values":["pending","running","success","failed"]},{"name":"commit","type":"string"},{"name":"triggeredBy","type":"string"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"BuildBrowse","category":"interaction","linkedEntity":"Build","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.branch","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.commit","type":"string"},{"name":"row.triggeredBy","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.branch","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.commit","type":"string"},{"name":"row.triggeredBy","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.branch","type":"string","required":true},{"name":"row.status","type":"string"},{"name":"row.commit","type":"string"},{"name":"row.triggeredBy","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"BuildLoaded","description":"Fired when Build finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Build]"}]},{"event":"BuildLoadFailed","description":"Fired when Build fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeploymentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DeploymentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"BUILD_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"BuildCreate"}},{"event":"BUILD_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"BuildEdit"}},{"event":"BUILD_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"BuildDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"BuildLoaded","name":"Build loaded","payloadSchema":[{"name":"data","type":"[Build]"}]},{"key":"BuildLoadFailed","name":"Build load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Build"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Build"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Build"}]},{"key":"BuildSaved","name":"Build saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildSaveFailed","name":"Build save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildUpdated","name":"Build updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildUpdateFailed","name":"Build update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildDeleted","name":"Build deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildDeleteFailed","name":"Build delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeploymentSaved","name":"Deployment saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DeploymentSaveFailed","name":"Deployment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Build",{"emit":{"failure":"BuildLoadFailed","success":"BuildLoaded"}}],["render-ui","main",{"gap":"md","align":"center","direction":"vertical","type":"stack","children":[{"type":"spinner"},{"type":"typography","variant":"caption","content":"Loading builds…","color":"muted"}],"className":"py-12"}]]},{"from":"browsing","to":"browsing","event":"BuildLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"hammer","href":"/builds","label":"Builds"},{"href":"/stages","icon":"layers","label":"Stages"},{"label":"Deploy","href":"/deploy","icon":"rocket"}],"appName":"CI/CD Pipeline","children":[{"className":"max-w-5xl mx-auto w-full","gap":"lg","children":[{"direction":"horizontal","gap":"md","children":[{"direction":"horizontal","children":[{"name":"package","type":"icon"},{"content":"Builds","type":"typography","variant":"h2"}],"type":"stack","align":"center","gap":"sm"},{"direction":"horizontal","type":"stack","children":[{"icon":"plus","type":"button","action":"CREATE","variant":"primary","label":"Create Build"}],"gap":"sm"}],"type":"stack","align":"center","justify":"between"},{"type":"divider"},{"gap":"sm","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"event":"EDIT","variant":"ghost","label":"Edit"},{"variant":"danger","event":"DELETE","label":"Delete"}],"fields":[{"icon":"git-branch","name":"branch","variant":"h3"},{"variant":"badge","name":"status"},{"name":"commit","variant":"body"},{"name":"triggeredBy","label":"Triggered By","variant":"caption"}],"variant":"card","type":"data-list","entity":"@payload.data"}],"type":"stack","direction":"vertical"}]}]]},{"from":"browsing","to":"browsing","event":"BuildLoadFailed","effects":[["render-ui","main",{"children":[{"name":"alert-triangle","color":"destructive","type":"icon"},{"content":"Failed to load builds","type":"typography","variant":"h3"},{"variant":"body","content":"@payload.error","color":"muted","type":"typography"},{"variant":"primary","icon":"rotate-ccw","label":"Retry","type":"button","action":"INIT"}],"type":"stack","direction":"vertical","gap":"md","align":"center","className":"py-12"}]]}]},"scope":"collection"},{"name":"BuildCreate","category":"interaction","linkedEntity":"Build","emits":[{"event":"BUILD_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildLoadFailed","description":"Fired when Build fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoaded","description":"Fired when Build finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Build]"}]},{"event":"BuildSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"BuildBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"BUILD_CREATED","name":"Build Created"},{"key":"BuildLoadFailed","name":"Build load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoaded","name":"Build loaded","payloadSchema":[{"name":"data","type":"[Build]"}]},{"key":"BuildSaveFailed","name":"Build save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildSaved","name":"Build saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}],["render-ui","modal",{"gap":"md","type":"stack","children":[{"gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"plus-circle"},{"content":"Create Build","variant":"h3","type":"typography"}],"type":"stack"},{"type":"divider"},{"fields":["branch","status","commit","triggeredBy"],"submitEvent":"SAVE","type":"form-section","cancelEvent":"CLOSE","mode":"create"}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Build","@payload.data",{"emit":{"success":"BuildSaved","failure":"BuildSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","BUILD_CREATED"]]}]},"scope":"collection"},{"name":"BuildEdit","category":"interaction","linkedEntity":"Build","emits":[{"event":"BUILD_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildLoadFailed","description":"Fired when Build fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoaded","description":"Fired when Build finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Build]"}]},{"event":"BuildUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"BuildView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"BuildBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Build"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"BUILD_UPDATED","name":"Build Updated"},{"key":"BuildLoadFailed","name":"Build load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoaded","name":"Build loaded","payloadSchema":[{"name":"data","type":"[Build]"}]},{"key":"BuildUpdateFailed","name":"Build update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildUpdated","name":"Build updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Build",{"id":"@payload.id","emit":{"failure":"BuildLoadFailed","success":"BuildLoaded"}}],["render-ui","modal",{"type":"stack","gap":"md","children":[{"direction":"horizontal","children":[{"type":"icon","name":"edit"},{"variant":"h3","type":"typography","content":"Edit Build"}],"type":"stack","gap":"sm"},{"type":"divider"},{"submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["branch","status","commit","triggeredBy"],"entity":"@payload.row","type":"form-section","mode":"edit"}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Build","@payload.data",{"emit":{"failure":"BuildUpdateFailed","success":"BuildUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","BUILD_UPDATED"]]}]},"scope":"collection"},{"name":"BuildView","category":"interaction","linkedEntity":"Build","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildLoaded","description":"Fired when Build finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Build]"}]},{"event":"BuildLoadFailed","description":"Fired when Build fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"BuildBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"BuildLoaded","name":"Build loaded","payloadSchema":[{"name":"data","type":"[Build]"}]},{"key":"BuildLoadFailed","name":"Build load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"children":[{"direction":"horizontal","align":"center","children":[{"name":"eye","type":"icon"},{"content":"@entity.branch","type":"typography","variant":"h3"}],"gap":"sm","type":"stack"},{"type":"divider"},{"children":[{"variant":"caption","type":"typography","content":"Branch"},{"type":"typography","content":"@entity.branch","variant":"body"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Status"},{"content":"@entity.status","variant":"body","type":"typography"}],"direction":"horizontal"},{"children":[{"type":"typography","variant":"caption","content":"Commit"},{"variant":"body","content":"@entity.commit","type":"typography"}],"gap":"md","type":"stack","direction":"horizontal"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"content":"Triggered By","variant":"caption","type":"typography"},{"content":"@entity.triggeredBy","variant":"body","type":"typography"}]},{"type":"divider"},{"gap":"sm","justify":"end","type":"stack","direction":"horizontal","children":[{"label":"Edit","variant":"primary","action":"EDIT","type":"button","icon":"edit"},{"type":"button","action":"CLOSE","label":"Close","variant":"ghost"}]}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"BuildDelete","category":"interaction","linkedEntity":"Build","emits":[{"event":"BUILD_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"BuildLoadFailed","description":"Fired when Build fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"BuildLoaded","description":"Fired when Build finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Build]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"BuildBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"BUILD_DELETED","name":"Build Deleted"},{"key":"BuildDeleteFailed","name":"Build delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildDeleted","name":"Build deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"BuildLoadFailed","name":"Build load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"BuildLoaded","name":"Build loaded","payloadSchema":[{"name":"data","type":"[Build]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Build",{"emit":{"failure":"BuildLoadFailed","success":"BuildLoaded"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","children":[{"type":"stack","gap":"sm","children":[{"type":"icon","name":"alert-triangle"},{"content":"Delete Build","type":"typography","variant":"h3"}],"direction":"horizontal","align":"center"},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"justify":"end","gap":"sm","direction":"horizontal","children":[{"type":"button","variant":"ghost","label":"Cancel","action":"CANCEL"},{"icon":"check","type":"button","action":"CONFIRM_DELETE","label":"Delete","variant":"danger"}],"type":"stack"}],"direction":"vertical","gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Build","@entity.pendingId",{"emit":{"success":"BuildDeleted","failure":"BuildDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}],["emit","BUILD_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Build",{"emit":{"success":"BuildLoaded","failure":"BuildLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Build",{"emit":{"failure":"BuildLoadFailed","success":"BuildLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"BuildsPage","path":"/builds","traits":[{"ref":"BuildBrowse"},{"ref":"BuildCreate"},{"ref":"BuildEdit"},{"ref":"BuildView"},{"ref":"BuildDelete"}]}]},{"name":"StageOrbital","entity":{"name":"Stage","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"status","type":"string","values":["pending","running","success","failed"]},{"name":"duration","type":"string"},{"name":"output","type":"string"}]},"traits":[{"name":"StageDisplay","category":"interaction","linkedEntity":"Stage","emits":[{"event":"StageLoaded","description":"Fired when Stage finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Stage]"}]},{"event":"StageLoadFailed","description":"Fired when Stage fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"StageLoaded","name":"Stage loaded","payloadSchema":[{"name":"data","type":"[Stage]"}]},{"key":"StageLoadFailed","name":"Stage load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","Stage",{"emit":{"failure":"StageLoadFailed","success":"StageLoaded"}}],["render-ui","main",{"children":[{"children":[{"children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Stages"}]},{"type":"stack","children":[{"children":[{"type":"icon","name":"layers"},{"variant":"h2","type":"typography","content":"Stages"}],"type":"stack","gap":"md","direction":"horizontal"},{"variant":"secondary","action":"REFRESH","icon":"refresh-cw","type":"button","label":"Refresh"}],"gap":"md","justify":"between","direction":"horizontal"},{"type":"divider"},{"children":[{"cols":3,"children":[{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"type":"typography","content":"Name","variant":"caption"},{"variant":"h3","content":"@entity.name","type":"typography"}]}]},{"type":"card","children":[{"children":[{"content":"Status","variant":"caption","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.status"}],"gap":"sm","type":"stack","direction":"vertical"}]},{"children":[{"type":"stack","gap":"sm","direction":"vertical","children":[{"variant":"caption","type":"typography","content":"Duration"},{"content":"@entity.duration","type":"typography","variant":"h3"}]}],"type":"card"},{"type":"card","children":[{"gap":"sm","children":[{"type":"typography","variant":"caption","content":"Output"},{"type":"typography","content":"@entity.output","variant":"h3"}],"direction":"vertical","type":"stack"}]}],"type":"simple-grid"}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"cols":2,"gap":"md"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"width":400,"height":200,"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}]}],"gap":"lg","type":"stack","direction":"vertical"}],"type":"scaled-diagram"}],"appName":"CI/CD Pipeline","navItems":[{"label":"Builds","href":"/builds","icon":"hammer"},{"icon":"layers","label":"Stages","href":"/stages"},{"label":"Deploy","href":"/deploy","icon":"rocket"}],"type":"dashboard-layout"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","Stage",{"emit":{"success":"StageLoaded","failure":"StageLoadFailed"}}],["render-ui","main",{"appName":"CI/CD Pipeline","type":"dashboard-layout","navItems":[{"icon":"hammer","href":"/builds","label":"Builds"},{"label":"Stages","href":"/stages","icon":"layers"},{"label":"Deploy","href":"/deploy","icon":"rocket"}],"children":[{"children":[{"children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Stages"}]},{"gap":"md","direction":"horizontal","justify":"between","type":"stack","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"name":"layers","type":"icon"},{"variant":"h2","type":"typography","content":"Stages"}]},{"variant":"secondary","action":"REFRESH","label":"Refresh","icon":"refresh-cw","type":"button"}]},{"type":"divider"},{"children":[{"cols":3,"type":"simple-grid","children":[{"children":[{"gap":"sm","type":"stack","children":[{"type":"typography","variant":"caption","content":"Name"},{"type":"typography","variant":"h3","content":"@entity.name"}],"direction":"vertical"}],"type":"card"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"variant":"caption","content":"Status","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.status"}]}]},{"children":[{"children":[{"variant":"caption","content":"Duration","type":"typography"},{"variant":"h3","content":"@entity.duration","type":"typography"}],"type":"stack","direction":"vertical","gap":"sm"}],"type":"card"},{"type":"card","children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"type":"typography","content":"Output","variant":"caption"},{"content":"@entity.output","variant":"h3","type":"typography"}]}]}]}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"children":[{"children":[{"type":"typography","variant":"caption","content":"Chart View"}],"type":"card"},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"gap":"md"},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"type":"graph-view","edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"nodes":[{"label":"Start","id":"a"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"width":400,"height":200}],"gap":"lg","direction":"vertical","type":"stack"}],"type":"scaled-diagram"}]}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","Stage",{"emit":{"success":"StageLoaded","failure":"StageLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Stages"}]},{"justify":"between","gap":"md","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"layers"},{"content":"Stages","variant":"h2","type":"typography"}]},{"label":"Refresh","action":"REFRESH","type":"button","icon":"refresh-cw","variant":"secondary"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"box","children":[{"children":[{"children":[{"direction":"vertical","children":[{"variant":"caption","type":"typography","content":"Name"},{"type":"typography","variant":"h3","content":"@entity.name"}],"type":"stack","gap":"sm"}],"type":"card"},{"type":"card","children":[{"children":[{"variant":"caption","content":"Status","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.status"}],"direction":"vertical","type":"stack","gap":"sm"}]},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"content":"Duration","type":"typography","variant":"caption"},{"variant":"h3","content":"@entity.duration","type":"typography"}]}]},{"children":[{"type":"stack","gap":"sm","children":[{"variant":"caption","content":"Output","type":"typography"},{"variant":"h3","content":"@entity.output","type":"typography"}],"direction":"vertical"}],"type":"card"}],"type":"simple-grid","cols":3}],"padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"type":"card","children":[{"variant":"caption","content":"Graph View","type":"typography"}]}]},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"height":200,"width":400,"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}]}]}],"type":"scaled-diagram"}],"navItems":[{"label":"Builds","icon":"hammer","href":"/builds"},{"icon":"layers","label":"Stages","href":"/stages"},{"icon":"rocket","href":"/deploy","label":"Deploy"}],"type":"dashboard-layout","appName":"CI/CD Pipeline"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","Stage",{"emit":{"failure":"StageLoadFailed","success":"StageLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Builds","href":"/builds","icon":"hammer"},{"href":"/stages","icon":"layers","label":"Stages"},{"href":"/deploy","icon":"rocket","label":"Deploy"}],"appName":"CI/CD Pipeline","children":[{"type":"scaled-diagram","children":[{"children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Stages"}]},{"justify":"between","type":"stack","direction":"horizontal","children":[{"direction":"horizontal","children":[{"name":"layers","type":"icon"},{"content":"Stages","type":"typography","variant":"h2"}],"gap":"md","type":"stack"},{"label":"Refresh","variant":"secondary","action":"REFRESH","type":"button","icon":"refresh-cw"}],"gap":"md"},{"type":"divider"},{"children":[{"type":"simple-grid","children":[{"children":[{"direction":"vertical","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Name"},{"variant":"h3","content":"@entity.name","type":"typography"}],"type":"stack"}],"type":"card"},{"type":"card","children":[{"children":[{"variant":"caption","type":"typography","content":"Status"},{"content":"@entity.status","variant":"h3","type":"typography"}],"gap":"sm","type":"stack","direction":"vertical"}]},{"type":"card","children":[{"direction":"vertical","gap":"sm","children":[{"variant":"caption","type":"typography","content":"Duration"},{"variant":"h3","type":"typography","content":"@entity.duration"}],"type":"stack"}]},{"children":[{"direction":"vertical","gap":"sm","children":[{"type":"typography","content":"Output","variant":"caption"},{"content":"@entity.output","type":"typography","variant":"h3"}],"type":"stack"}],"type":"card"}],"cols":3}],"padding":"md","type":"box"},{"type":"divider"},{"gap":"md","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"type":"grid","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}]},{"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"height":200,"width":400,"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"label":"Process","id":"b"},{"id":"c","label":"End"}]}],"gap":"lg","type":"stack","direction":"vertical"}]}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","Stage",{"emit":{"success":"StageLoaded","failure":"StageLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/builds","label":"Builds","icon":"hammer"},{"label":"Stages","href":"/stages","icon":"layers"},{"label":"Deploy","icon":"rocket","href":"/deploy"}],"children":[{"children":[{"gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Stages"}]},{"type":"stack","gap":"md","justify":"between","direction":"horizontal","children":[{"gap":"md","children":[{"type":"icon","name":"layers"},{"type":"typography","content":"Stages","variant":"h2"}],"type":"stack","direction":"horizontal"},{"action":"REFRESH","icon":"refresh-cw","type":"button","label":"Refresh","variant":"secondary"}]},{"type":"divider"},{"type":"box","padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"type":"card","children":[{"gap":"sm","direction":"vertical","type":"stack","children":[{"type":"typography","variant":"caption","content":"Name"},{"variant":"h3","content":"@entity.name","type":"typography"}]}]},{"children":[{"direction":"vertical","children":[{"type":"typography","content":"Status","variant":"caption"},{"variant":"h3","type":"typography","content":"@entity.status"}],"gap":"sm","type":"stack"}],"type":"card"},{"children":[{"type":"stack","gap":"sm","direction":"vertical","children":[{"type":"typography","variant":"caption","content":"Duration"},{"content":"@entity.duration","variant":"h3","type":"typography"}]}],"type":"card"},{"type":"card","children":[{"direction":"vertical","type":"stack","gap":"sm","children":[{"variant":"caption","content":"Output","type":"typography"},{"type":"typography","content":"@entity.output","variant":"h3"}]}]}]}]},{"type":"divider"},{"type":"grid","gap":"md","children":[{"type":"card","children":[{"content":"Chart View","variant":"caption","type":"typography"}]},{"children":[{"content":"Graph View","type":"typography","variant":"caption"}],"type":"card"}],"cols":2},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"height":200,"width":400,"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}]}],"direction":"vertical","type":"stack"}],"type":"scaled-diagram"}],"type":"dashboard-layout","appName":"CI/CD Pipeline"}]]}]},"scope":"collection"}],"pages":[{"name":"Stages","path":"/stages","traits":[{"ref":"StageDisplay"}]}]},{"name":"DeploymentOrbital","entity":{"name":"Deployment","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"environment","type":"string","required":true},{"name":"version","type":"string","required":true},{"name":"status","type":"string","values":["pending","running","success","failed"]},{"name":"deployedAt","type":"datetime"}]},"traits":[{"name":"DeploymentAsync","category":"interaction","linkedEntity":"Deployment","emits":[{"event":"DeploymentLoadFailed","description":"Fired when Deployment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeploymentLoaded","description":"Fired when Deployment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deployment]"}]},{"event":"DeploymentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DeploymentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"loading"},{"name":"success"},{"name":"error"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"LOADED","name":"Loaded","payloadSchema":[{"name":"data","type":"string"}]},{"key":"FAILED","name":"Failed"},{"key":"RESET","name":"Reset"},{"key":"RETRY","name":"Retry"},{"key":"DeploymentLoadFailed","name":"Deployment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeploymentLoaded","name":"Deployment loaded","payloadSchema":[{"name":"data","type":"[Deployment]"}]},{"key":"DeploymentSaveFailed","name":"Deployment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DeploymentSaved","name":"Deployment saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Deployment",{"emit":{"success":"DeploymentLoaded","failure":"DeploymentLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"children":[{"type":"stack","children":[{"type":"icon","name":"upload-cloud"},{"type":"typography","variant":"h2","content":"Deployment"}],"direction":"horizontal","align":"center","gap":"md"},{"type":"divider"},{"type":"typography","color":"muted","variant":"body","content":"Ready to start deployment operation."},{"label":"Start","icon":"play","type":"button","variant":"primary","action":"START"}],"gap":"lg","type":"stack","direction":"vertical","align":"center"}],"navItems":[{"icon":"hammer","href":"/builds","label":"Builds"},{"label":"Stages","href":"/stages","icon":"layers"},{"href":"/deploy","label":"Deploy","icon":"rocket"}],"appName":"CI/CD Pipeline"}]]},{"from":"idle","to":"loading","event":"START","effects":[["render-ui","main",{"type":"dashboard-layout","children":[{"gap":"lg","align":"center","type":"stack","children":[{"title":"Deploying...","type":"loading-state","message":"Processing deployment..."},{"variant":"text","type":"skeleton"}],"direction":"vertical"}],"appName":"CI/CD Pipeline","navItems":[{"icon":"hammer","label":"Builds","href":"/builds"},{"label":"Stages","icon":"layers","href":"/stages"},{"label":"Deploy","href":"/deploy","icon":"rocket"}]}]]},{"from":"loading","to":"success","event":"LOADED","effects":[["persist","create","Deployment","@payload.data",{"emit":{"success":"DeploymentSaved","failure":"DeploymentSaveFailed"}}],["render-ui","main",{"children":[{"align":"center","children":[{"name":"check-circle","type":"icon"},{"message":"Deployment successful.","type":"alert","variant":"success"},{"justify":"center","children":[{"type":"button","variant":"ghost","label":"Reset","action":"RESET","icon":"rotate-ccw"}],"gap":"sm","type":"stack","direction":"horizontal"}],"type":"stack","gap":"lg","direction":"vertical"}],"appName":"CI/CD Pipeline","type":"dashboard-layout","navItems":[{"icon":"hammer","label":"Builds","href":"/builds"},{"icon":"layers","label":"Stages","href":"/stages"},{"icon":"rocket","href":"/deploy","label":"Deploy"}]}]]},{"from":"loading","to":"error","event":"FAILED","effects":[["render-ui","main",{"navItems":[{"icon":"hammer","label":"Builds","href":"/builds"},{"icon":"layers","label":"Stages","href":"/stages"},{"href":"/deploy","label":"Deploy","icon":"rocket"}],"type":"dashboard-layout","appName":"CI/CD Pipeline","children":[{"type":"stack","align":"center","gap":"lg","direction":"vertical","children":[{"type":"error-state","onRetry":"RETRY","title":"Operation Failed","message":"Deployment failed."},{"justify":"center","children":[{"icon":"refresh-cw","variant":"primary","type":"button","action":"RETRY","label":"Retry"},{"icon":"rotate-ccw","type":"button","action":"RESET","variant":"ghost","label":"Reset"}],"direction":"horizontal","gap":"sm","type":"stack"}]}]}]]},{"from":"success","to":"idle","event":"RESET","effects":[["render-ui","main",{"children":[{"direction":"vertical","type":"stack","gap":"lg","align":"center","children":[{"children":[{"type":"icon","name":"upload-cloud"},{"type":"typography","variant":"h2","content":"Deployment"}],"type":"stack","direction":"horizontal","align":"center","gap":"md"},{"type":"divider"},{"content":"Ready to start deployment operation.","color":"muted","type":"typography","variant":"body"},{"type":"button","variant":"primary","icon":"play","label":"Start","action":"START"}]}],"type":"dashboard-layout","navItems":[{"icon":"hammer","label":"Builds","href":"/builds"},{"href":"/stages","label":"Stages","icon":"layers"},{"label":"Deploy","icon":"rocket","href":"/deploy"}],"appName":"CI/CD Pipeline"}]]},{"from":"error","to":"idle","event":"RESET","effects":[["render-ui","main",{"children":[{"gap":"lg","align":"center","type":"stack","direction":"vertical","children":[{"children":[{"type":"icon","name":"upload-cloud"},{"content":"Deployment","type":"typography","variant":"h2"}],"direction":"horizontal","type":"stack","align":"center","gap":"md"},{"type":"divider"},{"variant":"body","color":"muted","type":"typography","content":"Ready to start deployment operation."},{"action":"START","type":"button","icon":"play","variant":"primary","label":"Start"}]}],"navItems":[{"icon":"hammer","href":"/builds","label":"Builds"},{"icon":"layers","label":"Stages","href":"/stages"},{"href":"/deploy","label":"Deploy","icon":"rocket"}],"type":"dashboard-layout","appName":"CI/CD Pipeline"}]]},{"from":"error","to":"loading","event":"RETRY","effects":[["render-ui","main",{"appName":"CI/CD Pipeline","children":[{"type":"stack","direction":"vertical","align":"center","children":[{"title":"Deploying...","message":"Processing deployment...","type":"loading-state"},{"type":"skeleton","variant":"text"}],"gap":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/builds","label":"Builds","icon":"hammer"},{"label":"Stages","icon":"layers","href":"/stages"},{"icon":"rocket","label":"Deploy","href":"/deploy"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Deploy","path":"/deploy","traits":[{"ref":"DeploymentAsync"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'BuildOrbital',
+      uses: [],
+      entity: {
+        'name': 'Build',
+        'collection': 'builds',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'branch',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'commit',
+            'type': 'string',
+          },
+          {
+            'name': 'triggeredBy',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'BuildBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Build',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.branch',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.commit',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.triggeredBy',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.branch',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.commit',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.triggeredBy',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.branch',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.commit',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.triggeredBy',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoaded',
+              'description': 'Fired when Build finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Build]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoadFailed',
+              'description': 'Fired when Build fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeploymentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeploymentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'BUILD_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildCreate',
+              },
+            },
+            {
+              'event': 'BUILD_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildEdit',
+              },
+            },
+            {
+              'event': 'BUILD_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'BuildLoaded',
+                'name': 'Build loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Build]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoadFailed',
+                'name': 'Build load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Build',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Build',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Build',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSaved',
+                'name': 'Build saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSaveFailed',
+                'name': 'Build save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildUpdated',
+                'name': 'Build updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildUpdateFailed',
+                'name': 'Build update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildDeleted',
+                'name': 'Build deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildDeleteFailed',
+                'name': 'Build delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeploymentSaved',
+                'name': 'Deployment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeploymentSaveFailed',
+                'name': 'Deployment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading builds…',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'icon': 'hammer',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'label': 'Stages',
+                          'href': '/stages',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'package',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Builds',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'label': 'Create Build',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                  'event': 'VIEW',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'event': 'EDIT',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'icon': 'git-branch',
+                                  'name': 'branch',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'commit',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'label': 'Triggered By',
+                                  'variant': 'caption',
+                                  'name': 'triggeredBy',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'variant': 'card',
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'BuildLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': 'Failed to load builds',
+                          'variant': 'h3',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'variant': 'body',
+                        },
+                        {
+                          'type': 'button',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'variant': 'primary',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Build',
+          'emits': [
+            {
+              'event': 'BUILD_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoadFailed',
+              'description': 'Fired when Build fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoaded',
+              'description': 'Fired when Build finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Build]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'BUILD_CREATED',
+                'name': 'Build Created',
+              },
+              {
+                'key': 'BuildLoadFailed',
+                'name': 'Build load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoaded',
+                'name': 'Build loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Build]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSaveFailed',
+                'name': 'Build save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildSaved',
+                'name': 'Build saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Create Build',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'branch',
+                            'status',
+                            'commit',
+                            'triggeredBy',
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Build',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildSaved',
+                        'failure': 'BuildSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'BUILD_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Build',
+          'emits': [
+            {
+              'event': 'BUILD_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoadFailed',
+              'description': 'Fired when Build fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoaded',
+              'description': 'Fired when Build finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Build]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Build',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'BUILD_UPDATED',
+                'name': 'Build Updated',
+              },
+              {
+                'key': 'BuildLoadFailed',
+                'name': 'Build load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoaded',
+                'name': 'Build loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Build]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildUpdateFailed',
+                'name': 'Build update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildUpdated',
+                'name': 'Build updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Edit Build',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'edit',
+                          'fields': [
+                            'branch',
+                            'status',
+                            'commit',
+                            'triggeredBy',
+                          ],
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Build',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'BuildUpdated',
+                        'failure': 'BuildUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'BUILD_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildView',
+          'category': 'interaction',
+          'linkedEntity': 'Build',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoaded',
+              'description': 'Fired when Build finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Build]',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoadFailed',
+              'description': 'Fired when Build fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'BuildLoaded',
+                'name': 'Build loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Build]',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoadFailed',
+                'name': 'Build load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.branch',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.commit',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.triggeredBy',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.branch',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Branch',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.branch',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Status',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.status',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Commit',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.commit',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Triggered By',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.triggeredBy',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'variant': 'primary',
+                              'label': 'Edit',
+                              'icon': 'edit',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'BuildDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Build',
+          'emits': [
+            {
+              'event': 'BUILD_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoadFailed',
+              'description': 'Fired when Build fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'BuildLoaded',
+              'description': 'Fired when Build finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Build]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'BuildBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'BUILD_DELETED',
+                'name': 'Build Deleted',
+              },
+              {
+                'key': 'BuildDeleteFailed',
+                'name': 'Build delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildDeleted',
+                'name': 'Build deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoadFailed',
+                'name': 'Build load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'BuildLoaded',
+                'name': 'Build loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Build]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Build',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'action': 'CANCEL',
+                              'variant': 'ghost',
+                            },
+                            {
+                              'icon': 'check',
+                              'type': 'button',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Build',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'BuildDeleteFailed',
+                        'success': 'BuildDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'BUILD_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Build',
+                    {
+                      'emit': {
+                        'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'BuildsPage',
+          'path': '/builds',
+          'traits': [
+            {
+              'ref': 'BuildBrowse',
+            },
+            {
+              'ref': 'BuildCreate',
+            },
+            {
+              'ref': 'BuildEdit',
+            },
+            {
+              'ref': 'BuildView',
+            },
+            {
+              'ref': 'BuildDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'StageOrbital',
+      uses: [],
+      entity: {
+        'name': 'Stage',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'duration',
+            'type': 'string',
+          },
+          {
+            'name': 'output',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'StageDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'Stage',
+          'emits': [
+            {
+              'event': 'StageLoaded',
+              'description': 'Fired when Stage finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Stage]',
+                },
+              ],
+            },
+            {
+              'event': 'StageLoadFailed',
+              'description': 'Fired when Stage fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'StageLoaded',
+                'name': 'Stage loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Stage]',
+                  },
+                ],
+              },
+              {
+                'key': 'StageLoadFailed',
+                'name': 'Stage load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.duration',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.output',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Stage',
+                    {
+                      'emit': {
+                        'success': 'StageLoaded',
+                        'failure': 'StageLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CI/CD Pipeline',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Stages',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'layers',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Stages',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Name',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.name',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Duration',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.duration',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'content': 'Output',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.output',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'label': 'Stages',
+                          'href': '/stages',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Stage',
+                    {
+                      'emit': {
+                        'success': 'StageLoaded',
+                        'failure': 'StageLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'label': 'Stages',
+                          'href': '/stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Stages',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'layers',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Stages',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Name',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.name',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Status',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Duration',
+                                                },
+                                                {
+                                                  'content': '@entity.duration',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Output',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.output',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Stage',
+                    {
+                      'emit': {
+                        'success': 'StageLoaded',
+                        'failure': 'StageLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Stages',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'layers',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Stages',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Name',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'Status',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.status',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Duration',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.duration',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Output',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.output',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'width': 400,
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Stages',
+                          'icon': 'layers',
+                          'href': '/stages',
+                        },
+                        {
+                          'href': '/deploy',
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'Stage',
+                    {
+                      'emit': {
+                        'success': 'StageLoaded',
+                        'failure': 'StageLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Stages',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'layers',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Stages',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Name',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.status',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Duration',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.duration',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Output',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.output',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'icon': 'layers',
+                          'label': 'Stages',
+                          'href': '/stages',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Stage',
+                    {
+                      'emit': {
+                        'failure': 'StageLoadFailed',
+                        'success': 'StageLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'label': 'Stages',
+                          'href': '/stages',
+                        },
+                        {
+                          'icon': 'rocket',
+                          'href': '/deploy',
+                          'label': 'Deploy',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Stages',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'name': 'layers',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Stages',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'content': 'Name',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.name',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Status',
+                                                },
+                                                {
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Duration',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.duration',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'Output',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.output',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Stages',
+          'path': '/stages',
+          'traits': [
+            {
+              'ref': 'StageDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'DeploymentOrbital',
+      uses: [],
+      entity: {
+        'name': 'Deployment',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'environment',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'version',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'deployedAt',
+            'type': 'datetime',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DeploymentAsync',
+          'category': 'interaction',
+          'linkedEntity': 'Deployment',
+          'emits': [
+            {
+              'event': 'DeploymentLoadFailed',
+              'description': 'Fired when Deployment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeploymentLoaded',
+              'description': 'Fired when Deployment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deployment]',
+                },
+              ],
+            },
+            {
+              'event': 'DeploymentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DeploymentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'loading',
+              },
+              {
+                'name': 'success',
+              },
+              {
+                'name': 'error',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'RETRY',
+                'name': 'Retry',
+              },
+              {
+                'key': 'DeploymentLoadFailed',
+                'name': 'Deployment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeploymentLoaded',
+                'name': 'Deployment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deployment]',
+                  },
+                ],
+              },
+              {
+                'key': 'DeploymentSaveFailed',
+                'name': 'Deployment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DeploymentSaved',
+                'name': 'Deployment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deployment',
+                    {
+                      'emit': {
+                        'failure': 'DeploymentLoadFailed',
+                        'success': 'DeploymentLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'name': 'upload-cloud',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Deployment',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'body',
+                              'color': 'muted',
+                              'type': 'typography',
+                              'content': 'Ready to start deployment operation.',
+                            },
+                            {
+                              'type': 'button',
+                              'label': 'Start',
+                              'action': 'START',
+                              'variant': 'primary',
+                              'icon': 'play',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/stages',
+                          'label': 'Stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                          'href': '/deploy',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'loading',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'icon': 'hammer',
+                          'href': '/builds',
+                        },
+                        {
+                          'label': 'Stages',
+                          'href': '/stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'href': '/deploy',
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'loading-state',
+                              'title': 'Deploying...',
+                              'message': 'Processing deployment...',
+                            },
+                            {
+                              'type': 'skeleton',
+                              'variant': 'text',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'success',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Deployment',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'DeploymentSaved',
+                        'failure': 'DeploymentSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'name': 'check-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': 'Deployment successful.',
+                              'variant': 'success',
+                            },
+                            {
+                              'justify': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/stages',
+                          'label': 'Stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                          'href': '/deploy',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'error',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'title': 'Operation Failed',
+                              'type': 'error-state',
+                              'onRetry': 'RETRY',
+                              'message': 'Deployment failed.',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'action': 'RETRY',
+                                  'icon': 'refresh-cw',
+                                  'type': 'button',
+                                  'label': 'Retry',
+                                  'variant': 'primary',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'justify': 'center',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'align': 'center',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/stages',
+                          'label': 'Stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                          'href': '/deploy',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'success',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'CI/CD Pipeline',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'upload-cloud',
+                                },
+                                {
+                                  'content': 'Deployment',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'content': 'Ready to start deployment operation.',
+                              'variant': 'body',
+                              'type': 'typography',
+                              'color': 'muted',
+                            },
+                            {
+                              'icon': 'play',
+                              'label': 'Start',
+                              'action': 'START',
+                              'variant': 'primary',
+                              'type': 'button',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'icon': 'hammer',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'href': '/stages',
+                          'label': 'Stages',
+                        },
+                        {
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'error',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'href': '/stages',
+                          'label': 'Stages',
+                        },
+                        {
+                          'href': '/deploy',
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'upload-cloud',
+                                },
+                                {
+                                  'content': 'Deployment',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'color': 'muted',
+                              'variant': 'body',
+                              'content': 'Ready to start deployment operation.',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'START',
+                              'label': 'Start',
+                              'variant': 'primary',
+                              'icon': 'play',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'error',
+                'to': 'loading',
+                'event': 'RETRY',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'title': 'Deploying...',
+                              'message': 'Processing deployment...',
+                              'type': 'loading-state',
+                            },
+                            {
+                              'type': 'skeleton',
+                              'variant': 'text',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'icon': 'layers',
+                          'href': '/stages',
+                          'label': 'Stages',
+                        },
+                        {
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Deploy',
+          'path': '/deploy',
+          'traits': [
+            {
+              'ref': 'DeploymentAsync',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

@@ -144,9 +144,7296 @@ export function stdEcommerce(params: StdEcommerceParams): OrbitalDefinition[] {
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ProductOrbital","entity":{"name":"Product","collection":"products","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"description","type":"string"},{"name":"price","type":"number","required":true},{"name":"category","type":"string"},{"name":"sku","type":"string"},{"name":"inStock","type":"boolean","default":true},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"ProductBrowse","category":"interaction","linkedEntity":"Product","emits":[{"event":"ADD_TO_CART","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.price","type":"number","required":true},{"name":"row.category","type":"string"},{"name":"row.sku","type":"string"},{"name":"row.inStock","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.price","type":"number","required":true},{"name":"row.category","type":"string"},{"name":"row.sku","type":"string"},{"name":"row.inStock","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.price","type":"number","required":true},{"name":"row.category","type":"string"},{"name":"row.sku","type":"string"},{"name":"row.inStock","type":"boolean"},{"name":"row.pendingId","type":"string"}]},{"event":"ProductLoaded","description":"Fired when Product finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Product]"}]},{"event":"ProductLoadFailed","description":"Fired when Product fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CartItemSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CartItemDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CheckoutSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CheckoutSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OrderRecordSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OrderRecordUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OrderRecordDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PRODUCT_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"ProductCreate"}},{"event":"PRODUCT_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"ProductEdit"}},{"event":"PRODUCT_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"ProductDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ProductLoaded","name":"Product loaded","payloadSchema":[{"name":"data","type":"[Product]"}]},{"key":"ProductLoadFailed","name":"Product load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ADD_TO_CART","name":"Add To Cart"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Product"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Product"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Product"}]},{"key":"ProductSaved","name":"Product saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ProductSaveFailed","name":"Product save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductUpdated","name":"Product updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ProductUpdateFailed","name":"Product update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductDeleted","name":"Product deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ProductDeleteFailed","name":"Product delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemSaved","name":"Cart item saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CartItemSaveFailed","name":"Cart item save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemDeleted","name":"Cart item deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CartItemDeleteFailed","name":"Cart item delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CheckoutSaved","name":"Checkout saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CheckoutSaveFailed","name":"Checkout save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordSaved","name":"Order record saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"OrderRecordSaveFailed","name":"Order record save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordUpdated","name":"Order record updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"OrderRecordUpdateFailed","name":"Order record update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordDeleted","name":"Order record deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"OrderRecordDeleteFailed","name":"Order record delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}],["render-ui","main",{"align":"center","direction":"vertical","className":"py-12","type":"stack","gap":"md","children":[{"type":"spinner"},{"type":"typography","variant":"caption","content":"Loading…","color":"muted"}]}]]},{"from":"browsing","to":"browsing","event":"ProductLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/products","icon":"package","label":"Products"},{"icon":"shopping-cart","label":"Cart","href":"/cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}],"appName":"EcommerceApp","children":[{"type":"stack","gap":"lg","className":"max-w-5xl mx-auto w-full","children":[{"justify":"between","gap":"md","align":"center","children":[{"gap":"sm","children":[{"name":"package","type":"icon"},{"content":"Products","variant":"h2","type":"typography"}],"direction":"horizontal","type":"stack","align":"center"},{"children":[{"action":"CREATE","type":"button","label":"Create Product","variant":"primary","icon":"plus"}],"gap":"sm","direction":"horizontal","type":"stack"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"gap":"md","type":"data-grid","entity":"@payload.data","itemActions":[{"variant":"ghost","event":"VIEW","label":"View"},{"event":"EDIT","label":"Edit","variant":"ghost"},{"event":"DELETE","variant":"danger","label":"Delete"}],"cols":3,"fields":[{"name":"name","variant":"h3","icon":"package"},{"name":"category","variant":"badge"},{"variant":"h4","format":"currency","name":"price"},{"variant":"caption","name":"sku"},{"name":"inStock","variant":"body","label":"In Stock","format":"boolean"}]}],"direction":"vertical"}]}]]},{"from":"browsing","to":"browsing","event":"ProductLoadFailed","effects":[["render-ui","main",{"gap":"md","direction":"vertical","className":"py-12","type":"stack","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"content":"Failed to load product","type":"typography","variant":"h3"},{"type":"typography","content":"@payload.error","variant":"body","color":"muted"},{"type":"button","icon":"rotate-ccw","variant":"primary","action":"INIT","label":"Retry"}],"align":"center"}]]}]},"scope":"collection"},{"name":"ProductCreate","category":"interaction","linkedEntity":"Product","emits":[{"event":"PRODUCT_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductLoadFailed","description":"Fired when Product fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductLoaded","description":"Fired when Product finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Product]"}]},{"event":"ProductSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"ProductBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PRODUCT_CREATED","name":"Product Created"},{"key":"ProductLoadFailed","name":"Product load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductLoaded","name":"Product loaded","payloadSchema":[{"name":"data","type":"[Product]"}]},{"key":"ProductSaveFailed","name":"Product save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductSaved","name":"Product saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Product",{"emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}],["render-ui","modal",{"children":[{"type":"stack","direction":"horizontal","gap":"sm","children":[{"name":"plus-circle","type":"icon"},{"content":"Create Product","variant":"h3","type":"typography"}]},{"type":"divider"},{"mode":"create","fields":["name","description","price","category","sku","inStock"],"type":"form-section","submitEvent":"SAVE","cancelEvent":"CLOSE"}],"type":"stack","gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Product","@payload.data",{"emit":{"success":"ProductSaved","failure":"ProductSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","PRODUCT_CREATED"]]}]},"scope":"collection"},{"name":"ProductEdit","category":"interaction","linkedEntity":"Product","emits":[{"event":"PRODUCT_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductLoadFailed","description":"Fired when Product fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductLoaded","description":"Fired when Product finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Product]"}]},{"event":"ProductUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ProductView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ProductBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Product"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PRODUCT_UPDATED","name":"Product Updated"},{"key":"ProductLoadFailed","name":"Product load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductLoaded","name":"Product loaded","payloadSchema":[{"name":"data","type":"[Product]"}]},{"key":"ProductUpdateFailed","name":"Product update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductUpdated","name":"Product updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Product",{"emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","type":"stack","children":[{"children":[{"type":"icon","name":"edit"},{"variant":"h3","content":"Edit Product","type":"typography"}],"gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"mode":"edit","submitEvent":"SAVE","cancelEvent":"CLOSE","type":"form-section","entity":"@payload.row","fields":["name","description","price","category","sku","inStock"]}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Product","@payload.data",{"emit":{"failure":"ProductUpdateFailed","success":"ProductUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","PRODUCT_UPDATED"]]}]},"scope":"collection"},{"name":"ProductView","category":"interaction","linkedEntity":"Product","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductLoaded","description":"Fired when Product finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Product]"}]},{"event":"ProductLoadFailed","description":"Fired when Product fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"ProductBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"ProductLoaded","name":"Product loaded","payloadSchema":[{"name":"data","type":"[Product]"}]},{"key":"ProductLoadFailed","name":"Product load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Product",{"emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Product",{"id":"@payload.id","emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"}}],["render-ui","modal",{"children":[{"type":"stack","children":[{"type":"icon","name":"eye"},{"variant":"h3","content":"@entity.name","type":"typography"}],"gap":"sm","align":"center","direction":"horizontal"},{"type":"divider"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"variant":"caption","content":"Name","type":"typography"},{"variant":"body","type":"typography","content":"@entity.name"}]},{"type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Description"},{"variant":"body","content":"@entity.description","type":"typography"}],"direction":"horizontal"},{"type":"stack","gap":"md","children":[{"variant":"caption","content":"Price","type":"typography"},{"content":"@entity.price","type":"typography","variant":"body"}],"direction":"horizontal"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Category"},{"content":"@entity.category","variant":"body","type":"typography"}]},{"type":"stack","children":[{"content":"Sku","type":"typography","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.sku"}],"gap":"md","direction":"horizontal"},{"children":[{"content":"In Stock","type":"typography","variant":"caption"},{"content":"@entity.inStock","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"gap":"sm","justify":"end","direction":"horizontal","type":"stack","children":[{"variant":"primary","label":"Edit","action":"EDIT","icon":"edit","type":"button"},{"label":"Close","action":"CLOSE","type":"button","variant":"ghost"}]}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"ProductDelete","category":"interaction","linkedEntity":"Product","emits":[{"event":"PRODUCT_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ProductLoadFailed","description":"Fired when Product fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ProductLoaded","description":"Fired when Product finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Product]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"ProductBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"PRODUCT_DELETED","name":"Product Deleted"},{"key":"ProductDeleteFailed","name":"Product delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductDeleted","name":"Product deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ProductLoadFailed","name":"Product load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ProductLoaded","name":"Product loaded","payloadSchema":[{"name":"data","type":"[Product]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Product",{"emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Product",{"emit":{"success":"ProductLoaded","failure":"ProductLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"type":"stack","direction":"horizontal","children":[{"name":"alert-triangle","type":"icon"},{"content":"Delete Product","type":"typography","variant":"h3"}],"align":"center","gap":"sm"},{"type":"divider"},{"type":"alert","message":"This action cannot be undone.","variant":"error"},{"justify":"end","children":[{"type":"button","label":"Cancel","variant":"ghost","action":"CANCEL"},{"label":"Delete","type":"button","action":"CONFIRM_DELETE","variant":"danger","icon":"check"}],"direction":"horizontal","gap":"sm","type":"stack"}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Product","@entity.pendingId",{"emit":{"failure":"ProductDeleteFailed","success":"ProductDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}],["emit","PRODUCT_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Product",{"emit":{"failure":"ProductLoadFailed","success":"ProductLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"ProductsPage","path":"/products","traits":[{"ref":"ProductBrowse"},{"ref":"ProductCreate"},{"ref":"ProductEdit"},{"ref":"ProductView"},{"ref":"ProductDelete"}]}]},{"name":"CartItemOrbital","entity":{"name":"CartItem","collection":"cartitems","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"productName","type":"string","required":true},{"name":"quantity","type":"number","required":true},{"name":"unitPrice","type":"number","required":true},{"name":"totalPrice","type":"number"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"CartItemCartBrowse","category":"interaction","linkedEntity":"CartItem","emits":[{"event":"CHECKOUT_STARTED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ADD_ITEM"},{"event":"REQUEST_REMOVE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.productName","type":"string","required":true},{"name":"row.quantity","type":"number","required":true},{"name":"row.unitPrice","type":"number","required":true},{"name":"row.totalPrice","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"CartItemLoaded","description":"Fired when CartItem finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[CartItem]"}]},{"event":"CartItemLoadFailed","description":"Fired when CartItem fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"ADD_TO_CART","triggers":"INIT","source":{"kind":"orbital","orbital":"ProductOrbital","trait":"ProductBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true},{"name":"checkout"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CartItemLoaded","name":"CartItem loaded","payloadSchema":[{"name":"data","type":"[CartItem]"}]},{"key":"CartItemLoadFailed","name":"CartItem load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PROCEED_CHECKOUT","name":"Proceed Checkout"},{"key":"BACK_TO_CART","name":"Back To Cart"},{"key":"CONFIRM_ORDER","name":"Confirm Order"},{"key":"CHECKOUT_STARTED","name":"Checkout Started"},{"key":"ADD_ITEM","name":"Add Item"},{"key":"REQUEST_REMOVE","name":"Request Remove"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","CartItem",{"emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}],["render-ui","main",{"className":"py-12","gap":"md","direction":"vertical","children":[{"type":"spinner"},{"variant":"caption","content":"Loading…","color":"muted","type":"typography"}],"type":"stack","align":"center"}]]},{"from":"browsing","to":"browsing","event":"CartItemLoaded","effects":[["render-ui","main",{"navItems":[{"icon":"package","label":"Products","href":"/products"},{"href":"/cart","label":"Cart","icon":"shopping-cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"href":"/orders","icon":"clipboard-list","label":"Orders"}],"type":"dashboard-layout","appName":"EcommerceApp","children":[{"children":[{"type":"stack","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"name":"shopping-cart","type":"icon"},{"content":"Shopping Cart","type":"typography","variant":"h2"}]},{"icon":"plus","label":"Add Item","type":"button","action":"ADD_ITEM","variant":"primary"}],"direction":"horizontal","gap":"md","justify":"between"},{"type":"divider"},{"cols":3,"children":[{"type":"stat-display","label":"Items","value":"@payload.data.length","icon":"package"},{"label":"Subtotal","value":"@payload.data.length","type":"stat-display","icon":"dollar-sign"},{"value":"@payload.data.length","label":"Total","icon":"receipt","type":"stat-display"}],"type":"simple-grid"},{"type":"divider"},{"itemActions":[{"label":"Remove","event":"REQUEST_REMOVE","variant":"danger"}],"fields":[{"variant":"h4","name":"productName","icon":"shopping-cart","label":"Product Name"},{"label":"Quantity","name":"quantity","format":"currency","variant":"caption"},{"variant":"badge","name":"unitPrice","label":"Unit Price"}],"type":"data-grid","entity":"@payload.data"},{"icon":"arrow-right","label":"Proceed to Checkout","variant":"primary","type":"button","action":"PROCEED_CHECKOUT"}],"direction":"vertical","gap":"lg","type":"stack"}]}]]},{"from":"browsing","to":"browsing","event":"CartItemLoadFailed","effects":[["render-ui","main",{"type":"stack","align":"center","className":"py-12","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Failed to load cartitem"},{"type":"typography","content":"@payload.error","color":"muted","variant":"body"},{"action":"INIT","variant":"primary","icon":"rotate-ccw","type":"button","label":"Retry"}],"gap":"md","direction":"vertical"}]]},{"from":"browsing","to":"checkout","event":"PROCEED_CHECKOUT","effects":[["fetch","CartItem",{"emit":{"failure":"CartItemLoadFailed","success":"CartItemLoaded"}}],["render-ui","main",{"children":[{"type":"spinner"},{"color":"muted","content":"Preparing checkout…","type":"typography","variant":"caption"}],"direction":"vertical","gap":"md","className":"py-12","type":"stack","align":"center"}]]},{"from":"checkout","to":"checkout","event":"CartItemLoaded","effects":[["render-ui","main",{"navItems":[{"label":"Products","href":"/products","icon":"package"},{"label":"Cart","href":"/cart","icon":"shopping-cart"},{"label":"Checkout","icon":"credit-card","href":"/checkout"},{"href":"/orders","icon":"clipboard-list","label":"Orders"}],"appName":"EcommerceApp","type":"dashboard-layout","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"children":[{"type":"icon","name":"clipboard"},{"variant":"h2","type":"typography","content":"Checkout"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"entity":"@payload.data","fields":[{"label":"Product Name","variant":"h4","icon":"shopping-cart","name":"productName"},{"format":"currency","variant":"caption","name":"quantity","label":"Quantity"},{"variant":"badge","label":"Unit Price","name":"unitPrice"}],"itemActions":[{"event":"REQUEST_REMOVE","variant":"danger","label":"Remove"}],"type":"data-grid"},{"justify":"end","gap":"sm","direction":"horizontal","type":"stack","children":[{"variant":"ghost","label":"Back to Cart","icon":"arrow-left","type":"button","action":"BACK_TO_CART"},{"action":"CONFIRM_ORDER","icon":"check","variant":"primary","label":"Confirm Order","type":"button"}]}]}]}]]},{"from":"checkout","to":"browsing","event":"BACK_TO_CART","effects":[["fetch","CartItem",{"emit":{"failure":"CartItemLoadFailed","success":"CartItemLoaded"}}]]},{"from":"checkout","to":"browsing","event":"CONFIRM_ORDER","effects":[["fetch","CartItem",{"emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}],["render-ui","main",{"children":[{"align":"center","direction":"vertical","gap":"lg","children":[{"name":"check-circle","type":"icon"},{"variant":"h2","content":"Order Confirmed","type":"typography"},{"content":"Your order has been placed successfully.","variant":"body","type":"typography"},{"label":"Continue Shopping","action":"INIT","variant":"primary","type":"button"}],"type":"stack"}],"navItems":[{"label":"Products","href":"/products","icon":"package"},{"href":"/cart","label":"Cart","icon":"shopping-cart"},{"href":"/checkout","icon":"credit-card","label":"Checkout"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}],"type":"dashboard-layout","appName":"EcommerceApp"}]]}]},"scope":"collection"},{"name":"CartItemAddItem","category":"interaction","linkedEntity":"CartItem","emits":[{"event":"CartItemLoadFailed","description":"Fired when CartItem fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemLoaded","description":"Fired when CartItem finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[CartItem]"}]},{"event":"CartItemSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"ADD_ITEM","triggers":"ADD_ITEM","source":{"kind":"trait","trait":"CartItemCartBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ADD_ITEM","name":"Add Item"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CartItemLoadFailed","name":"CartItem load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemLoaded","name":"CartItem loaded","payloadSchema":[{"name":"data","type":"[CartItem]"}]},{"key":"CartItemSaveFailed","name":"CartItem save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemSaved","name":"CartItem saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","CartItem",{"emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}]]},{"from":"closed","to":"open","event":"ADD_ITEM","effects":[["fetch","CartItem",{"emit":{"failure":"CartItemLoadFailed","success":"CartItemLoaded"}}],["render-ui","modal",{"type":"stack","children":[{"children":[{"type":"icon","name":"plus-circle"},{"type":"typography","content":"Add Item","variant":"h3"}],"gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"form-section","mode":"create","submitEvent":"SAVE","cancelEvent":"CLOSE","fields":["productName","quantity","unitPrice","totalPrice"]}],"gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","CartItem","@payload.data",{"emit":{"success":"CartItemSaved","failure":"CartItemSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"CartItemRemoveConfirm","category":"interaction","linkedEntity":"CartItem","emits":[{"event":"CartItemDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CartItemLoadFailed","description":"Fired when CartItem fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CartItemLoaded","description":"Fired when CartItem finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[CartItem]"}]}],"listens":[{"event":"REQUEST_REMOVE","triggers":"REQUEST_REMOVE","source":{"kind":"trait","trait":"CartItemCartBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"REQUEST_REMOVE","name":"Request Remove","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_REMOVE","name":"Confirm Remove"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"CartItemDeleteFailed","name":"CartItem delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemDeleted","name":"CartItem deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CartItemLoadFailed","name":"CartItem load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CartItemLoaded","name":"CartItem loaded","payloadSchema":[{"name":"data","type":"[CartItem]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","CartItem",{"emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"REQUEST_REMOVE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","CartItem",{"id":"@payload.id","emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"gap":"sm","type":"stack","children":[{"type":"icon","name":"alert-triangle"},{"content":"Remove Item","variant":"h3","type":"typography"}],"align":"center","direction":"horizontal"},{"type":"divider"},{"type":"alert","variant":"error","message":"Are you sure you want to remove this item from your cart?"},{"children":[{"type":"button","label":"Cancel","action":"CANCEL","variant":"ghost"},{"type":"button","label":"Remove","variant":"danger","action":"CONFIRM_REMOVE","icon":"check"}],"type":"stack","direction":"horizontal","justify":"end","gap":"sm"}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_REMOVE","effects":[["persist","delete","CartItem","@entity.pendingId",{"emit":{"success":"CartItemDeleted","failure":"CartItemDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","CartItem",{"emit":{"failure":"CartItemLoadFailed","success":"CartItemLoaded"}}]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","CartItem",{"emit":{"failure":"CartItemLoadFailed","success":"CartItemLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","CartItem",{"emit":{"success":"CartItemLoaded","failure":"CartItemLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Cart","path":"/cart","traits":[{"ref":"CartItemCartBrowse"},{"ref":"CartItemAddItem"}]}]},{"name":"CheckoutOrbital","entity":{"name":"Checkout","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"customerName","type":"string","required":true},{"name":"email","type":"string","required":true},{"name":"shippingAddress","type":"string","required":true},{"name":"paymentMethod","type":"string","required":true},{"name":"orderTotal","type":"number"},{"name":"status","type":"string"}]},"traits":[{"name":"CheckoutWizard","category":"interaction","linkedEntity":"Checkout","emits":[{"event":"ORDER_PLACED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CheckoutLoadFailed","description":"Fired when Checkout fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CheckoutLoaded","description":"Fired when Checkout finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Checkout]"}]},{"event":"CheckoutSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CheckoutSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CHECKOUT_STARTED","triggers":"INIT","source":{"kind":"orbital","orbital":"CartItemOrbital","trait":"CartItemCartBrowse"}}],"stateMachine":{"states":[{"name":"step1","isInitial":true},{"name":"step2"},{"name":"step3"},{"name":"review"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NEXT","name":"Next"},{"key":"PREV","name":"Prev"},{"key":"COMPLETE","name":"Complete","payloadSchema":[{"name":"data","type":"string"}]},{"key":"RESTART","name":"Restart"},{"key":"ORDER_PLACED","name":"Order Placed"},{"key":"CheckoutLoadFailed","name":"Checkout load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CheckoutLoaded","name":"Checkout loaded","payloadSchema":[{"name":"data","type":"[Checkout]"}]},{"key":"CheckoutSaveFailed","name":"Checkout save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CheckoutSaved","name":"Checkout saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"step1","to":"step1","event":"INIT","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"children":[{"padding":"lg","maxWidth":"lg","children":[{"direction":"vertical","children":[{"align":"center","children":[{"name":"credit-card","type":"icon"},{"type":"typography","variant":"h2","content":"Checkout"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"progress-dots","count":3,"currentIndex":0},{"type":"wizard-progress","steps":["Customer Info","Shipping","Payment"],"currentStep":0},{"type":"divider"},{"variant":"h3","content":"Customer Info","type":"typography"},{"type":"form-section","cancelEvent":"INIT","fields":["customerName","email"],"mode":"create","submitEvent":"NEXT"},{"gap":"sm","justify":"end","direction":"horizontal","type":"stack","children":[{"type":"button","icon":"arrow-right","action":"NEXT","label":"Next","variant":"primary"}]}],"gap":"lg","type":"stack"}],"type":"container"}],"appName":"EcommerceApp","navItems":[{"href":"/products","label":"Products","icon":"package"},{"label":"Cart","href":"/cart","icon":"shopping-cart"},{"icon":"credit-card","label":"Checkout","href":"/checkout"},{"icon":"clipboard-list","label":"Orders","href":"/orders"}],"type":"dashboard-layout"}]]},{"from":"step1","to":"step2","event":"NEXT","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/products","icon":"package","label":"Products"},{"href":"/cart","label":"Cart","icon":"shopping-cart"},{"href":"/checkout","label":"Checkout","icon":"credit-card"},{"href":"/orders","icon":"clipboard-list","label":"Orders"}],"type":"dashboard-layout","appName":"EcommerceApp","children":[{"maxWidth":"lg","children":[{"children":[{"direction":"horizontal","type":"stack","children":[{"name":"credit-card","type":"icon"},{"content":"Checkout","variant":"h2","type":"typography"}],"gap":"sm","align":"center"},{"currentIndex":1,"count":3,"type":"progress-dots"},{"type":"wizard-progress","steps":["Customer Info","Shipping","Payment"],"currentStep":1},{"type":"divider"},{"type":"typography","content":"Shipping","variant":"h3"},{"mode":"create","submitEvent":"NEXT","fields":["shippingAddress"],"type":"form-section","cancelEvent":"PREV"},{"type":"stack","justify":"end","children":[{"variant":"ghost","action":"PREV","type":"button","label":"Back","icon":"arrow-left"},{"variant":"primary","label":"Next","action":"NEXT","type":"button","icon":"arrow-right"}],"gap":"sm","direction":"horizontal"}],"type":"stack","gap":"lg","direction":"vertical"}],"type":"container","padding":"lg"}]}]]},{"from":"step2","to":"step3","event":"NEXT","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"EcommerceApp","children":[{"maxWidth":"lg","children":[{"type":"stack","gap":"lg","children":[{"children":[{"name":"credit-card","type":"icon"},{"variant":"h2","type":"typography","content":"Checkout"}],"align":"center","direction":"horizontal","type":"stack","gap":"sm"},{"currentIndex":2,"count":3,"type":"progress-dots"},{"steps":["Customer Info","Shipping","Payment"],"type":"wizard-progress","currentStep":2},{"type":"divider"},{"content":"Payment","variant":"h3","type":"typography"},{"cancelEvent":"PREV","fields":["paymentMethod"],"type":"form-section","mode":"create","submitEvent":"NEXT"},{"type":"stack","gap":"sm","children":[{"variant":"ghost","label":"Back","action":"PREV","icon":"arrow-left","type":"button"},{"icon":"arrow-right","type":"button","action":"NEXT","variant":"primary","label":"Next"}],"direction":"horizontal","justify":"end"}],"direction":"vertical"}],"padding":"lg","type":"container"}],"navItems":[{"label":"Products","href":"/products","icon":"package"},{"icon":"shopping-cart","label":"Cart","href":"/cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}]}]]},{"from":"step2","to":"step1","event":"PREV","effects":[["fetch","Checkout",{"emit":{"failure":"CheckoutLoadFailed","success":"CheckoutLoaded"}}],["render-ui","main",{"children":[{"type":"container","children":[{"children":[{"gap":"sm","type":"stack","align":"center","direction":"horizontal","children":[{"name":"credit-card","type":"icon"},{"content":"Checkout","variant":"h2","type":"typography"}]},{"currentIndex":0,"count":3,"type":"progress-dots"},{"type":"wizard-progress","steps":["Customer Info","Shipping","Payment"],"currentStep":0},{"type":"divider"},{"variant":"h3","content":"Customer Info","type":"typography"},{"cancelEvent":"INIT","type":"form-section","fields":["customerName","email"],"submitEvent":"NEXT","mode":"create"},{"direction":"horizontal","justify":"end","children":[{"type":"button","icon":"arrow-right","variant":"primary","label":"Next","action":"NEXT"}],"gap":"sm","type":"stack"}],"type":"stack","gap":"lg","direction":"vertical"}],"padding":"lg","maxWidth":"lg"}],"navItems":[{"label":"Products","href":"/products","icon":"package"},{"label":"Cart","href":"/cart","icon":"shopping-cart"},{"icon":"credit-card","label":"Checkout","href":"/checkout"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}],"type":"dashboard-layout","appName":"EcommerceApp"}]]},{"from":"step3","to":"review","event":"NEXT","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/products","label":"Products","icon":"package"},{"icon":"shopping-cart","label":"Cart","href":"/cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"icon":"clipboard-list","href":"/orders","label":"Orders"}],"children":[{"children":[{"gap":"sm","children":[{"type":"icon","name":"credit-card"},{"content":"Checkout","type":"typography","variant":"h2"}],"direction":"horizontal","align":"center","type":"stack"},{"label":"Review","type":"badge"},{"type":"wizard-progress","currentStep":3,"steps":["Customer Info","Shipping","Payment"]},{"type":"divider"},{"direction":"vertical","gap":"sm","type":"stack","children":[{"children":[{"type":"typography","content":"Customer Name","variant":"caption"},{"content":"@entity.customerName","variant":"body","type":"typography"}],"direction":"horizontal","type":"stack","justify":"between","gap":"md"},{"justify":"between","direction":"horizontal","children":[{"type":"typography","content":"Email","variant":"caption"},{"type":"typography","content":"@entity.email","variant":"body"}],"gap":"md","type":"stack"},{"justify":"between","direction":"horizontal","gap":"md","children":[{"content":"Shipping Address","variant":"caption","type":"typography"},{"variant":"body","type":"typography","content":"@entity.shippingAddress"}],"type":"stack"},{"direction":"horizontal","gap":"md","justify":"between","type":"stack","children":[{"type":"typography","variant":"caption","content":"Payment Method"},{"content":"@entity.paymentMethod","type":"typography","variant":"body"}]},{"direction":"horizontal","children":[{"type":"typography","content":"Order Total","variant":"caption"},{"type":"typography","content":"@entity.orderTotal","variant":"body"}],"type":"stack","justify":"between","gap":"md"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"variant":"caption","type":"typography","content":"Status"},{"variant":"body","content":"@entity.status","type":"typography"}],"justify":"between"}]},{"type":"wizard-navigation","currentStep":3,"totalSteps":4,"showBack":true,"showComplete":true,"showNext":false}],"type":"stack","gap":"lg","direction":"vertical"}],"appName":"EcommerceApp","type":"dashboard-layout"}]]},{"from":"step3","to":"step2","event":"PREV","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"EcommerceApp","navItems":[{"label":"Products","href":"/products","icon":"package"},{"href":"/cart","icon":"shopping-cart","label":"Cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"href":"/orders","icon":"clipboard-list","label":"Orders"}],"children":[{"type":"container","maxWidth":"lg","children":[{"children":[{"gap":"sm","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"credit-card"},{"variant":"h2","type":"typography","content":"Checkout"}],"align":"center"},{"currentIndex":1,"type":"progress-dots","count":3},{"type":"wizard-progress","currentStep":1,"steps":["Customer Info","Shipping","Payment"]},{"type":"divider"},{"content":"Shipping","variant":"h3","type":"typography"},{"mode":"create","cancelEvent":"PREV","type":"form-section","submitEvent":"NEXT","fields":["shippingAddress"]},{"direction":"horizontal","type":"stack","children":[{"type":"button","action":"PREV","variant":"ghost","icon":"arrow-left","label":"Back"},{"action":"NEXT","icon":"arrow-right","variant":"primary","label":"Next","type":"button"}],"gap":"sm","justify":"end"}],"gap":"lg","type":"stack","direction":"vertical"}],"padding":"lg"}]}]]},{"from":"review","to":"step3","event":"PREV","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"type":"container","maxWidth":"lg","padding":"lg","children":[{"children":[{"children":[{"type":"icon","name":"credit-card"},{"variant":"h2","type":"typography","content":"Checkout"}],"direction":"horizontal","type":"stack","align":"center","gap":"sm"},{"count":3,"currentIndex":2,"type":"progress-dots"},{"type":"wizard-progress","steps":["Customer Info","Shipping","Payment"],"currentStep":2},{"type":"divider"},{"content":"Payment","type":"typography","variant":"h3"},{"type":"form-section","mode":"create","fields":["paymentMethod"],"cancelEvent":"PREV","submitEvent":"NEXT"},{"direction":"horizontal","justify":"end","gap":"sm","type":"stack","children":[{"action":"PREV","type":"button","label":"Back","variant":"ghost","icon":"arrow-left"},{"action":"NEXT","variant":"primary","type":"button","icon":"arrow-right","label":"Next"}]}],"type":"stack","gap":"lg","direction":"vertical"}]}],"appName":"EcommerceApp","navItems":[{"icon":"package","label":"Products","href":"/products"},{"href":"/cart","icon":"shopping-cart","label":"Cart"},{"icon":"credit-card","label":"Checkout","href":"/checkout"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}]}]]},{"from":"review","to":"complete","event":"COMPLETE","effects":[["persist","create","Checkout","@payload.data",{"emit":{"success":"CheckoutSaved","failure":"CheckoutSaveFailed"}}],["notify","success","Checkout created successfully"],["render-ui","main",{"type":"dashboard-layout","appName":"EcommerceApp","navItems":[{"label":"Products","href":"/products","icon":"package"},{"label":"Cart","href":"/cart","icon":"shopping-cart"},{"label":"Checkout","icon":"credit-card","href":"/checkout"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}],"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"type":"icon","name":"check-circle"},{"content":"Order Placed","type":"typography","variant":"h2"},{"type":"typography","content":"Your order has been placed successfully.","variant":"body"},{"icon":"refresh-cw","action":"RESTART","type":"button","variant":"primary","label":"Start New"}],"align":"center"}]}]]},{"from":"complete","to":"step1","event":"RESTART","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/products","label":"Products","icon":"package"},{"label":"Cart","href":"/cart","icon":"shopping-cart"},{"label":"Checkout","href":"/checkout","icon":"credit-card"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}],"appName":"EcommerceApp","type":"dashboard-layout","children":[{"padding":"lg","type":"container","maxWidth":"lg","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"direction":"horizontal","children":[{"name":"credit-card","type":"icon"},{"content":"Checkout","variant":"h2","type":"typography"}],"type":"stack","align":"center","gap":"sm"},{"type":"progress-dots","count":3,"currentIndex":0},{"type":"wizard-progress","currentStep":0,"steps":["Customer Info","Shipping","Payment"]},{"type":"divider"},{"variant":"h3","type":"typography","content":"Customer Info"},{"fields":["customerName","email"],"type":"form-section","mode":"create","cancelEvent":"INIT","submitEvent":"NEXT"},{"type":"stack","gap":"sm","children":[{"icon":"arrow-right","label":"Next","variant":"primary","type":"button","action":"NEXT"}],"direction":"horizontal","justify":"end"}]}]}]}]]},{"from":"complete","to":"step1","event":"INIT","effects":[["fetch","Checkout",{"emit":{"success":"CheckoutLoaded","failure":"CheckoutLoadFailed"}}],["render-ui","main",{"appName":"EcommerceApp","children":[{"padding":"lg","maxWidth":"lg","type":"container","children":[{"children":[{"align":"center","type":"stack","children":[{"name":"credit-card","type":"icon"},{"content":"Checkout","variant":"h2","type":"typography"}],"direction":"horizontal","gap":"sm"},{"type":"progress-dots","currentIndex":0,"count":3},{"type":"wizard-progress","currentStep":0,"steps":["Customer Info","Shipping","Payment"]},{"type":"divider"},{"variant":"h3","content":"Customer Info","type":"typography"},{"cancelEvent":"INIT","fields":["customerName","email"],"type":"form-section","mode":"create","submitEvent":"NEXT"},{"type":"stack","gap":"sm","children":[{"label":"Next","type":"button","action":"NEXT","variant":"primary","icon":"arrow-right"}],"justify":"end","direction":"horizontal"}],"gap":"lg","type":"stack","direction":"vertical"}]}],"type":"dashboard-layout","navItems":[{"href":"/products","icon":"package","label":"Products"},{"icon":"shopping-cart","href":"/cart","label":"Cart"},{"href":"/checkout","label":"Checkout","icon":"credit-card"},{"label":"Orders","href":"/orders","icon":"clipboard-list"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Checkout","path":"/checkout","traits":[{"ref":"CheckoutWizard"}]}]},{"name":"OrderRecordOrbital","entity":{"name":"OrderRecord","collection":"orderrecords","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"customerName","type":"string","required":true},{"name":"email","type":"string","required":true},{"name":"shippingAddress","type":"string","required":true},{"name":"paymentMethod","type":"string","required":true},{"name":"orderTotal","type":"number"},{"name":"status","type":"string"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"OrderRecordBrowse","category":"interaction","linkedEntity":"OrderRecord","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.customerName","type":"string","required":true},{"name":"row.email","type":"string","required":true},{"name":"row.shippingAddress","type":"string","required":true},{"name":"row.paymentMethod","type":"string","required":true},{"name":"row.orderTotal","type":"number"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.customerName","type":"string","required":true},{"name":"row.email","type":"string","required":true},{"name":"row.shippingAddress","type":"string","required":true},{"name":"row.paymentMethod","type":"string","required":true},{"name":"row.orderTotal","type":"number"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.customerName","type":"string","required":true},{"name":"row.email","type":"string","required":true},{"name":"row.shippingAddress","type":"string","required":true},{"name":"row.paymentMethod","type":"string","required":true},{"name":"row.orderTotal","type":"number"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"OrderRecordLoaded","description":"Fired when OrderRecord finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"event":"OrderRecordLoadFailed","description":"Fired when OrderRecord fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"ORDER_RECORD_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"OrderRecordCreate"}},{"event":"ORDER_RECORD_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"OrderRecordEdit"}},{"event":"ORDER_RECORD_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"OrderRecordDelete"}},{"event":"ORDER_PLACED","triggers":"INIT","source":{"kind":"orbital","orbital":"CheckoutOrbital","trait":"CheckoutWizard"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"OrderRecordLoaded","name":"OrderRecord loaded","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"key":"OrderRecordLoadFailed","name":"OrderRecord load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}],["render-ui","main",{"direction":"vertical","className":"py-12","align":"center","children":[{"type":"spinner"},{"content":"Loading…","color":"muted","type":"typography","variant":"caption"}],"type":"stack","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"OrderRecordLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"EcommerceApp","navItems":[{"icon":"package","href":"/products","label":"Products"},{"href":"/cart","label":"Cart","icon":"shopping-cart"},{"label":"Checkout","icon":"credit-card","href":"/checkout"},{"href":"/orders","icon":"clipboard-list","label":"Orders"}],"children":[{"direction":"vertical","children":[{"type":"stack","direction":"horizontal","gap":"md","justify":"between","align":"center","children":[{"align":"center","direction":"horizontal","children":[{"type":"icon","name":"clipboard-list"},{"type":"typography","content":"Order History","variant":"h2"}],"gap":"sm","type":"stack"},{"gap":"sm","children":[{"icon":"plus","type":"button","label":"Create OrderRecord","action":"CREATE","variant":"primary"}],"type":"stack","direction":"horizontal"}]},{"type":"divider"},{"variant":"card","type":"data-list","itemActions":[{"label":"View","variant":"ghost","event":"VIEW"},{"event":"EDIT","variant":"ghost","label":"Edit"},{"event":"DELETE","label":"Delete","variant":"danger"}],"fields":[{"label":"Customer","icon":"clipboard-list","name":"customerName","variant":"h3"},{"name":"status","variant":"badge"},{"format":"currency","label":"Total","variant":"h4","name":"orderTotal"},{"name":"email","variant":"caption"},{"name":"shippingAddress","variant":"caption","label":"Address"}],"gap":"sm","entity":"@payload.data"}],"gap":"lg","className":"max-w-5xl mx-auto w-full","type":"stack"}]}]]},{"from":"browsing","to":"browsing","event":"OrderRecordLoadFailed","effects":[["render-ui","main",{"direction":"vertical","gap":"md","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Failed to load orderrecord"},{"type":"typography","variant":"body","content":"@payload.error","color":"muted"},{"type":"button","label":"Retry","variant":"primary","action":"INIT","icon":"rotate-ccw"}],"align":"center","type":"stack","className":"py-12"}]]}]},"scope":"collection"},{"name":"OrderRecordCreate","category":"interaction","linkedEntity":"OrderRecord","emits":[{"event":"ORDER_RECORD_CREATED"},{"event":"OrderRecordLoadFailed","description":"Fired when OrderRecord fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordLoaded","description":"Fired when OrderRecord finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"event":"OrderRecordSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"OrderRecordBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"ORDER_RECORD_CREATED","name":"Order Record Created"},{"key":"OrderRecordLoadFailed","name":"OrderRecord load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordLoaded","name":"OrderRecord loaded","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"key":"OrderRecordSaveFailed","name":"OrderRecord save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordSaved","name":"OrderRecord saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","OrderRecord",{"emit":{"failure":"OrderRecordLoadFailed","success":"OrderRecordLoaded"}}],["render-ui","modal",{"direction":"vertical","children":[{"direction":"horizontal","children":[{"name":"plus-circle","type":"icon"},{"content":"Create OrderRecord","type":"typography","variant":"h3"}],"gap":"sm","type":"stack"},{"type":"divider"},{"fields":["customerName","email","shippingAddress","paymentMethod","orderTotal","status"],"type":"form-section","mode":"create","submitEvent":"SAVE","cancelEvent":"CLOSE"}],"type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","OrderRecord","@payload.data",{"emit":{"failure":"OrderRecordSaveFailed","success":"OrderRecordSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","ORDER_RECORD_CREATED"]]}]},"scope":"collection"},{"name":"OrderRecordEdit","category":"interaction","linkedEntity":"OrderRecord","emits":[{"event":"ORDER_RECORD_UPDATED"},{"event":"OrderRecordLoadFailed","description":"Fired when OrderRecord fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordLoaded","description":"Fired when OrderRecord finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"event":"OrderRecordUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"OrderRecordView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"OrderRecordBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"OrderRecord"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"ORDER_RECORD_UPDATED","name":"Order Record Updated"},{"key":"OrderRecordLoadFailed","name":"OrderRecord load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordLoaded","name":"OrderRecord loaded","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"key":"OrderRecordUpdateFailed","name":"OrderRecord update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordUpdated","name":"OrderRecord updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","OrderRecord",{"emit":{"failure":"OrderRecordLoadFailed","success":"OrderRecordLoaded"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","type":"stack","children":[{"direction":"horizontal","gap":"sm","type":"stack","children":[{"name":"edit","type":"icon"},{"type":"typography","content":"Edit OrderRecord","variant":"h3"}]},{"type":"divider"},{"fields":["customerName","email","shippingAddress","paymentMethod","orderTotal","status"],"type":"form-section","mode":"edit","submitEvent":"SAVE","cancelEvent":"CLOSE","entity":"@payload.row"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","OrderRecord","@payload.data",{"emit":{"failure":"OrderRecordUpdateFailed","success":"OrderRecordUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","ORDER_RECORD_UPDATED"]]}]},"scope":"collection"},{"name":"OrderRecordView","category":"interaction","linkedEntity":"OrderRecord","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OrderRecordLoaded","description":"Fired when OrderRecord finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"event":"OrderRecordLoadFailed","description":"Fired when OrderRecord fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"OrderRecordBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"OrderRecordLoaded","name":"OrderRecord loaded","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]},{"key":"OrderRecordLoadFailed","name":"OrderRecord load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","OrderRecord",{"id":"@payload.id","emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}],["render-ui","modal",{"gap":"md","type":"stack","direction":"vertical","children":[{"direction":"horizontal","children":[{"name":"eye","type":"icon"},{"content":"@entity.customerName","variant":"h3","type":"typography"}],"type":"stack","gap":"sm","align":"center"},{"type":"divider"},{"direction":"horizontal","type":"stack","children":[{"type":"typography","content":"Customer Name","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.customerName"}],"gap":"md"},{"children":[{"content":"Email","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.email"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"stack","direction":"horizontal","children":[{"type":"typography","variant":"caption","content":"Shipping Address"},{"content":"@entity.shippingAddress","type":"typography","variant":"body"}],"gap":"md"},{"gap":"md","children":[{"variant":"caption","type":"typography","content":"Payment Method"},{"type":"typography","variant":"body","content":"@entity.paymentMethod"}],"direction":"horizontal","type":"stack"},{"children":[{"type":"typography","variant":"caption","content":"Order Total"},{"type":"typography","variant":"body","content":"@entity.orderTotal"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"stack","gap":"md","direction":"horizontal","children":[{"type":"typography","variant":"caption","content":"Status"},{"variant":"body","content":"@entity.status","type":"typography"}]},{"type":"divider"},{"children":[{"action":"EDIT","type":"button","variant":"primary","icon":"edit","label":"Edit"},{"variant":"ghost","label":"Close","action":"CLOSE","type":"button"}],"type":"stack","direction":"horizontal","gap":"sm","justify":"end"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"OrderRecordDelete","category":"interaction","linkedEntity":"OrderRecord","emits":[{"event":"ORDER_RECORD_DELETED"},{"event":"OrderRecordDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OrderRecordLoadFailed","description":"Fired when OrderRecord fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OrderRecordLoaded","description":"Fired when OrderRecord finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"OrderRecordBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"ORDER_RECORD_DELETED","name":"Order Record Deleted"},{"key":"OrderRecordDeleteFailed","name":"OrderRecord delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordDeleted","name":"OrderRecord deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"OrderRecordLoadFailed","name":"OrderRecord load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OrderRecordLoaded","name":"OrderRecord loaded","payloadSchema":[{"name":"data","type":"[OrderRecord]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","OrderRecord",{"id":"@payload.id","emit":{"failure":"OrderRecordLoadFailed","success":"OrderRecordLoaded"}}],["render-ui","modal",{"type":"stack","direction":"vertical","children":[{"align":"center","direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"icon","name":"alert-triangle"},{"content":"Delete OrderRecord","type":"typography","variant":"h3"}]},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"children":[{"variant":"ghost","type":"button","label":"Cancel","action":"CANCEL"},{"label":"Delete","action":"CONFIRM_DELETE","type":"button","variant":"danger","icon":"check"}],"justify":"end","direction":"horizontal","gap":"sm","type":"stack"}],"gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","OrderRecord","@entity.pendingId",{"emit":{"success":"OrderRecordDeleted","failure":"OrderRecordDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}],["emit","ORDER_RECORD_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","OrderRecord",{"emit":{"failure":"OrderRecordLoadFailed","success":"OrderRecordLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","OrderRecord",{"emit":{"success":"OrderRecordLoaded","failure":"OrderRecordLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Orders","path":"/orders","traits":[{"ref":"OrderRecordBrowse"},{"ref":"OrderRecordCreate"},{"ref":"OrderRecordEdit"},{"ref":"OrderRecordView"},{"ref":"OrderRecordDelete"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ProductOrbital',
+      uses: [],
+      entity: {
+        'name': 'Product',
+        'collection': 'products',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+          },
+          {
+            'name': 'inStock',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ProductBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Product',
+          'emits': [
+            {
+              'event': 'ADD_TO_CART',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.price',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.sku',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.inStock',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.price',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.sku',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.inStock',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.price',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.sku',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.inStock',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoaded',
+              'description': 'Fired when Product finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoadFailed',
+              'description': 'Fired when Product fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PRODUCT_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductCreate',
+              },
+            },
+            {
+              'event': 'PRODUCT_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductEdit',
+              },
+            },
+            {
+              'event': 'PRODUCT_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ProductLoaded',
+                'name': 'Product loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Product]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoadFailed',
+                'name': 'Product load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ADD_TO_CART',
+                'name': 'Add To Cart',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Product',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Product',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Product',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductSaved',
+                'name': 'Product saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductSaveFailed',
+                'name': 'Product save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductUpdated',
+                'name': 'Product updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductUpdateFailed',
+                'name': 'Product update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductDeleted',
+                'name': 'Product deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductDeleteFailed',
+                'name': 'Product delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemSaved',
+                'name': 'Cart item saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemSaveFailed',
+                'name': 'Cart item save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemDeleted',
+                'name': 'Cart item deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemDeleteFailed',
+                'name': 'Cart item delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CheckoutSaved',
+                'name': 'Checkout saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CheckoutSaveFailed',
+                'name': 'Checkout save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordSaved',
+                'name': 'Order record saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordSaveFailed',
+                'name': 'Order record save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordUpdated',
+                'name': 'Order record updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordUpdateFailed',
+                'name': 'Order record update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordDeleted',
+                'name': 'Order record deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordDeleteFailed',
+                'name': 'Order record delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                          'color': 'muted',
+                        },
+                      ],
+                      'type': 'stack',
+                      'align': 'center',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ProductLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'package',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Products',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'action': 'CREATE',
+                                      'type': 'button',
+                                      'label': 'Create Product',
+                                      'icon': 'plus',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 3,
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                                {
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'gap': 'md',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'name',
+                                  'variant': 'h3',
+                                  'icon': 'package',
+                                },
+                                {
+                                  'name': 'category',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'price',
+                                  'format': 'currency',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'name': 'sku',
+                                  'variant': 'caption',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'format': 'boolean',
+                                  'name': 'inStock',
+                                  'label': 'In Stock',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'EcommerceApp',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ProductLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'align': 'center',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'content': 'Failed to load product',
+                          'variant': 'h3',
+                          'type': 'typography',
+                        },
+                        {
+                          'variant': 'body',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'color': 'muted',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
+                          'action': 'INIT',
+                          'type': 'button',
+                          'label': 'Retry',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProductCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Product',
+          'emits': [
+            {
+              'event': 'PRODUCT_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoadFailed',
+              'description': 'Fired when Product fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoaded',
+              'description': 'Fired when Product finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'event': 'ProductSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PRODUCT_CREATED',
+                'name': 'Product Created',
+              },
+              {
+                'key': 'ProductLoadFailed',
+                'name': 'Product load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoaded',
+                'name': 'Product loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Product]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductSaveFailed',
+                'name': 'Product save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductSaved',
+                'name': 'Product saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Create Product',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'name',
+                            'description',
+                            'price',
+                            'category',
+                            'sku',
+                            'inStock',
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Product',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ProductSaved',
+                        'failure': 'ProductSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PRODUCT_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProductEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Product',
+          'emits': [
+            {
+              'event': 'PRODUCT_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoadFailed',
+              'description': 'Fired when Product fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoaded',
+              'description': 'Fired when Product finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'event': 'ProductUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Product',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PRODUCT_UPDATED',
+                'name': 'Product Updated',
+              },
+              {
+                'key': 'ProductLoadFailed',
+                'name': 'Product load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoaded',
+                'name': 'Product loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Product]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductUpdateFailed',
+                'name': 'Product update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductUpdated',
+                'name': 'Product updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Edit Product',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
+                          'mode': 'edit',
+                          'type': 'form-section',
+                          'fields': [
+                            'name',
+                            'description',
+                            'price',
+                            'category',
+                            'sku',
+                            'inStock',
+                          ],
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Product',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ProductUpdated',
+                        'failure': 'ProductUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PRODUCT_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProductView',
+          'category': 'interaction',
+          'linkedEntity': 'Product',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoaded',
+              'description': 'Fired when Product finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoadFailed',
+              'description': 'Fired when Product fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'ProductLoaded',
+                'name': 'Product loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Product]',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoadFailed',
+                'name': 'Product load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.category',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.description',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.inStock',
+                    true,
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.price',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.sku',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': '@entity.name',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Name',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.name',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Description',
+                            },
+                            {
+                              'content': '@entity.description',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Price',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.price',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Category',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.category',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Sku',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.sku',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'In Stock',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.inStock',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'EDIT',
+                              'type': 'button',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                              'label': 'Edit',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ProductDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Product',
+          'emits': [
+            {
+              'event': 'PRODUCT_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoadFailed',
+              'description': 'Fired when Product fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ProductLoaded',
+              'description': 'Fired when Product finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ProductBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'PRODUCT_DELETED',
+                'name': 'Product Deleted',
+              },
+              {
+                'key': 'ProductDeleteFailed',
+                'name': 'Product delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductDeleted',
+                'name': 'Product deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoadFailed',
+                'name': 'Product load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ProductLoaded',
+                'name': 'Product loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Product]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Delete Product',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'message': 'This action cannot be undone.',
+                          'variant': 'error',
+                        },
+                        {
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'action': 'CANCEL',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                            },
+                            {
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Product',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'ProductDeleted',
+                        'failure': 'ProductDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'PRODUCT_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Product',
+                    {
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ProductsPage',
+          'path': '/products',
+          'traits': [
+            {
+              'ref': 'ProductBrowse',
+            },
+            {
+              'ref': 'ProductCreate',
+            },
+            {
+              'ref': 'ProductEdit',
+            },
+            {
+              'ref': 'ProductView',
+            },
+            {
+              'ref': 'ProductDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'CartItemOrbital',
+      uses: [],
+      entity: {
+        'name': 'CartItem',
+        'collection': 'cartitems',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'productName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unitPrice',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'totalPrice',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'CartItemCartBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'CartItem',
+          'emits': [
+            {
+              'event': 'CHECKOUT_STARTED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ADD_ITEM',
+            },
+            {
+              'event': 'REQUEST_REMOVE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.productName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.quantity',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'row.unitPrice',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'row.totalPrice',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemLoaded',
+              'description': 'Fired when CartItem finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CartItem]',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemLoadFailed',
+              'description': 'Fired when CartItem fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ADD_TO_CART',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'ProductOrbital',
+                'trait': 'ProductBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+              {
+                'name': 'checkout',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CartItemLoaded',
+                'name': 'CartItem loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[CartItem]',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemLoadFailed',
+                'name': 'CartItem load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PROCEED_CHECKOUT',
+                'name': 'Proceed Checkout',
+              },
+              {
+                'key': 'BACK_TO_CART',
+                'name': 'Back To Cart',
+              },
+              {
+                'key': 'CONFIRM_ORDER',
+                'name': 'Confirm Order',
+              },
+              {
+                'key': 'CHECKOUT_STARTED',
+                'name': 'Checkout Started',
+              },
+              {
+                'key': 'ADD_ITEM',
+                'name': 'Add Item',
+              },
+              {
+                'key': 'REQUEST_REMOVE',
+                'name': 'Request Remove',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CartItemLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'shopping-cart',
+                                    },
+                                    {
+                                      'content': 'Shopping Cart',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'label': 'Add Item',
+                                  'type': 'button',
+                                  'action': 'ADD_ITEM',
+                                  'variant': 'primary',
+                                  'icon': 'plus',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Items',
+                                  'value': '@payload.data.length',
+                                  'icon': 'package',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Subtotal',
+                                  'value': '@payload.data.length',
+                                  'icon': 'dollar-sign',
+                                },
+                                {
+                                  'value': '@payload.data.length',
+                                  'icon': 'receipt',
+                                  'label': 'Total',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'cols': 3,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'fields': [
+                                {
+                                  'icon': 'shopping-cart',
+                                  'name': 'productName',
+                                  'label': 'Product Name',
+                                  'variant': 'h4',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'format': 'currency',
+                                  'name': 'quantity',
+                                  'label': 'Quantity',
+                                },
+                                {
+                                  'name': 'unitPrice',
+                                  'label': 'Unit Price',
+                                  'variant': 'badge',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'label': 'Remove',
+                                  'variant': 'danger',
+                                  'event': 'REQUEST_REMOVE',
+                                },
+                              ],
+                            },
+                            {
+                              'action': 'PROCEED_CHECKOUT',
+                              'type': 'button',
+                              'label': 'Proceed to Checkout',
+                              'variant': 'primary',
+                              'icon': 'arrow-right',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                          'href': '/cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CartItemLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'content': 'Failed to load cartitem',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'color': 'muted',
+                          'variant': 'body',
+                          'type': 'typography',
+                        },
+                        {
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'checkout',
+                'event': 'PROCEED_CHECKOUT',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'success': 'CartItemLoaded',
+                        'failure': 'CartItemLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'content': 'Preparing checkout…',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checkout',
+                'to': 'checkout',
+                'event': 'CartItemLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'clipboard',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Checkout',
+                                  'variant': 'h2',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'itemActions': [
+                                {
+                                  'variant': 'danger',
+                                  'label': 'Remove',
+                                  'event': 'REQUEST_REMOVE',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'productName',
+                                  'variant': 'h4',
+                                  'label': 'Product Name',
+                                  'icon': 'shopping-cart',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'quantity',
+                                  'label': 'Quantity',
+                                  'format': 'currency',
+                                },
+                                {
+                                  'name': 'unitPrice',
+                                  'variant': 'badge',
+                                  'label': 'Unit Price',
+                                },
+                              ],
+                              'type': 'data-grid',
+                            },
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'icon': 'arrow-left',
+                                  'type': 'button',
+                                  'action': 'BACK_TO_CART',
+                                  'label': 'Back to Cart',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'type': 'button',
+                                  'label': 'Confirm Order',
+                                  'variant': 'primary',
+                                  'icon': 'check',
+                                  'action': 'CONFIRM_ORDER',
+                                },
+                              ],
+                              'justify': 'end',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                          'label': 'Orders',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checkout',
+                'to': 'browsing',
+                'event': 'BACK_TO_CART',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checkout',
+                'to': 'browsing',
+                'event': 'CONFIRM_ORDER',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'check-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Order Confirmed',
+                            },
+                            {
+                              'content': 'Your order has been placed successfully.',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'INIT',
+                              'label': 'Continue Shopping',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                          'href': '/cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CartItemAddItem',
+          'category': 'interaction',
+          'linkedEntity': 'CartItem',
+          'emits': [
+            {
+              'event': 'CartItemLoadFailed',
+              'description': 'Fired when CartItem fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemLoaded',
+              'description': 'Fired when CartItem finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CartItem]',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ADD_ITEM',
+              'triggers': 'ADD_ITEM',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CartItemCartBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ADD_ITEM',
+                'name': 'Add Item',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemLoadFailed',
+                'name': 'CartItem load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemLoaded',
+                'name': 'CartItem loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[CartItem]',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemSaveFailed',
+                'name': 'CartItem save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemSaved',
+                'name': 'CartItem saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'ADD_ITEM',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'success': 'CartItemLoaded',
+                        'failure': 'CartItemLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Add Item',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'productName',
+                            'quantity',
+                            'unitPrice',
+                            'totalPrice',
+                          ],
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'CartItem',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'CartItemSaved',
+                        'failure': 'CartItemSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CartItemRemoveConfirm',
+          'category': 'interaction',
+          'linkedEntity': 'CartItem',
+          'emits': [
+            {
+              'event': 'CartItemDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemLoadFailed',
+              'description': 'Fired when CartItem fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CartItemLoaded',
+              'description': 'Fired when CartItem finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CartItem]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'REQUEST_REMOVE',
+              'triggers': 'REQUEST_REMOVE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CartItemCartBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'REQUEST_REMOVE',
+                'name': 'Request Remove',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_REMOVE',
+                'name': 'Confirm Remove',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'CartItemDeleteFailed',
+                'name': 'CartItem delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemDeleted',
+                'name': 'CartItem deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemLoadFailed',
+                'name': 'CartItem load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CartItemLoaded',
+                'name': 'CartItem loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[CartItem]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'REQUEST_REMOVE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'CartItemLoaded',
+                        'failure': 'CartItemLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Remove Item',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'variant': 'error',
+                          'message': 'Are you sure you want to remove this item from your cart?',
+                        },
+                        {
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                              'type': 'button',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CONFIRM_REMOVE',
+                              'variant': 'danger',
+                              'label': 'Remove',
+                              'icon': 'check',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_REMOVE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'CartItem',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'CartItemDeleted',
+                        'failure': 'CartItemDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'failure': 'CartItemLoadFailed',
+                        'success': 'CartItemLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'CartItem',
+                    {
+                      'emit': {
+                        'success': 'CartItemLoaded',
+                        'failure': 'CartItemLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Cart',
+          'path': '/cart',
+          'traits': [
+            {
+              'ref': 'CartItemCartBrowse',
+            },
+            {
+              'ref': 'CartItemAddItem',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'CheckoutOrbital',
+      uses: [],
+      entity: {
+        'name': 'Checkout',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'shippingAddress',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'paymentMethod',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'orderTotal',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'CheckoutWizard',
+          'category': 'interaction',
+          'linkedEntity': 'Checkout',
+          'emits': [
+            {
+              'event': 'ORDER_PLACED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutLoadFailed',
+              'description': 'Fired when Checkout fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutLoaded',
+              'description': 'Fired when Checkout finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Checkout]',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CheckoutSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CHECKOUT_STARTED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'CartItemOrbital',
+                'trait': 'CartItemCartBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'step1',
+                'isInitial': true,
+              },
+              {
+                'name': 'step2',
+              },
+              {
+                'name': 'step3',
+              },
+              {
+                'name': 'review',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NEXT',
+                'name': 'Next',
+              },
+              {
+                'key': 'PREV',
+                'name': 'Prev',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'ORDER_PLACED',
+                'name': 'Order Placed',
+              },
+              {
+                'key': 'CheckoutLoadFailed',
+                'name': 'Checkout load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CheckoutLoaded',
+                'name': 'Checkout loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Checkout]',
+                  },
+                ],
+              },
+              {
+                'key': 'CheckoutSaveFailed',
+                'name': 'Checkout save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CheckoutSaved',
+                'name': 'Checkout saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'step1',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.customerName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.email',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.orderTotal',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.paymentMethod',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.shippingAddress',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'EcommerceApp',
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'icon': 'package',
+                          'label': 'Products',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'padding': 'lg',
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Checkout',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 0,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'content': 'Customer Info',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'fields': [
+                                    'customerName',
+                                    'email',
+                                  ],
+                                  'cancelEvent': 'INIT',
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                  'submitEvent': 'NEXT',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'label': 'Next',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step1',
+                'to': 'step2',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                          'href': '/cart',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'padding': 'lg',
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'credit-card',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Checkout',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 1,
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                  'currentStep': 1,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Shipping',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'shippingAddress',
+                                  ],
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'cancelEvent': 'PREV',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-left',
+                                      'label': 'Back',
+                                      'type': 'button',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                    },
+                                    {
+                                      'variant': 'primary',
+                                      'label': 'Next',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step3',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'icon': 'package',
+                          'label': 'Products',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'content': 'Checkout',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'currentIndex': 2,
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                  'currentStep': 2,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Payment',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'fields': [
+                                    'paymentMethod',
+                                  ],
+                                  'type': 'form-section',
+                                  'cancelEvent': 'PREV',
+                                  'submitEvent': 'NEXT',
+                                },
+                                {
+                                  'justify': 'end',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'ghost',
+                                      'icon': 'arrow-left',
+                                      'type': 'button',
+                                      'action': 'PREV',
+                                      'label': 'Back',
+                                    },
+                                    {
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'container',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step1',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'failure': 'CheckoutLoadFailed',
+                        'success': 'CheckoutLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'EcommerceApp',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Checkout',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                  'currentStep': 0,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Customer Info',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'INIT',
+                                  'fields': [
+                                    'customerName',
+                                    'email',
+                                  ],
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'icon': 'arrow-right',
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'container',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'review',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'failure': 'CheckoutLoadFailed',
+                        'success': 'CheckoutLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'credit-card',
+                                },
+                                {
+                                  'content': 'Checkout',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': 'Review',
+                            },
+                            {
+                              'steps': [
+                                'Customer Info',
+                                'Shipping',
+                                'Payment',
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': 3,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'gap': 'sm',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Customer Name',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'content': '@entity.customerName',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Email',
+                                    },
+                                    {
+                                      'content': '@entity.email',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Shipping Address',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.shippingAddress',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Payment Method',
+                                    },
+                                    {
+                                      'content': '@entity.paymentMethod',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Order Total',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.orderTotal',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'content': 'Status',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.status',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'currentStep': 3,
+                              'showBack': true,
+                              'showComplete': true,
+                              'showNext': false,
+                              'type': 'wizard-navigation',
+                              'totalSteps': 4,
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'label': 'Products',
+                          'icon': 'package',
+                        },
+                        {
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'step2',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Checkout',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'count': 3,
+                                  'currentIndex': 1,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'currentStep': 1,
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Shipping',
+                                },
+                                {
+                                  'cancelEvent': 'PREV',
+                                  'mode': 'create',
+                                  'fields': [
+                                    'shippingAddress',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'type': 'form-section',
+                                },
+                                {
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'type': 'button',
+                                      'variant': 'ghost',
+                                      'icon': 'arrow-left',
+                                    },
+                                    {
+                                      'variant': 'primary',
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                          'type': 'container',
+                          'padding': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'label': 'Products',
+                          'href': '/products',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                          'label': 'Orders',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'step3',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'failure': 'CheckoutLoadFailed',
+                        'success': 'CheckoutLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'credit-card',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Checkout',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'currentIndex': 2,
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                },
+                                {
+                                  'currentStep': 2,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Payment',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'paymentMethod',
+                                  ],
+                                  'mode': 'create',
+                                  'cancelEvent': 'PREV',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-left',
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'type': 'button',
+                                    },
+                                    {
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                      'action': 'NEXT',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                          'padding': 'lg',
+                          'type': 'container',
+                          'maxWidth': 'lg',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'label': 'Cart',
+                          'href': '/cart',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
+                          'href': '/checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Checkout',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'CheckoutSaveFailed',
+                        'success': 'CheckoutSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'notify',
+                    'success',
+                    'Checkout created successfully',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'check-circle',
+                            },
+                            {
+                              'content': 'Order Placed',
+                              'type': 'typography',
+                              'variant': 'h2',
+                            },
+                            {
+                              'content': 'Your order has been placed successfully.',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                            {
+                              'icon': 'refresh-cw',
+                              'label': 'Start New',
+                              'action': 'RESTART',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'align': 'center',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'icon': 'package',
+                          'href': '/products',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'href': '/cart',
+                          'label': 'Cart',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'label': 'Products',
+                          'href': '/products',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'href': '/cart',
+                          'label': 'Cart',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Checkout',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                  'content': 'Customer Info',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'cancelEvent': 'INIT',
+                                  'fields': [
+                                    'customerName',
+                                    'email',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'type': 'form-section',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'action': 'NEXT',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                          'type': 'container',
+                        },
+                      ],
+                      'appName': 'EcommerceApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Checkout',
+                    {
+                      'emit': {
+                        'success': 'CheckoutLoaded',
+                        'failure': 'CheckoutLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'credit-card',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Checkout',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Customer Info',
+                                    'Shipping',
+                                    'Payment',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Customer Info',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'customerName',
+                                    'email',
+                                  ],
+                                  'cancelEvent': 'INIT',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'action': 'NEXT',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                          'padding': 'lg',
+                          'type': 'container',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'icon': 'shopping-cart',
+                          'href': '/cart',
+                          'label': 'Cart',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                          'label': 'Orders',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'EcommerceApp',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Checkout',
+          'path': '/checkout',
+          'traits': [
+            {
+              'ref': 'CheckoutWizard',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'OrderRecordOrbital',
+      uses: [],
+      entity: {
+        'name': 'OrderRecord',
+        'collection': 'orderrecords',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'shippingAddress',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'paymentMethod',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'orderTotal',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'OrderRecordBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'OrderRecord',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.customerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.shippingAddress',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.paymentMethod',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.orderTotal',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.customerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.shippingAddress',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.paymentMethod',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.orderTotal',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.customerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.shippingAddress',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.paymentMethod',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.orderTotal',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoaded',
+              'description': 'Fired when OrderRecord finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoadFailed',
+              'description': 'Fired when OrderRecord fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ORDER_RECORD_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordCreate',
+              },
+            },
+            {
+              'event': 'ORDER_RECORD_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordEdit',
+              },
+            },
+            {
+              'event': 'ORDER_RECORD_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordDelete',
+              },
+            },
+            {
+              'event': 'ORDER_PLACED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'CheckoutOrbital',
+                'trait': 'CheckoutWizard',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'OrderRecordLoaded',
+                'name': 'OrderRecord loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrderRecord]',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoadFailed',
+                'name': 'OrderRecord load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'OrderRecordLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'EcommerceApp',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'clipboard-list',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Order History',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                      'label': 'Create OrderRecord',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'name': 'customerName',
+                                  'variant': 'h3',
+                                  'label': 'Customer',
+                                  'icon': 'clipboard-list',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'orderTotal',
+                                  'format': 'currency',
+                                  'variant': 'h4',
+                                  'label': 'Total',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'email',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'shippingAddress',
+                                  'label': 'Address',
+                                },
+                              ],
+                              'type': 'data-list',
+                              'entity': '@payload.data',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Cart',
+                          'href': '/cart',
+                          'icon': 'shopping-cart',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'OrderRecordLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'content': 'Failed to load orderrecord',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'variant': 'body',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'color': 'muted',
+                        },
+                        {
+                          'type': 'button',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'OrderRecordCreate',
+          'category': 'interaction',
+          'linkedEntity': 'OrderRecord',
+          'emits': [
+            {
+              'event': 'ORDER_RECORD_CREATED',
+            },
+            {
+              'event': 'OrderRecordLoadFailed',
+              'description': 'Fired when OrderRecord fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoaded',
+              'description': 'Fired when OrderRecord finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ORDER_RECORD_CREATED',
+                'name': 'Order Record Created',
+              },
+              {
+                'key': 'OrderRecordLoadFailed',
+                'name': 'OrderRecord load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoaded',
+                'name': 'OrderRecord loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrderRecord]',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordSaveFailed',
+                'name': 'OrderRecord save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordSaved',
+                'name': 'OrderRecord saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'content': 'Create OrderRecord',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'fields': [
+                            'customerName',
+                            'email',
+                            'shippingAddress',
+                            'paymentMethod',
+                            'orderTotal',
+                            'status',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'OrderRecord',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordSaved',
+                        'failure': 'OrderRecordSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ORDER_RECORD_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'OrderRecordEdit',
+          'category': 'interaction',
+          'linkedEntity': 'OrderRecord',
+          'emits': [
+            {
+              'event': 'ORDER_RECORD_UPDATED',
+            },
+            {
+              'event': 'OrderRecordLoadFailed',
+              'description': 'Fired when OrderRecord fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoaded',
+              'description': 'Fired when OrderRecord finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'OrderRecord',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ORDER_RECORD_UPDATED',
+                'name': 'Order Record Updated',
+              },
+              {
+                'key': 'OrderRecordLoadFailed',
+                'name': 'OrderRecord load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoaded',
+                'name': 'OrderRecord loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrderRecord]',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordUpdateFailed',
+                'name': 'OrderRecord update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordUpdated',
+                'name': 'OrderRecord updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'failure': 'OrderRecordLoadFailed',
+                        'success': 'OrderRecordLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Edit OrderRecord',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'fields': [
+                            'customerName',
+                            'email',
+                            'shippingAddress',
+                            'paymentMethod',
+                            'orderTotal',
+                            'status',
+                          ],
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'OrderRecord',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordUpdated',
+                        'failure': 'OrderRecordUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ORDER_RECORD_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'OrderRecordView',
+          'category': 'interaction',
+          'linkedEntity': 'OrderRecord',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoaded',
+              'description': 'Fired when OrderRecord finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoadFailed',
+              'description': 'Fired when OrderRecord fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'OrderRecordLoaded',
+                'name': 'OrderRecord loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrderRecord]',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoadFailed',
+                'name': 'OrderRecord load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.customerName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.email',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.orderTotal',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.paymentMethod',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.shippingAddress',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.customerName',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Customer Name',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.customerName',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Email',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.email',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Shipping Address',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.shippingAddress',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Payment Method',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.paymentMethod',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Order Total',
+                            },
+                            {
+                              'content': '@entity.orderTotal',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'EDIT',
+                              'type': 'button',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                            },
+                            {
+                              'action': 'CLOSE',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Close',
+                            },
+                          ],
+                          'justify': 'end',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'OrderRecordDelete',
+          'category': 'interaction',
+          'linkedEntity': 'OrderRecord',
+          'emits': [
+            {
+              'event': 'ORDER_RECORD_DELETED',
+            },
+            {
+              'event': 'OrderRecordDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoadFailed',
+              'description': 'Fired when OrderRecord fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OrderRecordLoaded',
+              'description': 'Fired when OrderRecord finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'OrderRecordBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'ORDER_RECORD_DELETED',
+                'name': 'Order Record Deleted',
+              },
+              {
+                'key': 'OrderRecordDeleteFailed',
+                'name': 'OrderRecord delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordDeleted',
+                'name': 'OrderRecord deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoadFailed',
+                'name': 'OrderRecord load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OrderRecordLoaded',
+                'name': 'OrderRecord loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrderRecord]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'OrderRecordLoadFailed',
+                        'success': 'OrderRecordLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Delete OrderRecord',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'type': 'alert',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'justify': 'end',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'action': 'CANCEL',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                            },
+                            {
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                              'label': 'Delete',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'OrderRecord',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'OrderRecordDeleteFailed',
+                        'success': 'OrderRecordDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'ORDER_RECORD_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'success': 'OrderRecordLoaded',
+                        'failure': 'OrderRecordLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'OrderRecord',
+                    {
+                      'emit': {
+                        'failure': 'OrderRecordLoadFailed',
+                        'success': 'OrderRecordLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Orders',
+          'path': '/orders',
+          'traits': [
+            {
+              'ref': 'OrderRecordBrowse',
+            },
+            {
+              'ref': 'OrderRecordCreate',
+            },
+            {
+              'ref': 'OrderRecordEdit',
+            },
+            {
+              'ref': 'OrderRecordView',
+            },
+            {
+              'ref': 'OrderRecordDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

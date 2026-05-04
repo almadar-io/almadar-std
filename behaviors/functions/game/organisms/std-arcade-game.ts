@@ -84,9 +84,1456 @@ export function stdArcadeGame(params: StdArcadeGameParams): OrbitalDefinition[] 
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ArcadeStateOrbital","entity":{"name":"ArcadeState","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"level","type":"number","default":1},{"name":"score","type":"number","default":0},{"name":"lives","type":"number","default":3},{"name":"highScore","type":"number","default":0}]},"traits":[{"name":"ArcadeStateGameflow","category":"interaction","linkedEntity":"ArcadeState","emits":[{"event":"ArcadeStateLoaded","description":"Fired when ArcadeState finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"level","type":"number"},{"name":"score","type":"number"},{"name":"lives","type":"number"},{"name":"highScore","type":"number"}]},{"event":"ArcadeStateLoadFailed","description":"Fired when ArcadeState fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"paused"},{"name":"gameover"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"PAUSE","name":"Pause"},{"key":"GAME_OVER","name":"Game Over"},{"key":"RESUME","name":"Resume"},{"key":"CLOSE","name":"Close"},{"key":"RESTART","name":"Restart"},{"key":"ArcadeStateLoaded","name":"ArcadeState loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"level","type":"number"},{"name":"score","type":"number"},{"name":"lives","type":"number"},{"name":"highScore","type":"number"}]},{"key":"ArcadeStateLoadFailed","name":"ArcadeState load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","ArcadeState",{"emit":{"failure":"ArcadeStateLoadFailed","success":"ArcadeStateLoaded"}}],["render-ui","main",{"showTopBar":true,"children":[{"menuItems":[{"label":"Start Game","variant":"primary","event":"START"}],"type":"game-menu","subtitle":"Main Menu","title":"Arcade"}],"appName":"Arcade Game","type":"game-shell"}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"type":"game-shell","appName":"Arcade Game","showTopBar":true,"children":[{"stats":[{"label":"Score","value":"@entity.score"},{"value":"@entity.level","label":"Level"}],"type":"game-hud"}]}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"paused","event":"PAUSE","effects":[["render-ui","modal",{"title":"Paused","menuItems":[{"label":"Resume","event":"RESUME","variant":"primary"},{"label":"Quit","event":"RESTART","variant":"ghost"}],"type":"game-menu"}]]},{"from":"playing","to":"gameover","event":"GAME_OVER","effects":[["render-ui","main",{"showTopBar":true,"type":"game-shell","children":[{"menuItems":[{"label":"Play Again","event":"RESTART","variant":"primary"},{"variant":"secondary","event":"RESTART","label":"Main Menu"}],"title":"Game Over","stats":[{"label":"Score","value":"@entity.score"},{"value":"@entity.level","label":"Level"}],"type":"game-over-screen"}],"appName":"Arcade Game"}]]},{"from":"paused","to":"paused","event":"NAVIGATE"},{"from":"paused","to":"playing","event":"RESUME","effects":[["render-ui","modal",null],["render-ui","main",{"type":"game-shell","showTopBar":true,"appName":"Arcade Game","children":[{"stats":[{"label":"Score","value":"@entity.score"},{"value":"@entity.level","label":"Level"}],"type":"game-hud"}]}]]},{"from":"paused","to":"playing","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"children":[{"type":"game-hud","stats":[{"label":"Score","value":"@entity.score"},{"label":"Level","value":"@entity.level"}]}],"showTopBar":true,"type":"game-shell","appName":"Arcade Game"}]]},{"from":"paused","to":"menu","event":"RESTART","effects":[["render-ui","modal",null],["render-ui","main",{"children":[{"type":"game-menu","menuItems":[{"event":"START","variant":"primary","label":"Start Game"}],"subtitle":"Main Menu","title":"Arcade"}],"showTopBar":true,"appName":"Arcade Game","type":"game-shell"}]]},{"from":"gameover","to":"menu","event":"RESTART","effects":[["render-ui","main",{"children":[{"menuItems":[{"label":"Start Game","event":"START","variant":"primary"}],"title":"Arcade","type":"game-menu","subtitle":"Main Menu"}],"appName":"Arcade Game","showTopBar":true,"type":"game-shell"}]]}]},"scope":"instance"}],"pages":[{"name":"GamePage","path":"/game","traits":[{"ref":"ArcadeStateGameflow"}]}]},{"name":"ArcadeCanvasOrbital","entity":{"name":"ArcadeCanvas","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"width","type":"number"},{"name":"height","type":"number"},{"name":"fps","type":"number"},{"name":"running","type":"boolean"}]},"traits":[{"name":"ArcadeCanvasGameCanvas2d","category":"interaction","linkedEntity":"ArcadeCanvas","emits":[{"event":"ArcadeCanvasLoaded","description":"Fired when ArcadeCanvas finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"width","type":"number"},{"name":"height","type":"number"},{"name":"fps","type":"number"},{"name":"running","type":"boolean"}]},{"event":"ArcadeCanvasLoadFailed","description":"Fired when ArcadeCanvas fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"rendering"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"TICK","name":"Tick"},{"key":"STOP","name":"Stop"},{"key":"ArcadeCanvasLoaded","name":"ArcadeCanvas loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"width","type":"number"},{"name":"height","type":"number"},{"name":"fps","type":"number"},{"name":"running","type":"boolean"}]},{"key":"ArcadeCanvasLoadFailed","name":"ArcadeCanvas load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","ArcadeCanvas",{"emit":{"failure":"ArcadeCanvasLoadFailed","success":"ArcadeCanvasLoaded"}}],["render-ui","main",{"type":"game-shell","appName":"Arcade Game","showTopBar":true,"children":[{"direction":"vertical","children":[{"children":[{"name":"monitor","type":"icon"},{"content":"ArcadeCanvas Canvas","variant":"h3","type":"typography"}],"gap":"sm","type":"stack","direction":"horizontal","align":"center"},{"variant":"caption","color":"muted","type":"typography","content":"800x600 @ 60fps"},{"fps":60,"type":"game-canvas-2d","width":800,"height":600},{"type":"button","action":"START","variant":"primary","icon":"play","label":"Start"}],"type":"stack","gap":"md"}]}]]},{"from":"idle","to":"rendering","event":"START","effects":[["render-ui","main",{"showTopBar":true,"appName":"Arcade Game","type":"game-shell","children":[{"direction":"vertical","type":"stack","children":[{"type":"stack","direction":"horizontal","children":[{"name":"monitor","type":"icon"},{"content":"ArcadeCanvas Canvas","type":"typography","variant":"h3"}],"gap":"sm","align":"center"},{"fps":60,"height":600,"width":800,"type":"game-canvas-2d"},{"icon":"square","action":"STOP","type":"button","variant":"ghost","label":"Stop"}],"gap":"md"}]}]]},{"from":"rendering","to":"rendering","event":"TICK"},{"from":"rendering","to":"idle","event":"STOP","effects":[["render-ui","main",{"children":[{"gap":"md","children":[{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":[{"name":"monitor","type":"icon"},{"content":"ArcadeCanvas Canvas","variant":"h3","type":"typography"}]},{"color":"muted","type":"typography","variant":"caption","content":"800x600 @ 60fps"},{"height":600,"type":"game-canvas-2d","fps":60,"width":800},{"label":"Start","action":"START","icon":"play","type":"button","variant":"primary"}],"type":"stack","direction":"vertical"}],"appName":"Arcade Game","type":"game-shell","showTopBar":true}]]}]},"scope":"instance"}],"pages":[{"name":"Canvas","path":"/canvas","traits":[{"ref":"ArcadeCanvasGameCanvas2d"}]}]},{"name":"ArcadeScoreOrbital","entity":{"name":"ArcadeScore","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true,"default":0},{"name":"level","type":"number","default":1},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number","default":0},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"}]},"traits":[{"name":"ArcadeScoreScoreBoard","category":"interaction","linkedEntity":"ArcadeScore","emits":[{"event":"ArcadeScoreLoaded","description":"Fired when ArcadeScore finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true},{"name":"level","type":"number"},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number"},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"}]},{"event":"ArcadeScoreLoadFailed","description":"Fired when ArcadeScore fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ADD_SCORE","name":"Add Score","payloadSchema":[{"name":"points","type":"string"}]},{"key":"COMBO","name":"Combo","payloadSchema":[{"name":"multiplier","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"ArcadeScoreLoaded","name":"ArcadeScore loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true},{"name":"level","type":"number"},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number"},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"}]},{"key":"ArcadeScoreLoadFailed","name":"ArcadeScore load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","ArcadeScore",{"emit":{"failure":"ArcadeScoreLoadFailed","success":"ArcadeScoreLoaded"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Arcade Game","children":[{"type":"score-board","level":"@entity.level","score":"@entity.score","highScore":"@entity.highScore","multiplier":"@entity.multiplier","combo":"@entity.combo"}]}]]},{"from":"idle","to":"idle","event":"ADD_SCORE","effects":[["set","@entity.score",["+","@entity.score","@payload.points"]],["set","@entity.combo",["+","@entity.combo",1]],["render-ui","main",{"children":[{"combo":"@entity.combo","multiplier":"@entity.multiplier","score":"@entity.score","highScore":"@entity.highScore","level":"@entity.level","type":"score-board"}],"showTopBar":true,"type":"game-shell","appName":"Arcade Game"}]]},{"from":"idle","to":"idle","event":"COMBO","effects":[["set","@entity.multiplier","@payload.multiplier"],["render-ui","main",{"appName":"Arcade Game","children":[{"type":"score-board","highScore":"@entity.highScore","score":"@entity.score","combo":"@entity.combo","multiplier":"@entity.multiplier","level":"@entity.level"}],"showTopBar":true,"type":"game-shell"}]]},{"from":"idle","to":"idle","event":"RESET","effects":[["set","@entity.score",0],["set","@entity.combo",0],["set","@entity.multiplier",1],["render-ui","main",{"showTopBar":true,"children":[{"highScore":"@entity.highScore","score":"@entity.score","level":"@entity.level","combo":"@entity.combo","multiplier":"@entity.multiplier","type":"score-board"}],"type":"game-shell","appName":"Arcade Game"}]]}]},"scope":"instance"}],"pages":[{"name":"Scores","path":"/scores","traits":[{"ref":"ArcadeScoreScoreBoard"}]}]},{"name":"ArcadeHudOrbital","entity":{"name":"ArcadeHud","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"score","type":"number","default":0},{"name":"lives","type":"number","default":3},{"name":"level","type":"number","default":1},{"name":"timer","type":"number"}]},"traits":[{"name":"ArcadeHudHud","category":"interaction","linkedEntity":"ArcadeHud","emits":[{"event":"ArcadeHudLoaded","description":"Fired when ArcadeHud finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"score","type":"number"},{"name":"lives","type":"number"},{"name":"level","type":"number"},{"name":"timer","type":"number"}]},{"event":"ArcadeHudLoadFailed","description":"Fired when ArcadeHud fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"REFRESH","name":"Refresh"},{"key":"ArcadeHudLoaded","name":"ArcadeHud loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"score","type":"number"},{"name":"lives","type":"number"},{"name":"level","type":"number"},{"name":"timer","type":"number"}]},{"key":"ArcadeHudLoadFailed","name":"ArcadeHud load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","ArcadeHud",{"emit":{"failure":"ArcadeHudLoadFailed","success":"ArcadeHudLoaded"}}],["render-ui","main",{"showTopBar":true,"children":[{"stats":[{"value":"@entity.score","label":"Score"},{"value":"@entity.lives","label":"Lives"},{"label":"Level","value":"@entity.level"},{"label":"Timer","value":"@entity.timer"}],"type":"game-hud","position":"top-left","transparent":false}],"type":"game-shell","appName":"Arcade Game"}]]},{"from":"idle","to":"idle","event":"REFRESH","effects":[["fetch","ArcadeHud",{"emit":{"success":"ArcadeHudLoaded","failure":"ArcadeHudLoadFailed"}}],["render-ui","main",{"showTopBar":true,"appName":"Arcade Game","children":[{"position":"top-left","transparent":false,"type":"game-hud","stats":[{"value":"@entity.score","label":"Score"},{"value":"@entity.lives","label":"Lives"},{"label":"Level","value":"@entity.level"},{"value":"@entity.timer","label":"Timer"}]}],"type":"game-shell"}]]}]},"scope":"instance"}],"pages":[{"name":"Hud","path":"/hud","traits":[{"ref":"ArcadeHudHud"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ArcadeStateOrbital',
+      uses: [],
+      entity: {
+        'name': 'ArcadeState',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lives',
+            'type': 'number',
+            'default': 3,
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ArcadeStateGameflow',
+          'category': 'interaction',
+          'linkedEntity': 'ArcadeState',
+          'emits': [
+            {
+              'event': 'ArcadeStateLoaded',
+              'description': 'Fired when ArcadeState finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'lives',
+                  'type': 'number',
+                },
+                {
+                  'name': 'highScore',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'ArcadeStateLoadFailed',
+              'description': 'Fired when ArcadeState fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'paused',
+              },
+              {
+                'name': 'gameover',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'PAUSE',
+                'name': 'Pause',
+              },
+              {
+                'key': 'GAME_OVER',
+                'name': 'Game Over',
+              },
+              {
+                'key': 'RESUME',
+                'name': 'Resume',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'ArcadeStateLoaded',
+                'name': 'ArcadeState loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'lives',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'highScore',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'ArcadeStateLoadFailed',
+                'name': 'ArcadeState load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ArcadeState',
+                    {
+                      'emit': {
+                        'failure': 'ArcadeStateLoadFailed',
+                        'success': 'ArcadeStateLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'label': 'Start Game',
+                              'variant': 'primary',
+                              'event': 'START',
+                            },
+                          ],
+                          'type': 'game-menu',
+                          'subtitle': 'Main Menu',
+                          'title': 'Arcade',
+                        },
+                      ],
+                      'appName': 'Arcade Game',
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'value': '@entity.level',
+                              'label': 'Level',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'paused',
+                'event': 'PAUSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'title': 'Paused',
+                      'menuItems': [
+                        {
+                          'label': 'Resume',
+                          'event': 'RESUME',
+                          'variant': 'primary',
+                        },
+                        {
+                          'label': 'Quit',
+                          'event': 'RESTART',
+                          'variant': 'ghost',
+                        },
+                      ],
+                      'type': 'game-menu',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'playing',
+                'to': 'gameover',
+                'event': 'GAME_OVER',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'label': 'Play Again',
+                              'event': 'RESTART',
+                              'variant': 'primary',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'event': 'RESTART',
+                              'label': 'Main Menu',
+                            },
+                          ],
+                          'title': 'Game Over',
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'value': '@entity.level',
+                              'label': 'Level',
+                            },
+                          ],
+                          'type': 'game-over-screen',
+                        },
+                      ],
+                      'appName': 'Arcade Game',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'paused',
+                'to': 'paused',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'paused',
+                'to': 'playing',
+                'event': 'RESUME',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Arcade Game',
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'value': '@entity.level',
+                              'label': 'Level',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'paused',
+                'to': 'playing',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'game-hud',
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Level',
+                              'value': '@entity.level',
+                            },
+                          ],
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'paused',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'variant': 'primary',
+                              'label': 'Start Game',
+                            },
+                          ],
+                          'subtitle': 'Main Menu',
+                          'title': 'Arcade',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'appName': 'Arcade Game',
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'gameover',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'label': 'Start Game',
+                              'event': 'START',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'title': 'Arcade',
+                          'type': 'game-menu',
+                          'subtitle': 'Main Menu',
+                        },
+                      ],
+                      'appName': 'Arcade Game',
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'GamePage',
+          'path': '/game',
+          'traits': [
+            {
+              'ref': 'ArcadeStateGameflow',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ArcadeCanvasOrbital',
+      uses: [],
+      entity: {
+        'name': 'ArcadeCanvas',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'width',
+            'type': 'number',
+          },
+          {
+            'name': 'height',
+            'type': 'number',
+          },
+          {
+            'name': 'fps',
+            'type': 'number',
+          },
+          {
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ArcadeCanvasGameCanvas2d',
+          'category': 'interaction',
+          'linkedEntity': 'ArcadeCanvas',
+          'emits': [
+            {
+              'event': 'ArcadeCanvasLoaded',
+              'description': 'Fired when ArcadeCanvas finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'width',
+                  'type': 'number',
+                },
+                {
+                  'name': 'height',
+                  'type': 'number',
+                },
+                {
+                  'name': 'fps',
+                  'type': 'number',
+                },
+                {
+                  'name': 'running',
+                  'type': 'boolean',
+                },
+              ],
+            },
+            {
+              'event': 'ArcadeCanvasLoadFailed',
+              'description': 'Fired when ArcadeCanvas fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'rendering',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'TICK',
+                'name': 'Tick',
+              },
+              {
+                'key': 'STOP',
+                'name': 'Stop',
+              },
+              {
+                'key': 'ArcadeCanvasLoaded',
+                'name': 'ArcadeCanvas loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'width',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'height',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'fps',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'running',
+                    'type': 'boolean',
+                  },
+                ],
+              },
+              {
+                'key': 'ArcadeCanvasLoadFailed',
+                'name': 'ArcadeCanvas load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ArcadeCanvas',
+                    {
+                      'emit': {
+                        'failure': 'ArcadeCanvasLoadFailed',
+                        'success': 'ArcadeCanvasLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'monitor',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'ArcadeCanvas Canvas',
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                            },
+                            {
+                              'variant': 'caption',
+                              'color': 'muted',
+                              'type': 'typography',
+                              'content': '800x600 @ 60fps',
+                            },
+                            {
+                              'fps': 60,
+                              'type': 'game-canvas-2d',
+                              'width': 800,
+                              'height': 600,
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'START',
+                              'variant': 'primary',
+                              'icon': 'play',
+                              'label': 'Start',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'rendering',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'appName': 'Arcade Game',
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'monitor',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'ArcadeCanvas Canvas',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'fps': 60,
+                              'height': 600,
+                              'width': 800,
+                              'type': 'game-canvas-2d',
+                            },
+                            {
+                              'icon': 'square',
+                              'action': 'STOP',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Stop',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'rendering',
+                'to': 'rendering',
+                'event': 'TICK',
+              },
+              {
+                'from': 'rendering',
+                'to': 'idle',
+                'event': 'STOP',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'monitor',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'ArcadeCanvas Canvas',
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                },
+                              ],
+                            },
+                            {
+                              'color': 'muted',
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': '800x600 @ 60fps',
+                            },
+                            {
+                              'height': 600,
+                              'type': 'game-canvas-2d',
+                              'fps': 60,
+                              'width': 800,
+                            },
+                            {
+                              'label': 'Start',
+                              'action': 'START',
+                              'icon': 'play',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Arcade Game',
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Canvas',
+          'path': '/canvas',
+          'traits': [
+            {
+              'ref': 'ArcadeCanvasGameCanvas2d',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ArcadeScoreOrbital',
+      uses: [],
+      entity: {
+        'name': 'ArcadeScore',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ArcadeScoreScoreBoard',
+          'category': 'interaction',
+          'linkedEntity': 'ArcadeScore',
+          'emits': [
+            {
+              'event': 'ArcadeScoreLoaded',
+              'description': 'Fired when ArcadeScore finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'playerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'highScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'combo',
+                  'type': 'number',
+                },
+                {
+                  'name': 'multiplier',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'ArcadeScoreLoadFailed',
+              'description': 'Fired when ArcadeScore fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ADD_SCORE',
+                'name': 'Add Score',
+                'payloadSchema': [
+                  {
+                    'name': 'points',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMBO',
+                'name': 'Combo',
+                'payloadSchema': [
+                  {
+                    'name': 'multiplier',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'ArcadeScoreLoaded',
+                'name': 'ArcadeScore loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'playerName',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completedAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'highScore',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'combo',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'multiplier',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'ArcadeScoreLoadFailed',
+                'name': 'ArcadeScore load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ArcadeScore',
+                    {
+                      'emit': {
+                        'failure': 'ArcadeScoreLoadFailed',
+                        'success': 'ArcadeScoreLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                      'children': [
+                        {
+                          'type': 'score-board',
+                          'level': '@entity.level',
+                          'score': '@entity.score',
+                          'highScore': '@entity.highScore',
+                          'multiplier': '@entity.multiplier',
+                          'combo': '@entity.combo',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'ADD_SCORE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.score',
+                    [
+                      '+',
+                      '@entity.score',
+                      '@payload.points',
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.combo',
+                    [
+                      '+',
+                      '@entity.combo',
+                      1,
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'combo': '@entity.combo',
+                          'multiplier': '@entity.multiplier',
+                          'score': '@entity.score',
+                          'highScore': '@entity.highScore',
+                          'level': '@entity.level',
+                          'type': 'score-board',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'COMBO',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.multiplier',
+                    '@payload.multiplier',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Arcade Game',
+                      'children': [
+                        {
+                          'type': 'score-board',
+                          'highScore': '@entity.highScore',
+                          'score': '@entity.score',
+                          'combo': '@entity.combo',
+                          'multiplier': '@entity.multiplier',
+                          'level': '@entity.level',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.score',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.combo',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.multiplier',
+                    1,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'highScore': '@entity.highScore',
+                          'score': '@entity.score',
+                          'level': '@entity.level',
+                          'combo': '@entity.combo',
+                          'multiplier': '@entity.multiplier',
+                          'type': 'score-board',
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Scores',
+          'path': '/scores',
+          'traits': [
+            {
+              'ref': 'ArcadeScoreScoreBoard',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ArcadeHudOrbital',
+      uses: [],
+      entity: {
+        'name': 'ArcadeHud',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lives',
+            'type': 'number',
+            'default': 3,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'timer',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ArcadeHudHud',
+          'category': 'interaction',
+          'linkedEntity': 'ArcadeHud',
+          'emits': [
+            {
+              'event': 'ArcadeHudLoaded',
+              'description': 'Fired when ArcadeHud finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'lives',
+                  'type': 'number',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+                {
+                  'name': 'timer',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'ArcadeHudLoadFailed',
+              'description': 'Fired when ArcadeHud fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'ArcadeHudLoaded',
+                'name': 'ArcadeHud loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'lives',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'timer',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'ArcadeHudLoadFailed',
+                'name': 'ArcadeHud load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ArcadeHud',
+                    {
+                      'emit': {
+                        'failure': 'ArcadeHudLoadFailed',
+                        'success': 'ArcadeHudLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'value': '@entity.score',
+                              'label': 'Score',
+                            },
+                            {
+                              'value': '@entity.lives',
+                              'label': 'Lives',
+                            },
+                            {
+                              'label': 'Level',
+                              'value': '@entity.level',
+                            },
+                            {
+                              'label': 'Timer',
+                              'value': '@entity.timer',
+                            },
+                          ],
+                          'type': 'game-hud',
+                          'position': 'top-left',
+                          'transparent': false,
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'appName': 'Arcade Game',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'ArcadeHud',
+                    {
+                      'emit': {
+                        'success': 'ArcadeHudLoaded',
+                        'failure': 'ArcadeHudLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'appName': 'Arcade Game',
+                      'children': [
+                        {
+                          'position': 'top-left',
+                          'transparent': false,
+                          'type': 'game-hud',
+                          'stats': [
+                            {
+                              'value': '@entity.score',
+                              'label': 'Score',
+                            },
+                            {
+                              'value': '@entity.lives',
+                              'label': 'Lives',
+                            },
+                            {
+                              'label': 'Level',
+                              'value': '@entity.level',
+                            },
+                            {
+                              'value': '@entity.timer',
+                              'label': 'Timer',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Hud',
+          'path': '/hud',
+          'traits': [
+            {
+              'ref': 'ArcadeHudHud',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

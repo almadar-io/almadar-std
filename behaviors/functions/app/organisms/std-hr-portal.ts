@@ -144,9 +144,7217 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"EmployeeOrbital","entity":{"name":"Employee","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","default":""},{"name":"email","type":"string","default":""},{"name":"department","type":"string","default":""},{"name":"role","type":"string","default":""},{"name":"startDate","type":"datetime","default":""},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"EmployeeBrowse","category":"interaction","linkedEntity":"Employee","emits":[{"event":"ONBOARD","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.email","type":"string"},{"name":"row.department","type":"string"},{"name":"row.role","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.email","type":"string"},{"name":"row.department","type":"string"},{"name":"row.role","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.email","type":"string"},{"name":"row.department","type":"string"},{"name":"row.role","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EmployeeLoaded","description":"Fired when Employee finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"event":"EmployeeLoadFailed","description":"Fired when Employee fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OnboardingSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"OnboardingSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TimeOffSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TimeOffUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TimeOffDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"EMPLOYEE_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"EmployeeCreate"}},{"event":"EMPLOYEE_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"EmployeeEdit"}},{"event":"EMPLOYEE_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"EmployeeDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EmployeeLoaded","name":"Employee loaded","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"key":"EmployeeLoadFailed","name":"Employee load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ONBOARD","name":"Onboard"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Employee"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Employee"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Employee"}]},{"key":"EmployeeSaved","name":"Employee saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"EmployeeSaveFailed","name":"Employee save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeUpdated","name":"Employee updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"EmployeeUpdateFailed","name":"Employee update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeDeleted","name":"Employee deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"EmployeeDeleteFailed","name":"Employee delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OnboardingSaved","name":"Onboarding saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"OnboardingSaveFailed","name":"Onboarding save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffSaved","name":"Time off saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TimeOffSaveFailed","name":"Time off save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffUpdated","name":"Time off updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TimeOffUpdateFailed","name":"Time off update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffDeleted","name":"Time off deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TimeOffDeleteFailed","name":"Time off delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}],["render-ui","main",{"align":"center","type":"stack","direction":"vertical","className":"py-12","children":[{"type":"spinner"},{"type":"typography","color":"muted","content":"Loading…","variant":"caption"}],"gap":"md"}]]},{"from":"browsing","to":"browsing","event":"EmployeeLoaded","effects":[["render-ui","main",{"navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"label":"Onboarding","icon":"layout-list","href":"/onboarding"},{"icon":"calendar","label":"Time Off","href":"/timeoff"},{"label":"Org Chart","icon":"layout-list","href":"/org-chart"}],"appName":"HRPortal","type":"dashboard-layout","children":[{"className":"max-w-5xl mx-auto w-full","children":[{"type":"stack","direction":"horizontal","children":[{"align":"center","children":[{"name":"users","type":"icon"},{"content":"Employees","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"label":"Add Employee","action":"CREATE","icon":"plus","type":"button","variant":"primary"}]}],"justify":"between","gap":"md","align":"center"},{"type":"divider"},{"type":"data-list","itemActions":[{"event":"VIEW","label":"View","variant":"ghost"},{"event":"EDIT","label":"Edit","variant":"ghost"},{"variant":"danger","label":"Delete","event":"DELETE"}],"fields":[{"name":"name","icon":"user","variant":"h3"},{"name":"department","variant":"badge"},{"name":"role","variant":"body"},{"name":"email","variant":"caption"},{"label":"Joined","variant":"caption","name":"startDate","format":"date"}],"entity":"@payload.data","variant":"card","gap":"sm"}],"gap":"lg","type":"stack","direction":"vertical"}]}]]},{"from":"browsing","to":"browsing","event":"EmployeeLoadFailed","effects":[["render-ui","main",{"align":"center","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"variant":"h3","content":"Failed to load employee","type":"typography"},{"variant":"body","type":"typography","color":"muted","content":"@payload.error"},{"type":"button","icon":"rotate-ccw","variant":"primary","label":"Retry","action":"INIT"}],"className":"py-12","type":"stack","direction":"vertical","gap":"md"}]]}]},"scope":"collection"},{"name":"EmployeeCreate","category":"interaction","linkedEntity":"Employee","emits":[{"event":"EMPLOYEE_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeLoadFailed","description":"Fired when Employee fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeLoaded","description":"Fired when Employee finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"event":"EmployeeSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"EmployeeBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EMPLOYEE_CREATED","name":"Employee Created"},{"key":"EmployeeLoadFailed","name":"Employee load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeLoaded","name":"Employee loaded","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"key":"EmployeeSaveFailed","name":"Employee save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeSaved","name":"Employee saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}],["render-ui","modal",{"children":[{"direction":"horizontal","children":[{"name":"plus-circle","type":"icon"},{"variant":"h3","type":"typography","content":"New Employee"}],"type":"stack","gap":"sm"},{"type":"divider"},{"type":"form-section","mode":"create","submitEvent":"SAVE","fields":["name","email","department","role","startDate"],"cancelEvent":"CLOSE"}],"direction":"vertical","gap":"md","type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Employee","@payload.data",{"emit":{"failure":"EmployeeSaveFailed","success":"EmployeeSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","EMPLOYEE_CREATED"]]}]},"scope":"collection"},{"name":"EmployeeEdit","category":"interaction","linkedEntity":"Employee","emits":[{"event":"EMPLOYEE_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeLoadFailed","description":"Fired when Employee fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeLoaded","description":"Fired when Employee finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"event":"EmployeeUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"EmployeeView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"EmployeeBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Employee"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EMPLOYEE_UPDATED","name":"Employee Updated"},{"key":"EmployeeLoadFailed","name":"Employee load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeLoaded","name":"Employee loaded","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"key":"EmployeeUpdateFailed","name":"Employee update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeUpdated","name":"Employee updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Employee",{"emit":{"failure":"EmployeeLoadFailed","success":"EmployeeLoaded"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","direction":"vertical","type":"stack","children":[{"children":[{"type":"icon","name":"edit"},{"variant":"h3","content":"Edit Employee","type":"typography"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"cancelEvent":"CLOSE","fields":["name","email","department","role","startDate"],"entity":"@payload.row","submitEvent":"SAVE","mode":"edit","type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Employee","@payload.data",{"emit":{"success":"EmployeeUpdated","failure":"EmployeeUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","EMPLOYEE_UPDATED"]]}]},"scope":"collection"},{"name":"EmployeeView","category":"interaction","linkedEntity":"Employee","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeLoaded","description":"Fired when Employee finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"event":"EmployeeLoadFailed","description":"Fired when Employee fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"EmployeeBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"EmployeeLoaded","name":"Employee loaded","payloadSchema":[{"name":"data","type":"[Employee]"}]},{"key":"EmployeeLoadFailed","name":"Employee load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Employee",{"emit":{"failure":"EmployeeLoadFailed","success":"EmployeeLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Employee",{"emit":{"failure":"EmployeeLoadFailed","success":"EmployeeLoaded"},"id":"@payload.id"}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"type":"stack","align":"center","gap":"sm","children":[{"name":"eye","type":"icon"},{"content":"@entity.name","type":"typography","variant":"h3"}],"direction":"horizontal"},{"type":"divider"},{"children":[{"type":"typography","variant":"caption","content":"Name"},{"variant":"body","type":"typography","content":"@entity.name"}],"gap":"md","type":"stack","direction":"horizontal"},{"direction":"horizontal","gap":"md","children":[{"type":"typography","content":"Email","variant":"caption"},{"variant":"body","content":"@entity.email","type":"typography"}],"type":"stack"},{"children":[{"type":"typography","content":"Department","variant":"caption"},{"content":"@entity.department","type":"typography","variant":"body"}],"direction":"horizontal","gap":"md","type":"stack"},{"direction":"horizontal","gap":"md","type":"stack","children":[{"type":"typography","content":"Role","variant":"caption"},{"type":"typography","content":"@entity.role","variant":"body"}]},{"gap":"md","direction":"horizontal","type":"stack","children":[{"variant":"caption","content":"Start Date","type":"typography"},{"type":"typography","variant":"body","content":"@entity.startDate"}]},{"type":"divider"},{"type":"stack","justify":"end","children":[{"type":"button","label":"Edit","action":"EDIT","icon":"edit","variant":"primary"},{"label":"Close","variant":"ghost","action":"CLOSE","type":"button"}],"direction":"horizontal","gap":"sm"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"EmployeeDelete","category":"interaction","linkedEntity":"Employee","emits":[{"event":"EMPLOYEE_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"EmployeeLoadFailed","description":"Fired when Employee fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"EmployeeLoaded","description":"Fired when Employee finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Employee]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"EmployeeBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"EMPLOYEE_DELETED","name":"Employee Deleted"},{"key":"EmployeeDeleteFailed","name":"Employee delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeDeleted","name":"Employee deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"EmployeeLoadFailed","name":"Employee load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"EmployeeLoaded","name":"Employee loaded","payloadSchema":[{"name":"data","type":"[Employee]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Employee",{"emit":{"failure":"EmployeeLoadFailed","success":"EmployeeLoaded"},"id":"@payload.id"}],["render-ui","modal",{"children":[{"children":[{"type":"icon","name":"alert-triangle"},{"content":"Delete Employee","variant":"h3","type":"typography"}],"direction":"horizontal","align":"center","type":"stack","gap":"sm"},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"type":"button","variant":"ghost","label":"Cancel","action":"CANCEL"},{"variant":"danger","type":"button","icon":"check","action":"CONFIRM_DELETE","label":"Delete"}],"justify":"end"}],"gap":"md","direction":"vertical","type":"stack"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Employee","@entity.pendingId",{"emit":{"success":"EmployeeDeleted","failure":"EmployeeDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}],["emit","EMPLOYEE_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Employee",{"emit":{"success":"EmployeeLoaded","failure":"EmployeeLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Employee",{"emit":{"failure":"EmployeeLoadFailed","success":"EmployeeLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"EmployeesPage","path":"/employees","traits":[{"ref":"EmployeeBrowse"},{"ref":"EmployeeCreate"},{"ref":"EmployeeEdit"},{"ref":"EmployeeView"},{"ref":"EmployeeDelete"}]}]},{"name":"OnboardingOrbital","entity":{"name":"Onboarding","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"employeeName","type":"string"},{"name":"department","type":"string","default":""},{"name":"manager","type":"string"},{"name":"equipmentReady","type":"boolean"},{"name":"accessGranted","type":"boolean"}]},"traits":[{"name":"OnboardingWizard","category":"interaction","linkedEntity":"Onboarding","emits":[{"event":"OnboardingLoadFailed","description":"Fired when Onboarding fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OnboardingLoaded","description":"Fired when Onboarding finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Onboarding]"}]},{"event":"OnboardingSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"OnboardingSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"ONBOARD","triggers":"INIT","source":{"kind":"orbital","orbital":"EmployeeOrbital","trait":"EmployeeBrowse"}}],"stateMachine":{"states":[{"name":"step1","isInitial":true},{"name":"step2"},{"name":"step3"},{"name":"review"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NEXT","name":"Next"},{"key":"PREV","name":"Prev"},{"key":"COMPLETE","name":"Complete","payloadSchema":[{"name":"data","type":"string"}]},{"key":"RESTART","name":"Restart"},{"key":"OnboardingLoadFailed","name":"Onboarding load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OnboardingLoaded","name":"Onboarding loaded","payloadSchema":[{"name":"data","type":"[Onboarding]"}]},{"key":"OnboardingSaveFailed","name":"Onboarding save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"OnboardingSaved","name":"Onboarding saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"step1","to":"step1","event":"INIT","effects":[["fetch","Onboarding",{"emit":{"success":"OnboardingLoaded","failure":"OnboardingLoadFailed"}}],["render-ui","main",{"appName":"HRPortal","navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"href":"/timeoff","label":"Time Off","icon":"calendar"},{"icon":"layout-list","label":"Org Chart","href":"/org-chart"}],"children":[{"type":"container","padding":"lg","children":[{"type":"stack","children":[{"direction":"horizontal","gap":"sm","align":"center","type":"stack","children":[{"type":"icon","name":"clipboard-check"},{"type":"typography","content":"Employee Onboarding","variant":"h2"}]},{"count":3,"type":"progress-dots","currentIndex":0},{"currentStep":0,"type":"wizard-progress","steps":["Employee Details","Manager Assignment","Setup Checklist"]},{"type":"divider"},{"type":"typography","content":"Employee Details","variant":"h3"},{"mode":"create","cancelEvent":"INIT","type":"form-section","fields":["employeeName","department"],"submitEvent":"NEXT"},{"children":[{"variant":"primary","label":"Next","icon":"arrow-right","action":"NEXT","type":"button"}],"justify":"end","direction":"horizontal","type":"stack","gap":"sm"}],"direction":"vertical","gap":"lg"}],"maxWidth":"lg"}],"type":"dashboard-layout"}]]},{"from":"step1","to":"step2","event":"NEXT","effects":[["fetch","Onboarding",{"emit":{"failure":"OnboardingLoadFailed","success":"OnboardingLoaded"}}],["render-ui","main",{"type":"dashboard-layout","appName":"HRPortal","children":[{"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"children":[{"type":"icon","name":"clipboard-check"},{"type":"typography","content":"Employee Onboarding","variant":"h2"}],"gap":"sm","align":"center","type":"stack","direction":"horizontal"},{"count":3,"type":"progress-dots","currentIndex":1},{"type":"wizard-progress","currentStep":1,"steps":["Employee Details","Manager Assignment","Setup Checklist"]},{"type":"divider"},{"type":"typography","variant":"h3","content":"Manager Assignment"},{"submitEvent":"NEXT","mode":"create","cancelEvent":"PREV","fields":["manager"],"type":"form-section"},{"type":"stack","justify":"end","gap":"sm","direction":"horizontal","children":[{"label":"Back","action":"PREV","variant":"ghost","type":"button","icon":"arrow-left"},{"label":"Next","type":"button","action":"NEXT","variant":"primary","icon":"arrow-right"}]}]}],"padding":"lg","type":"container","maxWidth":"lg"}],"navItems":[{"href":"/employees","label":"Employees","icon":"users"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"label":"Time Off","icon":"calendar","href":"/timeoff"},{"href":"/org-chart","icon":"layout-list","label":"Org Chart"}]}]]},{"from":"step2","to":"step3","event":"NEXT","effects":[["fetch","Onboarding",{"emit":{"success":"OnboardingLoaded","failure":"OnboardingLoadFailed"}}],["render-ui","main",{"appName":"HRPortal","children":[{"children":[{"gap":"lg","type":"stack","children":[{"align":"center","type":"stack","direction":"horizontal","gap":"sm","children":[{"type":"icon","name":"clipboard-check"},{"type":"typography","content":"Employee Onboarding","variant":"h2"}]},{"count":3,"currentIndex":2,"type":"progress-dots"},{"currentStep":2,"type":"wizard-progress","steps":["Employee Details","Manager Assignment","Setup Checklist"]},{"type":"divider"},{"content":"Setup Checklist","variant":"h3","type":"typography"},{"cancelEvent":"PREV","submitEvent":"NEXT","mode":"create","type":"form-section","fields":["equipmentReady","accessGranted"]},{"gap":"sm","justify":"end","direction":"horizontal","children":[{"label":"Back","icon":"arrow-left","action":"PREV","type":"button","variant":"ghost"},{"icon":"arrow-right","type":"button","action":"NEXT","label":"Next","variant":"primary"}],"type":"stack"}],"direction":"vertical"}],"type":"container","maxWidth":"lg","padding":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"icon":"layout-list","label":"Onboarding","href":"/onboarding"},{"href":"/timeoff","icon":"calendar","label":"Time Off"},{"href":"/org-chart","label":"Org Chart","icon":"layout-list"}]}]]},{"from":"step2","to":"step1","event":"PREV","effects":[["fetch","Onboarding",{"emit":{"success":"OnboardingLoaded","failure":"OnboardingLoadFailed"}}],["render-ui","main",{"appName":"HRPortal","navItems":[{"href":"/employees","label":"Employees","icon":"users"},{"label":"Onboarding","href":"/onboarding","icon":"layout-list"},{"href":"/timeoff","icon":"calendar","label":"Time Off"},{"href":"/org-chart","icon":"layout-list","label":"Org Chart"}],"children":[{"type":"container","padding":"lg","maxWidth":"lg","children":[{"gap":"lg","type":"stack","children":[{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"name":"clipboard-check","type":"icon"},{"variant":"h2","type":"typography","content":"Employee Onboarding"}]},{"currentIndex":0,"type":"progress-dots","count":3},{"currentStep":0,"steps":["Employee Details","Manager Assignment","Setup Checklist"],"type":"wizard-progress"},{"type":"divider"},{"variant":"h3","type":"typography","content":"Employee Details"},{"mode":"create","submitEvent":"NEXT","type":"form-section","cancelEvent":"INIT","fields":["employeeName","department"]},{"justify":"end","direction":"horizontal","gap":"sm","children":[{"action":"NEXT","label":"Next","icon":"arrow-right","type":"button","variant":"primary"}],"type":"stack"}],"direction":"vertical"}]}],"type":"dashboard-layout"}]]},{"from":"step3","to":"review","event":"NEXT","effects":[["fetch","Onboarding",{"emit":{"failure":"OnboardingLoadFailed","success":"OnboardingLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Employees","href":"/employees","icon":"users"},{"icon":"layout-list","label":"Onboarding","href":"/onboarding"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"icon":"layout-list","label":"Org Chart","href":"/org-chart"}],"appName":"HRPortal","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"type":"icon","name":"clipboard-check"},{"type":"typography","variant":"h2","content":"Employee Onboarding"}]},{"type":"badge","label":"Review"},{"steps":["Employee Details","Manager Assignment","Setup Checklist"],"currentStep":3,"type":"wizard-progress"},{"type":"divider"},{"direction":"vertical","children":[{"type":"stack","gap":"md","justify":"between","children":[{"content":"Employee Name","variant":"caption","type":"typography"},{"variant":"body","content":"@entity.employeeName","type":"typography"}],"direction":"horizontal"},{"justify":"between","gap":"md","direction":"horizontal","type":"stack","children":[{"content":"Department","variant":"caption","type":"typography"},{"content":"@entity.department","variant":"body","type":"typography"}]},{"justify":"between","children":[{"type":"typography","variant":"caption","content":"Manager"},{"content":"@entity.manager","type":"typography","variant":"body"}],"direction":"horizontal","type":"stack","gap":"md"},{"direction":"horizontal","children":[{"type":"typography","content":"Equipment Ready","variant":"caption"},{"variant":"body","content":"@entity.equipmentReady","type":"typography"}],"type":"stack","gap":"md","justify":"between"},{"gap":"md","direction":"horizontal","justify":"between","children":[{"type":"typography","variant":"caption","content":"Access Granted"},{"variant":"body","type":"typography","content":"@entity.accessGranted"}],"type":"stack"}],"type":"stack","gap":"sm"},{"showNext":false,"type":"wizard-navigation","currentStep":3,"totalSteps":4,"showBack":true,"showComplete":true}]}]}]]},{"from":"step3","to":"step2","event":"PREV","effects":[["fetch","Onboarding",{"emit":{"failure":"OnboardingLoadFailed","success":"OnboardingLoaded"}}],["render-ui","main",{"children":[{"maxWidth":"lg","padding":"lg","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"sm","align":"center","children":[{"type":"icon","name":"clipboard-check"},{"content":"Employee Onboarding","type":"typography","variant":"h2"}],"type":"stack"},{"currentIndex":1,"type":"progress-dots","count":3},{"type":"wizard-progress","steps":["Employee Details","Manager Assignment","Setup Checklist"],"currentStep":1},{"type":"divider"},{"content":"Manager Assignment","variant":"h3","type":"typography"},{"cancelEvent":"PREV","fields":["manager"],"mode":"create","submitEvent":"NEXT","type":"form-section"},{"type":"stack","justify":"end","children":[{"action":"PREV","variant":"ghost","label":"Back","icon":"arrow-left","type":"button"},{"action":"NEXT","label":"Next","variant":"primary","icon":"arrow-right","type":"button"}],"direction":"horizontal","gap":"sm"}]}],"type":"container"}],"appName":"HRPortal","navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"icon":"layout-list","href":"/onboarding","label":"Onboarding"},{"icon":"calendar","label":"Time Off","href":"/timeoff"},{"icon":"layout-list","href":"/org-chart","label":"Org Chart"}],"type":"dashboard-layout"}]]},{"from":"review","to":"step3","event":"PREV","effects":[["fetch","Onboarding",{"emit":{"failure":"OnboardingLoadFailed","success":"OnboardingLoaded"}}],["render-ui","main",{"type":"dashboard-layout","appName":"HRPortal","navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"href":"/timeoff","label":"Time Off","icon":"calendar"},{"href":"/org-chart","label":"Org Chart","icon":"layout-list"}],"children":[{"padding":"lg","maxWidth":"lg","children":[{"children":[{"gap":"sm","children":[{"name":"clipboard-check","type":"icon"},{"variant":"h2","content":"Employee Onboarding","type":"typography"}],"type":"stack","align":"center","direction":"horizontal"},{"type":"progress-dots","currentIndex":2,"count":3},{"currentStep":2,"steps":["Employee Details","Manager Assignment","Setup Checklist"],"type":"wizard-progress"},{"type":"divider"},{"type":"typography","content":"Setup Checklist","variant":"h3"},{"mode":"create","type":"form-section","cancelEvent":"PREV","submitEvent":"NEXT","fields":["equipmentReady","accessGranted"]},{"children":[{"label":"Back","action":"PREV","variant":"ghost","icon":"arrow-left","type":"button"},{"icon":"arrow-right","label":"Next","type":"button","variant":"primary","action":"NEXT"}],"type":"stack","direction":"horizontal","gap":"sm","justify":"end"}],"type":"stack","direction":"vertical","gap":"lg"}],"type":"container"}]}]]},{"from":"review","to":"complete","event":"COMPLETE","effects":[["persist","create","Onboarding","@payload.data",{"emit":{"failure":"OnboardingSaveFailed","success":"OnboardingSaved"}}],["notify","success","Onboarding created successfully"],["render-ui","main",{"navItems":[{"icon":"users","label":"Employees","href":"/employees"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"href":"/org-chart","icon":"layout-list","label":"Org Chart"}],"appName":"HRPortal","type":"dashboard-layout","children":[{"type":"stack","gap":"lg","children":[{"name":"check-circle","type":"icon"},{"type":"typography","content":"Onboarding Complete!","variant":"h2"},{"content":"The new employee has been fully onboarded.","variant":"body","type":"typography"},{"type":"button","variant":"primary","label":"Start New","action":"RESTART","icon":"refresh-cw"}],"align":"center","direction":"vertical"}]}]]},{"from":"complete","to":"step1","event":"RESTART","effects":[["fetch","Onboarding",{"emit":{"success":"OnboardingLoaded","failure":"OnboardingLoadFailed"}}],["render-ui","main",{"appName":"HRPortal","type":"dashboard-layout","children":[{"maxWidth":"lg","padding":"lg","type":"container","children":[{"children":[{"direction":"horizontal","type":"stack","children":[{"name":"clipboard-check","type":"icon"},{"variant":"h2","content":"Employee Onboarding","type":"typography"}],"align":"center","gap":"sm"},{"type":"progress-dots","count":3,"currentIndex":0},{"steps":["Employee Details","Manager Assignment","Setup Checklist"],"type":"wizard-progress","currentStep":0},{"type":"divider"},{"content":"Employee Details","type":"typography","variant":"h3"},{"submitEvent":"NEXT","cancelEvent":"INIT","fields":["employeeName","department"],"type":"form-section","mode":"create"},{"type":"stack","gap":"sm","direction":"horizontal","justify":"end","children":[{"label":"Next","action":"NEXT","type":"button","variant":"primary","icon":"arrow-right"}]}],"gap":"lg","type":"stack","direction":"vertical"}]}],"navItems":[{"icon":"users","label":"Employees","href":"/employees"},{"label":"Onboarding","href":"/onboarding","icon":"layout-list"},{"href":"/timeoff","icon":"calendar","label":"Time Off"},{"label":"Org Chart","icon":"layout-list","href":"/org-chart"}]}]]},{"from":"complete","to":"step1","event":"INIT","effects":[["fetch","Onboarding",{"emit":{"success":"OnboardingLoaded","failure":"OnboardingLoadFailed"}}],["render-ui","main",{"children":[{"padding":"lg","type":"container","maxWidth":"lg","children":[{"type":"stack","gap":"lg","children":[{"type":"stack","direction":"horizontal","gap":"sm","children":[{"name":"clipboard-check","type":"icon"},{"type":"typography","content":"Employee Onboarding","variant":"h2"}],"align":"center"},{"type":"progress-dots","currentIndex":0,"count":3},{"steps":["Employee Details","Manager Assignment","Setup Checklist"],"currentStep":0,"type":"wizard-progress"},{"type":"divider"},{"content":"Employee Details","variant":"h3","type":"typography"},{"submitEvent":"NEXT","fields":["employeeName","department"],"cancelEvent":"INIT","type":"form-section","mode":"create"},{"justify":"end","direction":"horizontal","children":[{"label":"Next","variant":"primary","icon":"arrow-right","type":"button","action":"NEXT"}],"gap":"sm","type":"stack"}],"direction":"vertical"}]}],"navItems":[{"label":"Employees","icon":"users","href":"/employees"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"href":"/timeoff","label":"Time Off","icon":"calendar"},{"icon":"layout-list","href":"/org-chart","label":"Org Chart"}],"type":"dashboard-layout","appName":"HRPortal"}]]}]},"scope":"collection"}],"pages":[{"name":"Onboarding","path":"/onboarding","traits":[{"ref":"OnboardingWizard"}]}]},{"name":"TimeOffOrbital","entity":{"name":"TimeOff","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"employeeName","type":"string"},{"name":"leaveType","type":"string"},{"name":"startDate","type":"datetime","default":""},{"name":"endDate","type":"datetime"},{"name":"status","type":"string"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"TimeOffBrowse","category":"interaction","linkedEntity":"TimeOff","emits":[{"event":"APPROVE_LEAVE","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.employeeName","type":"string"},{"name":"row.leaveType","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.endDate","type":"datetime"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.employeeName","type":"string"},{"name":"row.leaveType","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.endDate","type":"datetime"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.employeeName","type":"string"},{"name":"row.leaveType","type":"string"},{"name":"row.startDate","type":"datetime"},{"name":"row.endDate","type":"datetime"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"TimeOffLoaded","description":"Fired when TimeOff finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"event":"TimeOffLoadFailed","description":"Fired when TimeOff fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"TIME_OFF_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"TimeOffCreate"}},{"event":"TIME_OFF_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"TimeOffEdit"}},{"event":"TIME_OFF_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"TimeOffDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"TimeOffLoaded","name":"TimeOff loaded","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"key":"TimeOffLoadFailed","name":"TimeOff load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"APPROVE_LEAVE","name":"Approve Leave"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","TimeOff",{"emit":{"failure":"TimeOffLoadFailed","success":"TimeOffLoaded"}}],["render-ui","main",{"children":[{"type":"spinner"},{"type":"typography","variant":"caption","color":"muted","content":"Loading…"}],"type":"stack","align":"center","direction":"vertical","className":"py-12","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"TimeOffLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","children":[{"direction":"vertical","type":"stack","gap":"lg","className":"max-w-5xl mx-auto w-full","children":[{"gap":"md","direction":"horizontal","type":"stack","justify":"between","children":[{"gap":"sm","type":"stack","direction":"horizontal","children":[{"name":"calendar","type":"icon"},{"variant":"h2","type":"typography","content":"Time Off Requests"}],"align":"center"},{"children":[{"label":"Request Time Off","type":"button","action":"CREATE","variant":"primary","icon":"plus"}],"type":"stack","direction":"horizontal","gap":"sm"}],"align":"center"},{"type":"divider"},{"gap":"sm","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"label":"Edit","event":"EDIT","variant":"ghost"},{"event":"DELETE","variant":"danger","label":"Delete"}],"entity":"@payload.data","fields":[{"name":"employeeName","variant":"h3","icon":"calendar","label":"Employee"},{"label":"Type","variant":"badge","name":"leaveType"},{"variant":"badge","name":"status"},{"variant":"body","name":"startDate","label":"From","format":"date"},{"name":"endDate","label":"To","variant":"body","format":"date"}],"variant":"card","type":"data-list"}]}],"appName":"HRPortal","navItems":[{"href":"/employees","icon":"users","label":"Employees"},{"href":"/onboarding","label":"Onboarding","icon":"layout-list"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"href":"/org-chart","icon":"layout-list","label":"Org Chart"}]}]]},{"from":"browsing","to":"browsing","event":"TimeOffLoadFailed","effects":[["render-ui","main",{"gap":"md","direction":"vertical","className":"py-12","align":"center","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"variant":"h3","type":"typography","content":"Failed to load timeoff"},{"color":"muted","content":"@payload.error","type":"typography","variant":"body"},{"action":"INIT","icon":"rotate-ccw","type":"button","variant":"primary","label":"Retry"}],"type":"stack"}]]}]},"scope":"collection"},{"name":"TimeOffCreate","category":"interaction","linkedEntity":"TimeOff","emits":[{"event":"TIME_OFF_CREATED"},{"event":"TimeOffLoadFailed","description":"Fired when TimeOff fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffLoaded","description":"Fired when TimeOff finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"event":"TimeOffSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"TimeOffBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"TIME_OFF_CREATED","name":"Time Off Created"},{"key":"TimeOffLoadFailed","name":"TimeOff load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffLoaded","name":"TimeOff loaded","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"key":"TimeOffSaveFailed","name":"TimeOff save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffSaved","name":"TimeOff saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","TimeOff",{"emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","TimeOff",{"emit":{"failure":"TimeOffLoadFailed","success":"TimeOffLoaded"}}],["render-ui","modal",{"type":"stack","children":[{"type":"stack","children":[{"name":"plus-circle","type":"icon"},{"type":"typography","content":"New Time Off Request","variant":"h3"}],"gap":"sm","direction":"horizontal"},{"type":"divider"},{"cancelEvent":"CLOSE","fields":["employeeName","leaveType","startDate","endDate","status"],"mode":"create","type":"form-section","submitEvent":"SAVE"}],"direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","TimeOff","@payload.data",{"emit":{"success":"TimeOffSaved","failure":"TimeOffSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","TIME_OFF_CREATED"]]}]},"scope":"collection"},{"name":"TimeOffEdit","category":"interaction","linkedEntity":"TimeOff","emits":[{"event":"TIME_OFF_UPDATED"},{"event":"TimeOffLoadFailed","description":"Fired when TimeOff fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffLoaded","description":"Fired when TimeOff finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"event":"TimeOffUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"TimeOffView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"TimeOffBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"TimeOff"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"TIME_OFF_UPDATED","name":"Time Off Updated"},{"key":"TimeOffLoadFailed","name":"TimeOff load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffLoaded","name":"TimeOff loaded","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"key":"TimeOffUpdateFailed","name":"TimeOff update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffUpdated","name":"TimeOff updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","TimeOff",{"emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","TimeOff",{"id":"@payload.id","emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"gap":"sm","children":[{"type":"icon","name":"edit"},{"variant":"h3","type":"typography","content":"Edit TimeOff"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"submitEvent":"SAVE","type":"form-section","entity":"@payload.row","mode":"edit","cancelEvent":"CLOSE","fields":["employeeName","leaveType","startDate","endDate","status"]}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","TimeOff","@payload.data",{"emit":{"failure":"TimeOffUpdateFailed","success":"TimeOffUpdated"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","TIME_OFF_UPDATED"]]}]},"scope":"collection"},{"name":"TimeOffView","category":"interaction","linkedEntity":"TimeOff","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TimeOffLoaded","description":"Fired when TimeOff finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"event":"TimeOffLoadFailed","description":"Fired when TimeOff fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"TimeOffBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"TimeOffLoaded","name":"TimeOff loaded","payloadSchema":[{"name":"data","type":"[TimeOff]"}]},{"key":"TimeOffLoadFailed","name":"TimeOff load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","TimeOff",{"emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","TimeOff",{"id":"@payload.id","emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}],["render-ui","modal",{"type":"stack","gap":"md","children":[{"align":"center","direction":"horizontal","children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.employeeName"}],"gap":"sm","type":"stack"},{"type":"divider"},{"type":"stack","children":[{"variant":"caption","content":"Employee Name","type":"typography"},{"variant":"body","content":"@entity.employeeName","type":"typography"}],"direction":"horizontal","gap":"md"},{"type":"stack","direction":"horizontal","children":[{"variant":"caption","type":"typography","content":"Leave Type"},{"type":"typography","variant":"body","content":"@entity.leaveType"}],"gap":"md"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"typography","variant":"caption","content":"Start Date"},{"variant":"body","content":"@entity.startDate","type":"typography"}]},{"direction":"horizontal","children":[{"content":"End Date","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.endDate","variant":"body"}],"type":"stack","gap":"md"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"content":"Status","type":"typography","variant":"caption"},{"content":"@entity.status","type":"typography","variant":"body"}]},{"type":"divider"},{"direction":"horizontal","justify":"end","type":"stack","gap":"sm","children":[{"type":"button","action":"EDIT","variant":"primary","label":"Edit","icon":"edit"},{"type":"button","action":"CLOSE","variant":"ghost","label":"Close"}]}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"TimeOffDelete","category":"interaction","linkedEntity":"TimeOff","emits":[{"event":"TIME_OFF_DELETED"},{"event":"TimeOffDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TimeOffLoadFailed","description":"Fired when TimeOff fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TimeOffLoaded","description":"Fired when TimeOff finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[TimeOff]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"TimeOffBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"TIME_OFF_DELETED","name":"Time Off Deleted"},{"key":"TimeOffDeleteFailed","name":"TimeOff delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffDeleted","name":"TimeOff deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TimeOffLoadFailed","name":"TimeOff load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TimeOffLoaded","name":"TimeOff loaded","payloadSchema":[{"name":"data","type":"[TimeOff]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","TimeOff",{"emit":{"failure":"TimeOffLoadFailed","success":"TimeOffLoaded"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","TimeOff",{"emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","type":"stack","gap":"md","children":[{"align":"center","gap":"sm","type":"stack","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"Delete TimeOff","variant":"h3"}],"direction":"horizontal"},{"type":"divider"},{"type":"alert","message":"This action cannot be undone.","variant":"error"},{"type":"stack","direction":"horizontal","children":[{"action":"CANCEL","label":"Cancel","type":"button","variant":"ghost"},{"type":"button","variant":"danger","label":"Delete","action":"CONFIRM_DELETE","icon":"check"}],"gap":"sm","justify":"end"}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","TimeOff","@entity.pendingId",{"emit":{"failure":"TimeOffDeleteFailed","success":"TimeOffDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","TimeOff",{"emit":{"failure":"TimeOffLoadFailed","success":"TimeOffLoaded"}}],["emit","TIME_OFF_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","TimeOff",{"emit":{"failure":"TimeOffLoadFailed","success":"TimeOffLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","TimeOff",{"emit":{"success":"TimeOffLoaded","failure":"TimeOffLoadFailed"}}]]}]},"scope":"collection"}],"pages":[{"name":"Timeoff","path":"/timeoff","traits":[{"ref":"TimeOffBrowse"},{"ref":"TimeOffCreate"},{"ref":"TimeOffEdit"},{"ref":"TimeOffView"},{"ref":"TimeOffDelete"}]}]},{"name":"OrgChartOrbital","entity":{"name":"OrgChart","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"totalEmployees","type":"number"},{"name":"departments","type":"number"},{"name":"openPositions","type":"number"},{"name":"avgTenure","type":"string"},{"name":"headcount","type":"number"}]},"traits":[{"name":"OrgChartDisplay","category":"interaction","linkedEntity":"OrgChart","emits":[{"event":"OrgChartLoaded","description":"Fired when OrgChart finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[OrgChart]"}]},{"event":"OrgChartLoadFailed","description":"Fired when OrgChart fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"APPROVE_LEAVE","triggers":"INIT","source":{"kind":"orbital","orbital":"TimeOffOrbital","trait":"TimeOffBrowse"}}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"OrgChartLoaded","name":"OrgChart loaded","payloadSchema":[{"name":"data","type":"[OrgChart]"}]},{"key":"OrgChartLoadFailed","name":"OrgChart load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","OrgChart",{"emit":{"success":"OrgChartLoaded","failure":"OrgChartLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"items":[{"label":"Home","href":"/"},{"label":"Org Chart"}],"type":"breadcrumb"},{"gap":"md","justify":"between","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"git-branch"},{"content":"Org Chart","type":"typography","variant":"h2"}]},{"icon":"refresh-cw","action":"REFRESH","label":"Refresh","variant":"secondary","type":"button"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"box","padding":"md","children":[{"type":"simple-grid","children":[{"label":"TotalEmployees","value":"@entity.totalEmployees","type":"stat-display"},{"value":"@entity.departments","label":"Departments","type":"stat-display"},{"type":"stat-display","label":"OpenPositions","value":"@entity.openPositions"},{"type":"card","children":[{"children":[{"content":"AvgTenure","variant":"caption","type":"typography"},{"content":"@entity.avgTenure","type":"typography","variant":"h3"}],"gap":"sm","direction":"vertical","type":"stack"}]},{"value":"@entity.headcount","type":"stat-display","label":"Headcount"}],"cols":3}]},{"type":"divider"},{"children":[{"children":[{"variant":"caption","content":"Chart View","type":"typography"}],"type":"card"},{"type":"card","children":[{"variant":"caption","content":"Graph View","type":"typography"}]}],"gap":"md","cols":2,"type":"grid"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","height":200,"nodes":[{"label":"Start","id":"a"},{"label":"Process","id":"b"},{"label":"End","id":"c"}],"width":400,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}]}]}],"type":"scaled-diagram"}],"appName":"HRPortal","type":"dashboard-layout","navItems":[{"label":"Employees","href":"/employees","icon":"users"},{"href":"/onboarding","icon":"layout-list","label":"Onboarding"},{"label":"Time Off","icon":"calendar","href":"/timeoff"},{"icon":"layout-list","href":"/org-chart","label":"Org Chart"}]}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","OrgChart",{"emit":{"success":"OrgChartLoaded","failure":"OrgChartLoadFailed"}}],["render-ui","main",{"navItems":[{"label":"Employees","icon":"users","href":"/employees"},{"icon":"layout-list","label":"Onboarding","href":"/onboarding"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"label":"Org Chart","icon":"layout-list","href":"/org-chart"}],"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"items":[{"href":"/","label":"Home"},{"label":"Org Chart"}],"type":"breadcrumb"},{"children":[{"type":"stack","children":[{"name":"git-branch","type":"icon"},{"content":"Org Chart","variant":"h2","type":"typography"}],"direction":"horizontal","gap":"md"},{"icon":"refresh-cw","variant":"secondary","type":"button","action":"REFRESH","label":"Refresh"}],"type":"stack","direction":"horizontal","gap":"md","justify":"between"},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":3,"children":[{"label":"TotalEmployees","value":"@entity.totalEmployees","type":"stat-display"},{"type":"stat-display","label":"Departments","value":"@entity.departments"},{"value":"@entity.openPositions","label":"OpenPositions","type":"stat-display"},{"type":"card","children":[{"type":"stack","children":[{"variant":"caption","content":"AvgTenure","type":"typography"},{"type":"typography","variant":"h3","content":"@entity.avgTenure"}],"gap":"sm","direction":"vertical"}]},{"label":"Headcount","value":"@entity.headcount","type":"stat-display"}],"type":"simple-grid"}]},{"type":"divider"},{"gap":"md","children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"children":[{"variant":"caption","content":"Graph View","type":"typography"}],"type":"card"}],"cols":2,"type":"grid"},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"width":400,"edges":[{"source":"a","target":"b"},{"source":"b","target":"c"}],"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"height":200,"type":"graph-view"}]}]}],"appName":"HRPortal"}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","OrgChart",{"emit":{"failure":"OrgChartLoadFailed","success":"OrgChartLoaded"}}],["render-ui","main",{"navItems":[{"href":"/employees","label":"Employees","icon":"users"},{"label":"Onboarding","icon":"layout-list","href":"/onboarding"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"label":"Org Chart","icon":"layout-list","href":"/org-chart"}],"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Org Chart"}]},{"type":"stack","gap":"md","children":[{"direction":"horizontal","type":"stack","children":[{"name":"git-branch","type":"icon"},{"type":"typography","variant":"h2","content":"Org Chart"}],"gap":"md"},{"type":"button","action":"REFRESH","label":"Refresh","variant":"secondary","icon":"refresh-cw"}],"direction":"horizontal","justify":"between"},{"type":"divider"},{"children":[{"type":"simple-grid","cols":3,"children":[{"value":"@entity.totalEmployees","type":"stat-display","label":"TotalEmployees"},{"label":"Departments","value":"@entity.departments","type":"stat-display"},{"label":"OpenPositions","value":"@entity.openPositions","type":"stat-display"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"type":"typography","variant":"caption","content":"AvgTenure"},{"content":"@entity.avgTenure","type":"typography","variant":"h3"}]}]},{"label":"Headcount","type":"stat-display","value":"@entity.headcount"}]}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"type":"card","children":[{"type":"typography","variant":"caption","content":"Graph View"}]}],"gap":"md"},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"type":"graph-view","height":200,"width":400,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}]}]}],"appName":"HRPortal"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","OrgChart",{"emit":{"success":"OrgChartLoaded","failure":"OrgChartLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"HRPortal","navItems":[{"label":"Employees","href":"/employees","icon":"users"},{"icon":"layout-list","label":"Onboarding","href":"/onboarding"},{"href":"/timeoff","label":"Time Off","icon":"calendar"},{"icon":"layout-list","label":"Org Chart","href":"/org-chart"}],"children":[{"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Org Chart"}]},{"children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"name":"git-branch","type":"icon"},{"variant":"h2","content":"Org Chart","type":"typography"}]},{"variant":"secondary","type":"button","label":"Refresh","action":"REFRESH","icon":"refresh-cw"}],"gap":"md","direction":"horizontal","type":"stack","justify":"between"},{"type":"divider"},{"children":[{"type":"simple-grid","cols":3,"children":[{"type":"stat-display","label":"TotalEmployees","value":"@entity.totalEmployees"},{"type":"stat-display","label":"Departments","value":"@entity.departments"},{"type":"stat-display","value":"@entity.openPositions","label":"OpenPositions"},{"type":"card","children":[{"type":"stack","gap":"sm","direction":"vertical","children":[{"type":"typography","variant":"caption","content":"AvgTenure"},{"type":"typography","variant":"h3","content":"@entity.avgTenure"}]}]},{"type":"stat-display","value":"@entity.headcount","label":"Headcount"}]}],"type":"box","padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"type":"card","children":[{"variant":"caption","type":"typography","content":"Graph View"}]}]},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"width":400,"height":200,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}]}]}],"type":"scaled-diagram"}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","OrgChart",{"emit":{"failure":"OrgChartLoadFailed","success":"OrgChartLoaded"}}],["render-ui","main",{"appName":"HRPortal","children":[{"children":[{"gap":"lg","direction":"vertical","children":[{"items":[{"href":"/","label":"Home"},{"label":"Org Chart"}],"type":"breadcrumb"},{"justify":"between","direction":"horizontal","type":"stack","children":[{"children":[{"type":"icon","name":"git-branch"},{"content":"Org Chart","type":"typography","variant":"h2"}],"type":"stack","direction":"horizontal","gap":"md"},{"icon":"refresh-cw","type":"button","variant":"secondary","label":"Refresh","action":"REFRESH"}],"gap":"md"},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":3,"children":[{"type":"stat-display","label":"TotalEmployees","value":"@entity.totalEmployees"},{"type":"stat-display","value":"@entity.departments","label":"Departments"},{"label":"OpenPositions","type":"stat-display","value":"@entity.openPositions"},{"children":[{"children":[{"variant":"caption","type":"typography","content":"AvgTenure"},{"variant":"h3","type":"typography","content":"@entity.avgTenure"}],"gap":"sm","type":"stack","direction":"vertical"}],"type":"card"},{"value":"@entity.headcount","type":"stat-display","label":"Headcount"}],"type":"simple-grid"}]},{"type":"divider"},{"children":[{"children":[{"variant":"caption","type":"typography","content":"Chart View"}],"type":"card"},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}],"gap":"md","type":"grid","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"height":200,"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"type":"graph-view","nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"width":400}],"type":"stack"}],"type":"scaled-diagram"}],"navItems":[{"icon":"users","label":"Employees","href":"/employees"},{"icon":"layout-list","href":"/onboarding","label":"Onboarding"},{"label":"Time Off","href":"/timeoff","icon":"calendar"},{"label":"Org Chart","href":"/org-chart","icon":"layout-list"}],"type":"dashboard-layout"}]]}]},"scope":"collection"}],"pages":[{"name":"OrgChart","path":"/org-chart","traits":[{"ref":"OrgChartDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'EmployeeOrbital',
+      uses: [],
+      entity: {
+        'name': 'Employee',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'EmployeeBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Employee',
+          'emits': [
+            {
+              'event': 'ONBOARD',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.department',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.role',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.department',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.role',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.department',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.role',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoaded',
+              'description': 'Fired when Employee finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Employee]',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoadFailed',
+              'description': 'Fired when Employee fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OnboardingSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OnboardingSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EMPLOYEE_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeCreate',
+              },
+            },
+            {
+              'event': 'EMPLOYEE_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeEdit',
+              },
+            },
+            {
+              'event': 'EMPLOYEE_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EmployeeLoaded',
+                'name': 'Employee loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Employee]',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoadFailed',
+                'name': 'Employee load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ONBOARD',
+                'name': 'Onboard',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Employee',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Employee',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Employee',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeSaved',
+                'name': 'Employee saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeSaveFailed',
+                'name': 'Employee save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeUpdated',
+                'name': 'Employee updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeUpdateFailed',
+                'name': 'Employee update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeDeleted',
+                'name': 'Employee deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeDeleteFailed',
+                'name': 'Employee delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OnboardingSaved',
+                'name': 'Onboarding saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OnboardingSaveFailed',
+                'name': 'Onboarding save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffSaved',
+                'name': 'Time off saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffSaveFailed',
+                'name': 'Time off save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffUpdated',
+                'name': 'Time off updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffUpdateFailed',
+                'name': 'Time off update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffDeleted',
+                'name': 'Time off deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffDeleteFailed',
+                'name': 'Time off delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'EmployeeLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'navItems': [
+                        {
+                          'label': 'Employees',
+                          'href': '/employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'users',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Employees',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'label': 'Add Employee',
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'entity': '@payload.data',
+                              'gap': 'sm',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'type': 'data-list',
+                              'fields': [
+                                {
+                                  'icon': 'user',
+                                  'name': 'name',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'name': 'department',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'role',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'email',
+                                },
+                                {
+                                  'format': 'date',
+                                  'label': 'Joined',
+                                  'name': 'startDate',
+                                  'variant': 'caption',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'EmployeeLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'align': 'center',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load employee',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'color': 'muted',
+                          'variant': 'body',
+                        },
+                        {
+                          'label': 'Retry',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'EmployeeCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Employee',
+          'emits': [
+            {
+              'event': 'EMPLOYEE_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoadFailed',
+              'description': 'Fired when Employee fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoaded',
+              'description': 'Fired when Employee finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Employee]',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EMPLOYEE_CREATED',
+                'name': 'Employee Created',
+              },
+              {
+                'key': 'EmployeeLoadFailed',
+                'name': 'Employee load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoaded',
+                'name': 'Employee loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Employee]',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeSaveFailed',
+                'name': 'Employee save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeSaved',
+                'name': 'Employee saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'New Employee',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'fields': [
+                            'name',
+                            'email',
+                            'department',
+                            'role',
+                            'startDate',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Employee',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeSaveFailed',
+                        'success': 'EmployeeSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'EMPLOYEE_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'EmployeeEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Employee',
+          'emits': [
+            {
+              'event': 'EMPLOYEE_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoadFailed',
+              'description': 'Fired when Employee fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoaded',
+              'description': 'Fired when Employee finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Employee]',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Employee',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EMPLOYEE_UPDATED',
+                'name': 'Employee Updated',
+              },
+              {
+                'key': 'EmployeeLoadFailed',
+                'name': 'Employee load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoaded',
+                'name': 'Employee loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Employee]',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeUpdateFailed',
+                'name': 'Employee update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeUpdated',
+                'name': 'Employee updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'success': 'EmployeeLoaded',
+                        'failure': 'EmployeeLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'EmployeeLoaded',
+                        'failure': 'EmployeeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'content': 'Edit Employee',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'fields': [
+                            'name',
+                            'email',
+                            'department',
+                            'role',
+                            'startDate',
+                          ],
+                          'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'edit',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Employee',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'EmployeeUpdated',
+                        'failure': 'EmployeeUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'EMPLOYEE_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'EmployeeView',
+          'category': 'interaction',
+          'linkedEntity': 'Employee',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoaded',
+              'description': 'Fired when Employee finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Employee]',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoadFailed',
+              'description': 'Fired when Employee fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'EmployeeLoaded',
+                'name': 'Employee loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Employee]',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoadFailed',
+                'name': 'Employee load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.department',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.email',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.role',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.startDate',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Name',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.name',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Email',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.email',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Department',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.department',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Role',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.role',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Start Date',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.startDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'action': 'EDIT',
+                              'type': 'button',
+                              'icon': 'edit',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'justify': 'end',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'EmployeeDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Employee',
+          'emits': [
+            {
+              'event': 'EMPLOYEE_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoadFailed',
+              'description': 'Fired when Employee fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EmployeeLoaded',
+              'description': 'Fired when Employee finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Employee]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'EmployeeBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'EMPLOYEE_DELETED',
+                'name': 'Employee Deleted',
+              },
+              {
+                'key': 'EmployeeDeleteFailed',
+                'name': 'Employee delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeDeleted',
+                'name': 'Employee deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoadFailed',
+                'name': 'Employee load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'EmployeeLoaded',
+                'name': 'Employee loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Employee]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'success': 'EmployeeLoaded',
+                        'failure': 'EmployeeLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Employee',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                          'variant': 'error',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'type': 'button',
+                            },
+                          ],
+                          'type': 'stack',
+                          'justify': 'end',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Employee',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'EmployeeDeleted',
+                        'failure': 'EmployeeDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'EMPLOYEE_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Employee',
+                    {
+                      'emit': {
+                        'failure': 'EmployeeLoadFailed',
+                        'success': 'EmployeeLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'EmployeesPage',
+          'path': '/employees',
+          'traits': [
+            {
+              'ref': 'EmployeeBrowse',
+            },
+            {
+              'ref': 'EmployeeCreate',
+            },
+            {
+              'ref': 'EmployeeEdit',
+            },
+            {
+              'ref': 'EmployeeView',
+            },
+            {
+              'ref': 'EmployeeDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'OnboardingOrbital',
+      uses: [],
+      entity: {
+        'name': 'Onboarding',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeName',
+            'type': 'string',
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'manager',
+            'type': 'string',
+          },
+          {
+            'name': 'equipmentReady',
+            'type': 'boolean',
+          },
+          {
+            'name': 'accessGranted',
+            'type': 'boolean',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'OnboardingWizard',
+          'category': 'interaction',
+          'linkedEntity': 'Onboarding',
+          'emits': [
+            {
+              'event': 'OnboardingLoadFailed',
+              'description': 'Fired when Onboarding fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OnboardingLoaded',
+              'description': 'Fired when Onboarding finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Onboarding]',
+                },
+              ],
+            },
+            {
+              'event': 'OnboardingSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'OnboardingSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ONBOARD',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'EmployeeOrbital',
+                'trait': 'EmployeeBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'step1',
+                'isInitial': true,
+              },
+              {
+                'name': 'step2',
+              },
+              {
+                'name': 'step3',
+              },
+              {
+                'name': 'review',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NEXT',
+                'name': 'Next',
+              },
+              {
+                'key': 'PREV',
+                'name': 'Prev',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'OnboardingLoadFailed',
+                'name': 'Onboarding load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OnboardingLoaded',
+                'name': 'Onboarding loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Onboarding]',
+                  },
+                ],
+              },
+              {
+                'key': 'OnboardingSaveFailed',
+                'name': 'Onboarding save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'OnboardingSaved',
+                'name': 'Onboarding saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'step1',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.accessGranted',
+                    false,
+                  ],
+                  [
+                    'set',
+                    '@entity.department',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.employeeName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.equipmentReady',
+                    false,
+                  ],
+                  [
+                    'set',
+                    '@entity.manager',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'failure': 'OnboardingLoadFailed',
+                        'success': 'OnboardingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'clipboard-check',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Employee Onboarding',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 0,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Employee Details',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'cancelEvent': 'INIT',
+                                  'mode': 'create',
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'employeeName',
+                                    'department',
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'label': 'Next',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'justify': 'end',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'label': 'Employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'href': '/timeoff',
+                          'label': 'Time Off',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                          'href': '/org-chart',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step1',
+                'to': 'step2',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'success': 'OnboardingLoaded',
+                        'failure': 'OnboardingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Employees',
+                          'href': '/employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                          'label': 'Onboarding',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'content': 'Employee Onboarding',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                },
+                                {
+                                  'currentIndex': 1,
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'type': 'wizard-progress',
+                                  'currentStep': 1,
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Manager Assignment',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'fields': [
+                                    'manager',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'mode': 'create',
+                                  'cancelEvent': 'PREV',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'icon': 'arrow-left',
+                                      'type': 'button',
+                                    },
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                  'justify': 'end',
+                                },
+                              ],
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
+                          'type': 'container',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step3',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'failure': 'OnboardingLoadFailed',
+                        'success': 'OnboardingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'label': 'Employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'icon': 'calendar',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'container',
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'content': 'Employee Onboarding',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'count': 3,
+                                  'currentIndex': 2,
+                                  'type': 'progress-dots',
+                                },
+                                {
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 2,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Setup Checklist',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'mode': 'create',
+                                  'submitEvent': 'NEXT',
+                                  'type': 'form-section',
+                                  'cancelEvent': 'PREV',
+                                  'fields': [
+                                    'equipmentReady',
+                                    'accessGranted',
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-left',
+                                      'action': 'PREV',
+                                      'variant': 'ghost',
+                                      'label': 'Back',
+                                      'type': 'button',
+                                    },
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step2',
+                'to': 'step1',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'success': 'OnboardingLoaded',
+                        'failure': 'OnboardingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'content': 'Employee Onboarding',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'currentIndex': 0,
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                },
+                                {
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Employee Details',
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'fields': [
+                                    'employeeName',
+                                    'department',
+                                  ],
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'INIT',
+                                  'mode': 'create',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'action': 'NEXT',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Employees',
+                          'href': '/employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                          'label': 'Onboarding',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'review',
+                'event': 'NEXT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'success': 'OnboardingLoaded',
+                        'failure': 'OnboardingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Employees',
+                          'icon': 'users',
+                          'href': '/employees',
+                        },
+                        {
+                          'href': '/onboarding',
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                          'href': '/org-chart',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'clipboard-check',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Employee Onboarding',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'label': 'Review',
+                              'type': 'badge',
+                            },
+                            {
+                              'currentStep': 3,
+                              'type': 'wizard-progress',
+                              'steps': [
+                                'Employee Details',
+                                'Manager Assignment',
+                                'Setup Checklist',
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Employee Name',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.employeeName',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Department',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.department',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Manager',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'content': '@entity.manager',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'content': 'Equipment Ready',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.equipmentReady',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Access Granted',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.accessGranted',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                            {
+                              'showBack': true,
+                              'currentStep': 3,
+                              'type': 'wizard-navigation',
+                              'totalSteps': 4,
+                              'showComplete': true,
+                              'showNext': false,
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'step3',
+                'to': 'step2',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'success': 'OnboardingLoaded',
+                        'failure': 'OnboardingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Employee Onboarding',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'currentIndex': 1,
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                },
+                                {
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 1,
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'content': 'Manager Assignment',
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                  'cancelEvent': 'PREV',
+                                  'submitEvent': 'NEXT',
+                                  'fields': [
+                                    'manager',
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-left',
+                                      'action': 'PREV',
+                                      'label': 'Back',
+                                      'variant': 'ghost',
+                                      'type': 'button',
+                                    },
+                                    {
+                                      'variant': 'primary',
+                                      'label': 'Next',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'lg',
+                            },
+                          ],
+                          'type': 'container',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Employees',
+                          'href': '/employees',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'icon': 'calendar',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'step3',
+                'event': 'PREV',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'failure': 'OnboardingLoadFailed',
+                        'success': 'OnboardingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'icon': 'users',
+                          'label': 'Employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                        },
+                        {
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                          'label': 'Org Chart',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Employee Onboarding',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 2,
+                                },
+                                {
+                                  'currentStep': 2,
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                  'content': 'Setup Checklist',
+                                },
+                                {
+                                  'cancelEvent': 'PREV',
+                                  'fields': [
+                                    'equipmentReady',
+                                    'accessGranted',
+                                  ],
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-left',
+                                      'label': 'Back',
+                                      'variant': 'ghost',
+                                      'type': 'button',
+                                      'action': 'PREV',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'container',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'review',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Onboarding',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'OnboardingSaveFailed',
+                        'success': 'OnboardingSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'notify',
+                    'success',
+                    'Onboarding created successfully',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'icon': 'users',
+                          'label': 'Employees',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'check-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Onboarding Complete!',
+                              'variant': 'h2',
+                            },
+                            {
+                              'content': 'The new employee has been fully onboarded.',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'primary',
+                              'type': 'button',
+                              'label': 'Start New',
+                              'action': 'RESTART',
+                              'icon': 'refresh-cw',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'failure': 'OnboardingLoadFailed',
+                        'success': 'OnboardingLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'icon': 'users',
+                          'label': 'Employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                        },
+                        {
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'type': 'container',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'clipboard-check',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Employee Onboarding',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'progress-dots',
+                                  'count': 3,
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'currentStep': 0,
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                  'type': 'wizard-progress',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'variant': 'h3',
+                                  'type': 'typography',
+                                  'content': 'Employee Details',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'INIT',
+                                  'fields': [
+                                    'employeeName',
+                                    'department',
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'justify': 'end',
+                                  'children': [
+                                    {
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                      'action': 'NEXT',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                          'maxWidth': 'lg',
+                          'padding': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'step1',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Onboarding',
+                    {
+                      'emit': {
+                        'success': 'OnboardingLoaded',
+                        'failure': 'OnboardingLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Employees',
+                          'href': '/employees',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'href': '/org-chart',
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'maxWidth': 'lg',
+                          'type': 'container',
+                          'padding': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'clipboard-check',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                      'content': 'Employee Onboarding',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'count': 3,
+                                  'type': 'progress-dots',
+                                  'currentIndex': 0,
+                                },
+                                {
+                                  'currentStep': 0,
+                                  'type': 'wizard-progress',
+                                  'steps': [
+                                    'Employee Details',
+                                    'Manager Assignment',
+                                    'Setup Checklist',
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h3',
+                                  'content': 'Employee Details',
+                                },
+                                {
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'mode': 'create',
+                                  'cancelEvent': 'INIT',
+                                  'fields': [
+                                    'employeeName',
+                                    'department',
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'justify': 'end',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
+                                      'action': 'NEXT',
+                                      'type': 'button',
+                                      'label': 'Next',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Onboarding',
+          'path': '/onboarding',
+          'traits': [
+            {
+              'ref': 'OnboardingWizard',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'TimeOffOrbital',
+      uses: [],
+      entity: {
+        'name': 'TimeOff',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeName',
+            'type': 'string',
+          },
+          {
+            'name': 'leaveType',
+            'type': 'string',
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+            'default': '',
+          },
+          {
+            'name': 'endDate',
+            'type': 'datetime',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'TimeOffBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'TimeOff',
+          'emits': [
+            {
+              'event': 'APPROVE_LEAVE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.employeeName',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.leaveType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.employeeName',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.leaveType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.employeeName',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.leaveType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoaded',
+              'description': 'Fired when TimeOff finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimeOff]',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoadFailed',
+              'description': 'Fired when TimeOff fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'TIME_OFF_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffCreate',
+              },
+            },
+            {
+              'event': 'TIME_OFF_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffEdit',
+              },
+            },
+            {
+              'event': 'TIME_OFF_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'TimeOffLoaded',
+                'name': 'TimeOff loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[TimeOff]',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoadFailed',
+                'name': 'TimeOff load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'APPROVE_LEAVE',
+                'name': 'Approve Leave',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'TimeOffLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'navItems': [
+                        {
+                          'label': 'Employees',
+                          'href': '/employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'label': 'Onboarding',
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'calendar',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Time Off Requests',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'label': 'Request Time Off',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'label': 'Employee',
+                                  'icon': 'calendar',
+                                  'name': 'employeeName',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'label': 'Type',
+                                  'name': 'leaveType',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'startDate',
+                                  'label': 'From',
+                                  'variant': 'body',
+                                  'format': 'date',
+                                },
+                                {
+                                  'label': 'To',
+                                  'format': 'date',
+                                  'variant': 'body',
+                                  'name': 'endDate',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                  'variant': 'danger',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'TimeOffLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load timeoff',
+                          'type': 'typography',
+                        },
+                        {
+                          'color': 'muted',
+                          'variant': 'body',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'action': 'INIT',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                        },
+                      ],
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TimeOffCreate',
+          'category': 'interaction',
+          'linkedEntity': 'TimeOff',
+          'emits': [
+            {
+              'event': 'TIME_OFF_CREATED',
+            },
+            {
+              'event': 'TimeOffLoadFailed',
+              'description': 'Fired when TimeOff fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoaded',
+              'description': 'Fired when TimeOff finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimeOff]',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TIME_OFF_CREATED',
+                'name': 'Time Off Created',
+              },
+              {
+                'key': 'TimeOffLoadFailed',
+                'name': 'TimeOff load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoaded',
+                'name': 'TimeOff loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[TimeOff]',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffSaveFailed',
+                'name': 'TimeOff save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffSaved',
+                'name': 'TimeOff saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'failure': 'TimeOffLoadFailed',
+                        'success': 'TimeOffLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'New Time Off Request',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'employeeName',
+                            'leaveType',
+                            'startDate',
+                            'endDate',
+                            'status',
+                          ],
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'TimeOff',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'TimeOffSaved',
+                        'failure': 'TimeOffSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TIME_OFF_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TimeOffEdit',
+          'category': 'interaction',
+          'linkedEntity': 'TimeOff',
+          'emits': [
+            {
+              'event': 'TIME_OFF_UPDATED',
+            },
+            {
+              'event': 'TimeOffLoadFailed',
+              'description': 'Fired when TimeOff fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoaded',
+              'description': 'Fired when TimeOff finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimeOff]',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'TimeOff',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TIME_OFF_UPDATED',
+                'name': 'Time Off Updated',
+              },
+              {
+                'key': 'TimeOffLoadFailed',
+                'name': 'TimeOff load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoaded',
+                'name': 'TimeOff loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[TimeOff]',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffUpdateFailed',
+                'name': 'TimeOff update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffUpdated',
+                'name': 'TimeOff updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'failure': 'TimeOffLoadFailed',
+                        'success': 'TimeOffLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Edit TimeOff',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'employeeName',
+                            'leaveType',
+                            'startDate',
+                            'endDate',
+                            'status',
+                          ],
+                          'mode': 'edit',
+                          'entity': '@payload.row',
+                          'type': 'form-section',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'TimeOff',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'TimeOffUpdateFailed',
+                        'success': 'TimeOffUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TIME_OFF_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TimeOffView',
+          'category': 'interaction',
+          'linkedEntity': 'TimeOff',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoaded',
+              'description': 'Fired when TimeOff finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimeOff]',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoadFailed',
+              'description': 'Fired when TimeOff fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'TimeOffLoaded',
+                'name': 'TimeOff loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[TimeOff]',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoadFailed',
+                'name': 'TimeOff load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.employeeName',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.endDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.leaveType',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.startDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': '@entity.employeeName',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Employee Name',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.employeeName',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Leave Type',
+                            },
+                            {
+                              'content': '@entity.leaveType',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Start Date',
+                            },
+                            {
+                              'content': '@entity.startDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'End Date',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.endDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.status',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'variant': 'primary',
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'label': 'Edit',
+                              'icon': 'edit',
+                            },
+                            {
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Close',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TimeOffDelete',
+          'category': 'interaction',
+          'linkedEntity': 'TimeOff',
+          'emits': [
+            {
+              'event': 'TIME_OFF_DELETED',
+            },
+            {
+              'event': 'TimeOffDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoadFailed',
+              'description': 'Fired when TimeOff fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TimeOffLoaded',
+              'description': 'Fired when TimeOff finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimeOff]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TimeOffBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'TIME_OFF_DELETED',
+                'name': 'Time Off Deleted',
+              },
+              {
+                'key': 'TimeOffDeleteFailed',
+                'name': 'TimeOff delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffDeleted',
+                'name': 'TimeOff deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoadFailed',
+                'name': 'TimeOff load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TimeOffLoaded',
+                'name': 'TimeOff loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[TimeOff]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'failure': 'TimeOffLoadFailed',
+                        'success': 'TimeOffLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Delete TimeOff',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'type': 'alert',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'button',
+                              'label': 'Cancel',
+                              'variant': 'ghost',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'variant': 'danger',
+                              'label': 'Delete',
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'icon': 'check',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'TimeOff',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'TimeOffDeleted',
+                        'failure': 'TimeOffDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TIME_OFF_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'TimeOff',
+                    {
+                      'emit': {
+                        'success': 'TimeOffLoaded',
+                        'failure': 'TimeOffLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Timeoff',
+          'path': '/timeoff',
+          'traits': [
+            {
+              'ref': 'TimeOffBrowse',
+            },
+            {
+              'ref': 'TimeOffCreate',
+            },
+            {
+              'ref': 'TimeOffEdit',
+            },
+            {
+              'ref': 'TimeOffView',
+            },
+            {
+              'ref': 'TimeOffDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'OrgChartOrbital',
+      uses: [],
+      entity: {
+        'name': 'OrgChart',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalEmployees',
+            'type': 'number',
+          },
+          {
+            'name': 'departments',
+            'type': 'number',
+          },
+          {
+            'name': 'openPositions',
+            'type': 'number',
+          },
+          {
+            'name': 'avgTenure',
+            'type': 'string',
+          },
+          {
+            'name': 'headcount',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'OrgChartDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'OrgChart',
+          'emits': [
+            {
+              'event': 'OrgChartLoaded',
+              'description': 'Fired when OrgChart finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrgChart]',
+                },
+              ],
+            },
+            {
+              'event': 'OrgChartLoadFailed',
+              'description': 'Fired when OrgChart fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'APPROVE_LEAVE',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'TimeOffOrbital',
+                'trait': 'TimeOffBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'OrgChartLoaded',
+                'name': 'OrgChart loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[OrgChart]',
+                  },
+                ],
+              },
+              {
+                'key': 'OrgChartLoadFailed',
+                'name': 'OrgChart load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.avgTenure',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.departments',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.headcount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.openPositions',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalEmployees',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'OrgChart',
+                    {
+                      'emit': {
+                        'success': 'OrgChartLoaded',
+                        'failure': 'OrgChartLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Org Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'name': 'git-branch',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Org Chart',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalEmployees',
+                                          'value': '@entity.totalEmployees',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Departments',
+                                          'value': '@entity.departments',
+                                        },
+                                        {
+                                          'value': '@entity.openPositions',
+                                          'type': 'stat-display',
+                                          'label': 'OpenPositions',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'content': 'AvgTenure',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.avgTenure',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Headcount',
+                                          'value': '@entity.headcount',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Employees',
+                          'href': '/employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrgChart',
+                    {
+                      'emit': {
+                        'failure': 'OrgChartLoadFailed',
+                        'success': 'OrgChartLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Org Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'git-branch',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Org Chart',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'value': '@entity.totalEmployees',
+                                          'type': 'stat-display',
+                                          'label': 'TotalEmployees',
+                                        },
+                                        {
+                                          'label': 'Departments',
+                                          'value': '@entity.departments',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.openPositions',
+                                          'type': 'stat-display',
+                                          'label': 'OpenPositions',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'AvgTenure',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.avgTenure',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                        {
+                                          'value': '@entity.headcount',
+                                          'type': 'stat-display',
+                                          'label': 'Headcount',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Employees',
+                          'icon': 'users',
+                          'href': '/employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'href': '/timeoff',
+                          'label': 'Time Off',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                        },
+                      ],
+                      'appName': 'HRPortal',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrgChart',
+                    {
+                      'emit': {
+                        'failure': 'OrgChartLoadFailed',
+                        'success': 'OrgChartLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Org Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'git-branch',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Org Chart',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'label': 'TotalEmployees',
+                                          'value': '@entity.totalEmployees',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'Departments',
+                                          'value': '@entity.departments',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'OpenPositions',
+                                          'value': '@entity.openPositions',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'AvgTenure',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'content': '@entity.avgTenure',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.headcount',
+                                          'label': 'Headcount',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/employees',
+                          'label': 'Employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                          'label': 'Onboarding',
+                        },
+                        {
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'icon': 'layout-list',
+                          'href': '/org-chart',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrgChart',
+                    {
+                      'emit': {
+                        'failure': 'OrgChartLoadFailed',
+                        'success': 'OrgChartLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Org Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'git-branch',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Org Chart',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'value': '@entity.totalEmployees',
+                                          'type': 'stat-display',
+                                          'label': 'TotalEmployees',
+                                        },
+                                        {
+                                          'value': '@entity.departments',
+                                          'type': 'stat-display',
+                                          'label': 'Departments',
+                                        },
+                                        {
+                                          'label': 'OpenPositions',
+                                          'value': '@entity.openPositions',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'AvgTenure',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.avgTenure',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'value': '@entity.headcount',
+                                          'type': 'stat-display',
+                                          'label': 'Headcount',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'href': '/employees',
+                          'label': 'Employees',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Onboarding',
+                          'href': '/onboarding',
+                        },
+                        {
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                          'label': 'Time Off',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'OrgChart',
+                    {
+                      'emit': {
+                        'success': 'OrgChartLoaded',
+                        'failure': 'OrgChartLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'HRPortal',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Org Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'git-branch',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Org Chart',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalEmployees',
+                                          'value': '@entity.totalEmployees',
+                                        },
+                                        {
+                                          'label': 'Departments',
+                                          'type': 'stat-display',
+                                          'value': '@entity.departments',
+                                        },
+                                        {
+                                          'value': '@entity.openPositions',
+                                          'type': 'stat-display',
+                                          'label': 'OpenPositions',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'AvgTenure',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.avgTenure',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'value': '@entity.headcount',
+                                          'type': 'stat-display',
+                                          'label': 'Headcount',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Employees',
+                          'href': '/employees',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/onboarding',
+                          'label': 'Onboarding',
+                        },
+                        {
+                          'label': 'Time Off',
+                          'href': '/timeoff',
+                          'icon': 'calendar',
+                        },
+                        {
+                          'label': 'Org Chart',
+                          'href': '/org-chart',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'OrgChart',
+          'path': '/org-chart',
+          'traits': [
+            {
+              'ref': 'OrgChartDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

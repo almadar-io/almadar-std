@@ -144,9 +144,6588 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ContactOrbital","entity":{"name":"Contact","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","default":""},{"name":"company","type":"string","default":""},{"name":"email","type":"string","default":""},{"name":"phone","type":"string","default":""},{"name":"status","type":"string","default":"lead","values":["lead","prospect","customer","inactive"]},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"ContactBrowse","category":"interaction","linkedEntity":"Contact","emits":[{"event":"CONVERT_LEAD","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.company","type":"string"},{"name":"row.email","type":"string"},{"name":"row.phone","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.company","type":"string"},{"name":"row.email","type":"string"},{"name":"row.phone","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.company","type":"string"},{"name":"row.email","type":"string"},{"name":"row.phone","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"ContactLoaded","description":"Fired when Contact finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"event":"ContactLoadFailed","description":"Fired when Contact fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DealSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DealUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DealDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"NoteSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"NoteSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"CONTACT_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"ContactCreate"}},{"event":"CONTACT_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"ContactEdit"}},{"event":"CONTACT_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"ContactDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ContactLoaded","name":"Contact loaded","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"key":"ContactLoadFailed","name":"Contact load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CONVERT_LEAD","name":"Convert Lead"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"},{"key":"ContactSaved","name":"Contact saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ContactSaveFailed","name":"Contact save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactUpdated","name":"Contact updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ContactUpdateFailed","name":"Contact update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactDeleted","name":"Contact deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ContactDeleteFailed","name":"Contact delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealSaved","name":"Deal saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DealSaveFailed","name":"Deal save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealUpdated","name":"Deal updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DealUpdateFailed","name":"Deal update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealDeleted","name":"Deal deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DealDeleteFailed","name":"Deal delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"NoteSaved","name":"Note saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"NoteSaveFailed","name":"Note save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Contact",{"emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}],["render-ui","main",{"className":"py-12","align":"center","direction":"vertical","type":"stack","gap":"md","children":[{"type":"spinner"},{"type":"typography","color":"muted","variant":"caption","content":"Loading…"}]}]]},{"from":"browsing","to":"browsing","event":"ContactLoaded","effects":[["render-ui","main",{"navItems":[{"icon":"users","label":"Contacts","href":"/contacts"},{"href":"/deals","label":"Deals","icon":"briefcase"},{"icon":"bar-chart-2","label":"Pipeline","href":"/pipeline"},{"href":"/notes","icon":"file-text","label":"Notes"}],"type":"dashboard-layout","children":[{"type":"stack","gap":"lg","direction":"vertical","className":"max-w-5xl mx-auto w-full","children":[{"gap":"md","children":[{"direction":"horizontal","type":"stack","gap":"sm","align":"center","children":[{"type":"icon","name":"users"},{"variant":"h2","content":"Contacts","type":"typography"}]},{"gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"button","icon":"plus","variant":"primary","action":"CREATE","label":"Add Contact"}]}],"type":"stack","justify":"between","direction":"horizontal","align":"center"},{"type":"divider"},{"type":"simple-grid","children":[{"icon":"users","value":"@payload.data.length","label":"Total Contacts","type":"stat-display"}],"cols":1},{"type":"divider"},{"type":"data-list","fields":[{"icon":"user","variant":"h3","name":"name"},{"name":"status","variant":"badge"},{"variant":"body","name":"company"},{"variant":"caption","name":"email"},{"variant":"caption","name":"phone"}],"itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"label":"Edit","event":"EDIT","variant":"ghost"},{"event":"DELETE","variant":"danger","label":"Delete"}],"entity":"@payload.data","gap":"sm","variant":"card"}]}],"appName":"CRM"}]]},{"from":"browsing","to":"browsing","event":"ContactLoadFailed","effects":[["render-ui","main",{"type":"stack","className":"py-12","direction":"vertical","gap":"md","align":"center","children":[{"name":"alert-triangle","type":"icon","color":"destructive"},{"variant":"h3","type":"typography","content":"Failed to load contact"},{"color":"muted","type":"typography","variant":"body","content":"@payload.error"},{"variant":"primary","label":"Retry","action":"INIT","icon":"rotate-ccw","type":"button"}]}]]}]},"scope":"collection"},{"name":"ContactCreate","category":"interaction","linkedEntity":"Contact","emits":[{"event":"CONTACT_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactLoadFailed","description":"Fired when Contact fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactLoaded","description":"Fired when Contact finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"event":"ContactSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"ContactBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"CONTACT_CREATED","name":"Contact Created"},{"key":"ContactLoadFailed","name":"Contact load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactLoaded","name":"Contact loaded","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"key":"ContactSaveFailed","name":"Contact save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactSaved","name":"Contact saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Contact",{"emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Contact",{"emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}],["render-ui","modal",{"gap":"md","type":"stack","direction":"vertical","children":[{"type":"stack","children":[{"type":"icon","name":"plus-circle"},{"type":"typography","content":"New Contact","variant":"h3"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"fields":["name","company","email","phone","status"],"mode":"create","cancelEvent":"CLOSE","type":"form-section","submitEvent":"SAVE"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Contact","@payload.data",{"emit":{"failure":"ContactSaveFailed","success":"ContactSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CONTACT_CREATED"]]}]},"scope":"collection"},{"name":"ContactEdit","category":"interaction","linkedEntity":"Contact","emits":[{"event":"CONTACT_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactLoadFailed","description":"Fired when Contact fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactLoaded","description":"Fired when Contact finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"event":"ContactUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ContactBrowse"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"ContactView"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Contact"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"CONTACT_UPDATED","name":"Contact Updated"},{"key":"ContactLoadFailed","name":"Contact load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactLoaded","name":"Contact loaded","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"key":"ContactUpdateFailed","name":"Contact update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactUpdated","name":"Contact updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Contact",{"emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Contact",{"id":"@payload.id","emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}],["render-ui","modal",{"type":"stack","children":[{"gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"edit"},{"type":"typography","content":"Edit Contact","variant":"h3"}]},{"type":"divider"},{"fields":["name","company","email","phone","status"],"entity":"@payload.row","mode":"edit","cancelEvent":"CLOSE","submitEvent":"SAVE","type":"form-section"}],"direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Contact","@payload.data",{"emit":{"success":"ContactUpdated","failure":"ContactUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","CONTACT_UPDATED"]]}]},"scope":"collection"},{"name":"ContactView","category":"interaction","linkedEntity":"Contact","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string"},{"name":"row.company","type":"string"},{"name":"row.email","type":"string"},{"name":"row.phone","type":"string"},{"name":"row.status","type":"string"},{"name":"row.pendingId","type":"string"}]},{"event":"ContactLoaded","description":"Fired when Contact finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"event":"ContactLoadFailed","description":"Fired when Contact fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"ContactBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"ContactLoaded","name":"Contact loaded","payloadSchema":[{"name":"data","type":"[Contact]"}]},{"key":"ContactLoadFailed","name":"Contact load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Contact",{"emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Contact",{"id":"@payload.id","emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}],["render-ui","modal",{"direction":"vertical","type":"stack","children":[{"type":"stack","align":"center","children":[{"name":"eye","type":"icon"},{"content":"@entity.name","type":"typography","variant":"h3"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"direction":"horizontal","children":[{"content":"Name","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.name"}],"gap":"md","type":"stack"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"variant":"caption","content":"Company","type":"typography"},{"type":"typography","content":"@entity.company","variant":"body"}]},{"type":"stack","direction":"horizontal","gap":"md","children":[{"type":"typography","variant":"caption","content":"Email"},{"content":"@entity.email","type":"typography","variant":"body"}]},{"children":[{"type":"typography","variant":"caption","content":"Phone"},{"variant":"body","content":"@entity.phone","type":"typography"}],"type":"stack","gap":"md","direction":"horizontal"},{"gap":"md","direction":"horizontal","children":[{"content":"Status","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.status"}],"type":"stack"},{"type":"divider"},{"direction":"horizontal","gap":"sm","justify":"end","type":"stack","children":[{"label":"Edit","action":"EDIT","variant":"primary","icon":"edit","type":"button"},{"action":"CLOSE","type":"button","label":"Close","variant":"ghost"}]}],"gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"ContactDelete","category":"interaction","linkedEntity":"Contact","emits":[{"event":"CONTACT_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ContactLoadFailed","description":"Fired when Contact fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ContactLoaded","description":"Fired when Contact finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Contact]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"ContactBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"CONTACT_DELETED","name":"Contact Deleted"},{"key":"ContactDeleteFailed","name":"Contact delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactDeleted","name":"Contact deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ContactLoadFailed","name":"Contact load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ContactLoaded","name":"Contact loaded","payloadSchema":[{"name":"data","type":"[Contact]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Contact",{"emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Contact",{"id":"@payload.id","emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"children":[{"type":"icon","name":"alert-triangle"},{"variant":"h3","type":"typography","content":"Delete Contact"}],"gap":"sm","type":"stack","direction":"horizontal","align":"center"},{"type":"divider"},{"message":"This action cannot be undone.","type":"alert","variant":"error"},{"justify":"end","direction":"horizontal","type":"stack","gap":"sm","children":[{"action":"CANCEL","label":"Cancel","variant":"ghost","type":"button"},{"icon":"check","action":"CONFIRM_DELETE","type":"button","variant":"danger","label":"Delete"}]}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Contact","@entity.pendingId",{"emit":{"success":"ContactDeleted","failure":"ContactDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Contact",{"emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}],["emit","CONTACT_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Contact",{"emit":{"success":"ContactLoaded","failure":"ContactLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Contact",{"emit":{"failure":"ContactLoadFailed","success":"ContactLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"ContactsPage","path":"/contacts","traits":[{"ref":"ContactBrowse"},{"ref":"ContactCreate"},{"ref":"ContactEdit"},{"ref":"ContactView"},{"ref":"ContactDelete"}]}]},{"name":"DealOrbital","entity":{"name":"Deal","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string"},{"name":"contactId","type":"string"},{"name":"value","type":"number"},{"name":"stage","type":"string"},{"name":"closedAt","type":"datetime"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"DealBrowse","category":"interaction","linkedEntity":"Deal","emits":[{"event":"CLOSE_DEAL","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string"},{"name":"row.contactId","type":"string"},{"name":"row.value","type":"number"},{"name":"row.stage","type":"string"},{"name":"row.closedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string"},{"name":"row.contactId","type":"string"},{"name":"row.value","type":"number"},{"name":"row.stage","type":"string"},{"name":"row.closedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string"},{"name":"row.contactId","type":"string"},{"name":"row.value","type":"number"},{"name":"row.stage","type":"string"},{"name":"row.closedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DealLoaded","description":"Fired when Deal finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"event":"DealLoadFailed","description":"Fired when Deal fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"DEAL_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"DealCreate"}},{"event":"DEAL_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"DealEdit"}},{"event":"DEAL_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"DealDelete"}},{"event":"CONVERT_LEAD","triggers":"INIT","source":{"kind":"orbital","orbital":"ContactOrbital","trait":"ContactBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DealLoaded","name":"Deal loaded","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"key":"DealLoadFailed","name":"Deal load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CLOSE_DEAL","name":"Close Deal"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Deal",{"emit":{"success":"DealLoaded","failure":"DealLoadFailed"}}],["render-ui","main",{"children":[{"type":"spinner"},{"type":"typography","content":"Loading…","color":"muted","variant":"caption"}],"align":"center","type":"stack","gap":"md","className":"py-12","direction":"vertical"}]]},{"from":"browsing","to":"browsing","event":"DealLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/contacts","label":"Contacts","icon":"users"},{"href":"/deals","icon":"briefcase","label":"Deals"},{"label":"Pipeline","icon":"bar-chart-2","href":"/pipeline"},{"label":"Notes","icon":"file-text","href":"/notes"}],"appName":"CRM","children":[{"direction":"vertical","className":"max-w-5xl mx-auto w-full","children":[{"type":"stack","direction":"horizontal","align":"center","children":[{"align":"center","gap":"sm","children":[{"type":"icon","name":"briefcase"},{"variant":"h2","type":"typography","content":"Deals"}],"direction":"horizontal","type":"stack"},{"children":[{"label":"New Deal","variant":"primary","icon":"plus","action":"CREATE","type":"button"}],"gap":"sm","type":"stack","direction":"horizontal"}],"gap":"md","justify":"between"},{"type":"divider"},{"type":"data-grid","fields":[{"variant":"h3","icon":"briefcase","name":"title"},{"name":"stage","variant":"badge"},{"variant":"h4","name":"value","format":"currency"},{"label":"Contact","variant":"caption","name":"contactId"}],"itemActions":[{"event":"VIEW","variant":"ghost","label":"View"},{"event":"EDIT","variant":"ghost","label":"Edit"},{"label":"Delete","event":"DELETE","variant":"danger"}],"gap":"md","cols":2,"entity":"@payload.data"}],"type":"stack","gap":"lg"}]}]]},{"from":"browsing","to":"browsing","event":"DealLoadFailed","effects":[["render-ui","main",{"children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"content":"Failed to load deal","type":"typography","variant":"h3"},{"content":"@payload.error","color":"muted","variant":"body","type":"typography"},{"variant":"primary","icon":"rotate-ccw","action":"INIT","type":"button","label":"Retry"}],"type":"stack","gap":"md","align":"center","direction":"vertical","className":"py-12"}]]}]},"scope":"collection"},{"name":"DealCreate","category":"interaction","linkedEntity":"Deal","emits":[{"event":"DEAL_CREATED"},{"event":"DealLoadFailed","description":"Fired when Deal fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealLoaded","description":"Fired when Deal finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"event":"DealSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"DealBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DEAL_CREATED","name":"Deal Created"},{"key":"DealLoadFailed","name":"Deal load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealLoaded","name":"Deal loaded","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"key":"DealSaveFailed","name":"Deal save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealSaved","name":"Deal saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}],["render-ui","modal",{"gap":"md","direction":"vertical","type":"stack","children":[{"children":[{"name":"plus-circle","type":"icon"},{"type":"typography","content":"Create Deal","variant":"h3"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"form-section","cancelEvent":"CLOSE","submitEvent":"SAVE","mode":"create","fields":["title","contactId","value","stage","closedAt"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Deal","@payload.data",{"emit":{"failure":"DealSaveFailed","success":"DealSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","DEAL_CREATED"]]}]},"scope":"collection"},{"name":"DealEdit","category":"interaction","linkedEntity":"Deal","emits":[{"event":"DEAL_UPDATED"},{"event":"DealLoadFailed","description":"Fired when Deal fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealLoaded","description":"Fired when Deal finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"event":"DealUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"DealBrowse"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"DealView"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Deal"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DEAL_UPDATED","name":"Deal Updated"},{"key":"DealLoadFailed","name":"Deal load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealLoaded","name":"Deal loaded","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"key":"DealUpdateFailed","name":"Deal update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealUpdated","name":"Deal updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Deal",{"id":"@payload.id","emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}],["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"children":[{"name":"edit","type":"icon"},{"content":"Edit Deal","type":"typography","variant":"h3"}],"gap":"sm","direction":"horizontal","type":"stack"},{"type":"divider"},{"entity":"@payload.row","submitEvent":"SAVE","type":"form-section","mode":"edit","cancelEvent":"CLOSE","fields":["title","contactId","value","stage","closedAt"]}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Deal","@payload.data",{"emit":{"success":"DealUpdated","failure":"DealUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","DEAL_UPDATED"]]}]},"scope":"collection"},{"name":"DealView","category":"interaction","linkedEntity":"Deal","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string"},{"name":"row.contactId","type":"string"},{"name":"row.value","type":"number"},{"name":"row.stage","type":"string"},{"name":"row.closedAt","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DealLoaded","description":"Fired when Deal finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"event":"DealLoadFailed","description":"Fired when Deal fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"DealBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"DealLoaded","name":"Deal loaded","payloadSchema":[{"name":"data","type":"[Deal]"}]},{"key":"DealLoadFailed","name":"Deal load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Deal",{"id":"@payload.id","emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"children":[{"name":"eye","type":"icon"},{"content":"@entity.title","variant":"h3","type":"typography"}],"align":"center","direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"content":"Title","variant":"caption","type":"typography"},{"content":"@entity.title","variant":"body","type":"typography"}]},{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"typography","content":"Contact ID","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.contactId"}]},{"children":[{"type":"typography","content":"Value","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.value"}],"gap":"md","direction":"horizontal","type":"stack"},{"direction":"horizontal","gap":"md","type":"stack","children":[{"type":"typography","variant":"caption","content":"Stage"},{"variant":"body","content":"@entity.stage","type":"typography"}]},{"type":"stack","direction":"horizontal","gap":"md","children":[{"content":"Closed At","variant":"caption","type":"typography"},{"variant":"body","content":"@entity.closedAt","type":"typography"}]},{"type":"divider"},{"direction":"horizontal","justify":"end","children":[{"type":"button","label":"Edit","action":"EDIT","icon":"edit","variant":"primary"},{"label":"Close","action":"CLOSE","variant":"ghost","type":"button"}],"gap":"sm","type":"stack"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"DealDelete","category":"interaction","linkedEntity":"Deal","emits":[{"event":"DEAL_DELETED"},{"event":"DealDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DealLoadFailed","description":"Fired when Deal fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"DealLoaded","description":"Fired when Deal finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Deal]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"DealBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"DEAL_DELETED","name":"Deal Deleted"},{"key":"DealDeleteFailed","name":"Deal delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealDeleted","name":"Deal deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"DealLoadFailed","name":"Deal load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"DealLoaded","name":"Deal loaded","payloadSchema":[{"name":"data","type":"[Deal]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Deal",{"emit":{"success":"DealLoaded","failure":"DealLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"direction":"horizontal","type":"stack","align":"center","children":[{"name":"alert-triangle","type":"icon"},{"variant":"h3","type":"typography","content":"Delete Deal"}],"gap":"sm"},{"type":"divider"},{"variant":"error","type":"alert","message":"This action cannot be undone."},{"direction":"horizontal","type":"stack","gap":"sm","justify":"end","children":[{"variant":"ghost","type":"button","action":"CANCEL","label":"Cancel"},{"label":"Delete","icon":"check","action":"CONFIRM_DELETE","variant":"danger","type":"button"}]}]}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Deal","@entity.pendingId",{"emit":{"success":"DealDeleted","failure":"DealDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}],["emit","DEAL_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Deal",{"emit":{"success":"DealLoaded","failure":"DealLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Deal",{"emit":{"failure":"DealLoadFailed","success":"DealLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"Deals","path":"/deals","traits":[{"ref":"DealBrowse"},{"ref":"DealCreate"},{"ref":"DealEdit"},{"ref":"DealView"},{"ref":"DealDelete"}]}]},{"name":"PipelineOrbital","entity":{"name":"Pipeline","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"totalDeals","type":"number"},{"name":"totalValue","type":"number"},{"name":"wonDeals","type":"number"},{"name":"lostDeals","type":"number"},{"name":"conversionRate","type":"number"}]},"traits":[{"name":"PipelineDisplay","category":"interaction","linkedEntity":"Pipeline","emits":[{"event":"PipelineLoaded","description":"Fired when Pipeline finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Pipeline]"}]},{"event":"PipelineLoadFailed","description":"Fired when Pipeline fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"CLOSE_DEAL","triggers":"INIT","source":{"kind":"orbital","orbital":"DealOrbital","trait":"DealBrowse"}}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"PipelineLoaded","name":"Pipeline loaded","payloadSchema":[{"name":"data","type":"[Pipeline]"}]},{"key":"PipelineLoadFailed","name":"Pipeline load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","Pipeline",{"emit":{"failure":"PipelineLoadFailed","success":"PipelineLoaded"}}],["render-ui","main",{"navItems":[{"label":"Contacts","href":"/contacts","icon":"users"},{"label":"Deals","href":"/deals","icon":"briefcase"},{"href":"/pipeline","label":"Pipeline","icon":"bar-chart-2"},{"icon":"file-text","label":"Notes","href":"/notes"}],"children":[{"type":"scaled-diagram","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Pipeline"}],"type":"breadcrumb"},{"gap":"md","direction":"horizontal","type":"stack","justify":"between","children":[{"gap":"md","type":"stack","children":[{"name":"bar-chart-2","type":"icon"},{"content":"Pipeline","variant":"h2","type":"typography"}],"direction":"horizontal"},{"type":"button","action":"REFRESH","label":"Refresh","variant":"secondary","icon":"refresh-cw"}]},{"type":"divider"},{"children":[{"cols":3,"children":[{"label":"TotalDeals","value":"@entity.totalDeals","type":"stat-display"},{"label":"TotalValue","type":"stat-display","value":"@entity.totalValue"},{"label":"WonDeals","value":"@entity.wonDeals","type":"stat-display"},{"label":"LostDeals","value":"@entity.lostDeals","type":"stat-display"},{"value":"@entity.conversionRate","type":"stat-display","label":"ConversionRate"}],"type":"simple-grid"}],"padding":"md","type":"box"},{"type":"divider"},{"type":"grid","children":[{"children":[{"type":"typography","content":"Chart View","variant":"caption"}],"type":"card"},{"children":[{"content":"Graph View","variant":"caption","type":"typography"}],"type":"card"}],"gap":"md","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"height":200,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view","width":400}]}]}],"appName":"CRM","type":"dashboard-layout"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","Pipeline",{"emit":{"failure":"PipelineLoadFailed","success":"PipelineLoaded"}}],["render-ui","main",{"navItems":[{"href":"/contacts","icon":"users","label":"Contacts"},{"icon":"briefcase","label":"Deals","href":"/deals"},{"label":"Pipeline","href":"/pipeline","icon":"bar-chart-2"},{"label":"Notes","href":"/notes","icon":"file-text"}],"children":[{"type":"scaled-diagram","children":[{"gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Pipeline"}]},{"gap":"md","type":"stack","justify":"between","direction":"horizontal","children":[{"type":"stack","children":[{"name":"bar-chart-2","type":"icon"},{"type":"typography","content":"Pipeline","variant":"h2"}],"gap":"md","direction":"horizontal"},{"variant":"secondary","type":"button","action":"REFRESH","label":"Refresh","icon":"refresh-cw"}]},{"type":"divider"},{"padding":"md","type":"box","children":[{"type":"simple-grid","cols":3,"children":[{"label":"TotalDeals","type":"stat-display","value":"@entity.totalDeals"},{"value":"@entity.totalValue","label":"TotalValue","type":"stat-display"},{"label":"WonDeals","value":"@entity.wonDeals","type":"stat-display"},{"type":"stat-display","label":"LostDeals","value":"@entity.lostDeals"},{"label":"ConversionRate","value":"@entity.conversionRate","type":"stat-display"}]}]},{"type":"divider"},{"cols":2,"children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"children":[{"variant":"caption","type":"typography","content":"Graph View"}],"type":"card"}],"type":"grid","gap":"md"},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"width":400,"type":"graph-view","height":200}],"type":"stack","direction":"vertical"}]}],"type":"dashboard-layout","appName":"CRM"}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","Pipeline",{"emit":{"success":"PipelineLoaded","failure":"PipelineLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"CRM","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Pipeline"}],"type":"breadcrumb"},{"type":"stack","direction":"horizontal","justify":"between","gap":"md","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"name":"bar-chart-2","type":"icon"},{"content":"Pipeline","variant":"h2","type":"typography"}]},{"type":"button","icon":"refresh-cw","label":"Refresh","action":"REFRESH","variant":"secondary"}]},{"type":"divider"},{"padding":"md","children":[{"type":"simple-grid","cols":3,"children":[{"label":"TotalDeals","value":"@entity.totalDeals","type":"stat-display"},{"value":"@entity.totalValue","type":"stat-display","label":"TotalValue"},{"value":"@entity.wonDeals","type":"stat-display","label":"WonDeals"},{"label":"LostDeals","type":"stat-display","value":"@entity.lostDeals"},{"label":"ConversionRate","type":"stat-display","value":"@entity.conversionRate"}]}],"type":"box"},{"type":"divider"},{"children":[{"children":[{"variant":"caption","content":"Chart View","type":"typography"}],"type":"card"},{"type":"card","children":[{"type":"typography","variant":"caption","content":"Graph View"}]}],"gap":"md","cols":2,"type":"grid"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}]},{"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"type":"graph-view","height":200,"width":400,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}],"gap":"lg","type":"stack"}]}],"navItems":[{"label":"Contacts","icon":"users","href":"/contacts"},{"label":"Deals","icon":"briefcase","href":"/deals"},{"label":"Pipeline","href":"/pipeline","icon":"bar-chart-2"},{"label":"Notes","href":"/notes","icon":"file-text"}]}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","Pipeline",{"emit":{"failure":"PipelineLoadFailed","success":"PipelineLoaded"}}],["render-ui","main",{"appName":"CRM","navItems":[{"href":"/contacts","icon":"users","label":"Contacts"},{"icon":"briefcase","label":"Deals","href":"/deals"},{"icon":"bar-chart-2","label":"Pipeline","href":"/pipeline"},{"label":"Notes","href":"/notes","icon":"file-text"}],"type":"dashboard-layout","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"items":[{"label":"Home","href":"/"},{"label":"Pipeline"}],"type":"breadcrumb"},{"justify":"between","children":[{"type":"stack","gap":"md","children":[{"type":"icon","name":"bar-chart-2"},{"type":"typography","content":"Pipeline","variant":"h2"}],"direction":"horizontal"},{"type":"button","label":"Refresh","variant":"secondary","icon":"refresh-cw","action":"REFRESH"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"type":"box","children":[{"cols":3,"type":"simple-grid","children":[{"label":"TotalDeals","type":"stat-display","value":"@entity.totalDeals"},{"type":"stat-display","value":"@entity.totalValue","label":"TotalValue"},{"value":"@entity.wonDeals","label":"WonDeals","type":"stat-display"},{"value":"@entity.lostDeals","type":"stat-display","label":"LostDeals"},{"label":"ConversionRate","type":"stat-display","value":"@entity.conversionRate"}]}],"padding":"md"},{"type":"divider"},{"children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"type":"card","children":[{"variant":"caption","content":"Graph View","type":"typography"}]}],"cols":2,"gap":"md","type":"grid"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"height":200,"type":"graph-view","width":400,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}],"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"label":"End","id":"c"}]}]}]}]}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","Pipeline",{"emit":{"success":"PipelineLoaded","failure":"PipelineLoadFailed"}}],["render-ui","main",{"appName":"CRM","children":[{"children":[{"type":"stack","gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Pipeline"}],"type":"breadcrumb"},{"gap":"md","type":"stack","justify":"between","direction":"horizontal","children":[{"gap":"md","type":"stack","children":[{"type":"icon","name":"bar-chart-2"},{"type":"typography","content":"Pipeline","variant":"h2"}],"direction":"horizontal"},{"variant":"secondary","type":"button","icon":"refresh-cw","label":"Refresh","action":"REFRESH"}]},{"type":"divider"},{"children":[{"type":"simple-grid","children":[{"value":"@entity.totalDeals","type":"stat-display","label":"TotalDeals"},{"type":"stat-display","label":"TotalValue","value":"@entity.totalValue"},{"value":"@entity.wonDeals","type":"stat-display","label":"WonDeals"},{"value":"@entity.lostDeals","type":"stat-display","label":"LostDeals"},{"type":"stat-display","value":"@entity.conversionRate","label":"ConversionRate"}],"cols":3}],"padding":"md","type":"box"},{"type":"divider"},{"type":"grid","cols":2,"gap":"md","children":[{"children":[{"type":"typography","variant":"caption","content":"Chart View"}],"type":"card"},{"children":[{"content":"Graph View","variant":"caption","type":"typography"}],"type":"card"}]},{"type":"line-chart","data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}]},{"type":"graph-view","edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"height":200,"width":400}],"direction":"vertical"}],"type":"scaled-diagram"}],"type":"dashboard-layout","navItems":[{"label":"Contacts","href":"/contacts","icon":"users"},{"icon":"briefcase","href":"/deals","label":"Deals"},{"label":"Pipeline","icon":"bar-chart-2","href":"/pipeline"},{"label":"Notes","href":"/notes","icon":"file-text"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Pipeline","path":"/pipeline","traits":[{"ref":"PipelineDisplay"}]}]},{"name":"NoteOrbital","entity":{"name":"Note","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"subject","type":"string"},{"name":"body","type":"string"},{"name":"author","type":"string"},{"name":"createdAt","type":"datetime"}]},"traits":[{"name":"NoteBrowse","category":"interaction","linkedEntity":"Note","emits":[{"event":"COMPOSE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.subject","type":"string"},{"name":"row.body","type":"string"},{"name":"row.author","type":"string"},{"name":"row.createdAt","type":"datetime"}]},{"event":"NoteLoaded","description":"Fired when Note finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Note]"}]},{"event":"NoteLoadFailed","description":"Fired when Note fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"SEND","triggers":"INIT","source":{"kind":"trait","trait":"NoteCompose"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NoteLoaded","name":"Note loaded","payloadSchema":[{"name":"data","type":"[Note]"}]},{"key":"NoteLoadFailed","name":"Note load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"COMPOSE","name":"Compose"},{"key":"VIEW","name":"View"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Note",{"emit":{"success":"NoteLoaded","failure":"NoteLoadFailed"}}],["render-ui","main",{"gap":"md","direction":"vertical","children":[{"type":"spinner"},{"type":"typography","color":"muted","variant":"caption","content":"Loading…"}],"type":"stack","align":"center","className":"py-12"}]]},{"from":"browsing","to":"browsing","event":"NoteLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"CRM","navItems":[{"icon":"users","href":"/contacts","label":"Contacts"},{"label":"Deals","href":"/deals","icon":"briefcase"},{"label":"Pipeline","href":"/pipeline","icon":"bar-chart-2"},{"icon":"file-text","label":"Notes","href":"/notes"}],"children":[{"type":"stack","gap":"lg","direction":"vertical","className":"max-w-5xl mx-auto w-full","children":[{"type":"stack","gap":"md","justify":"between","align":"center","children":[{"type":"stack","align":"center","direction":"horizontal","gap":"sm","children":[{"name":"file-text","type":"icon"},{"content":"Notes","type":"typography","variant":"h2"}]},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"label":"Compose","type":"button","icon":"edit","variant":"primary","action":"COMPOSE"}]}],"direction":"horizontal"},{"type":"divider"},{"type":"data-list","fields":[{"icon":"file-text","name":"subject","variant":"h4"},{"name":"author","variant":"caption"},{"variant":"caption","name":"createdAt","format":"date"}],"gap":"sm","itemActions":[{"variant":"ghost","label":"View","event":"VIEW"}],"entity":"@payload.data","variant":"card"}]}]}]]},{"from":"browsing","to":"browsing","event":"NoteLoadFailed","effects":[["render-ui","main",{"direction":"vertical","type":"stack","gap":"md","children":[{"name":"alert-triangle","color":"destructive","type":"icon"},{"variant":"h3","type":"typography","content":"Failed to load note"},{"type":"typography","color":"muted","variant":"body","content":"@payload.error"},{"type":"button","variant":"primary","icon":"rotate-ccw","label":"Retry","action":"INIT"}],"align":"center","className":"py-12"}]]}]},"scope":"collection"},{"name":"NoteCompose","category":"interaction","linkedEntity":"Note","emits":[{"event":"SEND"},{"event":"NoteLoadFailed","description":"Fired when Note fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"NoteLoaded","description":"Fired when Note finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Note]"}]},{"event":"NoteSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"NoteSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"COMPOSE","triggers":"COMPOSE","source":{"kind":"trait","trait":"NoteBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"COMPOSE","name":"Compose"},{"key":"CLOSE","name":"Close"},{"key":"SEND","name":"Send","payloadSchema":[{"name":"data","type":"string"}]},{"key":"NoteLoadFailed","name":"Note load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"NoteLoaded","name":"Note loaded","payloadSchema":[{"name":"data","type":"[Note]"}]},{"key":"NoteSaveFailed","name":"Note save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"NoteSaved","name":"Note saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Note",{"emit":{"success":"NoteLoaded","failure":"NoteLoadFailed"}}]]},{"from":"closed","to":"open","event":"COMPOSE","effects":[["render-ui","modal",{"type":"stack","children":[{"gap":"sm","children":[{"name":"edit","type":"icon"},{"variant":"h3","type":"typography","content":"New Note"}],"type":"stack","direction":"horizontal"},{"type":"divider"},{"fields":["subject","body","author"],"submitEvent":"SEND","type":"form-section","mode":"create","cancelEvent":"CLOSE"}],"gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SEND","effects":[["persist","create","Note","@payload.data",{"emit":{"failure":"NoteSaveFailed","success":"NoteSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"NoteView","category":"interaction","linkedEntity":"Note","emits":[{"event":"NoteLoaded","description":"Fired when Note finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Note]"}]},{"event":"NoteLoadFailed","description":"Fired when Note fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"NoteBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"NoteLoaded","name":"Note loaded","payloadSchema":[{"name":"data","type":"[Note]"}]},{"key":"NoteLoadFailed","name":"Note load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Note",{"emit":{"success":"NoteLoaded","failure":"NoteLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Note",{"id":"@payload.id","emit":{"success":"NoteLoaded","failure":"NoteLoadFailed"}}],["render-ui","modal",{"direction":"vertical","gap":"md","children":[{"direction":"horizontal","children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.subject"}],"type":"stack","align":"center","gap":"sm"},{"type":"divider"},{"type":"stack","gap":"md","direction":"horizontal","children":[{"variant":"caption","content":"Subject","type":"typography"},{"type":"typography","variant":"body","content":"@entity.subject"}]},{"children":[{"content":"Body","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.body"}],"gap":"md","direction":"horizontal","type":"stack"},{"children":[{"content":"Author","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.author","variant":"body"}],"direction":"horizontal","gap":"md","type":"stack"},{"type":"stack","children":[{"type":"typography","content":"Created At","variant":"caption"},{"content":"@entity.createdAt","type":"typography","variant":"body"}],"gap":"md","direction":"horizontal"},{"type":"divider"},{"justify":"end","type":"stack","gap":"sm","direction":"horizontal","children":[{"label":"Close","variant":"ghost","action":"CLOSE","type":"button"}]}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"Notes","path":"/notes","traits":[{"ref":"NoteBrowse"},{"ref":"NoteCompose"},{"ref":"NoteView"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ContactOrbital',
+      uses: [],
+      entity: {
+        'name': 'Contact',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'company',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'lead',
+            'values': [
+              'lead',
+              'prospect',
+              'customer',
+              'inactive',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ContactBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Contact',
+          'emits': [
+            {
+              'event': 'CONVERT_LEAD',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.company',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.company',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.company',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoaded',
+              'description': 'Fired when Contact finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Contact]',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoadFailed',
+              'description': 'Fired when Contact fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'NoteSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'NoteSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CONTACT_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactCreate',
+              },
+            },
+            {
+              'event': 'CONTACT_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactEdit',
+              },
+            },
+            {
+              'event': 'CONTACT_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ContactLoaded',
+                'name': 'Contact loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Contact]',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoadFailed',
+                'name': 'Contact load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONVERT_LEAD',
+                'name': 'Convert Lead',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+              {
+                'key': 'ContactSaved',
+                'name': 'Contact saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactSaveFailed',
+                'name': 'Contact save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactUpdated',
+                'name': 'Contact updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactUpdateFailed',
+                'name': 'Contact update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactDeleted',
+                'name': 'Contact deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactDeleteFailed',
+                'name': 'Contact delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealSaved',
+                'name': 'Deal saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealSaveFailed',
+                'name': 'Deal save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealUpdated',
+                'name': 'Deal updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealUpdateFailed',
+                'name': 'Deal update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealDeleted',
+                'name': 'Deal deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealDeleteFailed',
+                'name': 'Deal delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteSaved',
+                'name': 'Note saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteSaveFailed',
+                'name': 'Note save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'color': 'muted',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ContactLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'users',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Contacts',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'label': 'Add Contact',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'icon': 'users',
+                                  'value': '@payload.data.length',
+                                  'label': 'Total Contacts',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                              'cols': 1,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                },
+                              ],
+                              'type': 'data-list',
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'icon': 'user',
+                                  'name': 'name',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'company',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'email',
+                                },
+                                {
+                                  'name': 'phone',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'CRM',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                        },
+                        {
+                          'label': 'Deals',
+                          'icon': 'briefcase',
+                          'href': '/deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'bar-chart-2',
+                        },
+                        {
+                          'href': '/notes',
+                          'label': 'Notes',
+                          'icon': 'file-text',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ContactLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load contact',
+                          'type': 'typography',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ContactCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Contact',
+          'emits': [
+            {
+              'event': 'CONTACT_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoadFailed',
+              'description': 'Fired when Contact fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoaded',
+              'description': 'Fired when Contact finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Contact]',
+                },
+              ],
+            },
+            {
+              'event': 'ContactSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONTACT_CREATED',
+                'name': 'Contact Created',
+              },
+              {
+                'key': 'ContactLoadFailed',
+                'name': 'Contact load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoaded',
+                'name': 'Contact loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Contact]',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactSaveFailed',
+                'name': 'Contact save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactSaved',
+                'name': 'Contact saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'New Contact',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'fields': [
+                            'name',
+                            'company',
+                            'email',
+                            'phone',
+                            'status',
+                          ],
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Contact',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'ContactSaved',
+                        'failure': 'ContactSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CONTACT_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ContactEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Contact',
+          'emits': [
+            {
+              'event': 'CONTACT_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoadFailed',
+              'description': 'Fired when Contact fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoaded',
+              'description': 'Fired when Contact finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Contact]',
+                },
+              ],
+            },
+            {
+              'event': 'ContactUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactBrowse',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactView',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Contact',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONTACT_UPDATED',
+                'name': 'Contact Updated',
+              },
+              {
+                'key': 'ContactLoadFailed',
+                'name': 'Contact load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoaded',
+                'name': 'Contact loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Contact]',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactUpdateFailed',
+                'name': 'Contact update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactUpdated',
+                'name': 'Contact updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Edit Contact',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'edit',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'name',
+                            'company',
+                            'email',
+                            'phone',
+                            'status',
+                          ],
+                          'entity': '@payload.row',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Contact',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ContactUpdateFailed',
+                        'success': 'ContactUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CONTACT_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ContactView',
+          'category': 'interaction',
+          'linkedEntity': 'Contact',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.company',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.email',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.phone',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoaded',
+              'description': 'Fired when Contact finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Contact]',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoadFailed',
+              'description': 'Fired when Contact fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'ContactLoaded',
+                'name': 'Contact loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Contact]',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoadFailed',
+                'name': 'Contact load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.company',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.email',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.phone',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'lead',
+                  ],
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                            },
+                          ],
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Name',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.name',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Company',
+                            },
+                            {
+                              'content': '@entity.company',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Email',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.email',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Phone',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.phone',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Status',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.status',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'icon': 'edit',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'label': 'Close',
+                              'type': 'button',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'end',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ContactDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Contact',
+          'emits': [
+            {
+              'event': 'CONTACT_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoadFailed',
+              'description': 'Fired when Contact fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ContactLoaded',
+              'description': 'Fired when Contact finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Contact]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ContactBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'CONTACT_DELETED',
+                'name': 'Contact Deleted',
+              },
+              {
+                'key': 'ContactDeleteFailed',
+                'name': 'Contact delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactDeleted',
+                'name': 'Contact deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoadFailed',
+                'name': 'Contact load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ContactLoaded',
+                'name': 'Contact loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Contact]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'content': 'Delete Contact',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'justify': 'end',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'icon': 'check',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                              'variant': 'danger',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Contact',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'ContactDeleteFailed',
+                        'success': 'ContactDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'CONTACT_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Contact',
+                    {
+                      'emit': {
+                        'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'ContactsPage',
+          'path': '/contacts',
+          'traits': [
+            {
+              'ref': 'ContactBrowse',
+            },
+            {
+              'ref': 'ContactCreate',
+            },
+            {
+              'ref': 'ContactEdit',
+            },
+            {
+              'ref': 'ContactView',
+            },
+            {
+              'ref': 'ContactDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'DealOrbital',
+      uses: [],
+      entity: {
+        'name': 'Deal',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'contactId',
+            'type': 'string',
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+          },
+          {
+            'name': 'stage',
+            'type': 'string',
+          },
+          {
+            'name': 'closedAt',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DealBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Deal',
+          'emits': [
+            {
+              'event': 'CLOSE_DEAL',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.contactId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.value',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.stage',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.closedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.contactId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.value',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.stage',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.closedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.contactId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.value',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.stage',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.closedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoaded',
+              'description': 'Fired when Deal finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deal]',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoadFailed',
+              'description': 'Fired when Deal fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DEAL_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealCreate',
+              },
+            },
+            {
+              'event': 'DEAL_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealEdit',
+              },
+            },
+            {
+              'event': 'DEAL_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealDelete',
+              },
+            },
+            {
+              'event': 'CONVERT_LEAD',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'ContactOrbital',
+                'trait': 'ContactBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DealLoaded',
+                'name': 'Deal loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deal]',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoadFailed',
+                'name': 'Deal load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE_DEAL',
+                'name': 'Close Deal',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'DealLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                          'href': '/deals',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'label': 'Notes',
+                          'href': '/notes',
+                        },
+                      ],
+                      'appName': 'CRM',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'briefcase',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Deals',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'label': 'New Deal',
+                                      'action': 'CREATE',
+                                      'type': 'button',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'fields': [
+                                {
+                                  'icon': 'briefcase',
+                                  'variant': 'h3',
+                                  'name': 'title',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'stage',
+                                },
+                                {
+                                  'variant': 'h4',
+                                  'name': 'value',
+                                  'format': 'currency',
+                                },
+                                {
+                                  'label': 'Contact',
+                                  'name': 'contactId',
+                                  'variant': 'caption',
+                                },
+                              ],
+                              'gap': 'md',
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                                {
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'cols': 2,
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'DealLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Failed to load deal',
+                          'variant': 'h3',
+                          'type': 'typography',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                        {
+                          'label': 'Retry',
+                          'type': 'button',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DealCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Deal',
+          'emits': [
+            {
+              'event': 'DEAL_CREATED',
+            },
+            {
+              'event': 'DealLoadFailed',
+              'description': 'Fired when Deal fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoaded',
+              'description': 'Fired when Deal finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deal]',
+                },
+              ],
+            },
+            {
+              'event': 'DealSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DEAL_CREATED',
+                'name': 'Deal Created',
+              },
+              {
+                'key': 'DealLoadFailed',
+                'name': 'Deal load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoaded',
+                'name': 'Deal loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deal]',
+                  },
+                ],
+              },
+              {
+                'key': 'DealSaveFailed',
+                'name': 'Deal save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealSaved',
+                'name': 'Deal saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Create Deal',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'fields': [
+                            'title',
+                            'contactId',
+                            'value',
+                            'stage',
+                            'closedAt',
+                          ],
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Deal',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'DealSaved',
+                        'failure': 'DealSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEAL_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DealEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Deal',
+          'emits': [
+            {
+              'event': 'DEAL_UPDATED',
+            },
+            {
+              'event': 'DealLoadFailed',
+              'description': 'Fired when Deal fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoaded',
+              'description': 'Fired when Deal finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deal]',
+                },
+              ],
+            },
+            {
+              'event': 'DealUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealBrowse',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealView',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Deal',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DEAL_UPDATED',
+                'name': 'Deal Updated',
+              },
+              {
+                'key': 'DealLoadFailed',
+                'name': 'Deal load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoaded',
+                'name': 'Deal loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deal]',
+                  },
+                ],
+              },
+              {
+                'key': 'DealUpdateFailed',
+                'name': 'Deal update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealUpdated',
+                'name': 'Deal updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'content': 'Edit Deal',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                          'entity': '@payload.row',
+                          'fields': [
+                            'title',
+                            'contactId',
+                            'value',
+                            'stage',
+                            'closedAt',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Deal',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'DealUpdated',
+                        'failure': 'DealUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEAL_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DealView',
+          'category': 'interaction',
+          'linkedEntity': 'Deal',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.contactId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.value',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.stage',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.closedAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoaded',
+              'description': 'Fired when Deal finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deal]',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoadFailed',
+              'description': 'Fired when Deal fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DealLoaded',
+                'name': 'Deal loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deal]',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoadFailed',
+                'name': 'Deal load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.closedAt',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.contactId',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.stage',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.title',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.value',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.title',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Title',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.title',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Contact ID',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.contactId',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Value',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.value',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Stage',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.stage',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Closed At',
+                            },
+                            {
+                              'content': '@entity.closedAt',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'justify': 'end',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'action': 'EDIT',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'label': 'Close',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'DealDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Deal',
+          'emits': [
+            {
+              'event': 'DEAL_DELETED',
+            },
+            {
+              'event': 'DealDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoadFailed',
+              'description': 'Fired when Deal fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DealLoaded',
+              'description': 'Fired when Deal finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Deal]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'DealBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'DEAL_DELETED',
+                'name': 'Deal Deleted',
+              },
+              {
+                'key': 'DealDeleteFailed',
+                'name': 'Deal delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealDeleted',
+                'name': 'Deal deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoadFailed',
+                'name': 'Deal load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DealLoaded',
+                'name': 'Deal loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Deal]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'align': 'center',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Delete Deal',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'icon': 'check',
+                              'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                              'label': 'Delete',
+                              'variant': 'danger',
+                            },
+                          ],
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Deal',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'success': 'DealDeleted',
+                        'failure': 'DealDeleteFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'DEAL_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Deal',
+                    {
+                      'emit': {
+                        'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Deals',
+          'path': '/deals',
+          'traits': [
+            {
+              'ref': 'DealBrowse',
+            },
+            {
+              'ref': 'DealCreate',
+            },
+            {
+              'ref': 'DealEdit',
+            },
+            {
+              'ref': 'DealView',
+            },
+            {
+              'ref': 'DealDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'PipelineOrbital',
+      uses: [],
+      entity: {
+        'name': 'Pipeline',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalDeals',
+            'type': 'number',
+          },
+          {
+            'name': 'totalValue',
+            'type': 'number',
+          },
+          {
+            'name': 'wonDeals',
+            'type': 'number',
+          },
+          {
+            'name': 'lostDeals',
+            'type': 'number',
+          },
+          {
+            'name': 'conversionRate',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PipelineDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'Pipeline',
+          'emits': [
+            {
+              'event': 'PipelineLoaded',
+              'description': 'Fired when Pipeline finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Pipeline]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineLoadFailed',
+              'description': 'Fired when Pipeline fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CLOSE_DEAL',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'DealOrbital',
+                'trait': 'DealBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'PipelineLoaded',
+                'name': 'Pipeline loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Pipeline]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineLoadFailed',
+                'name': 'Pipeline load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.conversionRate',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.lostDeals',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalDeals',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalValue',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.wonDeals',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'Pipeline',
+                    {
+                      'emit': {
+                        'success': 'PipelineLoaded',
+                        'failure': 'PipelineLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'CRM',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Pipeline',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'bar-chart-2',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Pipeline',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalDeals',
+                                          'label': 'TotalDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalValue',
+                                          'label': 'TotalValue',
+                                        },
+                                        {
+                                          'label': 'WonDeals',
+                                          'value': '@entity.wonDeals',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.lostDeals',
+                                          'type': 'stat-display',
+                                          'label': 'LostDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.conversionRate',
+                                          'label': 'ConversionRate',
+                                        },
+                                      ],
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'height': 200,
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'label': 'Deals',
+                          'href': '/deals',
+                          'icon': 'briefcase',
+                        },
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'bar-chart-2',
+                        },
+                        {
+                          'href': '/notes',
+                          'label': 'Notes',
+                          'icon': 'file-text',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Pipeline',
+                    {
+                      'emit': {
+                        'failure': 'PipelineLoadFailed',
+                        'success': 'PipelineLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Pipeline',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'bar-chart-2',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Pipeline',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalDeals',
+                                          'value': '@entity.totalDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalValue',
+                                          'label': 'TotalValue',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'WonDeals',
+                                          'value': '@entity.wonDeals',
+                                        },
+                                        {
+                                          'value': '@entity.lostDeals',
+                                          'label': 'LostDeals',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.conversionRate',
+                                          'type': 'stat-display',
+                                          'label': 'ConversionRate',
+                                        },
+                                      ],
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'CRM',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                          'href': '/deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Notes',
+                          'href': '/notes',
+                          'icon': 'file-text',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Pipeline',
+                    {
+                      'emit': {
+                        'success': 'PipelineLoaded',
+                        'failure': 'PipelineLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/contacts',
+                          'icon': 'users',
+                          'label': 'Contacts',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                          'href': '/deals',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/notes',
+                          'icon': 'file-text',
+                          'label': 'Notes',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Pipeline',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'bar-chart-2',
+                                        },
+                                        {
+                                          'content': 'Pipeline',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalDeals',
+                                          'label': 'TotalDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalValue',
+                                          'value': '@entity.totalValue',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'WonDeals',
+                                          'value': '@entity.wonDeals',
+                                        },
+                                        {
+                                          'value': '@entity.lostDeals',
+                                          'type': 'stat-display',
+                                          'label': 'LostDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'ConversionRate',
+                                          'value': '@entity.conversionRate',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'lg',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'CRM',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'Pipeline',
+                    {
+                      'emit': {
+                        'success': 'PipelineLoaded',
+                        'failure': 'PipelineLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Pipeline',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'bar-chart-2',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Pipeline',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'TotalDeals',
+                                          'value': '@entity.totalDeals',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalValue',
+                                          'label': 'TotalValue',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.wonDeals',
+                                          'label': 'WonDeals',
+                                        },
+                                        {
+                                          'label': 'LostDeals',
+                                          'type': 'stat-display',
+                                          'value': '@entity.lostDeals',
+                                        },
+                                        {
+                                          'label': 'ConversionRate',
+                                          'value': '@entity.conversionRate',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'CRM',
+                      'navItems': [
+                        {
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'href': '/deals',
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'bar-chart-2',
+                        },
+                        {
+                          'label': 'Notes',
+                          'icon': 'file-text',
+                          'href': '/notes',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Pipeline',
+                    {
+                      'emit': {
+                        'failure': 'PipelineLoadFailed',
+                        'success': 'PipelineLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'CRM',
+                      'navItems': [
+                        {
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                          'href': '/deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Notes',
+                          'href': '/notes',
+                          'icon': 'file-text',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Pipeline',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'bar-chart-2',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Pipeline',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'value': '@entity.totalDeals',
+                                          'type': 'stat-display',
+                                          'label': 'TotalDeals',
+                                        },
+                                        {
+                                          'value': '@entity.totalValue',
+                                          'type': 'stat-display',
+                                          'label': 'TotalValue',
+                                        },
+                                        {
+                                          'label': 'WonDeals',
+                                          'type': 'stat-display',
+                                          'value': '@entity.wonDeals',
+                                        },
+                                        {
+                                          'label': 'LostDeals',
+                                          'value': '@entity.lostDeals',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.conversionRate',
+                                          'type': 'stat-display',
+                                          'label': 'ConversionRate',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Pipeline',
+          'path': '/pipeline',
+          'traits': [
+            {
+              'ref': 'PipelineDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'NoteOrbital',
+      uses: [],
+      entity: {
+        'name': 'Note',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'datetime',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'NoteBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Note',
+          'emits': [
+            {
+              'event': 'COMPOSE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.subject',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.body',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'datetime',
+                },
+              ],
+            },
+            {
+              'event': 'NoteLoaded',
+              'description': 'Fired when Note finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Note]',
+                },
+              ],
+            },
+            {
+              'event': 'NoteLoadFailed',
+              'description': 'Fired when Note fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'SEND',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'NoteCompose',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NoteLoaded',
+                'name': 'Note loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Note]',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteLoadFailed',
+                'name': 'Note load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Note',
+                    {
+                      'emit': {
+                        'failure': 'NoteLoadFailed',
+                        'success': 'NoteLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'NoteLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'CRM',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'file-text',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Notes',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'action': 'COMPOSE',
+                                      'type': 'button',
+                                      'label': 'Compose',
+                                      'icon': 'edit',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'fields': [
+                                {
+                                  'variant': 'h4',
+                                  'icon': 'file-text',
+                                  'name': 'subject',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'author',
+                                },
+                                {
+                                  'name': 'createdAt',
+                                  'variant': 'caption',
+                                  'format': 'date',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'data-list',
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                  'event': 'VIEW',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                        },
+                        {
+                          'href': '/deals',
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'href': '/notes',
+                          'label': 'Notes',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'NoteLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'type': 'icon',
+                          'color': 'destructive',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load note',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'variant': 'body',
+                        },
+                        {
+                          'action': 'INIT',
+                          'type': 'button',
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'NoteCompose',
+          'category': 'interaction',
+          'linkedEntity': 'Note',
+          'emits': [
+            {
+              'event': 'SEND',
+            },
+            {
+              'event': 'NoteLoadFailed',
+              'description': 'Fired when Note fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'NoteLoaded',
+              'description': 'Fired when Note finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Note]',
+                },
+              ],
+            },
+            {
+              'event': 'NoteSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'NoteSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'COMPOSE',
+              'triggers': 'COMPOSE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'NoteBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SEND',
+                'name': 'Send',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteLoadFailed',
+                'name': 'Note load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteLoaded',
+                'name': 'Note loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Note]',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteSaveFailed',
+                'name': 'Note save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteSaved',
+                'name': 'Note saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Note',
+                    {
+                      'emit': {
+                        'failure': 'NoteLoadFailed',
+                        'success': 'NoteLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'COMPOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'New Note',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'subject',
+                            'body',
+                            'author',
+                          ],
+                          'mode': 'create',
+                          'submitEvent': 'SEND',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SEND',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Note',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'NoteSaveFailed',
+                        'success': 'NoteSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'NoteView',
+          'category': 'interaction',
+          'linkedEntity': 'Note',
+          'emits': [
+            {
+              'event': 'NoteLoaded',
+              'description': 'Fired when Note finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Note]',
+                },
+              ],
+            },
+            {
+              'event': 'NoteLoadFailed',
+              'description': 'Fired when Note fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'NoteBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'NoteLoaded',
+                'name': 'Note loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Note]',
+                  },
+                ],
+              },
+              {
+                'key': 'NoteLoadFailed',
+                'name': 'Note load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.author',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.body',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.subject',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Note',
+                    {
+                      'emit': {
+                        'success': 'NoteLoaded',
+                        'failure': 'NoteLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Note',
+                    {
+                      'emit': {
+                        'success': 'NoteLoaded',
+                        'failure': 'NoteLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'content': '@entity.subject',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Subject',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.subject',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Body',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.body',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Author',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.author',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Created At',
+                            },
+                            {
+                              'content': '@entity.createdAt',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                              'type': 'button',
+                            },
+                          ],
+                          'type': 'stack',
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Notes',
+          'path': '/notes',
+          'traits': [
+            {
+              'ref': 'NoteBrowse',
+            },
+            {
+              'ref': 'NoteCompose',
+            },
+            {
+              'ref': 'NoteView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

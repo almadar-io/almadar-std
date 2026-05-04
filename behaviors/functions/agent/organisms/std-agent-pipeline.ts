@@ -144,9 +144,11329 @@ export function stdAgentPipeline(params: StdAgentPipelineParams): OrbitalDefinit
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"PipelinePlanOrbital","uses":[{"from":"std/behaviors/std-agent-step-progress","as":"AgentStepProgress"},{"from":"std/behaviors/std-drawer","as":"Drawer"}],"entity":{"name":"PipelinePlan","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"task","type":"string","default":""},{"name":"category","type":"string","default":""},{"name":"steps","type":"string","default":""},{"name":"confidence","type":"number","default":0},{"name":"status","type":"string","default":"idle"},{"name":"relevantMemories","type":"string","default":""},{"name":"memoryCount","type":"number","default":0},{"name":"error","type":"string","default":""},{"name":"input","type":"string","default":""},{"name":"prompt","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"provider","type":"string","default":"anthropic"},{"name":"model","type":"string","default":"claude-sonnet-4-20250514"},{"name":"content","type":"string","default":""},{"name":"scope","type":"string","default":""},{"name":"strength","type":"number","default":1},{"name":"pinned","type":"boolean","default":false},{"name":"action","type":"string","default":""},{"name":"detail","type":"string","default":""},{"name":"timestamp","type":"string","default":""},{"name":"duration","type":"number","default":0},{"name":"icon","type":"string","default":"circle"}]},"traits":[{"name":"PipelinePlanner","category":"interaction","linkedEntity":"PipelinePlan","emits":[{"event":"PLAN_READY","scope":"external","payloadSchema":[{"name":"plan","type":"string"},{"name":"category","type":"string"}]},{"event":"PIPELINE_PLANNED","scope":"external","payloadSchema":[{"name":"steps","type":"string"}]},{"event":"SessionTreeLoaded","description":"Emitted event SessionTreeLoaded","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SessionTreeLoadFailed","description":"Emitted event SessionTreeLoadFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelinePlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PipelinePlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineExecSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PipelineExecSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineSessionUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PipelineSessionUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ExecutionLogSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ExecutionLogSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"PLAN_READY","triggers":"INIT","source":{"kind":"trait","trait":"PipelinePlanner"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"classifying"},{"name":"recalling"},{"name":"planning"},{"name":"ready"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PLAN","name":"Plan"},{"key":"CLASSIFIED","name":"Classified","payloadSchema":[{"name":"category","type":"string","required":true}]},{"key":"FAILED","name":"Failed","payloadSchema":[{"name":"error","type":"string","required":true}]},{"key":"MEMORIES_LOADED","name":"Memories Loaded","payloadSchema":[{"name":"memories","type":"string","required":true},{"name":"count","type":"number","required":true}]},{"key":"PLAN_GENERATED","name":"Plan Generated","payloadSchema":[{"name":"steps","type":"string","required":true},{"name":"confidence","type":"number","required":true},{"name":"plan","type":"string"},{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"PLAN_READY","name":"Plan Ready"},{"key":"PIPELINE_PLANNED","name":"Pipeline Planned"},{"key":"SessionTreeLoaded","name":"Session tree loaded","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SessionTreeLoadFailed","name":"Session tree load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelinePlanSaved","name":"PipelinePlan saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PipelinePlanSaveFailed","name":"PipelinePlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineExecSaved","name":"Pipeline exec saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PipelineExecSaveFailed","name":"Pipeline exec save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineSessionUpdated","name":"Pipeline session updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PipelineSessionUpdateFailed","name":"Pipeline session update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ExecutionLogSaved","name":"Execution log saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"ExecutionLogSaveFailed","name":"Execution log save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["render-ui","main",{"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"label":"Execution","icon":"play","href":"/execution"},{"icon":"terminal","href":"/logs","label":"Logs"}],"children":[{"type":"stack","gap":"lg","children":[{"direction":"horizontal","align":"center","children":[{"type":"icon","name":"map"},{"content":"Task Planner","variant":"h2","type":"typography"}],"gap":"sm","type":"stack"},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","type":"stack","gap":"md","children":[{"variant":"body","content":"Describe the task to plan","type":"typography"},{"entity":"@entity","type":"form-section","mode":"edit","submitEvent":"PLAN","fields":["task"]}]}]}],"direction":"vertical"}]}]]},{"from":"idle","to":"classifying","event":"PLAN","effects":[["set","@entity.status","classifying"],["agent/generate",["str/concat","Classify this task into exactly one category.\\n","Categories: ","data, transform, validate, deploy, test","\\n","Task: ","@entity.task","\\n","Return only the category name."]],["render-ui","main",{"children":[{"align":"center","direction":"vertical","children":[{"type":"icon","name":"tag"},{"variant":"h3","content":"Classifying task...","type":"typography"},{"type":"spinner"},{"content":"@entity.task","variant":"caption","type":"typography"}],"type":"stack","gap":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"href":"/logs","label":"Logs","icon":"terminal"}],"appName":"Agent Pipeline"}]]},{"from":"classifying","to":"recalling","event":"CLASSIFIED","effects":[["set","@entity.category","@payload.category"],["set","@entity.status","recalling"],["agent/recall",["str/concat","@entity.category"," ","@entity.task"],5],["render-ui","main",{"children":[{"align":"center","direction":"vertical","gap":"lg","type":"stack","children":[{"name":"brain","type":"icon"},{"content":"Recalling relevant experience...","variant":"h3","type":"typography"},{"type":"spinner"},{"label":"@entity.category","type":"badge"}]}],"navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}],"appName":"Agent Pipeline","type":"dashboard-layout"}]]},{"from":"classifying","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"href":"/logs","icon":"terminal","label":"Logs"}],"children":[{"align":"center","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"Planning Failed","variant":"h2"},{"type":"alert","message":"@entity.error","variant":"error"},{"variant":"primary","action":"RESET","icon":"rotate-ccw","type":"button","label":"Try Again"}],"direction":"vertical","gap":"lg","type":"stack"}]}]]},{"from":"recalling","to":"planning","event":"MEMORIES_LOADED","effects":[["set","@entity.relevantMemories","@payload.memories"],["set","@entity.memoryCount","@payload.count"],["set","@entity.status","planning"],["agent/generate",["str/concat","Task: ","@entity.task","\\n","Category: ","@entity.category","\\n","Relevant experience:\\n","@entity.relevantMemories","\\n\\n","Generate a numbered step-by-step execution plan. ","Include a confidence score (0-100) for how likely this plan will succeed."]],["render-ui","main",{"type":"dashboard-layout","children":[{"direction":"vertical","type":"stack","align":"center","gap":"lg","children":[{"type":"icon","name":"cpu"},{"content":"Generating plan...","type":"typography","variant":"h3"},{"type":"spinner"},{"gap":"md","direction":"horizontal","type":"stack","justify":"center","children":[{"type":"badge","label":"@entity.category"},{"label":"@entity.memoryCount","type":"badge"}]}]}],"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"label":"Execution","icon":"play","href":"/execution"},{"href":"/logs","label":"Logs","icon":"terminal"}],"appName":"Agent Pipeline"}]]},{"from":"recalling","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"gap":"lg","type":"stack","direction":"vertical","align":"center","children":[{"type":"icon","name":"alert-triangle"},{"content":"Planning Failed","variant":"h2","type":"typography"},{"variant":"error","type":"alert","message":"@entity.error"},{"type":"button","label":"Try Again","variant":"primary","icon":"rotate-ccw","action":"RESET"}]}],"navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"label":"Logs","icon":"terminal","href":"/logs"}]}]]},{"from":"planning","to":"ready","event":"PLAN_GENERATED","effects":[["set","@entity.steps","@payload.steps"],["set","@entity.confidence","@payload.confidence"],["set","@entity.status","ready"],["agent/memorize",["str/concat","Plan for ","@entity.category"," task: ","@entity.task"],"pattern-affinity"],["emit","PLAN_READY"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"direction":"vertical","children":[{"justify":"between","gap":"sm","align":"center","type":"stack","children":[{"children":[{"name":"check-circle","type":"icon"},{"type":"typography","content":"Plan Ready","variant":"h2"}],"gap":"sm","direction":"horizontal","type":"stack","align":"center"},{"icon":"rotate-ccw","label":"New Plan","type":"button","variant":"ghost","action":"RESET"}],"direction":"horizontal"},{"type":"divider"},{"children":[{"icon":"tag","value":"@entity.category","label":"Category","type":"stat-display"},{"type":"stat-display","icon":"target","label":"Confidence","value":"@entity.confidence"},{"label":"Memories Used","icon":"brain","type":"stat-display","value":"@entity.memoryCount"}],"type":"simple-grid","cols":3},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","type":"stack","gap":"md","children":[{"content":"Task","type":"typography","variant":"caption"},{"content":"@entity.task","variant":"body","type":"typography"},{"type":"divider"},{"variant":"caption","type":"typography","content":"Execution Plan"},{"type":"typography","content":"@entity.steps","variant":"body"}]}]},{"type":"card","children":[{"type":"stack","gap":"sm","children":[{"type":"typography","variant":"caption","content":"Relevant Memories"},{"content":"@entity.relevantMemories","type":"typography","variant":"body"}],"direction":"vertical"}]}],"type":"stack","gap":"lg"}],"navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"href":"/logs","icon":"terminal","label":"Logs"}]}]]},{"from":"planning","to":"idle","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","error"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"href":"/logs","icon":"terminal","label":"Logs"}],"children":[{"direction":"vertical","children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","content":"Planning Failed","variant":"h2"},{"type":"alert","variant":"error","message":"@entity.error"},{"label":"Try Again","action":"RESET","icon":"rotate-ccw","type":"button","variant":"primary"}],"type":"stack","gap":"lg","align":"center"}],"appName":"Agent Pipeline"}]]},{"from":"ready","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.category",""],["set","@entity.steps",""],["set","@entity.confidence",0],["set","@entity.relevantMemories",""],["set","@entity.memoryCount",0],["set","@entity.error",""],["render-ui","main",{"children":[{"children":[{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"type":"icon","name":"map"},{"type":"typography","content":"Task Planner","variant":"h2"}]},{"type":"divider"},{"type":"card","children":[{"type":"stack","children":[{"content":"Describe the task to plan","variant":"body","type":"typography"},{"fields":["task"],"type":"form-section","mode":"edit","entity":"@entity","submitEvent":"PLAN"}],"gap":"md","direction":"vertical"}]}],"direction":"vertical","gap":"lg","type":"stack"}],"appName":"Agent Pipeline","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"label":"Logs","icon":"terminal","href":"/logs"}],"type":"dashboard-layout"}]]}]},"scope":"collection"},{"name":"PlannerTaskInput","category":"interaction","linkedEntity":"PipelinePlan","emits":[{"event":"PipelinePlanLoaded","description":"Fired when PipelinePlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"event":"PipelinePlanLoadFailed","description":"Fired when PipelinePlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"NEW_TASK","name":"New Task"},{"key":"CLOSE","name":"Close"},{"key":"PLAN","name":"Plan","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PipelinePlanLoaded","name":"PipelinePlan loaded","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"key":"PipelinePlanLoadFailed","name":"PipelinePlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelinePlan",{"emit":{"failure":"PipelinePlanLoadFailed","success":"PipelinePlanLoaded"}}]]},{"from":"closed","to":"open","event":"NEW_TASK","effects":[["render-ui","modal",{"children":[{"type":"icon","name":"map"},{"content":"Describe the task to plan","type":"typography","variant":"h3"},{"type":"divider"},{"entity":"@entity","mode":"edit","fields":["task"],"submitEvent":"PLAN","type":"form-section","cancelEvent":"CLOSE"}],"direction":"vertical","type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"PLAN","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"PlannerClassifierFlow","category":"interaction","linkedEntity":"PipelinePlan","emits":[{"event":"SAVE","scope":"internal"},{"event":"CLASSIFIED","scope":"internal"},{"event":"PipelinePlanLoadFailed","description":"Fired when PipelinePlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelinePlanLoaded","description":"Fired when PipelinePlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"event":"PipelinePlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelinePlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CLASSIFY","name":"Classify"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"CLASSIFIED","name":"Classified"},{"key":"PipelinePlanLoadFailed","name":"PipelinePlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelinePlanLoaded","name":"PipelinePlan loaded","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"key":"PipelinePlanSaveFailed","name":"PipelinePlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelinePlanSaved","name":"PipelinePlan saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelinePlan",{"emit":{"success":"PipelinePlanLoaded","failure":"PipelinePlanLoadFailed"}}],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","children":[{"justify":"between","gap":"md","type":"stack","direction":"horizontal","children":[{"gap":"md","direction":"horizontal","children":[{"type":"icon","name":"tag"},{"type":"typography","variant":"h2","content":"PipelinePlan"}],"type":"stack"},{"action":"CLASSIFY","variant":"primary","icon":"tag","type":"button","label":"Open"}]},{"type":"divider"},{"title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state","icon":"tag"}],"type":"stack"}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"closed","to":"open","event":"CLASSIFY","effects":[["render-ui","modal",{"direction":"vertical","type":"stack","gap":"md","children":[{"gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"tag"},{"variant":"h3","content":"PipelinePlan","type":"typography"}]},{"type":"divider"},{"direction":"horizontal","gap":"sm","children":[{"content":"Categories:","variant":"caption","type":"typography"},{"type":"badge","label":"data","variant":"secondary"},{"type":"badge","variant":"secondary","label":"transform"},{"type":"badge","label":"validate","variant":"secondary"},{"variant":"secondary","type":"badge","label":"deploy"},{"label":"test","variant":"secondary","type":"badge"}],"type":"stack"},{"type":"form-section","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["input"],"mode":"create"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","PipelinePlan",{"emit":{"failure":"PipelinePlanLoadFailed","success":"PipelinePlanLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"git-branch","href":"/pipeline","label":"Pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}],"appName":"Agent Pipeline","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"children":[{"gap":"md","direction":"horizontal","children":[{"type":"icon","name":"tag"},{"content":"PipelinePlan","variant":"h2","type":"typography"}],"type":"stack"},{"label":"Open","variant":"primary","icon":"tag","action":"CLASSIFY","type":"button"}],"type":"stack","gap":"md","justify":"between","direction":"horizontal"},{"type":"divider"},{"type":"empty-state","title":"Nothing open","icon":"tag","description":"Click Open to view details in a modal overlay."}]}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","PipelinePlan","@payload.data",{"emit":{"success":"PipelinePlanSaved","failure":"PipelinePlanSaveFailed"}}],["render-ui","modal",null],["emit","CLASSIFIED"],["fetch","PipelinePlan",{"emit":{"failure":"PipelinePlanLoadFailed","success":"PipelinePlanLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"icon":"play","label":"Execution","href":"/execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"children":[{"type":"stack","children":[{"direction":"horizontal","children":[{"children":[{"type":"icon","name":"tag"},{"content":"PipelinePlan","variant":"h2","type":"typography"}],"gap":"md","type":"stack","direction":"horizontal"},{"type":"button","icon":"tag","action":"CLASSIFY","label":"Open","variant":"primary"}],"type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay.","icon":"tag"}],"gap":"lg","direction":"vertical"}],"appName":"Agent Pipeline"}]]}]},"scope":"collection"},{"name":"PlannerCompletionFlow","category":"interaction","linkedEntity":"PipelinePlan","emits":[{"event":"SAVE","scope":"internal"},{"event":"GENERATED","scope":"internal"},{"event":"PipelinePlanLoadFailed","description":"Fired when PipelinePlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelinePlanLoaded","description":"Fired when PipelinePlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"event":"PipelinePlanSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelinePlanSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"GENERATE","name":"Generate"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"GENERATED","name":"Generated"},{"key":"PipelinePlanLoadFailed","name":"PipelinePlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelinePlanLoaded","name":"PipelinePlan loaded","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"key":"PipelinePlanSaveFailed","name":"PipelinePlan save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelinePlanSaved","name":"PipelinePlan saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelinePlan",{"emit":{"success":"PipelinePlanLoaded","failure":"PipelinePlanLoadFailed"}}],["render-ui","main",{"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"href":"/execution","label":"Execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}],"appName":"Agent Pipeline","type":"dashboard-layout","children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"direction":"horizontal","gap":"md","children":[{"type":"stack","gap":"md","direction":"horizontal","children":[{"name":"sparkles","type":"icon"},{"variant":"h2","content":"PipelinePlan","type":"typography"}]},{"action":"GENERATE","label":"Open","type":"button","variant":"primary","icon":"sparkles"}],"justify":"between","type":"stack"},{"type":"divider"},{"icon":"sparkles","type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay."}]}]}]]},{"from":"closed","to":"open","event":"GENERATE","effects":[["render-ui","modal",{"type":"stack","children":[{"direction":"horizontal","gap":"sm","children":[{"name":"sparkles","type":"icon"},{"type":"typography","content":"PipelinePlan","variant":"h3"}],"type":"stack"},{"type":"divider"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"type":"badge","label":"@entity.provider"},{"type":"badge","label":"@entity.model"}]},{"cancelEvent":"CLOSE","type":"form-section","mode":"create","submitEvent":"SAVE","fields":["prompt"]}],"gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","PipelinePlan",{"emit":{"success":"PipelinePlanLoaded","failure":"PipelinePlanLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"gap":"lg","children":[{"type":"stack","direction":"horizontal","justify":"between","children":[{"direction":"horizontal","gap":"md","children":[{"type":"icon","name":"sparkles"},{"content":"PipelinePlan","type":"typography","variant":"h2"}],"type":"stack"},{"icon":"sparkles","action":"GENERATE","label":"Open","type":"button","variant":"primary"}],"gap":"md"},{"type":"divider"},{"description":"Click Open to view details in a modal overlay.","type":"empty-state","title":"Nothing open","icon":"sparkles"}],"direction":"vertical","type":"stack"}],"navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","label":"Logs","href":"/logs"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","PipelinePlan","@payload.data",{"emit":{"failure":"PipelinePlanSaveFailed","success":"PipelinePlanSaved"}}],["render-ui","modal",null],["emit","GENERATED"],["fetch","PipelinePlan",{"emit":{"success":"PipelinePlanLoaded","failure":"PipelinePlanLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"href":"/execution","icon":"play","label":"Execution"},{"icon":"terminal","href":"/logs","label":"Logs"}],"children":[{"gap":"lg","children":[{"type":"stack","gap":"md","justify":"between","direction":"horizontal","children":[{"type":"stack","gap":"md","children":[{"type":"icon","name":"sparkles"},{"content":"PipelinePlan","type":"typography","variant":"h2"}],"direction":"horizontal"},{"label":"Open","type":"button","icon":"sparkles","action":"GENERATE","variant":"primary"}]},{"type":"divider"},{"icon":"sparkles","description":"Click Open to view details in a modal overlay.","title":"Nothing open","type":"empty-state"}],"type":"stack","direction":"vertical"}],"appName":"Agent Pipeline"}]]}]},"scope":"collection"},{"name":"PlannerMemoryLifecycle","category":"interaction","linkedEntity":"PipelinePlan","emits":[{"event":"PipelinePlanLoaded","description":"Fired when PipelinePlan finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"event":"PipelinePlanLoadFailed","description":"Fired when PipelinePlan fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PipelinePlanLoaded","name":"PipelinePlan loaded","payloadSchema":[{"name":"data","type":"[PipelinePlan]"}]},{"key":"PipelinePlanLoadFailed","name":"PipelinePlan load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PIN","name":"Pin","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"PipelinePlan"}]},{"key":"REINFORCE","name":"Reinforce","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"PipelinePlan"}]},{"key":"FORGET","name":"Forget","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"PipelinePlan"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","PipelinePlan",{"emit":{"failure":"PipelinePlanLoadFailed","success":"PipelinePlanLoaded"}}],["render-ui","main",{"children":[{"type":"spinner"},{"content":"Loading…","type":"typography","variant":"caption","color":"muted"}],"className":"py-12","gap":"md","align":"center","type":"stack","direction":"vertical"}]]},{"from":"browsing","to":"browsing","event":"PipelinePlanLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"label":"Execution","icon":"play","href":"/execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"children":[{"children":[{"justify":"between","align":"center","children":[{"type":"stack","direction":"horizontal","align":"center","children":[{"name":"brain","type":"icon"},{"variant":"h2","type":"typography","content":"PipelinePlan Manager"}],"gap":"sm"},{"direction":"horizontal","gap":"sm","type":"stack","children":[{"variant":"primary","action":"MEMORIZE","label":"Memorize","type":"button","icon":"plus"},{"type":"button","action":"RECALL","label":"Recall","icon":"search","variant":"secondary"},{"icon":"clock","variant":"ghost","type":"button","label":"Decay All","action":"DECAY"}]}],"type":"stack","gap":"md","direction":"horizontal"},{"type":"divider"},{"type":"data-grid","fields":[{"icon":"brain","name":"content","label":"Content","variant":"h4"},{"name":"category","label":"Category","colorMap":{"failed":"destructive","active":"success","scheduled":"warning","completed":"success","draft":"warning","done":"success","disabled":"neutral","pending":"warning","inactive":"neutral","archived":"neutral","error":"destructive","cancelled":"destructive"},"variant":"badge"},{"variant":"caption","name":"strength","label":"Strength"}],"entity":"@payload.data","itemActions":[{"label":"Pin","event":"PIN","variant":"ghost"},{"variant":"ghost","label":"Reinforce","event":"REINFORCE"},{"variant":"danger","event":"FORGET","label":"Forget"}]}],"className":"max-w-5xl mx-auto w-full","type":"stack","direction":"vertical","gap":"lg"}],"appName":"Agent Pipeline"}]]},{"from":"browsing","to":"browsing","event":"PipelinePlanLoadFailed","effects":[["render-ui","main",{"className":"py-12","type":"stack","gap":"md","children":[{"name":"alert-triangle","color":"destructive","type":"icon"},{"variant":"h3","type":"typography","content":"Failed to load pipelineplan"},{"type":"typography","content":"@payload.error","color":"muted","variant":"body"},{"icon":"rotate-ccw","label":"Retry","variant":"primary","type":"button","action":"INIT"}],"direction":"vertical","align":"center"}]]}]},"scope":"collection"}],"pages":[{"name":"PipelinePage","path":"/pipeline","traits":[{"ref":"PipelinePlanner"}]}]},{"name":"PipelineExecOrbital","entity":{"name":"PipelineExec","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"task","type":"string","default":""},{"name":"plan","type":"string"},{"name":"iterations","type":"number"},{"name":"maxIterations","type":"number"},{"name":"status","type":"string","default":"idle"},{"name":"result","type":"string"},{"name":"currentTool","type":"string"},{"name":"lastToolResult","type":"string"},{"name":"error","type":"string","default":""},{"name":"currentStep","type":"number"},{"name":"totalSteps","type":"number"},{"name":"steps","type":"string","default":""},{"name":"toolName","type":"string"},{"name":"args","type":"string"},{"name":"prompt","type":"string","default":""},{"name":"response","type":"string","default":""},{"name":"provider","type":"string","default":"anthropic"},{"name":"model","type":"string","default":"claude-sonnet-4-20250514"},{"name":"tokenCount","type":"number"},{"name":"maxTokens","type":"number"},{"name":"usage","type":"number"},{"name":"current","type":"number"},{"name":"max","type":"number"},{"name":"threshold","type":"number"},{"name":"lastCompactedAt","type":"string"},{"name":"action","type":"string","default":""},{"name":"detail","type":"string","default":""},{"name":"timestamp","type":"string","default":""},{"name":"duration","type":"number","default":0}]},"traits":[{"name":"PipelineExecutor","category":"interaction","linkedEntity":"PipelineExec","emits":[{"event":"STEP_COMPLETE","scope":"internal","payloadSchema":[{"name":"step","type":"number"}]},{"event":"STEP_COMPLETE","scope":"external","payloadSchema":[{"name":"step","type":"number"}]},{"event":"PIPELINE_FINISHED","scope":"external","payloadSchema":[{"name":"result","type":"string"}]},{"event":"RESET"}],"listens":[{"event":"PIPELINE_PLANNED","triggers":"EXECUTE","source":{"kind":"orbital","orbital":"PipelinePlanOrbital","trait":"PipelinePlanner"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopStepProgress"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopContextMonitor"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"planning"},{"name":"executing"},{"name":"checking"},{"name":"completed"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EXECUTE","name":"Execute"},{"key":"PLAN_GENERATED","name":"Plan Generated","payloadSchema":[{"name":"plan","type":"string"},{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"FAILED","name":"Failed","payloadSchema":[{"name":"error","type":"string"}]},{"key":"TOOL_RESULT","name":"Tool Result","payloadSchema":[{"name":"output","type":"string"}]},{"key":"CHECK_PASSED","name":"Check Passed","payloadSchema":[{"name":"result","type":"string"}]},{"key":"CHECK_NEEDS_MORE","name":"Check Needs More","payloadSchema":[{"name":"toolName","type":"string"},{"name":"toolArgs","type":"string"}]},{"key":"MAX_ITERATIONS","name":"Max Iterations","payloadSchema":[{"name":"error","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"STEP_COMPLETE","name":"Step Complete"},{"key":"PIPELINE_FINISHED","name":"Pipeline Finished"}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["render-ui","main",{"navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}],"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"children":[{"name":"repeat","type":"icon"},{"type":"typography","content":"Tool Execution Loop","variant":"h2"}],"type":"stack","direction":"horizontal","align":"center","gap":"sm"},{"type":"divider"},{"children":[{"direction":"vertical","type":"stack","children":[{"variant":"body","type":"typography","content":"Describe the task to execute with tools"},{"type":"form-section","entity":"@entity","mode":"edit","submitEvent":"EXECUTE","fields":["task"]}],"gap":"md"}],"type":"card"}]}]}]]},{"from":"idle","to":"planning","event":"EXECUTE","effects":[["set","@entity.status","planning"],["set","@entity.iterations",0],["agent/generate",["str/concat","Task: ","@entity.task","\\n\\nAvailable tools: ",["str/join",["agent/tools"],", "],"\\n\\nGenerate a step-by-step plan. Return the first tool to call and its arguments."]],["render-ui","main",{"navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"label":"Logs","icon":"terminal","href":"/logs"}],"children":[{"children":[{"type":"icon","name":"brain"},{"content":"Planning execution...","type":"typography","variant":"h3"},{"type":"spinner"},{"variant":"caption","content":"@entity.task","type":"typography"}],"gap":"lg","align":"center","direction":"vertical","type":"stack"}],"appName":"Agent Pipeline","type":"dashboard-layout"}]]},{"from":"planning","to":"executing","event":"PLAN_GENERATED","effects":[["set","@entity.plan","@payload.plan"],["set","@entity.currentTool","@payload.toolName"],["set","@entity.iterations",["+","@entity.iterations",1]],["agent/invoke","@payload.toolName","@payload.toolArgs"],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"type":"stack","align":"center","direction":"horizontal","justify":"between","gap":"sm","children":[{"align":"center","gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"tool"},{"type":"typography","content":"Executing Tool","variant":"h2"}]},{"type":"badge","label":"@entity.maxIterations"}]},{"type":"divider"},{"children":[{"gap":"sm","children":[{"content":"Current Tool","type":"typography","variant":"caption"},{"type":"typography","content":"@entity.currentTool","variant":"h4"},{"type":"spinner"}],"type":"stack","direction":"vertical"}],"type":"card"},{"type":"card","children":[{"type":"stack","direction":"vertical","gap":"sm","children":[{"type":"typography","content":"Plan","variant":"caption"},{"content":"@entity.plan","type":"typography","variant":"body"}]}]}]}],"navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"icon":"play","href":"/execution","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"planning","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"children":[{"gap":"lg","children":[{"name":"x-circle","type":"icon"},{"content":"Loop Failed","variant":"h2","type":"typography"},{"type":"alert","message":"@entity.error","variant":"error"},{"children":[{"type":"stat-display","label":"Iterations Used","icon":"repeat","value":"@entity.iterations"},{"type":"stat-display","value":"@entity.maxIterations","label":"Max Allowed","icon":"shield"}],"cols":2,"type":"simple-grid"},{"icon":"rotate-ccw","action":"RESET","type":"button","label":"Retry","variant":"primary"}],"type":"stack","align":"center","direction":"vertical"}],"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"icon":"play","label":"Execution","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}]}]]},{"from":"executing","to":"checking","event":"TOOL_RESULT","effects":[["set","@entity.lastToolResult","@payload.output"],["agent/generate",["str/concat","Task: ","@entity.task","\\nPlan: ","@entity.plan","\\nTool output: ","@payload.output","\\n\\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."]],["render-ui","main",{"type":"dashboard-layout","navItems":[{"icon":"git-branch","href":"/pipeline","label":"Pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"direction":"vertical","gap":"lg","align":"center","type":"stack","children":[{"type":"icon","name":"eye"},{"type":"typography","content":"Checking result...","variant":"h3"},{"type":"spinner"},{"label":"@entity.iterations","type":"badge"}]}],"appName":"Agent Pipeline"}]]},{"from":"executing","to":"failed","event":"FAILED","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"icon":"play","label":"Execution","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"type":"stack","gap":"lg","align":"center","direction":"vertical","children":[{"name":"x-circle","type":"icon"},{"content":"Loop Failed","variant":"h2","type":"typography"},{"message":"@entity.error","type":"alert","variant":"error"},{"type":"simple-grid","cols":2,"children":[{"type":"stat-display","label":"Iterations Used","value":"@entity.iterations","icon":"repeat"},{"icon":"shield","type":"stat-display","label":"Max Allowed","value":"@entity.maxIterations"}]},{"label":"Retry","variant":"primary","action":"RESET","type":"button","icon":"rotate-ccw"}]}]}]]},{"from":"checking","to":"completed","event":"CHECK_PASSED","effects":[["set","@entity.result","@payload.result"],["set","@entity.status","completed"],["render-ui","main",{"children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"align":"center","children":[{"type":"stack","children":[{"name":"check-circle","type":"icon"},{"content":"Loop Complete","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","align":"center"},{"type":"button","variant":"ghost","action":"RESET","icon":"rotate-ccw","label":"New Task"}],"justify":"between","type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"cols":2,"type":"simple-grid","children":[{"type":"stat-display","icon":"repeat","value":"@entity.iterations","label":"Iterations"},{"label":"Status","icon":"check","value":"@entity.status","type":"stat-display"}]},{"type":"divider"},{"type":"card","children":[{"children":[{"content":"Task","variant":"caption","type":"typography"},{"variant":"body","type":"typography","content":"@entity.task"},{"type":"divider"},{"variant":"caption","content":"Result","type":"typography"},{"content":"@entity.result","type":"typography","variant":"body"}],"gap":"md","type":"stack","direction":"vertical"}]}]}],"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"href":"/execution","label":"Execution","icon":"play"},{"href":"/logs","label":"Logs","icon":"terminal"}],"type":"dashboard-layout","appName":"Agent Pipeline"}]]},{"from":"checking","to":"executing","event":"CHECK_NEEDS_MORE","effects":[["set","@entity.currentTool","@payload.toolName"],["set","@entity.iterations",["+","@entity.iterations",1]],["if",[">=",["agent/context-usage"],0.8],["agent/compact","hybrid"],["log","Context below compact threshold"]],["agent/invoke","@payload.toolName","@payload.toolArgs"],["render-ui","main",{"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"icon":"play","label":"Execution","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"justify":"between","children":[{"children":[{"name":"tool","type":"icon"},{"variant":"h2","content":"Executing Tool","type":"typography"}],"gap":"sm","align":"center","type":"stack","direction":"horizontal"},{"label":"@entity.maxIterations","type":"badge"}],"type":"stack","direction":"horizontal","align":"center","gap":"sm"},{"type":"divider"},{"type":"card","children":[{"gap":"sm","type":"stack","children":[{"variant":"caption","type":"typography","content":"Current Tool"},{"type":"typography","variant":"h4","content":"@entity.currentTool"},{"type":"spinner"}],"direction":"vertical"}]},{"type":"card","children":[{"direction":"vertical","gap":"sm","type":"stack","children":[{"variant":"caption","type":"typography","content":"Plan"},{"content":"@entity.plan","type":"typography","variant":"body"}]}]}]}]}]]},{"from":"checking","to":"failed","event":"MAX_ITERATIONS","effects":[["set","@entity.error","@payload.error"],["set","@entity.status","failed"],["render-ui","main",{"children":[{"align":"center","children":[{"name":"x-circle","type":"icon"},{"content":"Loop Failed","variant":"h2","type":"typography"},{"variant":"error","message":"@entity.error","type":"alert"},{"cols":2,"type":"simple-grid","children":[{"label":"Iterations Used","value":"@entity.iterations","type":"stat-display","icon":"repeat"},{"icon":"shield","type":"stat-display","label":"Max Allowed","value":"@entity.maxIterations"}]},{"variant":"primary","type":"button","label":"Retry","action":"RESET","icon":"rotate-ccw"}],"type":"stack","direction":"vertical","gap":"lg"}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"completed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.plan",""],["set","@entity.result",""],["set","@entity.currentTool",""],["set","@entity.lastToolResult",""],["set","@entity.iterations",0],["set","@entity.error",""],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"icon":"play","href":"/execution","label":"Execution"},{"label":"Logs","icon":"terminal","href":"/logs"}],"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"type":"stack","gap":"sm","align":"center","direction":"horizontal","children":[{"name":"repeat","type":"icon"},{"variant":"h2","type":"typography","content":"Tool Execution Loop"}]},{"type":"divider"},{"type":"card","children":[{"direction":"vertical","children":[{"variant":"body","content":"Describe the task to execute with tools","type":"typography"},{"type":"form-section","submitEvent":"EXECUTE","fields":["task"],"entity":"@entity","mode":"edit"}],"gap":"md","type":"stack"}]}]}]}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.task",""],["set","@entity.plan",""],["set","@entity.result",""],["set","@entity.currentTool",""],["set","@entity.lastToolResult",""],["set","@entity.iterations",0],["set","@entity.error",""],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"children":[{"direction":"horizontal","children":[{"name":"repeat","type":"icon"},{"content":"Tool Execution Loop","variant":"h2","type":"typography"}],"gap":"sm","type":"stack","align":"center"},{"type":"divider"},{"type":"card","children":[{"children":[{"type":"typography","content":"Describe the task to execute with tools","variant":"body"},{"submitEvent":"EXECUTE","fields":["task"],"type":"form-section","entity":"@entity","mode":"edit"}],"direction":"vertical","type":"stack","gap":"md"}]}],"gap":"lg","type":"stack","direction":"vertical"}],"appName":"Agent Pipeline"}]]}]},"scope":"collection"},{"name":"ToolLoopStepProgress","category":"interaction","linkedEntity":"PipelineExec","emits":[{"event":"RESET"},{"event":"PipelineExecLoaded","description":"Fired when PipelineExec finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"event":"PipelineExecLoadFailed","description":"Fired when PipelineExec fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"PipelineExecutor"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopContextMonitor"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"in_progress"},{"name":"completed"},{"name":"failed"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"RESET","name":"Reset"},{"key":"ADVANCE","name":"Advance"},{"key":"COMPLETE","name":"Complete"},{"key":"FAIL","name":"Fail"},{"key":"PipelineExecLoaded","name":"PipelineExec loaded","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"key":"PipelineExecLoadFailed","name":"PipelineExec load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","PipelineExec",{"emit":{"success":"PipelineExecLoaded","failure":"PipelineExecLoadFailed"}}],["render-ui","main",{"children":[{"children":[{"align":"center","gap":"sm","type":"stack","direction":"horizontal","children":[{"type":"icon","name":"list-ordered"},{"type":"typography","content":"PipelineExec","variant":"h2"},{"type":"badge","label":"Idle","variant":"default"}]},{"type":"divider"},{"currentStep":"@entity.currentStep","type":"wizard-progress","steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"id":"2","title":"Check"},{"id":"3","title":"Complete"}]},{"type":"button","icon":"play","label":"Start","action":"START","variant":"primary"}],"gap":"lg","type":"stack","direction":"vertical"}],"navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"label":"Logs","icon":"terminal","href":"/logs"}],"type":"dashboard-layout","appName":"Agent Pipeline"}]]},{"from":"idle","to":"in_progress","event":"START","effects":[["set","@entity.status","in_progress"],["set","@entity.currentStep",0],["render-ui","main",{"appName":"Agent Pipeline","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"children":[{"name":"loader","type":"icon"},{"content":"PipelineExec","variant":"h2","type":"typography"},{"label":"In Progress","variant":"warning","type":"badge"}],"align":"center","type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"type":"wizard-progress","steps":[{"title":"Plan","id":"0"},{"title":"Execute","id":"1"},{"title":"Check","id":"2"},{"title":"Complete","id":"3"}],"currentStep":"@entity.currentStep"},{"type":"stack","align":"center","direction":"horizontal","gap":"sm","children":[{"type":"stat-display","label":"Current Step","value":"@entity.currentStep"},{"label":"Total Steps","value":"@entity.totalSteps","type":"stat-display"}]},{"type":"stack","gap":"sm","direction":"horizontal","children":[{"variant":"primary","type":"button","label":"Advance","action":"ADVANCE","icon":"chevron-right"},{"action":"RESET","label":"Reset","icon":"rotate-ccw","variant":"ghost","type":"button"}]}]}],"type":"dashboard-layout"}]]},{"from":"idle","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"appName":"Agent Pipeline","children":[{"children":[{"gap":"sm","children":[{"type":"icon","name":"list-ordered"},{"type":"typography","content":"PipelineExec","variant":"h2"},{"label":"Idle","variant":"default","type":"badge"}],"direction":"horizontal","align":"center","type":"stack"},{"type":"divider"},{"type":"wizard-progress","steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}],"currentStep":"@entity.currentStep"},{"variant":"primary","label":"Start","icon":"play","action":"START","type":"button"}],"type":"stack","direction":"vertical","gap":"lg"}],"type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"href":"/logs","icon":"terminal","label":"Logs"}]}]]},{"from":"in_progress","to":"in_progress","event":"ADVANCE","guard":["<","@entity.currentStep","@entity.totalSteps"],"effects":[["set","@entity.currentStep",["+","@entity.currentStep",1]],["render-ui","main",{"appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"href":"/logs","icon":"terminal","label":"Logs"}],"children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"direction":"horizontal","type":"stack","align":"center","children":[{"type":"icon","name":"loader"},{"type":"typography","variant":"h2","content":"PipelineExec"},{"label":"In Progress","variant":"warning","type":"badge"}],"gap":"sm"},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"title":"Check","id":"2"},{"title":"Complete","id":"3"}],"currentStep":"@entity.currentStep","type":"wizard-progress"},{"type":"stack","align":"center","children":[{"label":"Current Step","value":"@entity.currentStep","type":"stat-display"},{"label":"Total Steps","type":"stat-display","value":"@entity.totalSteps"}],"gap":"sm","direction":"horizontal"},{"children":[{"variant":"primary","icon":"chevron-right","label":"Advance","type":"button","action":"ADVANCE"},{"type":"button","label":"Reset","action":"RESET","variant":"ghost","icon":"rotate-ccw"}],"direction":"horizontal","gap":"sm","type":"stack"}]}],"type":"dashboard-layout"}]]},{"from":"in_progress","to":"completed","event":"COMPLETE","effects":[["set","@entity.status","completed"],["set","@entity.currentStep","@entity.totalSteps"],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","children":[{"children":[{"name":"check-circle","type":"icon"},{"content":"PipelineExec","type":"typography","variant":"h2"},{"label":"Completed","type":"badge","variant":"success"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"id":"2","title":"Check"},{"title":"Complete","id":"3"}],"currentStep":"@entity.totalSteps","type":"wizard-progress"},{"variant":"success","message":"All steps completed successfully.","type":"alert"},{"action":"RESET","type":"button","label":"Reset","variant":"ghost","icon":"rotate-ccw"}],"type":"stack"}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"icon":"terminal","href":"/logs","label":"Logs"}]}]]},{"from":"in_progress","to":"failed","event":"FAIL","effects":[["set","@entity.status","failed"],["render-ui","main",{"children":[{"type":"stack","gap":"lg","children":[{"children":[{"type":"icon","name":"x-circle"},{"content":"PipelineExec","type":"typography","variant":"h2"},{"variant":"danger","type":"badge","label":"Failed"}],"type":"stack","direction":"horizontal","gap":"sm","align":"center"},{"type":"divider"},{"steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"id":"2","title":"Check"},{"id":"3","title":"Complete"}],"currentStep":"@entity.currentStep","type":"wizard-progress"},{"variant":"error","type":"alert","message":"Pipeline failed at the current step."},{"children":[{"type":"stat-display","label":"Failed At Step","value":"@entity.currentStep"}],"gap":"sm","direction":"horizontal","type":"stack"},{"label":"Reset","action":"RESET","icon":"rotate-ccw","type":"button","variant":"ghost"}],"direction":"vertical"}],"type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","label":"Logs","href":"/logs"}],"appName":"Agent Pipeline"}]]},{"from":"in_progress","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"children":[{"type":"icon","name":"list-ordered"},{"content":"PipelineExec","type":"typography","variant":"h2"},{"variant":"default","label":"Idle","type":"badge"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"title":"Check","id":"2"},{"id":"3","title":"Complete"}]},{"variant":"primary","label":"Start","icon":"play","action":"START","type":"button"}]}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"href":"/logs","label":"Logs","icon":"terminal"}]}]]},{"from":"completed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"type":"dashboard-layout","children":[{"gap":"lg","direction":"vertical","type":"stack","children":[{"direction":"horizontal","type":"stack","align":"center","gap":"sm","children":[{"type":"icon","name":"list-ordered"},{"content":"PipelineExec","type":"typography","variant":"h2"},{"label":"Idle","variant":"default","type":"badge"}]},{"type":"divider"},{"type":"wizard-progress","currentStep":"@entity.currentStep","steps":[{"id":"0","title":"Plan"},{"id":"1","title":"Execute"},{"id":"2","title":"Check"},{"id":"3","title":"Complete"}]},{"type":"button","label":"Start","action":"START","variant":"primary","icon":"play"}]}],"appName":"Agent Pipeline","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","label":"Logs","href":"/logs"}]}]]},{"from":"failed","to":"idle","event":"RESET","effects":[["set","@entity.status","idle"],["set","@entity.currentStep",0],["render-ui","main",{"children":[{"direction":"vertical","type":"stack","children":[{"type":"stack","align":"center","children":[{"name":"list-ordered","type":"icon"},{"type":"typography","variant":"h2","content":"PipelineExec"},{"type":"badge","label":"Idle","variant":"default"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"type":"wizard-progress","steps":[{"id":"0","title":"Plan"},{"title":"Execute","id":"1"},{"id":"2","title":"Check"},{"title":"Complete","id":"3"}],"currentStep":"@entity.currentStep"},{"icon":"play","type":"button","action":"START","variant":"primary","label":"Start"}],"gap":"lg"}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","href":"/pipeline","label":"Pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]}]},"scope":"collection"},{"name":"ToolLoopCompletionFlow","category":"interaction","linkedEntity":"PipelineExec","emits":[{"event":"SAVE","scope":"internal"},{"event":"GENERATED","scope":"internal"},{"event":"PipelineExecLoadFailed","description":"Fired when PipelineExec fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineExecLoaded","description":"Fired when PipelineExec finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"event":"PipelineExecSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineExecSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"GENERATE","name":"Generate"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"GENERATED","name":"Generated"},{"key":"PipelineExecLoadFailed","name":"PipelineExec load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineExecLoaded","name":"PipelineExec loaded","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"key":"PipelineExecSaveFailed","name":"PipelineExec save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineExecSaved","name":"PipelineExec saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelineExec",{"emit":{"success":"PipelineExecLoaded","failure":"PipelineExecLoadFailed"}}],["render-ui","main",{"children":[{"type":"stack","children":[{"gap":"md","type":"stack","justify":"between","children":[{"gap":"md","type":"stack","direction":"horizontal","children":[{"name":"sparkles","type":"icon"},{"type":"typography","content":"PipelineExec","variant":"h2"}]},{"icon":"sparkles","action":"GENERATE","label":"Open","type":"button","variant":"primary"}],"direction":"horizontal"},{"type":"divider"},{"title":"Nothing open","description":"Click Open to view details in a modal overlay.","type":"empty-state","icon":"sparkles"}],"gap":"lg","direction":"vertical"}],"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"icon":"play","label":"Execution","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}]}]]},{"from":"closed","to":"open","event":"GENERATE","effects":[["render-ui","modal",{"type":"stack","gap":"md","children":[{"direction":"horizontal","type":"stack","children":[{"name":"sparkles","type":"icon"},{"content":"PipelineExec","variant":"h3","type":"typography"}],"gap":"sm"},{"type":"divider"},{"direction":"horizontal","children":[{"type":"badge","label":"@entity.provider"},{"label":"@entity.model","type":"badge"}],"type":"stack","gap":"sm"},{"mode":"create","type":"form-section","cancelEvent":"CLOSE","fields":["prompt"],"submitEvent":"SAVE"}],"direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","PipelineExec",{"emit":{"failure":"PipelineExecLoadFailed","success":"PipelineExecLoaded"}}],["render-ui","main",{"children":[{"children":[{"direction":"horizontal","type":"stack","justify":"between","gap":"md","children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"name":"sparkles","type":"icon"},{"content":"PipelineExec","type":"typography","variant":"h2"}]},{"variant":"primary","label":"Open","type":"button","action":"GENERATE","icon":"sparkles"}]},{"type":"divider"},{"title":"Nothing open","type":"empty-state","icon":"sparkles","description":"Click Open to view details in a modal overlay."}],"type":"stack","gap":"lg","direction":"vertical"}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"icon":"play","label":"Execution","href":"/execution"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","PipelineExec","@payload.data",{"emit":{"failure":"PipelineExecSaveFailed","success":"PipelineExecSaved"}}],["render-ui","modal",null],["emit","GENERATED"],["fetch","PipelineExec",{"emit":{"success":"PipelineExecLoaded","failure":"PipelineExecLoadFailed"}}],["render-ui","main",{"navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","icon":"play","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"appName":"Agent Pipeline","type":"dashboard-layout","children":[{"children":[{"type":"stack","direction":"horizontal","justify":"between","children":[{"gap":"md","direction":"horizontal","type":"stack","children":[{"name":"sparkles","type":"icon"},{"content":"PipelineExec","type":"typography","variant":"h2"}]},{"variant":"primary","type":"button","label":"Open","icon":"sparkles","action":"GENERATE"}],"gap":"md"},{"type":"divider"},{"icon":"sparkles","type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay."}],"type":"stack","gap":"lg","direction":"vertical"}]}]]}]},"scope":"collection"},{"name":"ToolLoopToolCallFlow","category":"interaction","linkedEntity":"PipelineExec","emits":[{"event":"SAVE","scope":"internal"},{"event":"INVOKED","scope":"internal"},{"event":"PipelineExecLoadFailed","description":"Fired when PipelineExec fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineExecLoaded","description":"Fired when PipelineExec finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"event":"PipelineExecSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineExecSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"INVOKE","name":"Invoke"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"INVOKED","name":"Invoked"},{"key":"PipelineExecLoadFailed","name":"PipelineExec load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineExecLoaded","name":"PipelineExec loaded","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"key":"PipelineExecSaveFailed","name":"PipelineExec save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineExecSaved","name":"PipelineExec saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelineExec",{"emit":{"failure":"PipelineExecLoadFailed","success":"PipelineExecLoaded"}}],["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"gap":"lg","children":[{"gap":"md","type":"stack","justify":"between","children":[{"gap":"md","children":[{"type":"icon","name":"wrench"},{"type":"typography","content":"Invoke Tool","variant":"h2"}],"type":"stack","direction":"horizontal"},{"type":"button","variant":"primary","label":"Open","action":"INVOKE","icon":"wrench"}],"direction":"horizontal"},{"type":"divider"},{"type":"empty-state","icon":"wrench","title":"Nothing open","description":"Click Open to view details in a modal overlay."}],"direction":"vertical","type":"stack"}],"navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","href":"/logs","label":"Logs"}]}]]},{"from":"closed","to":"open","event":"INVOKE","effects":[["render-ui","modal",{"gap":"md","direction":"vertical","type":"stack","children":[{"type":"stack","children":[{"name":"wrench","type":"icon"},{"type":"typography","variant":"h3","content":"Invoke Tool"}],"gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"form-section","submitEvent":"SAVE","cancelEvent":"CLOSE","mode":"create","fields":["toolName","args"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["notify","Cancelled","info"],["fetch","PipelineExec",{"emit":{"success":"PipelineExecLoaded","failure":"PipelineExecLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"children":[{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"icon","name":"wrench"},{"variant":"h2","type":"typography","content":"Invoke Tool"}]},{"action":"INVOKE","label":"Open","variant":"primary","type":"button","icon":"wrench"}],"type":"stack","gap":"md","direction":"horizontal","justify":"between"},{"type":"divider"},{"type":"empty-state","title":"Nothing open","description":"Click Open to view details in a modal overlay.","icon":"wrench"}]}],"navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"href":"/logs","label":"Logs","icon":"terminal"}],"appName":"Agent Pipeline"}]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","PipelineExec","@payload.data",{"emit":{"success":"PipelineExecSaved","failure":"PipelineExecSaveFailed"}}],["render-ui","modal",null],["emit","INVOKED"],["fetch","PipelineExec",{"emit":{"failure":"PipelineExecLoadFailed","success":"PipelineExecLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"children":[{"gap":"lg","direction":"vertical","children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"gap":"md","children":[{"name":"wrench","type":"icon"},{"variant":"h2","type":"typography","content":"Invoke Tool"}],"type":"stack","direction":"horizontal"},{"type":"button","label":"Open","variant":"primary","action":"INVOKE","icon":"wrench"}],"justify":"between"},{"type":"divider"},{"type":"empty-state","icon":"wrench","description":"Click Open to view details in a modal overlay.","title":"Nothing open"}],"type":"stack"}],"appName":"Agent Pipeline"}]]}]},"scope":"collection"},{"name":"ToolLoopContextMonitor","category":"interaction","linkedEntity":"PipelineExec","emits":[{"event":"RESET"},{"event":"PipelineExecLoaded","description":"Fired when PipelineExec finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"event":"PipelineExecLoadFailed","description":"Fired when PipelineExec fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"PipelineExecutor"}},{"event":"RESET","triggers":"RESET","source":{"kind":"trait","trait":"ToolLoopStepProgress"}}],"stateMachine":{"states":[{"name":"normal","isInitial":true},{"name":"warning"},{"name":"critical"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"UPDATE","name":"Update","payloadSchema":[{"name":"current","type":"string"}]},{"key":"COMPACT","name":"Compact"},{"key":"RESET","name":"Reset"},{"key":"PipelineExecLoaded","name":"PipelineExec loaded","payloadSchema":[{"name":"data","type":"[PipelineExec]"}]},{"key":"PipelineExecLoadFailed","name":"PipelineExec load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"normal","to":"normal","event":"INIT","effects":[["fetch","PipelineExec",{"emit":{"failure":"PipelineExecLoadFailed","success":"PipelineExecLoaded"}}],["render-ui","main",{"appName":"Agent Pipeline","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}],"children":[{"children":[{"direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"icon","name":"gauge"},{"variant":"h2","content":"Token Usage","type":"typography"},{"type":"badge","label":"Normal","variant":"default"}],"align":"center"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"type":"stack","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"direction":"horizontal","gap":"md"},{"type":"button","action":"RESET","variant":"ghost","icon":"rotate-ccw","label":"Reset"}],"gap":"lg","type":"stack","direction":"vertical"}],"type":"dashboard-layout"}]]},{"from":"normal","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"appName":"Agent Pipeline","children":[{"direction":"vertical","gap":"lg","type":"stack","children":[{"direction":"horizontal","align":"center","type":"stack","children":[{"type":"icon","name":"gauge"},{"type":"typography","content":"Token Usage","variant":"h2"},{"label":"Normal","variant":"default","type":"badge"}],"gap":"sm"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"direction":"horizontal","gap":"md","type":"stack"},{"label":"Reset","action":"RESET","variant":"ghost","type":"button","icon":"rotate-ccw"}]}],"type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"href":"/execution","label":"Execution","icon":"play"},{"icon":"terminal","label":"Logs","href":"/logs"}]}]]},{"from":"normal","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"icon":"play","label":"Execution","href":"/execution"},{"label":"Logs","icon":"terminal","href":"/logs"}],"appName":"Agent Pipeline","type":"dashboard-layout","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"gap":"sm","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","content":"Token Usage","variant":"h2"},{"label":"Warning","variant":"warning","type":"badge"}],"type":"stack","align":"center","direction":"horizontal"},{"type":"divider"},{"variant":"warning","type":"alert","message":"Token usage approaching limit. Consider compacting."},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"gap":"md","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"type":"stack","direction":"horizontal"},{"type":"stack","children":[{"icon":"minimize-2","type":"button","label":"Compact","variant":"primary","action":"COMPACT"},{"variant":"ghost","icon":"rotate-ccw","type":"button","action":"RESET","label":"Reset"}],"gap":"sm","direction":"horizontal"}]}]}]]},{"from":"normal","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"direction":"horizontal","align":"center","children":[{"type":"icon","name":"alert-octagon"},{"content":"Token Usage","variant":"h2","type":"typography"},{"type":"badge","label":"Critical","variant":"danger"}],"type":"stack","gap":"sm"},{"type":"divider"},{"type":"alert","variant":"error","message":"Token usage critical. Compact immediately to avoid truncation."},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}]},{"direction":"horizontal","children":[{"action":"COMPACT","label":"Compact Now","variant":"primary","icon":"minimize-2","type":"button"},{"icon":"rotate-ccw","type":"button","label":"Reset","action":"RESET","variant":"ghost"}],"type":"stack","gap":"sm"}]}],"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"href":"/execution","icon":"play","label":"Execution"},{"href":"/logs","icon":"terminal","label":"Logs"}],"type":"dashboard-layout","appName":"Agent Pipeline"}]]},{"from":"normal","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"icon":"play","href":"/execution","label":"Execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"children":[{"children":[{"gap":"sm","direction":"horizontal","type":"stack","align":"center","children":[{"type":"icon","name":"gauge"},{"content":"Token Usage","variant":"h2","type":"typography"},{"type":"badge","label":"Normal","variant":"default"}]},{"type":"divider"},{"value":"@entity.current","max":"@entity.max","type":"progress-bar"},{"direction":"horizontal","gap":"md","children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"type":"stack"},{"action":"RESET","icon":"rotate-ccw","type":"button","label":"Reset","variant":"ghost"}],"direction":"vertical","type":"stack","gap":"lg"}],"type":"dashboard-layout","appName":"Agent Pipeline"}]]},{"from":"normal","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"href":"/logs","label":"Logs","icon":"terminal"}],"children":[{"gap":"lg","type":"stack","direction":"vertical","children":[{"gap":"sm","direction":"horizontal","type":"stack","children":[{"type":"icon","name":"gauge"},{"variant":"h2","content":"Token Usage","type":"typography"},{"label":"Normal","variant":"default","type":"badge"}],"align":"center"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}]},{"variant":"ghost","icon":"rotate-ccw","action":"RESET","type":"button","label":"Reset"}]}]}]]},{"from":"warning","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"appName":"Agent Pipeline","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"type":"dashboard-layout","children":[{"type":"stack","direction":"vertical","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h2","content":"Token Usage","type":"typography"},{"type":"badge","label":"Warning","variant":"warning"}],"gap":"sm","direction":"horizontal","type":"stack","align":"center"},{"type":"divider"},{"variant":"warning","message":"Token usage approaching limit. Consider compacting.","type":"alert"},{"value":"@entity.current","type":"progress-bar","max":"@entity.max"},{"type":"stack","direction":"horizontal","children":[{"label":"Tokens Used","type":"stat-display","value":"@entity.current"},{"value":"@entity.max","type":"stat-display","label":"Max Tokens"}],"gap":"md"},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"variant":"primary","action":"COMPACT","type":"button","icon":"minimize-2","label":"Compact"},{"variant":"ghost","type":"button","icon":"rotate-ccw","action":"RESET","label":"Reset"}]}],"gap":"lg"}]}]]},{"from":"warning","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"href":"/execution","icon":"play","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"children":[{"type":"stack","children":[{"name":"alert-octagon","type":"icon"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"danger","type":"badge","label":"Critical"}],"align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"message":"Token usage critical. Compact immediately to avoid truncation.","type":"alert","variant":"error"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","value":"@entity.max","label":"Max Tokens"}]},{"type":"stack","direction":"horizontal","children":[{"variant":"primary","action":"COMPACT","type":"button","label":"Compact Now","icon":"minimize-2"},{"type":"button","label":"Reset","variant":"ghost","icon":"rotate-ccw","action":"RESET"}],"gap":"sm"}],"type":"stack","gap":"lg","direction":"vertical"}]}]]},{"from":"warning","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"direction":"horizontal","type":"stack","children":[{"name":"gauge","type":"icon"},{"type":"typography","variant":"h2","content":"Token Usage"},{"variant":"default","type":"badge","label":"Normal"}],"gap":"sm","align":"center"},{"type":"divider"},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"gap":"md","children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"value":"@entity.max","label":"Max Tokens","type":"stat-display"}],"direction":"horizontal","type":"stack"},{"action":"RESET","label":"Reset","type":"button","variant":"ghost","icon":"rotate-ccw"}]}],"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"warning","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"appName":"Agent Pipeline","type":"dashboard-layout","navItems":[{"label":"Pipeline","icon":"git-branch","href":"/pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"children":[{"type":"stack","direction":"vertical","children":[{"children":[{"type":"icon","name":"gauge"},{"type":"typography","content":"Token Usage","variant":"h2"},{"label":"Normal","type":"badge","variant":"default"}],"direction":"horizontal","align":"center","gap":"sm","type":"stack"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"direction":"horizontal","type":"stack","gap":"md"},{"type":"button","label":"Reset","action":"RESET","variant":"ghost","icon":"rotate-ccw"}],"gap":"lg"}]}]]},{"from":"warning","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"children":[{"direction":"vertical","type":"stack","children":[{"children":[{"type":"icon","name":"gauge"},{"type":"typography","content":"Token Usage","variant":"h2"},{"label":"Normal","variant":"default","type":"badge"}],"type":"stack","align":"center","direction":"horizontal","gap":"sm"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"gap":"md","direction":"horizontal","children":[{"type":"stat-display","value":"@entity.current","label":"Tokens Used"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"type":"stack"},{"action":"RESET","type":"button","variant":"ghost","label":"Reset","icon":"rotate-ccw"}],"gap":"lg"}],"appName":"Agent Pipeline","navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","href":"/logs","label":"Logs"}],"type":"dashboard-layout"}]]},{"from":"critical","to":"critical","event":"UPDATE","guard":[">=",["/","@payload.current","@entity.max"],0.95],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"type":"dashboard-layout","navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"href":"/logs","icon":"terminal","label":"Logs"}],"appName":"Agent Pipeline","children":[{"direction":"vertical","type":"stack","children":[{"children":[{"name":"alert-octagon","type":"icon"},{"content":"Token Usage","type":"typography","variant":"h2"},{"variant":"danger","label":"Critical","type":"badge"}],"direction":"horizontal","gap":"sm","type":"stack","align":"center"},{"type":"divider"},{"type":"alert","variant":"error","message":"Token usage critical. Compact immediately to avoid truncation."},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"label":"Max Tokens","type":"stat-display","value":"@entity.max"}]},{"gap":"sm","children":[{"variant":"primary","icon":"minimize-2","label":"Compact Now","action":"COMPACT","type":"button"},{"icon":"rotate-ccw","action":"RESET","type":"button","label":"Reset","variant":"ghost"}],"type":"stack","direction":"horizontal"}],"gap":"lg"}]}]]},{"from":"critical","to":"warning","event":"UPDATE","guard":["and",[">=",["/","@payload.current","@entity.max"],0.85],["<",["/","@payload.current","@entity.max"],0.95]],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"appName":"Agent Pipeline","children":[{"gap":"lg","direction":"vertical","children":[{"type":"stack","direction":"horizontal","align":"center","children":[{"name":"alert-triangle","type":"icon"},{"type":"typography","content":"Token Usage","variant":"h2"},{"type":"badge","label":"Warning","variant":"warning"}],"gap":"sm"},{"type":"divider"},{"variant":"warning","type":"alert","message":"Token usage approaching limit. Consider compacting."},{"type":"progress-bar","max":"@entity.max","value":"@entity.current"},{"children":[{"value":"@entity.current","type":"stat-display","label":"Tokens Used"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"gap":"md","direction":"horizontal","type":"stack"},{"direction":"horizontal","children":[{"label":"Compact","variant":"primary","type":"button","icon":"minimize-2","action":"COMPACT"},{"variant":"ghost","type":"button","label":"Reset","icon":"rotate-ccw","action":"RESET"}],"gap":"sm","type":"stack"}],"type":"stack"}],"navItems":[{"icon":"git-branch","href":"/pipeline","label":"Pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"type":"dashboard-layout"}]]},{"from":"critical","to":"normal","event":"UPDATE","guard":["<",["/","@payload.current","@entity.max"],0.85],"effects":[["set","@entity.current","@payload.current"],["render-ui","main",{"navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"icon":"terminal","label":"Logs","href":"/logs"}],"type":"dashboard-layout","children":[{"type":"stack","children":[{"type":"stack","gap":"sm","align":"center","children":[{"type":"icon","name":"gauge"},{"type":"typography","variant":"h2","content":"Token Usage"},{"type":"badge","label":"Normal","variant":"default"}],"direction":"horizontal"},{"type":"divider"},{"type":"progress-bar","value":"@entity.current","max":"@entity.max"},{"type":"stack","children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"gap":"md","direction":"horizontal"},{"variant":"ghost","type":"button","icon":"rotate-ccw","action":"RESET","label":"Reset"}],"direction":"vertical","gap":"lg"}],"appName":"Agent Pipeline"}]]},{"from":"critical","to":"normal","event":"COMPACT","effects":[["agent/compact"],["set","@entity.lastCompactedAt","@now"],["agent/token-count"],["render-ui","main",{"navItems":[{"href":"/pipeline","label":"Pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"href":"/logs","label":"Logs","icon":"terminal"}],"appName":"Agent Pipeline","children":[{"type":"stack","direction":"vertical","children":[{"type":"stack","direction":"horizontal","children":[{"type":"icon","name":"gauge"},{"variant":"h2","type":"typography","content":"Token Usage"},{"variant":"default","label":"Normal","type":"badge"}],"gap":"sm","align":"center"},{"type":"divider"},{"max":"@entity.max","value":"@entity.current","type":"progress-bar"},{"children":[{"label":"Tokens Used","value":"@entity.current","type":"stat-display"},{"type":"stat-display","label":"Max Tokens","value":"@entity.max"}],"direction":"horizontal","type":"stack","gap":"md"},{"type":"button","icon":"rotate-ccw","label":"Reset","variant":"ghost","action":"RESET"}],"gap":"lg"}],"type":"dashboard-layout"}]]},{"from":"critical","to":"normal","event":"RESET","effects":[["set","@entity.current",0],["render-ui","main",{"navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","icon":"play","href":"/execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"type":"dashboard-layout","appName":"Agent Pipeline","children":[{"type":"stack","children":[{"gap":"sm","children":[{"name":"gauge","type":"icon"},{"type":"typography","content":"Token Usage","variant":"h2"},{"type":"badge","label":"Normal","variant":"default"}],"direction":"horizontal","align":"center","type":"stack"},{"type":"divider"},{"value":"@entity.current","type":"progress-bar","max":"@entity.max"},{"children":[{"type":"stat-display","label":"Tokens Used","value":"@entity.current"},{"label":"Max Tokens","value":"@entity.max","type":"stat-display"}],"direction":"horizontal","type":"stack","gap":"md"},{"action":"RESET","variant":"ghost","type":"button","label":"Reset","icon":"rotate-ccw"}],"gap":"lg","direction":"vertical"}]}]]}]},"scope":"collection"}],"pages":[{"name":"Execution","path":"/execution","traits":[{"ref":"PipelineExecutor"}]}]},{"name":"PipelineSessionOrbital","entity":{"name":"PipelineSession","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"sessionId","type":"string"},{"name":"parentId","type":"string"},{"name":"label","type":"string"},{"name":"status","type":"string","default":"idle"},{"name":"createdAt","type":"string"}]},"traits":[{"name":"PipelineSessionManager","category":"interaction","linkedEntity":"PipelineSession","emits":[{"event":"FORK"},{"event":"LABEL"},{"event":"END"},{"event":"PipelineSessionLoaded","description":"Fired when PipelineSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"event":"PipelineSessionLoadFailed","description":"Fired when PipelineSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"FORKED","triggers":"INIT","source":{"kind":"trait","trait":"PipelineSessionAgent"}},{"event":"LABELED","triggers":"INIT","source":{"kind":"trait","trait":"PipelineSessionLabel"}},{"event":"ENDED","triggers":"INIT","source":{"kind":"trait","trait":"PipelineSessionAgent"}},{"event":"STEP_COMPLETE","triggers":"INIT","source":{"kind":"orbital","orbital":"PipelineExecOrbital","trait":"PipelineExecutor"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PipelineSessionLoaded","name":"PipelineSession loaded","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"key":"PipelineSessionLoadFailed","name":"PipelineSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"FORK","name":"Fork"},{"key":"LABEL","name":"Label"},{"key":"END","name":"End"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","PipelineSession",{"emit":{"failure":"PipelineSessionLoadFailed","success":"PipelineSessionLoaded"}}],["render-ui","main",{"className":"py-12","align":"center","children":[{"type":"spinner"},{"color":"muted","content":"Loading…","type":"typography","variant":"caption"}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"PipelineSessionLoaded","effects":[["render-ui","main",{"type":"dashboard-layout","appName":"Agent Pipeline","navItems":[{"icon":"git-branch","label":"Pipeline","href":"/pipeline"},{"icon":"play","href":"/execution","label":"Execution"},{"href":"/logs","icon":"terminal","label":"Logs"}],"children":[{"gap":"lg","type":"stack","children":[{"direction":"horizontal","align":"center","children":[{"gap":"sm","type":"stack","children":[{"type":"icon","name":"terminal"},{"type":"typography","content":"PipelineSession Manager","variant":"h2"}],"direction":"horizontal","align":"center"},{"type":"stack","children":[{"type":"button","label":"Fork","variant":"secondary","icon":"git-branch","action":"FORK"},{"action":"LABEL","type":"button","variant":"secondary","label":"Label","icon":"tag"},{"icon":"square","type":"button","variant":"ghost","action":"END","label":"End"}],"direction":"horizontal","gap":"sm"}],"type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"fields":[{"name":"sessionId","icon":"terminal","label":"Session ID","variant":"h4"},{"name":"status","label":"Status","variant":"badge","colorMap":{"completed":"success","done":"success","scheduled":"warning","disabled":"neutral","pending":"warning","archived":"neutral","error":"destructive","cancelled":"destructive","failed":"destructive","inactive":"neutral","active":"success","draft":"warning"}},{"label":"Label","name":"label","variant":"caption"}],"entity":"@payload.data","type":"data-grid","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"}]}],"direction":"vertical","className":"max-w-5xl mx-auto w-full"}]}]]},{"from":"browsing","to":"browsing","event":"PipelineSessionLoadFailed","effects":[["render-ui","main",{"className":"py-12","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"content":"Failed to load pipelinesession","variant":"h3","type":"typography"},{"type":"typography","variant":"body","color":"muted","content":"@payload.error"},{"type":"button","label":"Retry","variant":"primary","icon":"rotate-ccw","action":"INIT"}],"type":"stack","direction":"vertical","gap":"md","align":"center"}]]}]},"scope":"collection"},{"name":"PipelineSessionLabel","category":"interaction","linkedEntity":"PipelineSession","emits":[{"event":"LABELED"},{"event":"PipelineSessionLoadFailed","description":"Fired when PipelineSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineSessionLoaded","description":"Fired when PipelineSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"event":"PipelineSessionUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PipelineSessionUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"LABEL","triggers":"LABEL","source":{"kind":"trait","trait":"PipelineSessionManager"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LABEL","name":"Label"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LABELED","name":"Labeled"},{"key":"PipelineSessionLoadFailed","name":"PipelineSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineSessionLoaded","name":"PipelineSession loaded","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"key":"PipelineSessionUpdateFailed","name":"PipelineSession update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PipelineSessionUpdated","name":"PipelineSession updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","PipelineSession",{"emit":{"success":"PipelineSessionLoaded","failure":"PipelineSessionLoadFailed"}}]]},{"from":"closed","to":"open","event":"LABEL","effects":[["fetch","PipelineSession",{"emit":{"success":"PipelineSessionLoaded","failure":"PipelineSessionLoadFailed"}}],["render-ui","modal",{"children":[{"children":[{"name":"tag","type":"icon"},{"variant":"h3","type":"typography","content":"Label Session"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"children":[{"type":"typography","variant":"caption","content":"Session:"},{"type":"badge","label":"@entity.sessionId"}],"type":"stack","direction":"horizontal","gap":"md"},{"mode":"edit","fields":["label"],"type":"form-section","entity":"@entity","submitEvent":"SAVE","cancelEvent":"CLOSE"}],"direction":"vertical","gap":"md","type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","PipelineSession","@payload.data",{"emit":{"success":"PipelineSessionUpdated","failure":"PipelineSessionUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","LABELED"]]}]},"scope":"collection"},{"name":"PipelineSessionAgent","category":"interaction","linkedEntity":"PipelineSession","emits":[{"event":"ENDED","scope":"external","payloadSchema":[{"name":"sessionId","type":"string"}]},{"event":"FORKED","scope":"external","payloadSchema":[{"name":"sessionId","type":"string"}]},{"event":"PipelineSessionLoaded","description":"Fired when PipelineSession finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"event":"PipelineSessionLoadFailed","description":"Fired when PipelineSession fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"ENDED","triggers":"INIT","source":{"kind":"trait","trait":"PipelineSessionAgent"}},{"event":"FORKED","triggers":"INIT","source":{"kind":"trait","trait":"PipelineSessionAgent"}},{"event":"FORK","triggers":"FORK","source":{"kind":"trait","trait":"PipelineSessionManager"}},{"event":"END","triggers":"END","source":{"kind":"trait","trait":"PipelineSessionManager"}}],"stateMachine":{"states":[{"name":"active","isInitial":true},{"name":"forked"},{"name":"ended"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"FORK","name":"Fork"},{"key":"DO_LABEL","name":"Do Label","payloadSchema":[{"name":"data","type":"string"}]},{"key":"LABELED","name":"Labeled"},{"key":"END","name":"End"},{"key":"ENDED","name":"Ended"},{"key":"FORKED","name":"Forked"},{"key":"PipelineSessionLoaded","name":"PipelineSession loaded","payloadSchema":[{"name":"data","type":"[PipelineSession]"}]},{"key":"PipelineSessionLoadFailed","name":"PipelineSession load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"active","to":"active","event":"INIT","effects":[["fetch","PipelineSession",{"emit":{"failure":"PipelineSessionLoadFailed","success":"PipelineSessionLoaded"}}],["agent/session-id"],["set","@entity.createdAt","@now"],["render-ui","main",{"children":[{"description":"Session is ready","icon":"git-branch","title":"Session","type":"empty-state"}],"navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"label":"Execution","href":"/execution","icon":"play"},{"icon":"terminal","href":"/logs","label":"Logs"}],"type":"dashboard-layout","appName":"Agent Pipeline"}]]},{"from":"active","to":"forked","event":"FORK","effects":[["set","@entity.parentId","@entity.sessionId"],["agent/fork"],["agent/session-id"],["persist","create","PipelineSession",{"status":"forked","parentId":"@entity.parentId","createdAt":"@now","sessionId":"@entity.sessionId"},{"emit":{"success":"FORKED"}}]]},{"from":"active","to":"active","event":"DO_LABEL","effects":[["agent/label","@payload.data.label"],["set","@entity.label","@payload.data.label"]]},{"from":"active","to":"active","event":"LABELED","effects":[["agent/label","@entity.label"],["fetch","PipelineSession",{"emit":{"success":"PipelineSessionLoaded","failure":"PipelineSessionLoadFailed"}}]]},{"from":"active","to":"ended","event":"END","effects":[["set","@entity.status","ended"],["emit","ENDED"]]},{"from":"forked","to":"forked","event":"FORK","effects":[["set","@entity.parentId","@entity.sessionId"],["agent/fork"],["agent/session-id"],["persist","create","PipelineSession",{"status":"forked","parentId":"@entity.parentId","sessionId":"@entity.sessionId","createdAt":"@now"},{"emit":{"success":"FORKED"}}]]},{"from":"forked","to":"forked","event":"DO_LABEL","effects":[["agent/label","@payload.data.label"],["set","@entity.label","@payload.data.label"]]},{"from":"forked","to":"forked","event":"LABELED","effects":[["agent/label","@entity.label"],["fetch","PipelineSession",{"emit":{"failure":"PipelineSessionLoadFailed","success":"PipelineSessionLoaded"}}]]},{"from":"forked","to":"ended","event":"END","effects":[["set","@entity.status","ended"],["emit","ENDED"]]},{"from":"ended","to":"active","event":"INIT","effects":[["fetch","PipelineSession",{"emit":{"failure":"PipelineSessionLoadFailed","success":"PipelineSessionLoaded"}}],["agent/session-id"],["set","@entity.createdAt","@now"],["set","@entity.status","active"],["render-ui","main",{"children":[{"type":"empty-state","icon":"git-branch","title":"Session","description":"Session is ready"}],"type":"dashboard-layout","navItems":[{"label":"Pipeline","href":"/pipeline","icon":"git-branch"},{"href":"/execution","icon":"play","label":"Execution"},{"label":"Logs","icon":"terminal","href":"/logs"}],"appName":"Agent Pipeline"}]]}]},"scope":"collection"}],"pages":[{"name":"Session","path":"/session","traits":[{"ref":"PipelineSessionManager"}]}]},{"name":"ExecutionLogOrbital","entity":{"name":"ExecutionLog","collection":"executionlogs","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"content","type":"string","default":""},{"name":"category","type":"string","default":""},{"name":"strength","type":"number","default":1},{"name":"pinned","type":"boolean","default":false},{"name":"scope","type":"string","default":""},{"name":"lastAccessedAt","type":"string"},{"name":"createdAt","type":"string"}]},"traits":[{"name":"ExecutionLogBrowse","category":"interaction","linkedEntity":"ExecutionLog","emits":[{"event":"MEMORIZE"},{"event":"RECALL"},{"event":"DECAY"},{"event":"PIN","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"REINFORCE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"FORGET","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.content","type":"string"},{"name":"row.category","type":"string"},{"name":"row.strength","type":"number"},{"name":"row.pinned","type":"boolean"},{"name":"row.scope","type":"string"},{"name":"row.lastAccessedAt","type":"string"},{"name":"row.createdAt","type":"string"}]},{"event":"ExecutionLogLoaded","description":"Fired when ExecutionLog finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"event":"ExecutionLogLoadFailed","description":"Fired when ExecutionLog fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"MEMORIZED","triggers":"INIT","source":{"kind":"trait","trait":"ExecutionLogCreate"}},{"event":"PINNED","triggers":"INIT","source":{"kind":"trait","trait":"ExecutionLogAgent"}},{"event":"FORGOT","triggers":"INIT","source":{"kind":"trait","trait":"ExecutionLogAgent"}},{"event":"REINFORCED","triggers":"INIT","source":{"kind":"trait","trait":"ExecutionLogAgent"}},{"event":"DECAYED","triggers":"INIT","source":{"kind":"trait","trait":"ExecutionLogAgent"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ExecutionLogLoaded","name":"ExecutionLog loaded","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"key":"ExecutionLogLoadFailed","name":"ExecutionLog load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"MEMORIZE","name":"Memorize"},{"key":"RECALL","name":"Recall"},{"key":"DECAY","name":"Decay"},{"key":"PIN","name":"Pin"},{"key":"REINFORCE","name":"Reinforce"},{"key":"FORGET","name":"Forget"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","ExecutionLog",{"emit":{"failure":"ExecutionLogLoadFailed","success":"ExecutionLogLoaded"}}],["render-ui","main",{"gap":"md","type":"stack","align":"center","className":"py-12","children":[{"type":"spinner"},{"variant":"caption","content":"Loading…","color":"muted","type":"typography"}],"direction":"vertical"}]]},{"from":"browsing","to":"browsing","event":"ExecutionLogLoaded","effects":[["render-ui","main",{"children":[{"direction":"vertical","children":[{"children":[{"type":"stack","children":[{"type":"icon","name":"brain"},{"variant":"h2","type":"typography","content":"ExecutionLog Manager"}],"direction":"horizontal","gap":"sm","align":"center"},{"gap":"sm","type":"stack","children":[{"label":"Memorize","action":"MEMORIZE","icon":"plus","variant":"primary","type":"button"},{"icon":"search","label":"Recall","variant":"secondary","action":"RECALL","type":"button"},{"type":"button","icon":"clock","action":"DECAY","variant":"ghost","label":"Decay All"}],"direction":"horizontal"}],"justify":"between","align":"center","type":"stack","direction":"horizontal","gap":"md"},{"type":"divider"},{"fields":[{"variant":"h4","label":"Content","name":"content","icon":"brain"},{"name":"category","variant":"badge","label":"Category","colorMap":{"pending":"warning","archived":"neutral","done":"success","inactive":"neutral","scheduled":"warning","draft":"warning","completed":"success","active":"success","disabled":"neutral","error":"destructive","cancelled":"destructive","failed":"destructive"}},{"label":"Strength","variant":"caption","name":"strength"}],"entity":"@payload.data","type":"data-grid","itemActions":[{"label":"Pin","event":"PIN","variant":"ghost"},{"variant":"ghost","label":"Reinforce","event":"REINFORCE"},{"event":"FORGET","label":"Forget","variant":"danger"}]}],"gap":"lg","type":"stack","className":"max-w-5xl mx-auto w-full"}],"type":"dashboard-layout","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"href":"/execution","icon":"play","label":"Execution"},{"label":"Logs","href":"/logs","icon":"terminal"}],"appName":"Agent Pipeline"}]]},{"from":"browsing","to":"browsing","event":"ExecutionLogLoadFailed","effects":[["render-ui","main",{"className":"py-12","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"variant":"h3","content":"Failed to load executionlog","type":"typography"},{"variant":"body","type":"typography","content":"@payload.error","color":"muted"},{"icon":"rotate-ccw","variant":"primary","action":"INIT","label":"Retry","type":"button"}],"direction":"vertical","gap":"md","type":"stack","align":"center"}]]}]},"scope":"collection"},{"name":"ExecutionLogCreate","category":"interaction","linkedEntity":"ExecutionLog","emits":[{"event":"MEMORIZED"},{"event":"ExecutionLogLoadFailed","description":"Fired when ExecutionLog fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ExecutionLogLoaded","description":"Fired when ExecutionLog finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"event":"ExecutionLogSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ExecutionLogSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"MEMORIZE","triggers":"MEMORIZE","source":{"kind":"trait","trait":"ExecutionLogBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"MEMORIZE","name":"Memorize"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"MEMORIZED","name":"Memorized"},{"key":"ExecutionLogLoadFailed","name":"ExecutionLog load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ExecutionLogLoaded","name":"ExecutionLog loaded","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"key":"ExecutionLogSaveFailed","name":"ExecutionLog save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ExecutionLogSaved","name":"ExecutionLog saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","ExecutionLog",{"emit":{"failure":"ExecutionLogLoadFailed","success":"ExecutionLogLoaded"}}]]},{"from":"closed","to":"open","event":"MEMORIZE","effects":[["render-ui","modal",{"type":"stack","children":[{"children":[{"type":"icon","name":"plus-circle"},{"content":"Memorize","variant":"h3","type":"typography"}],"gap":"sm","type":"stack","direction":"horizontal"},{"type":"divider"},{"type":"form-section","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["content","category","scope"],"mode":"create"}],"direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","ExecutionLog","@payload.data",{"emit":{"success":"ExecutionLogSaved","failure":"ExecutionLogSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","MEMORIZED"]]}]},"scope":"collection"},{"name":"ExecutionLogAgent","category":"interaction","linkedEntity":"ExecutionLog","emits":[{"event":"FORGOT","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"REINFORCED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"DECAYED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PINNED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"ExecutionLogLoadFailed","description":"Fired when ExecutionLog fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ExecutionLogLoaded","description":"Fired when ExecutionLog finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"event":"ExecutionLogSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"ExecutionLogSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"PIPELINE_FINISHED","triggers":"MEMORIZE","source":{"kind":"orbital","orbital":"PipelineExecOrbital","trait":"PipelineExecutor"}},{"event":"RECALL","triggers":"RECALL","source":{"kind":"trait","trait":"ExecutionLogBrowse"}},{"event":"DECAY","triggers":"DECAY","source":{"kind":"trait","trait":"ExecutionLogBrowse"}},{"event":"PIN","triggers":"PIN","source":{"kind":"trait","trait":"ExecutionLogBrowse"}},{"event":"REINFORCE","triggers":"REINFORCE","source":{"kind":"trait","trait":"ExecutionLogBrowse"}},{"event":"FORGET","triggers":"FORGET","source":{"kind":"trait","trait":"ExecutionLogBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"active"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DO_MEMORIZE","name":"Do Memorize","payloadSchema":[{"name":"data","type":"string"}]},{"key":"DECAY","name":"Decay"},{"key":"MEMORIZED","name":"Memorized"},{"key":"RECALL","name":"Recall","payloadSchema":[{"name":"query","type":"string"}]},{"key":"PIN","name":"Pin","payloadSchema":[{"name":"id","type":"string"}]},{"key":"FORGET","name":"Forget","payloadSchema":[{"name":"id","type":"string"}]},{"key":"REINFORCE","name":"Reinforce","payloadSchema":[{"name":"id","type":"string"}]},{"key":"FORGOT","name":"Forgot"},{"key":"REINFORCED","name":"Reinforced"},{"key":"DECAYED","name":"Decayed"},{"key":"PINNED","name":"Pinned"},{"key":"ExecutionLogLoadFailed","name":"ExecutionLog load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ExecutionLogLoaded","name":"ExecutionLog loaded","payloadSchema":[{"name":"data","type":"[ExecutionLog]"}]},{"key":"ExecutionLogSaveFailed","name":"ExecutionLog save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ExecutionLogSaved","name":"ExecutionLog saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","ExecutionLog",{"emit":{"success":"ExecutionLogLoaded","failure":"ExecutionLogLoadFailed"}}],["render-ui","main",{"type":"dashboard-layout","children":[{"type":"empty-state","title":"Memory","icon":"brain","description":"Memory is ready"}],"appName":"Agent Pipeline","navItems":[{"href":"/pipeline","icon":"git-branch","label":"Pipeline"},{"label":"Execution","href":"/execution","icon":"play"},{"label":"Logs","href":"/logs","icon":"terminal"}]}]]},{"from":"idle","to":"active","event":"DO_MEMORIZE","effects":[["agent/memorize","@payload.data.content","@payload.data.category"],["persist","create","ExecutionLog","@payload.data",{"emit":{"success":"ExecutionLogSaved","failure":"ExecutionLogSaveFailed"}}]]},{"from":"idle","to":"idle","event":"DECAY","effects":[["agent/decay"],["emit","DECAYED"]]},{"from":"idle","to":"active","event":"MEMORIZED","effects":[["fetch","ExecutionLog",{"emit":{"failure":"ExecutionLogLoadFailed","success":"ExecutionLogLoaded"}}]]},{"from":"active","to":"active","event":"RECALL","effects":[["agent/recall","@payload.query"]]},{"from":"active","to":"active","event":"PIN","guard":["not",["agent/is-pinned","@payload.id"]],"effects":[["agent/pin","@payload.id"],["set","@entity.pinned",true],["emit","PINNED"]]},{"from":"active","to":"idle","event":"FORGET","effects":[["agent/forget","@payload.id"],["emit","FORGOT"]]},{"from":"active","to":"active","event":"REINFORCE","effects":[["agent/reinforce","@payload.id"],["emit","REINFORCED"]]},{"from":"active","to":"active","event":"DECAY","effects":[["agent/decay"],["emit","DECAYED"]]}]},"scope":"collection"}],"pages":[{"name":"Logs","path":"/logs","traits":[{"ref":"ExecutionLogBrowse"},{"ref":"ExecutionLogCreate"},{"ref":"ExecutionLogAgent"}]}]},{"name":"PipelineProgressOrbital","uses":[{"from":"std/behaviors/std-agent-step-progress","as":"AgentStepProgress"}],"entity":{"name":"PipelineProgress","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"steps","type":"string","default":""},{"name":"currentStep","type":"number"},{"name":"totalSteps","type":"number"},{"name":"status","type":"string","default":"idle"}]},"traits":[{"ref":"AgentStepProgress.traits.AgentStepProgressProgress","name":"PipelineStepProgress","linkedEntity":"PipelineProgress"}],"pages":[{"name":"PipelineProgress","path":"/pipeline/progress","traits":[{"ref":"PipelineStepProgress"}]}]},{"name":"SessionTreeOrbital","uses":[{"from":"std/behaviors/std-drawer","as":"Drawer"}],"entity":{"name":"SessionTree","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"branchId","type":"string"},{"name":"label","type":"string"},{"name":"status","type":"string","default":"idle"}]},"traits":[{"ref":"Drawer.traits.DrawerContentDrawer","name":"SessionTreeDrawer","linkedEntity":"SessionTree"}],"pages":[{"name":"PipelineTree","path":"/pipeline/tree","traits":[{"ref":"SessionTreeDrawer"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'PipelinePlanOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-agent-step-progress',
+          'as': 'AgentStepProgress',
+        },
+        {
+          'from': 'std/behaviors/std-drawer',
+          'as': 'Drawer',
+        },
+      ],
+      entity: {
+        'name': 'PipelinePlan',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'confidence',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'relevantMemories',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'input',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': 'circle',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PipelinePlanner',
+          'category': 'interaction',
+          'linkedEntity': 'PipelinePlan',
+          'emits': [
+            {
+              'event': 'PLAN_READY',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'plan',
+                  'type': 'string',
+                },
+                {
+                  'name': 'category',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PIPELINE_PLANNED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'steps',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PLAN_READY',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelinePlanner',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'classifying',
+              },
+              {
+                'name': 'recalling',
+              },
+              {
+                'name': 'planning',
+              },
+              {
+                'name': 'ready',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PLAN',
+                'name': 'Plan',
+              },
+              {
+                'key': 'CLASSIFIED',
+                'name': 'Classified',
+                'payloadSchema': [
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIES_LOADED',
+                'name': 'Memories Loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'memories',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'count',
+                    'type': 'number',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PLAN_GENERATED',
+                'name': 'Plan Generated',
+                'payloadSchema': [
+                  {
+                    'name': 'steps',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'confidence',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'plan',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'PLAN_READY',
+                'name': 'Plan Ready',
+              },
+              {
+                'key': 'PIPELINE_PLANNED',
+                'name': 'Pipeline Planned',
+              },
+              {
+                'key': 'PipelinePlanSaved',
+                'name': 'PipelinePlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanSaveFailed',
+                'name': 'PipelinePlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaved',
+                'name': 'Pipeline exec saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaveFailed',
+                'name': 'Pipeline exec save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionUpdated',
+                'name': 'Pipeline session updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionUpdateFailed',
+                'name': 'Pipeline session update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaved',
+                'name': 'Execution log saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaveFailed',
+                'name': 'Execution log save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'map',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Task Planner',
+                                },
+                              ],
+                              'align': 'center',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                      'content': 'Describe the task to plan',
+                                    },
+                                    {
+                                      'type': 'form-section',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'mode': 'edit',
+                                      'submitEvent': 'PLAN',
+                                      'entity': '@entity',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'classifying',
+                'event': 'PLAN',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'classifying',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Classify this task into exactly one category.\n',
+                      'Categories: ',
+                      'data, transform, validate, deploy, test',
+                      '\n',
+                      'Task: ',
+                      '@entity.task',
+                      '\n',
+                      'Return only the category name.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'tag',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Classifying task...',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.task',
+                              'variant': 'caption',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'classifying',
+                'to': 'recalling',
+                'event': 'CLASSIFIED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.category',
+                    '@payload.category',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'recalling',
+                  ],
+                  [
+                    'agent/recall',
+                    [
+                      'str/concat',
+                      '@entity.category',
+                      ' ',
+                      '@entity.task',
+                    ],
+                    5,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'brain',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Recalling relevant experience...',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'label': '@entity.category',
+                              'type': 'badge',
+                            },
+                          ],
+                          'align': 'center',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'classifying',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h2',
+                              'content': 'Planning Failed',
+                            },
+                            {
+                              'variant': 'error',
+                              'type': 'alert',
+                              'message': '@entity.error',
+                            },
+                            {
+                              'variant': 'primary',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'type': 'button',
+                              'label': 'Try Again',
+                            },
+                          ],
+                          'type': 'stack',
+                          'align': 'center',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'recalling',
+                'to': 'planning',
+                'event': 'MEMORIES_LOADED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.relevantMemories',
+                    '@payload.memories',
+                  ],
+                  [
+                    'set',
+                    '@entity.memoryCount',
+                    '@payload.count',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'planning',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\n',
+                      'Category: ',
+                      '@entity.category',
+                      '\n',
+                      'Relevant experience:\n',
+                      '@entity.relevantMemories',
+                      '\n\n',
+                      'Generate a numbered step-by-step execution plan. ',
+                      'Include a confidence score (0-100) for how likely this plan will succeed.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'cpu',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Generating plan...',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'center',
+                              'children': [
+                                {
+                                  'label': '@entity.category',
+                                  'type': 'badge',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': '@entity.memoryCount',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'recalling',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Planning Failed',
+                              'variant': 'h2',
+                              'type': 'typography',
+                            },
+                            {
+                              'message': '@entity.error',
+                              'variant': 'error',
+                              'type': 'alert',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'label': 'Try Again',
+                              'variant': 'primary',
+                              'type': 'button',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'ready',
+                'event': 'PLAN_GENERATED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.steps',
+                    '@payload.steps',
+                  ],
+                  [
+                    'set',
+                    '@entity.confidence',
+                    '@payload.confidence',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'ready',
+                  ],
+                  [
+                    'agent/memorize',
+                    [
+                      'str/concat',
+                      'Plan for ',
+                      '@entity.category',
+                      ' task: ',
+                      '@entity.task',
+                    ],
+                    'pattern-affinity',
+                  ],
+                  [
+                    'emit',
+                    'PLAN_READY',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'check-circle',
+                                    },
+                                    {
+                                      'content': 'Plan Ready',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                },
+                                {
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'label': 'New Plan',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'cols': 3,
+                              'children': [
+                                {
+                                  'icon': 'tag',
+                                  'value': '@entity.category',
+                                  'type': 'stat-display',
+                                  'label': 'Category',
+                                },
+                                {
+                                  'value': '@entity.confidence',
+                                  'type': 'stat-display',
+                                  'label': 'Confidence',
+                                  'icon': 'target',
+                                },
+                                {
+                                  'icon': 'brain',
+                                  'label': 'Memories Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.memoryCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Task',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.task',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'type': 'divider',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Execution Plan',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                      'content': '@entity.steps',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Relevant Memories',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'content': '@entity.relevantMemories',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'idle',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'error',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'name': 'alert-triangle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Planning Failed',
+                              'type': 'typography',
+                              'variant': 'h2',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': '@entity.error',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'button',
+                              'label': 'Try Again',
+                              'variant': 'primary',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'ready',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.category',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.steps',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.confidence',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.relevantMemories',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.memoryCount',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'map',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Task Planner',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                              ],
+                              'align': 'center',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Describe the task to plan',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'mode': 'edit',
+                                      'submitEvent': 'PLAN',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerTaskInput',
+          'category': 'interaction',
+          'linkedEntity': 'PipelinePlan',
+          'emits': [
+            {
+              'event': 'PipelinePlanLoaded',
+              'description': 'Fired when PipelinePlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelinePlan]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanLoadFailed',
+              'description': 'Fired when PipelinePlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'NEW_TASK',
+                'name': 'New Task',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'PLAN',
+                'name': 'Plan',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanLoaded',
+                'name': 'PipelinePlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelinePlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanLoadFailed',
+                'name': 'PipelinePlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanLoadFailed',
+                        'success': 'PipelinePlanLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'NEW_TASK',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'name': 'map',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'type': 'typography',
+                          'content': 'Describe the task to plan',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'entity': '@entity',
+                          'fields': [
+                            'task',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'PLAN',
+                          'mode': 'edit',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'PLAN',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerClassifierFlow',
+          'category': 'interaction',
+          'linkedEntity': 'PipelinePlan',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'CLASSIFIED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'PipelinePlanLoadFailed',
+              'description': 'Fired when PipelinePlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanLoaded',
+              'description': 'Fired when PipelinePlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelinePlan]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CLASSIFY',
+                'name': 'Classify',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLASSIFIED',
+                'name': 'Classified',
+              },
+              {
+                'key': 'PipelinePlanLoadFailed',
+                'name': 'PipelinePlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanLoaded',
+                'name': 'PipelinePlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelinePlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanSaveFailed',
+                'name': 'PipelinePlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanSaved',
+                'name': 'PipelinePlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'success': 'PipelinePlanLoaded',
+                        'failure': 'PipelinePlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'tag',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'button',
+                                  'action': 'CLASSIFY',
+                                  'label': 'Open',
+                                  'icon': 'tag',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'tag',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CLASSIFY',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'tag',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'PipelinePlan',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Categories:',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'label': 'data',
+                              'type': 'badge',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'label': 'transform',
+                              'variant': 'secondary',
+                              'type': 'badge',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': 'validate',
+                              'variant': 'secondary',
+                            },
+                            {
+                              'variant': 'secondary',
+                              'type': 'badge',
+                              'label': 'deploy',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': 'test',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'fields': [
+                            'input',
+                          ],
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'direction': 'vertical',
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'success': 'PipelinePlanLoaded',
+                        'failure': 'PipelinePlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'tag',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'type': 'button',
+                                  'action': 'CLASSIFY',
+                                  'variant': 'primary',
+                                  'icon': 'tag',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'icon': 'tag',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'PipelinePlan',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanSaveFailed',
+                        'success': 'PipelinePlanSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'CLASSIFIED',
+                  ],
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'success': 'PipelinePlanLoaded',
+                        'failure': 'PipelinePlanLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'tag',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'CLASSIFY',
+                                  'type': 'button',
+                                  'icon': 'tag',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                              'type': 'empty-state',
+                              'icon': 'tag',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerCompletionFlow',
+          'category': 'interaction',
+          'linkedEntity': 'PipelinePlan',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'GENERATED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'PipelinePlanLoadFailed',
+              'description': 'Fired when PipelinePlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanLoaded',
+              'description': 'Fired when PipelinePlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelinePlan]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'GENERATE',
+                'name': 'Generate',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'GENERATED',
+                'name': 'Generated',
+              },
+              {
+                'key': 'PipelinePlanLoadFailed',
+                'name': 'PipelinePlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanLoaded',
+                'name': 'PipelinePlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelinePlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanSaveFailed',
+                'name': 'PipelinePlan save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanSaved',
+                'name': 'PipelinePlan saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.model',
+                    'claude-sonnet-4-20250514',
+                  ],
+                  [
+                    'set',
+                    '@entity.provider',
+                    'anthropic',
+                  ],
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanLoadFailed',
+                        'success': 'PipelinePlanLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'icon': 'sparkles',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'type': 'stack',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'GENERATE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'sparkles',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'PipelinePlan',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'label': '@entity.provider',
+                              'type': 'badge',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.model',
+                            },
+                          ],
+                        },
+                        {
+                          'fields': [
+                            'prompt',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanLoadFailed',
+                        'success': 'PipelinePlanLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'justify': 'between',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'PipelinePlan',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'icon': 'sparkles',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'PipelinePlan',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanSaveFailed',
+                        'success': 'PipelinePlanSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'GENERATED',
+                  ],
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanLoadFailed',
+                        'success': 'PipelinePlanLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'icon': 'sparkles',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'sparkles',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PlannerMemoryLifecycle',
+          'category': 'interaction',
+          'linkedEntity': 'PipelinePlan',
+          'emits': [
+            {
+              'event': 'PipelinePlanLoaded',
+              'description': 'Fired when PipelinePlan finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelinePlan]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelinePlanLoadFailed',
+              'description': 'Fired when PipelinePlan fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PipelinePlanLoaded',
+                'name': 'PipelinePlan loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelinePlan]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelinePlanLoadFailed',
+                'name': 'PipelinePlan load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'PipelinePlan',
+                  },
+                ],
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'PipelinePlan',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'PipelinePlan',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelinePlan',
+                    {
+                      'emit': {
+                        'failure': 'PipelinePlanLoadFailed',
+                        'success': 'PipelinePlanLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PipelinePlanLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'align': 'center',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'name': 'brain',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'PipelinePlan Manager',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'content',
+                                  'variant': 'h4',
+                                  'icon': 'brain',
+                                  'label': 'Content',
+                                },
+                                {
+                                  'label': 'Category',
+                                  'variant': 'badge',
+                                  'name': 'category',
+                                  'colorMap': {
+                                    'active': 'success',
+                                    'disabled': 'neutral',
+                                    'archived': 'neutral',
+                                    'scheduled': 'warning',
+                                    'draft': 'warning',
+                                    'failed': 'destructive',
+                                    'completed': 'success',
+                                    'done': 'success',
+                                    'error': 'destructive',
+                                    'pending': 'warning',
+                                    'cancelled': 'destructive',
+                                    'inactive': 'neutral',
+                                  },
+                                },
+                                {
+                                  'label': 'Strength',
+                                  'variant': 'caption',
+                                  'name': 'strength',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PipelinePlanLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'align': 'center',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'h3',
+                          'content': 'Failed to load pipelineplan',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'type': 'button',
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'PipelinePage',
+          'path': '/pipeline',
+          'traits': [
+            {
+              'ref': 'PipelinePlanner',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'PipelineExecOrbital',
+      uses: [],
+      entity: {
+        'name': 'PipelineExec',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'plan',
+            'type': 'string',
+          },
+          {
+            'name': 'iterations',
+            'type': 'number',
+          },
+          {
+            'name': 'maxIterations',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'currentTool',
+            'type': 'string',
+          },
+          {
+            'name': 'lastToolResult',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+          },
+          {
+            'name': 'args',
+            'type': 'string',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'name': 'maxTokens',
+            'type': 'number',
+          },
+          {
+            'name': 'usage',
+            'type': 'number',
+          },
+          {
+            'name': 'current',
+            'type': 'number',
+          },
+          {
+            'name': 'max',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+          {
+            'name': 'lastCompactedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PipelineExecutor',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineExec',
+          'emits': [
+            {
+              'event': 'STEP_COMPLETE',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'step',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'STEP_COMPLETE',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'step',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'PIPELINE_FINISHED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'RESET',
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PIPELINE_PLANNED',
+              'triggers': 'EXECUTE',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'PipelinePlanOrbital',
+                'trait': 'PipelinePlanner',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopStepProgress',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopContextMonitor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'planning',
+              },
+              {
+                'name': 'executing',
+              },
+              {
+                'name': 'checking',
+              },
+              {
+                'name': 'completed',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EXECUTE',
+                'name': 'Execute',
+              },
+              {
+                'key': 'PLAN_GENERATED',
+                'name': 'Plan Generated',
+                'payloadSchema': [
+                  {
+                    'name': 'plan',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FAILED',
+                'name': 'Failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TOOL_RESULT',
+                'name': 'Tool Result',
+                'payloadSchema': [
+                  {
+                    'name': 'output',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHECK_PASSED',
+                'name': 'Check Passed',
+                'payloadSchema': [
+                  {
+                    'name': 'result',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CHECK_NEEDS_MORE',
+                'name': 'Check Needs More',
+                'payloadSchema': [
+                  {
+                    'name': 'toolName',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'toolArgs',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MAX_ITERATIONS',
+                'name': 'Max Iterations',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'STEP_COMPLETE',
+                'name': 'Step Complete',
+              },
+              {
+                'key': 'PIPELINE_FINISHED',
+                'name': 'Pipeline Finished',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.maxIterations',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'repeat',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Tool Execution Loop',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Describe the task to execute with tools',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'type': 'form-section',
+                                      'mode': 'edit',
+                                      'entity': '@entity',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                      'submitEvent': 'EXECUTE',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'planning',
+                'event': 'EXECUTE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'planning',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\n\nAvailable tools: ',
+                      [
+                        'str/join',
+                        [
+                          'agent/tools',
+                        ],
+                        ', ',
+                      ],
+                      '\n\nGenerate a step-by-step plan. Return the first tool to call and its arguments.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'brain',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Planning execution...',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': '@entity.task',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'executing',
+                'event': 'PLAN_GENERATED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.plan',
+                    '@payload.plan',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '@payload.toolName',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    [
+                      '+',
+                      '@entity.iterations',
+                      1,
+                    ],
+                  ],
+                  [
+                    'agent/invoke',
+                    '@payload.toolName',
+                    '@payload.toolArgs',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'tool',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Executing Tool',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': '@entity.maxIterations',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'content': 'Current Tool',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'h4',
+                                      'content': '@entity.currentTool',
+                                    },
+                                    {
+                                      'type': 'spinner',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Plan',
+                                      'variant': 'caption',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': '@entity.plan',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'planning',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'name': 'x-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Loop Failed',
+                              'variant': 'h2',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': '@entity.error',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Iterations Used',
+                                  'value': '@entity.iterations',
+                                  'icon': 'repeat',
+                                },
+                                {
+                                  'icon': 'shield',
+                                  'value': '@entity.maxIterations',
+                                  'type': 'stat-display',
+                                  'label': 'Max Allowed',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'variant': 'primary',
+                              'label': 'Retry',
+                              'type': 'button',
+                            },
+                          ],
+                          'align': 'center',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'executing',
+                'to': 'checking',
+                'event': 'TOOL_RESULT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '@payload.output',
+                  ],
+                  [
+                    'agent/generate',
+                    [
+                      'str/concat',
+                      'Task: ',
+                      '@entity.task',
+                      '\nPlan: ',
+                      '@entity.plan',
+                      '\nTool output: ',
+                      '@payload.output',
+                      '\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments.',
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'content': 'Checking result...',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'spinner',
+                            },
+                            {
+                              'type': 'badge',
+                              'label': '@entity.iterations',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'align': 'center',
+                          'gap': 'lg',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'executing',
+                'to': 'failed',
+                'event': 'FAILED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'align': 'center',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'x-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h2',
+                              'type': 'typography',
+                              'content': 'Loop Failed',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'error',
+                              'message': '@entity.error',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'icon': 'repeat',
+                                  'value': '@entity.iterations',
+                                  'label': 'Iterations Used',
+                                },
+                                {
+                                  'value': '@entity.maxIterations',
+                                  'icon': 'shield',
+                                  'label': 'Max Allowed',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'variant': 'primary',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'label': 'Retry',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'completed',
+                'event': 'CHECK_PASSED',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.result',
+                    '@payload.result',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'completed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'check-circle',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Loop Complete',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'type': 'button',
+                                  'label': 'New Task',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'icon': 'repeat',
+                                  'value': '@entity.iterations',
+                                  'type': 'stat-display',
+                                  'label': 'Iterations',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Status',
+                                  'icon': 'check',
+                                  'value': '@entity.status',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'variant': 'caption',
+                                      'content': 'Task',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.task',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'divider',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Result',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.result',
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'executing',
+                'event': 'CHECK_NEEDS_MORE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '@payload.toolName',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    [
+                      '+',
+                      '@entity.iterations',
+                      1,
+                    ],
+                  ],
+                  [
+                    'if',
+                    [
+                      '>=',
+                      [
+                        'agent/context-usage',
+                      ],
+                      0.8,
+                    ],
+                    [
+                      'agent/compact',
+                      'hybrid',
+                    ],
+                    [
+                      'log',
+                      'Context below compact threshold',
+                    ],
+                  ],
+                  [
+                    'agent/invoke',
+                    '@payload.toolName',
+                    '@payload.toolArgs',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'tool',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Executing Tool',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'align': 'center',
+                                },
+                                {
+                                  'label': '@entity.maxIterations',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Current Tool',
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'content': '@entity.currentTool',
+                                      'variant': 'h4',
+                                      'type': 'typography',
+                                    },
+                                    {
+                                      'type': 'spinner',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'card',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'variant': 'caption',
+                                      'content': 'Plan',
+                                    },
+                                    {
+                                      'content': '@entity.plan',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'vertical',
+                                  'gap': 'sm',
+                                },
+                              ],
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'checking',
+                'to': 'failed',
+                'event': 'MAX_ITERATIONS',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.error',
+                    '@payload.error',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'x-circle',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h2',
+                              'content': 'Loop Failed',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': '@entity.error',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'value': '@entity.iterations',
+                                  'icon': 'repeat',
+                                  'type': 'stat-display',
+                                  'label': 'Iterations Used',
+                                },
+                                {
+                                  'value': '@entity.maxIterations',
+                                  'type': 'stat-display',
+                                  'icon': 'shield',
+                                  'label': 'Max Allowed',
+                                },
+                              ],
+                            },
+                            {
+                              'label': 'Retry',
+                              'variant': 'primary',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'completed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.plan',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.result',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'repeat',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Tool Execution Loop',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'direction': 'vertical',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Describe the task to execute with tools',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'submitEvent': 'EXECUTE',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'mode': 'edit',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.task',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.plan',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.result',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentTool',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastToolResult',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.iterations',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.error',
+                    '',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'repeat',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Tool Execution Loop',
+                                },
+                              ],
+                              'type': 'stack',
+                              'align': 'center',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'body',
+                                      'type': 'typography',
+                                      'content': 'Describe the task to execute with tools',
+                                    },
+                                    {
+                                      'submitEvent': 'EXECUTE',
+                                      'mode': 'edit',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'fields': [
+                                        'task',
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopStepProgress',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineExec',
+          'emits': [
+            {
+              'event': 'RESET',
+            },
+            {
+              'event': 'PipelineExecLoaded',
+              'description': 'Fired when PipelineExec finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineExec]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecLoadFailed',
+              'description': 'Fired when PipelineExec fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineExecutor',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopContextMonitor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'in_progress',
+              },
+              {
+                'name': 'completed',
+              },
+              {
+                'name': 'failed',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'ADVANCE',
+                'name': 'Advance',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'FAIL',
+                'name': 'Fail',
+              },
+              {
+                'key': 'PipelineExecLoaded',
+                'name': 'PipelineExec loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineExec]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecLoadFailed',
+                'name': 'PipelineExec load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.totalSteps',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'PipelineExec',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'action': 'START',
+                              'icon': 'play',
+                              'label': 'Start',
+                              'variant': 'primary',
+                              'type': 'button',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'in_progress',
+                'event': 'START',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'in_progress',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'loader',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'PipelineExec',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'In Progress',
+                                  'variant': 'warning',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'value': '@entity.currentStep',
+                                  'label': 'Current Step',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.totalSteps',
+                                  'label': 'Total Steps',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Advance',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'action': 'ADVANCE',
+                                  'icon': 'chevron-right',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'PipelineExec',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'action': 'START',
+                              'type': 'button',
+                              'label': 'Start',
+                              'icon': 'play',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'in_progress',
+                'event': 'ADVANCE',
+                'guard': [
+                  '<',
+                  '@entity.currentStep',
+                  '@entity.totalSteps',
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    [
+                      '+',
+                      '@entity.currentStep',
+                      1,
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'loader',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'PipelineExec',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'In Progress',
+                                  'type': 'badge',
+                                  'variant': 'warning',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.currentStep',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Current Step',
+                                  'value': '@entity.currentStep',
+                                },
+                                {
+                                  'value': '@entity.totalSteps',
+                                  'type': 'stat-display',
+                                  'label': 'Total Steps',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'variant': 'primary',
+                                  'icon': 'chevron-right',
+                                  'label': 'Advance',
+                                  'type': 'button',
+                                  'action': 'ADVANCE',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'completed',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'completed',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    '@entity.totalSteps',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'check-circle',
+                                },
+                                {
+                                  'content': 'PipelineExec',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Completed',
+                                  'type': 'badge',
+                                  'variant': 'success',
+                                },
+                              ],
+                              'align': 'center',
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'wizard-progress',
+                              'currentStep': '@entity.totalSteps',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'success',
+                              'message': 'All steps completed successfully.',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'failed',
+                'event': 'FAIL',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'failed',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'x-circle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'PipelineExec',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'type': 'badge',
+                                  'label': 'Failed',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'error',
+                              'message': 'Pipeline failed at the current step.',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'value': '@entity.currentStep',
+                                  'label': 'Failed At Step',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'label': 'Reset',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'in_progress',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'PipelineExec',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Idle',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'action': 'START',
+                              'icon': 'play',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'completed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'list-ordered',
+                                },
+                                {
+                                  'content': 'PipelineExec',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Idle',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                              'steps': [
+                                {
+                                  'id': '0',
+                                  'title': 'Plan',
+                                },
+                                {
+                                  'id': '1',
+                                  'title': 'Execute',
+                                },
+                                {
+                                  'title': 'Check',
+                                  'id': '2',
+                                },
+                                {
+                                  'id': '3',
+                                  'title': 'Complete',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'primary',
+                              'icon': 'play',
+                              'label': 'Start',
+                              'action': 'START',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'failed',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'idle',
+                  ],
+                  [
+                    'set',
+                    '@entity.currentStep',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'name': 'list-ordered',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'PipelineExec',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Idle',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'steps': [
+                                {
+                                  'title': 'Plan',
+                                  'id': '0',
+                                },
+                                {
+                                  'title': 'Execute',
+                                  'id': '1',
+                                },
+                                {
+                                  'id': '2',
+                                  'title': 'Check',
+                                },
+                                {
+                                  'title': 'Complete',
+                                  'id': '3',
+                                },
+                              ],
+                              'currentStep': '@entity.currentStep',
+                              'type': 'wizard-progress',
+                            },
+                            {
+                              'label': 'Start',
+                              'variant': 'primary',
+                              'action': 'START',
+                              'icon': 'play',
+                              'type': 'button',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopCompletionFlow',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineExec',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'GENERATED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'PipelineExecLoadFailed',
+              'description': 'Fired when PipelineExec fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecLoaded',
+              'description': 'Fired when PipelineExec finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineExec]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'GENERATE',
+                'name': 'Generate',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'GENERATED',
+                'name': 'Generated',
+              },
+              {
+                'key': 'PipelineExecLoadFailed',
+                'name': 'PipelineExec load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecLoaded',
+                'name': 'PipelineExec loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineExec]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaveFailed',
+                'name': 'PipelineExec save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaved',
+                'name': 'PipelineExec saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.model',
+                    'claude-sonnet-4-20250514',
+                  ],
+                  [
+                    'set',
+                    '@entity.provider',
+                    'anthropic',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'sparkles',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'PipelineExec',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'icon': 'sparkles',
+                                  'label': 'Open',
+                                  'action': 'GENERATE',
+                                  'type': 'button',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'title': 'Nothing open',
+                              'icon': 'sparkles',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'GENERATE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'sparkles',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'PipelineExec',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'label': '@entity.provider',
+                              'type': 'badge',
+                            },
+                            {
+                              'label': '@entity.model',
+                              'type': 'badge',
+                            },
+                          ],
+                        },
+                        {
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'prompt',
+                          ],
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'success': 'PipelineExecLoaded',
+                        'failure': 'PipelineExecLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'content': 'PipelineExec',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'button',
+                                  'action': 'GENERATE',
+                                  'variant': 'primary',
+                                  'label': 'Open',
+                                  'icon': 'sparkles',
+                                },
+                              ],
+                              'justify': 'between',
+                              'gap': 'md',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'type': 'empty-state',
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'PipelineExec',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecSaveFailed',
+                        'success': 'PipelineExecSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'GENERATED',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'sparkles',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'PipelineExec',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'action': 'GENERATE',
+                                  'variant': 'primary',
+                                  'icon': 'sparkles',
+                                  'label': 'Open',
+                                  'type': 'button',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'icon': 'sparkles',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopToolCallFlow',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineExec',
+          'emits': [
+            {
+              'event': 'SAVE',
+              'scope': 'internal',
+            },
+            {
+              'event': 'INVOKED',
+              'scope': 'internal',
+            },
+            {
+              'event': 'PipelineExecLoadFailed',
+              'description': 'Fired when PipelineExec fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecLoaded',
+              'description': 'Fired when PipelineExec finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineExec]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'INVOKE',
+                'name': 'Invoke',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'INVOKED',
+                'name': 'Invoked',
+              },
+              {
+                'key': 'PipelineExecLoadFailed',
+                'name': 'PipelineExec load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecLoaded',
+                'name': 'PipelineExec loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineExec]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaveFailed',
+                'name': 'PipelineExec save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecSaved',
+                'name': 'PipelineExec saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'icon': 'wrench',
+                                  'action': 'INVOKE',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'icon': 'wrench',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'INVOKE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'wrench',
+                              'type': 'icon',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Invoke Tool',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'fields': [
+                            'toolName',
+                            'args',
+                          ],
+                          'cancelEvent': 'CLOSE',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'success': 'PipelineExecLoaded',
+                        'failure': 'PipelineExecLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'wrench',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                                {
+                                  'icon': 'wrench',
+                                  'type': 'button',
+                                  'label': 'Open',
+                                  'variant': 'primary',
+                                  'action': 'INVOKE',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'icon': 'wrench',
+                              'type': 'empty-state',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'title': 'Nothing open',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'PipelineExec',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'PipelineExecSaved',
+                        'failure': 'PipelineExecSaveFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'emit',
+                    'INVOKED',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'wrench',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Invoke Tool',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'label': 'Open',
+                                  'action': 'INVOKE',
+                                  'variant': 'primary',
+                                  'icon': 'wrench',
+                                  'type': 'button',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'empty-state',
+                              'title': 'Nothing open',
+                              'description': 'Click Open to view details in a modal overlay.',
+                              'icon': 'wrench',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ToolLoopContextMonitor',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineExec',
+          'emits': [
+            {
+              'event': 'RESET',
+            },
+            {
+              'event': 'PipelineExecLoaded',
+              'description': 'Fired when PipelineExec finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineExec]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineExecLoadFailed',
+              'description': 'Fired when PipelineExec fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineExecutor',
+              },
+            },
+            {
+              'event': 'RESET',
+              'triggers': 'RESET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ToolLoopStepProgress',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'normal',
+                'isInitial': true,
+              },
+              {
+                'name': 'warning',
+              },
+              {
+                'name': 'critical',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'UPDATE',
+                'name': 'Update',
+                'payloadSchema': [
+                  {
+                    'name': 'current',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPACT',
+                'name': 'Compact',
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'PipelineExecLoaded',
+                'name': 'PipelineExec loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineExec]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineExecLoadFailed',
+                'name': 'PipelineExec load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.max',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'PipelineExec',
+                    {
+                      'emit': {
+                        'failure': 'PipelineExecLoadFailed',
+                        'success': 'PipelineExecLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'button',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'name': 'alert-triangle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'variant': 'primary',
+                                  'label': 'Compact',
+                                  'action': 'COMPACT',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'label': 'Execution',
+                          'href': '/execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-octagon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'label': 'Critical',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'error',
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'type': 'alert',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'label': 'Compact Now',
+                                  'action': 'COMPACT',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                },
+                              ],
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'normal',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
+                              'type': 'button',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'icon': 'play',
+                          'href': '/execution',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'alert-triangle',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Warning',
+                                  'variant': 'warning',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'warning',
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'action': 'COMPACT',
+                                  'type': 'button',
+                                  'label': 'Compact',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'alert-octagon',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Critical',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'type': 'alert',
+                              'variant': 'error',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'label': 'Compact Now',
+                                  'action': 'COMPACT',
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                  'icon': 'rotate-ccw',
+                                  'action': 'RESET',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'action': 'RESET',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'warning',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'action': 'RESET',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Reset',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'critical',
+                'event': 'UPDATE',
+                'guard': [
+                  '>=',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.95,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'alert-octagon',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'content': 'Token Usage',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Critical',
+                                  'variant': 'danger',
+                                  'type': 'badge',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                              'type': 'alert',
+                              'variant': 'error',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'variant': 'primary',
+                                  'action': 'COMPACT',
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'label': 'Compact Now',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                          ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'warning',
+                'event': 'UPDATE',
+                'guard': [
+                  'and',
+                  [
+                    '>=',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.85,
+                  ],
+                  [
+                    '<',
+                    [
+                      '/',
+                      '@payload.current',
+                      '@entity.max',
+                    ],
+                    0.95,
+                  ],
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'alert-triangle',
+                                },
+                                {
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                },
+                                {
+                                  'label': 'Warning',
+                                  'type': 'badge',
+                                  'variant': 'warning',
+                                },
+                              ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Token usage approaching limit. Consider compacting.',
+                              'type': 'alert',
+                              'variant': 'warning',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'type': 'stat-display',
+                                  'value': '@entity.current',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'label': 'Max Tokens',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'variant': 'primary',
+                                  'icon': 'minimize-2',
+                                  'type': 'button',
+                                  'label': 'Compact',
+                                  'action': 'COMPACT',
+                                },
+                                {
+                                  'type': 'button',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'variant': 'ghost',
+                                  'label': 'Reset',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'UPDATE',
+                'guard': [
+                  '<',
+                  [
+                    '/',
+                    '@payload.current',
+                    '@entity.max',
+                  ],
+                  0.85,
+                ],
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    '@payload.current',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                            },
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'RESET',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'COMPACT',
+                'effects': [
+                  [
+                    'agent/compact',
+                  ],
+                  [
+                    'set',
+                    '@entity.lastCompactedAt',
+                    '@now',
+                  ],
+                  [
+                    'agent/token-count',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'type': 'icon',
+                                  'name': 'gauge',
+                                },
+                                {
+                                  'variant': 'h2',
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                },
+                                {
+                                  'type': 'badge',
+                                  'label': 'Normal',
+                                  'variant': 'default',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'progress-bar',
+                              'value': '@entity.current',
+                              'max': '@entity.max',
+                            },
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'label': 'Tokens Used',
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                  'label': 'Max Tokens',
+                                },
+                              ],
+                            },
+                            {
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'label': 'Reset',
+                              'variant': 'ghost',
+                              'type': 'button',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'critical',
+                'to': 'normal',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.current',
+                    0,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'children': [
+                                {
+                                  'name': 'gauge',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Token Usage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                                {
+                                  'variant': 'default',
+                                  'label': 'Normal',
+                                  'type': 'badge',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'max': '@entity.max',
+                              'value': '@entity.current',
+                              'type': 'progress-bar',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'value': '@entity.current',
+                                  'type': 'stat-display',
+                                  'label': 'Tokens Used',
+                                },
+                                {
+                                  'label': 'Max Tokens',
+                                  'value': '@entity.max',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
+                              'type': 'button',
+                              'label': 'Reset',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Execution',
+          'path': '/execution',
+          'traits': [
+            {
+              'ref': 'PipelineExecutor',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'PipelineSessionOrbital',
+      uses: [],
+      entity: {
+        'name': 'PipelineSession',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PipelineSessionManager',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineSession',
+          'emits': [
+            {
+              'event': 'FORK',
+            },
+            {
+              'event': 'LABEL',
+            },
+            {
+              'event': 'END',
+            },
+            {
+              'event': 'PipelineSessionLoaded',
+              'description': 'Fired when PipelineSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineSession]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionLoadFailed',
+              'description': 'Fired when PipelineSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'FORKED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionAgent',
+              },
+            },
+            {
+              'event': 'LABELED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionLabel',
+              },
+            },
+            {
+              'event': 'ENDED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionAgent',
+              },
+            },
+            {
+              'event': 'STEP_COMPLETE',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'PipelineExecOrbital',
+                'trait': 'PipelineExecutor',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PipelineSessionLoaded',
+                'name': 'PipelineSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionLoadFailed',
+                'name': 'PipelineSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORK',
+                'name': 'Fork',
+              },
+              {
+                'key': 'LABEL',
+                'name': 'Label',
+              },
+              {
+                'key': 'END',
+                'name': 'End',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                          'type': 'typography',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PipelineSessionLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'terminal',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'PipelineSession Manager',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'action': 'FORK',
+                                      'variant': 'secondary',
+                                      'label': 'Fork',
+                                      'icon': 'git-branch',
+                                    },
+                                    {
+                                      'label': 'Label',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'icon': 'tag',
+                                      'action': 'LABEL',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'label': 'End',
+                                      'action': 'END',
+                                      'variant': 'ghost',
+                                      'icon': 'square',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'fields': [
+                                {
+                                  'name': 'sessionId',
+                                  'variant': 'h4',
+                                  'icon': 'terminal',
+                                  'label': 'Session ID',
+                                },
+                                {
+                                  'colorMap': {
+                                    'completed': 'success',
+                                    'done': 'success',
+                                    'scheduled': 'warning',
+                                    'draft': 'warning',
+                                    'inactive': 'neutral',
+                                    'cancelled': 'destructive',
+                                    'disabled': 'neutral',
+                                    'failed': 'destructive',
+                                    'error': 'destructive',
+                                    'archived': 'neutral',
+                                    'active': 'success',
+                                    'pending': 'warning',
+                                  },
+                                  'name': 'status',
+                                  'label': 'Status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'label': 'Label',
+                                  'variant': 'caption',
+                                  'name': 'label',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PipelineSessionLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'name': 'alert-triangle',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Failed to load pipelinesession',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'type': 'button',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PipelineSessionLabel',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineSession',
+          'emits': [
+            {
+              'event': 'LABELED',
+            },
+            {
+              'event': 'PipelineSessionLoadFailed',
+              'description': 'Fired when PipelineSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionLoaded',
+              'description': 'Fired when PipelineSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineSession]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'LABEL',
+              'triggers': 'LABEL',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LABEL',
+                'name': 'Label',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LABELED',
+                'name': 'Labeled',
+              },
+              {
+                'key': 'PipelineSessionLoadFailed',
+                'name': 'PipelineSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionLoaded',
+                'name': 'PipelineSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionUpdateFailed',
+                'name': 'PipelineSession update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionUpdated',
+                'name': 'PipelineSession updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.sessionId',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'LABEL',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'tag',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Label Session',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Session:',
+                            },
+                            {
+                              'label': '@entity.sessionId',
+                              'type': 'badge',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'entity': '@entity',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'label',
+                          ],
+                          'mode': 'edit',
+                        },
+                      ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'PipelineSession',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionUpdateFailed',
+                        'success': 'PipelineSessionUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'LABELED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PipelineSessionAgent',
+          'category': 'interaction',
+          'linkedEntity': 'PipelineSession',
+          'emits': [
+            {
+              'event': 'ENDED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'sessionId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'FORKED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'sessionId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionLoaded',
+              'description': 'Fired when PipelineSession finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[PipelineSession]',
+                },
+              ],
+            },
+            {
+              'event': 'PipelineSessionLoadFailed',
+              'description': 'Fired when PipelineSession fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'ENDED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionAgent',
+              },
+            },
+            {
+              'event': 'FORKED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionAgent',
+              },
+            },
+            {
+              'event': 'FORK',
+              'triggers': 'FORK',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionManager',
+              },
+            },
+            {
+              'event': 'END',
+              'triggers': 'END',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PipelineSessionManager',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'active',
+                'isInitial': true,
+              },
+              {
+                'name': 'forked',
+              },
+              {
+                'name': 'ended',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'FORK',
+                'name': 'Fork',
+              },
+              {
+                'key': 'DO_LABEL',
+                'name': 'Do Label',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LABELED',
+                'name': 'Labeled',
+              },
+              {
+                'key': 'END',
+                'name': 'End',
+              },
+              {
+                'key': 'ENDED',
+                'name': 'Ended',
+              },
+              {
+                'key': 'FORKED',
+                'name': 'Forked',
+              },
+              {
+                'key': 'PipelineSessionLoaded',
+                'name': 'PipelineSession loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[PipelineSession]',
+                  },
+                ],
+              },
+              {
+                'key': 'PipelineSessionLoadFailed',
+                'name': 'PipelineSession load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.sessionId',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '@now',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Execution',
+                          'href': '/execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'icon': 'git-branch',
+                          'description': 'Session is ready',
+                          'type': 'empty-state',
+                          'title': 'Session',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'forked',
+                'event': 'FORK',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.parentId',
+                    '@entity.sessionId',
+                  ],
+                  [
+                    'agent/fork',
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'PipelineSession',
+                    {
+                      'createdAt': '@now',
+                      'sessionId': '@entity.sessionId',
+                      'status': 'forked',
+                      'parentId': '@entity.parentId',
+                    },
+                    {
+                      'emit': {
+                        'success': 'FORKED',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'DO_LABEL',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@payload.data.label',
+                  ],
+                  [
+                    'set',
+                    '@entity.label',
+                    '@payload.data.label',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'LABELED',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@entity.label',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'ended',
+                'event': 'END',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'ended',
+                  ],
+                  [
+                    'emit',
+                    'ENDED',
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'FORK',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.parentId',
+                    '@entity.sessionId',
+                  ],
+                  [
+                    'agent/fork',
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'PipelineSession',
+                    {
+                      'createdAt': '@now',
+                      'sessionId': '@entity.sessionId',
+                      'status': 'forked',
+                      'parentId': '@entity.parentId',
+                    },
+                    {
+                      'emit': {
+                        'success': 'FORKED',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'DO_LABEL',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@payload.data.label',
+                  ],
+                  [
+                    'set',
+                    '@entity.label',
+                    '@payload.data.label',
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'forked',
+                'event': 'LABELED',
+                'effects': [
+                  [
+                    'agent/label',
+                    '@entity.label',
+                  ],
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'success': 'PipelineSessionLoaded',
+                        'failure': 'PipelineSessionLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'forked',
+                'to': 'ended',
+                'event': 'END',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.status',
+                    'ended',
+                  ],
+                  [
+                    'emit',
+                    'ENDED',
+                  ],
+                ],
+              },
+              {
+                'from': 'ended',
+                'to': 'active',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'PipelineSession',
+                    {
+                      'emit': {
+                        'failure': 'PipelineSessionLoadFailed',
+                        'success': 'PipelineSessionLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'agent/session-id',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '@now',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'active',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'label': 'Execution',
+                          'icon': 'play',
+                        },
+                        {
+                          'label': 'Logs',
+                          'href': '/logs',
+                          'icon': 'terminal',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'title': 'Session',
+                          'type': 'empty-state',
+                          'description': 'Session is ready',
+                          'icon': 'git-branch',
+                        },
+                      ],
+                      'appName': 'Agent Pipeline',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Session',
+          'path': '/session',
+          'traits': [
+            {
+              'ref': 'PipelineSessionManager',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ExecutionLogOrbital',
+      uses: [],
+      entity: {
+        'name': 'ExecutionLog',
+        'collection': 'executionlogs',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastAccessedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ExecutionLogBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'ExecutionLog',
+          'emits': [
+            {
+              'event': 'MEMORIZE',
+            },
+            {
+              'event': 'RECALL',
+            },
+            {
+              'event': 'DECAY',
+            },
+            {
+              'event': 'PIN',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'REINFORCE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'FORGET',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.strength',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pinned',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'row.scope',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.lastAccessedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogLoaded',
+              'description': 'Fired when ExecutionLog finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ExecutionLog]',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogLoadFailed',
+              'description': 'Fired when ExecutionLog fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'MEMORIZED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogCreate',
+              },
+            },
+            {
+              'event': 'PINNED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogAgent',
+              },
+            },
+            {
+              'event': 'FORGOT',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogAgent',
+              },
+            },
+            {
+              'event': 'REINFORCED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogAgent',
+              },
+            },
+            {
+              'event': 'DECAYED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogAgent',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ExecutionLogLoaded',
+                'name': 'ExecutionLog loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ExecutionLog]',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogLoadFailed',
+                'name': 'ExecutionLog load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIZE',
+                'name': 'Memorize',
+              },
+              {
+                'key': 'RECALL',
+                'name': 'Recall',
+              },
+              {
+                'key': 'DECAY',
+                'name': 'Decay',
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ExecutionLog',
+                    {
+                      'emit': {
+                        'success': 'ExecutionLogLoaded',
+                        'failure': 'ExecutionLogLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'align': 'center',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                          'variant': 'caption',
+                        },
+                      ],
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ExecutionLogLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Execution',
+                          'icon': 'play',
+                          'href': '/execution',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'brain',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'ExecutionLog Manager',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'action': 'MEMORIZE',
+                                      'icon': 'plus',
+                                      'label': 'Memorize',
+                                    },
+                                    {
+                                      'label': 'Recall',
+                                      'variant': 'secondary',
+                                      'icon': 'search',
+                                      'type': 'button',
+                                      'action': 'RECALL',
+                                    },
+                                    {
+                                      'label': 'Decay All',
+                                      'action': 'DECAY',
+                                      'variant': 'ghost',
+                                      'icon': 'clock',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'event': 'PIN',
+                                  'variant': 'ghost',
+                                  'label': 'Pin',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'Reinforce',
+                                  'event': 'REINFORCE',
+                                },
+                                {
+                                  'label': 'Forget',
+                                  'event': 'FORGET',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'fields': [
+                                {
+                                  'variant': 'h4',
+                                  'name': 'content',
+                                  'label': 'Content',
+                                  'icon': 'brain',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'category',
+                                  'colorMap': {
+                                    'scheduled': 'warning',
+                                    'completed': 'success',
+                                    'pending': 'warning',
+                                    'draft': 'warning',
+                                    'failed': 'destructive',
+                                    'active': 'success',
+                                    'cancelled': 'destructive',
+                                    'disabled': 'neutral',
+                                    'inactive': 'neutral',
+                                    'error': 'destructive',
+                                    'done': 'success',
+                                    'archived': 'neutral',
+                                  },
+                                  'label': 'Category',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'strength',
+                                  'label': 'Strength',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Agent Pipeline',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'ExecutionLogLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'type': 'icon',
+                          'color': 'destructive',
+                        },
+                        {
+                          'content': 'Failed to load executionlog',
+                          'variant': 'h3',
+                          'type': 'typography',
+                        },
+                        {
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'variant': 'body',
+                          'color': 'muted',
+                        },
+                        {
+                          'type': 'button',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
+                          'action': 'INIT',
+                          'label': 'Retry',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ExecutionLogCreate',
+          'category': 'interaction',
+          'linkedEntity': 'ExecutionLog',
+          'emits': [
+            {
+              'event': 'MEMORIZED',
+            },
+            {
+              'event': 'ExecutionLogLoadFailed',
+              'description': 'Fired when ExecutionLog fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogLoaded',
+              'description': 'Fired when ExecutionLog finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ExecutionLog]',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'MEMORIZE',
+              'triggers': 'MEMORIZE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'MEMORIZE',
+                'name': 'Memorize',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'MEMORIZED',
+                'name': 'Memorized',
+              },
+              {
+                'key': 'ExecutionLogLoadFailed',
+                'name': 'ExecutionLog load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogLoaded',
+                'name': 'ExecutionLog loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ExecutionLog]',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaveFailed',
+                'name': 'ExecutionLog save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaved',
+                'name': 'ExecutionLog saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ExecutionLog',
+                    {
+                      'emit': {
+                        'failure': 'ExecutionLogLoadFailed',
+                        'success': 'ExecutionLogLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'MEMORIZE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Memorize',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'fields': [
+                            'content',
+                            'category',
+                            'scope',
+                          ],
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'ExecutionLog',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ExecutionLogSaveFailed',
+                        'success': 'ExecutionLogSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'MEMORIZED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'ExecutionLogAgent',
+          'category': 'interaction',
+          'linkedEntity': 'ExecutionLog',
+          'emits': [
+            {
+              'event': 'FORGOT',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'REINFORCED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DECAYED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PINNED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogLoadFailed',
+              'description': 'Fired when ExecutionLog fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogLoaded',
+              'description': 'Fired when ExecutionLog finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ExecutionLog]',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'ExecutionLogSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'PIPELINE_FINISHED',
+              'triggers': 'MEMORIZE',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'PipelineExecOrbital',
+                'trait': 'PipelineExecutor',
+              },
+            },
+            {
+              'event': 'RECALL',
+              'triggers': 'RECALL',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+            {
+              'event': 'DECAY',
+              'triggers': 'DECAY',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+            {
+              'event': 'PIN',
+              'triggers': 'PIN',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+            {
+              'event': 'REINFORCE',
+              'triggers': 'REINFORCE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+            {
+              'event': 'FORGET',
+              'triggers': 'FORGET',
+              'source': {
+                'kind': 'trait',
+                'trait': 'ExecutionLogBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'active',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DO_MEMORIZE',
+                'name': 'Do Memorize',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'DECAY',
+                'name': 'Decay',
+              },
+              {
+                'key': 'MEMORIZED',
+                'name': 'Memorized',
+              },
+              {
+                'key': 'RECALL',
+                'name': 'Recall',
+                'payloadSchema': [
+                  {
+                    'name': 'query',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PIN',
+                'name': 'Pin',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGET',
+                'name': 'Forget',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'REINFORCE',
+                'name': 'Reinforce',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'FORGOT',
+                'name': 'Forgot',
+              },
+              {
+                'key': 'REINFORCED',
+                'name': 'Reinforced',
+              },
+              {
+                'key': 'DECAYED',
+                'name': 'Decayed',
+              },
+              {
+                'key': 'PINNED',
+                'name': 'Pinned',
+              },
+              {
+                'key': 'ExecutionLogLoadFailed',
+                'name': 'ExecutionLog load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogLoaded',
+                'name': 'ExecutionLog loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[ExecutionLog]',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaveFailed',
+                'name': 'ExecutionLog save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ExecutionLogSaved',
+                'name': 'ExecutionLog saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'ExecutionLog',
+                    {
+                      'emit': {
+                        'failure': 'ExecutionLogLoadFailed',
+                        'success': 'ExecutionLogLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Agent Pipeline',
+                      'navItems': [
+                        {
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/execution',
+                          'icon': 'play',
+                          'label': 'Execution',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                          'href': '/logs',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'title': 'Memory',
+                          'type': 'empty-state',
+                          'icon': 'brain',
+                          'description': 'Memory is ready',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'DO_MEMORIZE',
+                'effects': [
+                  [
+                    'agent/memorize',
+                    '@payload.data.content',
+                    '@payload.data.category',
+                  ],
+                  [
+                    'persist',
+                    'create',
+                    'ExecutionLog',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'ExecutionLogSaveFailed',
+                        'success': 'ExecutionLogSaved',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'DECAY',
+                'effects': [
+                  [
+                    'agent/decay',
+                  ],
+                  [
+                    'emit',
+                    'DECAYED',
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'active',
+                'event': 'MEMORIZED',
+                'effects': [
+                  [
+                    'fetch',
+                    'ExecutionLog',
+                    {
+                      'emit': {
+                        'failure': 'ExecutionLogLoadFailed',
+                        'success': 'ExecutionLogLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'RECALL',
+                'effects': [
+                  [
+                    'agent/recall',
+                    '@payload.query',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'PIN',
+                'guard': [
+                  'not',
+                  [
+                    'agent/is-pinned',
+                    '@payload.id',
+                  ],
+                ],
+                'effects': [
+                  [
+                    'agent/pin',
+                    '@payload.id',
+                  ],
+                  [
+                    'set',
+                    '@entity.pinned',
+                    true,
+                  ],
+                  [
+                    'emit',
+                    'PINNED',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'idle',
+                'event': 'FORGET',
+                'effects': [
+                  [
+                    'agent/forget',
+                    '@payload.id',
+                  ],
+                  [
+                    'emit',
+                    'FORGOT',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'REINFORCE',
+                'effects': [
+                  [
+                    'agent/reinforce',
+                    '@payload.id',
+                  ],
+                  [
+                    'emit',
+                    'REINFORCED',
+                  ],
+                ],
+              },
+              {
+                'from': 'active',
+                'to': 'active',
+                'event': 'DECAY',
+                'effects': [
+                  [
+                    'agent/decay',
+                  ],
+                  [
+                    'emit',
+                    'DECAYED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Logs',
+          'path': '/logs',
+          'traits': [
+            {
+              'ref': 'ExecutionLogBrowse',
+            },
+            {
+              'ref': 'ExecutionLogCreate',
+            },
+            {
+              'ref': 'ExecutionLogAgent',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'PipelineProgressOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-agent-step-progress',
+          'as': 'AgentStepProgress',
+        },
+      ],
+      entity: {
+        'name': 'PipelineProgress',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+        ],
+      } as Entity,
+      traits: [
+        makeTraitRef({
+          'ref': 'AgentStepProgress.traits.AgentStepProgressProgress',
+          'name': 'PipelineStepProgress',
+          'linkedEntity': 'PipelineProgress',
+        }),
+      ],
+      pages: [
+        {
+          'name': 'PipelineProgress',
+          'path': '/pipeline/progress',
+          'traits': [
+            {
+              'ref': 'PipelineStepProgress',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'SessionTreeOrbital',
+      uses: [
+        {
+          'from': 'std/behaviors/std-drawer',
+          'as': 'Drawer',
+        },
+      ],
+      entity: {
+        'name': 'SessionTree',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'branchId',
+            'type': 'string',
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+        ],
+      } as Entity,
+      traits: [
+        makeTraitRef({
+          'ref': 'Drawer.traits.DrawerContentDrawer',
+          'name': 'SessionTreeDrawer',
+          'linkedEntity': 'SessionTree',
+        }),
+      ],
+      pages: [
+        {
+          'name': 'PipelineTree',
+          'path': '/pipeline/tree',
+          'traits': [
+            {
+              'ref': 'SessionTreeDrawer',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

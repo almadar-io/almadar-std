@@ -114,9 +114,2121 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"PostOrbital","entity":{"name":"Post","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","default":""},{"name":"content","type":"string","default":""},{"name":"author","type":"string","default":""},{"name":"createdAt","type":"datetime","default":""},{"name":"likes","type":"number","default":0}]},"traits":[{"name":"PostBrowse","category":"interaction","linkedEntity":"Post","emits":[{"event":"COMMENT","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string"},{"name":"row.content","type":"string"},{"name":"row.author","type":"string"},{"name":"row.createdAt","type":"datetime"},{"name":"row.likes","type":"number"}]},{"event":"PostLoaded","description":"Fired when Post finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Post]"}]},{"event":"PostLoadFailed","description":"Fired when Post fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PostSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"PostSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CommentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CommentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"PostLoaded","name":"Post loaded","payloadSchema":[{"name":"data","type":"[Post]"}]},{"key":"PostLoadFailed","name":"Post load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"COMMENT","name":"Comment"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Post"}]},{"key":"PostSaved","name":"Post saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"PostSaveFailed","name":"Post save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CommentSaved","name":"Comment saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CommentSaveFailed","name":"Comment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Post",{"emit":{"success":"PostLoaded","failure":"PostLoadFailed"}}],["render-ui","main",{"className":"py-12","type":"stack","children":[{"type":"spinner"},{"color":"muted","variant":"caption","type":"typography","content":"Loading…"}],"align":"center","direction":"vertical","gap":"md"}]]},{"from":"browsing","to":"browsing","event":"PostLoaded","effects":[["render-ui","main",{"navItems":[{"label":"Feed","icon":"layout-list","href":"/feed"},{"icon":"message-circle","href":"/messages","label":"Messages"}],"appName":"SocialFeed","type":"dashboard-layout","children":[{"children":[{"direction":"horizontal","type":"stack","children":[{"align":"center","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"rss"},{"variant":"h2","type":"typography","content":"Feed"}],"type":"stack"},{"direction":"horizontal","gap":"sm","children":[{"label":"New Post","type":"button","variant":"primary","icon":"plus","action":"CREATE"}],"type":"stack"}],"gap":"md","justify":"between","align":"center"},{"type":"divider"},{"itemActions":[{"label":"View","event":"VIEW","variant":"ghost"}],"type":"data-list","entity":"@payload.data","fields":[{"variant":"h3","name":"title","icon":"rss"},{"format":"number","variant":"badge","name":"likes"},{"name":"author","variant":"body"},{"name":"content","variant":"body"},{"format":"date","label":"Posted","name":"createdAt","variant":"caption"}],"variant":"card","gap":"sm"}],"direction":"vertical","gap":"lg","type":"stack","className":"max-w-5xl mx-auto w-full"}]}]]},{"from":"browsing","to":"browsing","event":"PostLoadFailed","effects":[["render-ui","main",{"className":"py-12","children":[{"type":"icon","name":"alert-triangle","color":"destructive"},{"variant":"h3","type":"typography","content":"Failed to load post"},{"variant":"body","type":"typography","color":"muted","content":"@payload.error"},{"type":"button","variant":"primary","icon":"rotate-ccw","action":"INIT","label":"Retry"}],"type":"stack","direction":"vertical","gap":"md","align":"center"}]]}]},"scope":"collection"},{"name":"PostCreate","category":"interaction","linkedEntity":"Post","emits":[{"event":"PostLoadFailed","description":"Fired when Post fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PostLoaded","description":"Fired when Post finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Post]"}]},{"event":"PostSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"PostSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"PostBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PostLoadFailed","name":"Post load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PostLoaded","name":"Post loaded","payloadSchema":[{"name":"data","type":"[Post]"}]},{"key":"PostSaveFailed","name":"Post save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"PostSaved","name":"Post saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Post",{"emit":{"success":"PostLoaded","failure":"PostLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Post",{"emit":{"success":"PostLoaded","failure":"PostLoadFailed"}}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"children":[{"type":"icon","name":"plus-circle"},{"variant":"h3","type":"typography","content":"Create Post"}],"direction":"horizontal","gap":"sm","type":"stack"},{"type":"divider"},{"mode":"create","cancelEvent":"CLOSE","submitEvent":"SAVE","fields":["title","content","author","likes"],"type":"form-section"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Post","@payload.data",{"emit":{"failure":"PostSaveFailed","success":"PostSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"PostView","category":"interaction","linkedEntity":"Post","emits":[{"event":"PostLoaded","description":"Fired when Post finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Post]"}]},{"event":"PostLoadFailed","description":"Fired when Post fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"PostBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"PostLoaded","name":"Post loaded","payloadSchema":[{"name":"data","type":"[Post]"}]},{"key":"PostLoadFailed","name":"Post load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Post",{"emit":{"success":"PostLoaded","failure":"PostLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Post",{"emit":{"success":"PostLoaded","failure":"PostLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"children":[{"align":"center","children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.title"}],"direction":"horizontal","type":"stack","gap":"sm"},{"type":"divider"},{"type":"stack","children":[{"variant":"caption","content":"Title","type":"typography"},{"content":"@entity.title","type":"typography","variant":"body"}],"direction":"horizontal","gap":"md"},{"children":[{"type":"typography","content":"Content","variant":"caption"},{"type":"typography","content":"@entity.content","variant":"body"}],"type":"stack","gap":"md","direction":"horizontal"},{"children":[{"type":"typography","content":"Author","variant":"caption"},{"content":"@entity.author","type":"typography","variant":"body"}],"direction":"horizontal","type":"stack","gap":"md"},{"children":[{"type":"typography","variant":"caption","content":"Created At"},{"content":"@entity.createdAt","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal","gap":"md"},{"direction":"horizontal","children":[{"variant":"caption","content":"Likes","type":"typography"},{"type":"typography","variant":"body","content":"@entity.likes"}],"type":"stack","gap":"md"},{"type":"divider"},{"children":[{"type":"button","action":"CLOSE","label":"Close","variant":"ghost"}],"direction":"horizontal","justify":"end","type":"stack","gap":"sm"}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"FeedPage","path":"/feed","traits":[{"ref":"PostBrowse"},{"ref":"PostCreate"},{"ref":"PostView"}]}]},{"name":"CommentOrbital","entity":{"name":"Comment","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"body","type":"string"},{"name":"author","type":"string","default":""},{"name":"postId","type":"string"},{"name":"createdAt","type":"datetime","default":""}]},"traits":[{"name":"CommentBrowse","category":"interaction","linkedEntity":"Comment","emits":[{"event":"COMPOSE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.body","type":"string"},{"name":"row.author","type":"string"},{"name":"row.postId","type":"string"},{"name":"row.createdAt","type":"datetime"}]},{"event":"CommentLoaded","description":"Fired when Comment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"event":"CommentLoadFailed","description":"Fired when Comment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"SEND","triggers":"INIT","source":{"kind":"trait","trait":"CommentCompose"}},{"event":"COMMENT","triggers":"INIT","source":{"kind":"orbital","orbital":"PostOrbital","trait":"PostBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CommentLoaded","name":"Comment loaded","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"key":"CommentLoadFailed","name":"Comment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"COMPOSE","name":"Compose"},{"key":"VIEW","name":"View"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Comment",{"emit":{"success":"CommentLoaded","failure":"CommentLoadFailed"}}],["render-ui","main",{"children":[{"type":"spinner"},{"type":"typography","color":"muted","variant":"caption","content":"Loading…"}],"gap":"md","type":"stack","align":"center","direction":"vertical","className":"py-12"}]]},{"from":"browsing","to":"browsing","event":"CommentLoaded","effects":[["render-ui","main",{"navItems":[{"icon":"layout-list","label":"Feed","href":"/feed"},{"icon":"message-circle","label":"Messages","href":"/messages"}],"type":"dashboard-layout","appName":"SocialFeed","children":[{"direction":"vertical","gap":"lg","className":"max-w-5xl mx-auto w-full","type":"stack","children":[{"type":"stack","children":[{"children":[{"type":"icon","name":"message-circle"},{"variant":"h2","type":"typography","content":"Messages"}],"gap":"sm","direction":"horizontal","type":"stack","align":"center"},{"direction":"horizontal","gap":"sm","type":"stack","children":[{"variant":"primary","action":"COMPOSE","icon":"edit","label":"Compose","type":"button"}]}],"justify":"between","direction":"horizontal","align":"center","gap":"md"},{"type":"divider"},{"entity":"@payload.data","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"}],"fields":[{"name":"author","variant":"h4","icon":"message-circle"},{"name":"body","variant":"body"},{"name":"createdAt","variant":"caption","format":"date"}],"variant":"card","type":"data-list","gap":"sm"}]}]}]]},{"from":"browsing","to":"browsing","event":"CommentLoadFailed","effects":[["render-ui","main",{"children":[{"name":"alert-triangle","color":"destructive","type":"icon"},{"type":"typography","variant":"h3","content":"Failed to load comment"},{"color":"muted","type":"typography","variant":"body","content":"@payload.error"},{"type":"button","icon":"rotate-ccw","action":"INIT","variant":"primary","label":"Retry"}],"direction":"vertical","type":"stack","align":"center","className":"py-12","gap":"md"}]]}]},"scope":"collection"},{"name":"CommentCompose","category":"interaction","linkedEntity":"Comment","emits":[{"event":"SEND"},{"event":"CommentLoadFailed","description":"Fired when Comment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CommentLoaded","description":"Fired when Comment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"event":"CommentSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"CommentSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"COMPOSE","triggers":"COMPOSE","source":{"kind":"trait","trait":"CommentBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"COMPOSE","name":"Compose"},{"key":"CLOSE","name":"Close"},{"key":"SEND","name":"Send","payloadSchema":[{"name":"data","type":"string"}]},{"key":"CommentLoadFailed","name":"Comment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CommentLoaded","name":"Comment loaded","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"key":"CommentSaveFailed","name":"Comment save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CommentSaved","name":"Comment saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Comment",{"emit":{"success":"CommentLoaded","failure":"CommentLoadFailed"}}]]},{"from":"closed","to":"open","event":"COMPOSE","effects":[["render-ui","modal",{"gap":"md","direction":"vertical","children":[{"children":[{"name":"edit","type":"icon"},{"variant":"h3","content":"New Comment","type":"typography"}],"type":"stack","direction":"horizontal","gap":"sm"},{"type":"divider"},{"fields":["body","author","postId"],"type":"form-section","mode":"create","cancelEvent":"CLOSE","submitEvent":"SEND"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SEND","effects":[["persist","create","Comment","@payload.data",{"emit":{"failure":"CommentSaveFailed","success":"CommentSaved"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"CommentView","category":"interaction","linkedEntity":"Comment","emits":[{"event":"CommentLoaded","description":"Fired when Comment finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"event":"CommentLoadFailed","description":"Fired when Comment fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"CommentBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"CommentLoaded","name":"Comment loaded","payloadSchema":[{"name":"data","type":"[Comment]"}]},{"key":"CommentLoadFailed","name":"Comment load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Comment",{"emit":{"failure":"CommentLoadFailed","success":"CommentLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Comment",{"emit":{"failure":"CommentLoadFailed","success":"CommentLoaded"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","children":[{"children":[{"type":"icon","name":"eye"},{"type":"typography","variant":"h3","content":"@entity.body"}],"type":"stack","align":"center","gap":"sm","direction":"horizontal"},{"type":"divider"},{"type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Body"},{"type":"typography","variant":"body","content":"@entity.body"}],"direction":"horizontal"},{"children":[{"type":"typography","variant":"caption","content":"Author"},{"variant":"body","type":"typography","content":"@entity.author"}],"direction":"horizontal","gap":"md","type":"stack"},{"children":[{"content":"Post ID","type":"typography","variant":"caption"},{"type":"typography","variant":"body","content":"@entity.postId"}],"gap":"md","direction":"horizontal","type":"stack"},{"gap":"md","type":"stack","children":[{"variant":"caption","content":"Created At","type":"typography"},{"type":"typography","variant":"body","content":"@entity.createdAt"}],"direction":"horizontal"},{"type":"divider"},{"direction":"horizontal","justify":"end","type":"stack","children":[{"type":"button","variant":"ghost","action":"CLOSE","label":"Close"}],"gap":"sm"}],"type":"stack"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"}],"pages":[{"name":"Messages","path":"/messages","traits":[{"ref":"CommentBrowse"},{"ref":"CommentCompose"},{"ref":"CommentView"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'PostOrbital',
+      uses: [],
+      entity: {
+        'name': 'Post',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'datetime',
+            'default': '',
+          },
+          {
+            'name': 'likes',
+            'type': 'number',
+            'default': 0,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'PostBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Post',
+          'emits': [
+            {
+              'event': 'COMMENT',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.content',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.likes',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'PostLoaded',
+              'description': 'Fired when Post finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Post]',
+                },
+              ],
+            },
+            {
+              'event': 'PostLoadFailed',
+              'description': 'Fired when Post fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PostSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PostSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CommentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CommentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'PostLoaded',
+                'name': 'Post loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Post]',
+                  },
+                ],
+              },
+              {
+                'key': 'PostLoadFailed',
+                'name': 'Post load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMMENT',
+                'name': 'Comment',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Post',
+                  },
+                ],
+              },
+              {
+                'key': 'PostSaved',
+                'name': 'Post saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PostSaveFailed',
+                'name': 'Post save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentSaved',
+                'name': 'Comment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentSaveFailed',
+                'name': 'Comment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Post',
+                    {
+                      'emit': {
+                        'failure': 'PostLoadFailed',
+                        'success': 'PostLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                        },
+                      ],
+                      'type': 'stack',
+                      'align': 'center',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PostLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'rss',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Feed',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'label': 'New Post',
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'variant': 'primary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'fields': [
+                                {
+                                  'name': 'title',
+                                  'variant': 'h3',
+                                  'icon': 'rss',
+                                },
+                                {
+                                  'format': 'number',
+                                  'name': 'likes',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'author',
+                                },
+                                {
+                                  'name': 'content',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'name': 'createdAt',
+                                  'variant': 'caption',
+                                  'label': 'Posted',
+                                  'format': 'date',
+                                },
+                              ],
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'type': 'data-list',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Feed',
+                          'icon': 'layout-list',
+                          'href': '/feed',
+                        },
+                        {
+                          'href': '/messages',
+                          'icon': 'message-circle',
+                          'label': 'Messages',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'SocialFeed',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'PostLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'align': 'center',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load post',
+                          'type': 'typography',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'label': 'Retry',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
+                          'action': 'INIT',
+                        },
+                      ],
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PostCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Post',
+          'emits': [
+            {
+              'event': 'PostLoadFailed',
+              'description': 'Fired when Post fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PostLoaded',
+              'description': 'Fired when Post finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Post]',
+                },
+              ],
+            },
+            {
+              'event': 'PostSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'PostSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PostBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PostLoadFailed',
+                'name': 'Post load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PostLoaded',
+                'name': 'Post loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Post]',
+                  },
+                ],
+              },
+              {
+                'key': 'PostSaveFailed',
+                'name': 'Post save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'PostSaved',
+                'name': 'Post saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Post',
+                    {
+                      'emit': {
+                        'failure': 'PostLoadFailed',
+                        'success': 'PostLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Post',
+                    {
+                      'emit': {
+                        'failure': 'PostLoadFailed',
+                        'success': 'PostLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'content': 'Create Post',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'title',
+                            'content',
+                            'author',
+                            'likes',
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Post',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'PostSaveFailed',
+                        'success': 'PostSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'PostView',
+          'category': 'interaction',
+          'linkedEntity': 'Post',
+          'emits': [
+            {
+              'event': 'PostLoaded',
+              'description': 'Fired when Post finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Post]',
+                },
+              ],
+            },
+            {
+              'event': 'PostLoadFailed',
+              'description': 'Fired when Post fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'PostBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'PostLoaded',
+                'name': 'Post loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Post]',
+                  },
+                ],
+              },
+              {
+                'key': 'PostLoadFailed',
+                'name': 'Post load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.author',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.content',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.likes',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.title',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Post',
+                    {
+                      'emit': {
+                        'failure': 'PostLoadFailed',
+                        'success': 'PostLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Post',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'PostLoadFailed',
+                        'success': 'PostLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'content': '@entity.title',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Title',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.title',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'content': 'Content',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.content',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Author',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.author',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Created At',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.createdAt',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Likes',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.likes',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Close',
+                            },
+                          ],
+                          'justify': 'end',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'FeedPage',
+          'path': '/feed',
+          'traits': [
+            {
+              'ref': 'PostBrowse',
+            },
+            {
+              'ref': 'PostCreate',
+            },
+            {
+              'ref': 'PostView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'CommentOrbital',
+      uses: [],
+      entity: {
+        'name': 'Comment',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'postId',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'datetime',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'CommentBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Comment',
+          'emits': [
+            {
+              'event': 'COMPOSE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.body',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.author',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.postId',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.createdAt',
+                  'type': 'datetime',
+                },
+              ],
+            },
+            {
+              'event': 'CommentLoaded',
+              'description': 'Fired when Comment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Comment]',
+                },
+              ],
+            },
+            {
+              'event': 'CommentLoadFailed',
+              'description': 'Fired when Comment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'SEND',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CommentCompose',
+              },
+            },
+            {
+              'event': 'COMMENT',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'PostOrbital',
+                'trait': 'PostBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CommentLoaded',
+                'name': 'Comment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Comment]',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentLoadFailed',
+                'name': 'Comment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Comment',
+                    {
+                      'emit': {
+                        'success': 'CommentLoaded',
+                        'failure': 'CommentLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'type': 'typography',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CommentLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'SocialFeed',
+                      'navItems': [
+                        {
+                          'href': '/feed',
+                          'label': 'Feed',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Messages',
+                          'href': '/messages',
+                          'icon': 'message-circle',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'message-circle',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Messages',
+                                    },
+                                  ],
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'icon': 'edit',
+                                      'action': 'COMPOSE',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'label': 'Compose',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'fields': [
+                                {
+                                  'variant': 'h4',
+                                  'name': 'author',
+                                  'icon': 'message-circle',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'body',
+                                },
+                                {
+                                  'variant': 'caption',
+                                  'name': 'createdAt',
+                                  'format': 'date',
+                                },
+                              ],
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'entity': '@payload.data',
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'vertical',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'CommentLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'stack',
+                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
+                        },
+                        {
+                          'variant': 'h3',
+                          'content': 'Failed to load comment',
+                          'type': 'typography',
+                        },
+                        {
+                          'color': 'muted',
+                          'type': 'typography',
+                          'variant': 'body',
+                          'content': '@payload.error',
+                        },
+                        {
+                          'label': 'Retry',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'type': 'button',
+                          'icon': 'rotate-ccw',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CommentCompose',
+          'category': 'interaction',
+          'linkedEntity': 'Comment',
+          'emits': [
+            {
+              'event': 'SEND',
+            },
+            {
+              'event': 'CommentLoadFailed',
+              'description': 'Fired when Comment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CommentLoaded',
+              'description': 'Fired when Comment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Comment]',
+                },
+              ],
+            },
+            {
+              'event': 'CommentSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CommentSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'COMPOSE',
+              'triggers': 'COMPOSE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CommentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'COMPOSE',
+                'name': 'Compose',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SEND',
+                'name': 'Send',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentLoadFailed',
+                'name': 'Comment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentLoaded',
+                'name': 'Comment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Comment]',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentSaveFailed',
+                'name': 'Comment save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentSaved',
+                'name': 'Comment saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Comment',
+                    {
+                      'emit': {
+                        'success': 'CommentLoaded',
+                        'failure': 'CommentLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'COMPOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'New Comment',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'submitEvent': 'SEND',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'body',
+                            'author',
+                            'postId',
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SEND',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Comment',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'CommentSaveFailed',
+                        'success': 'CommentSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'CommentView',
+          'category': 'interaction',
+          'linkedEntity': 'Comment',
+          'emits': [
+            {
+              'event': 'CommentLoaded',
+              'description': 'Fired when Comment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Comment]',
+                },
+              ],
+            },
+            {
+              'event': 'CommentLoadFailed',
+              'description': 'Fired when Comment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'CommentBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'CommentLoaded',
+                'name': 'Comment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Comment]',
+                  },
+                ],
+              },
+              {
+                'key': 'CommentLoadFailed',
+                'name': 'Comment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.author',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.body',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.createdAt',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.postId',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Comment',
+                    {
+                      'emit': {
+                        'failure': 'CommentLoadFailed',
+                        'success': 'CommentLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Comment',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'CommentLoadFailed',
+                        'success': 'CommentLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.body',
+                              'variant': 'h3',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Body',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.body',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'content': 'Author',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.author',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Post ID',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.postId',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                        },
+                        {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Created At',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.createdAt',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Messages',
+          'path': '/messages',
+          'traits': [
+            {
+              'ref': 'CommentBrowse',
+            },
+            {
+              'ref': 'CommentCompose',
+            },
+            {
+              'ref': 'CommentView',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

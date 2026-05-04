@@ -144,9 +144,5675 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"TaskOrbital","entity":{"name":"Task","collection":"tasks","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"description","type":"string"},{"name":"assignee","type":"string"},{"name":"priority","type":"string","default":"medium","values":["low","medium","high","critical"]},{"name":"status","type":"string","default":"todo","values":["todo","in-progress","review","done"]},{"name":"storyPoints","type":"number","default":0},{"name":"dueDate","type":"datetime"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"TaskBrowse","category":"interaction","linkedEntity":"Task","emits":[{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.assignee","type":"string"},{"name":"row.priority","type":"string"},{"name":"row.status","type":"string"},{"name":"row.storyPoints","type":"number"},{"name":"row.dueDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.assignee","type":"string"},{"name":"row.priority","type":"string"},{"name":"row.status","type":"string"},{"name":"row.storyPoints","type":"number"},{"name":"row.dueDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.title","type":"string","required":true},{"name":"row.description","type":"string"},{"name":"row.assignee","type":"string"},{"name":"row.priority","type":"string"},{"name":"row.status","type":"string"},{"name":"row.storyPoints","type":"number"},{"name":"row.dueDate","type":"datetime"},{"name":"row.pendingId","type":"string"}]},{"event":"TaskLoaded","description":"Fired when Task finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Task]"}]},{"event":"TaskLoadFailed","description":"Fired when Task fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"SprintSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"SprintUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"SprintDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"TASK_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"TaskCreate"}},{"event":"TASK_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"TaskEdit"}},{"event":"TASK_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"TaskDelete"}},{"event":"ASSIGN_TASK","triggers":"INIT","source":{"kind":"orbital","orbital":"SprintOrbital","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"TaskLoaded","name":"Task loaded","payloadSchema":[{"name":"data","type":"[Task]"}]},{"key":"TaskLoadFailed","name":"Task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Task"}]},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Task"}]},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Task"}]},{"key":"TaskSaved","name":"Task saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TaskSaveFailed","name":"Task save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskUpdated","name":"Task updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TaskUpdateFailed","name":"Task update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskDeleted","name":"Task deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TaskDeleteFailed","name":"Task delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintSaved","name":"Sprint saved","payloadSchema":[{"name":"id","type":"string"}]},{"key":"SprintSaveFailed","name":"Sprint save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintUpdated","name":"Sprint updated","payloadSchema":[{"name":"id","type":"string"}]},{"key":"SprintUpdateFailed","name":"Sprint update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintDeleted","name":"Sprint deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"SprintDeleteFailed","name":"Sprint delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}],["render-ui","main",{"align":"center","type":"stack","direction":"vertical","className":"py-12","children":[{"type":"spinner"},{"variant":"caption","type":"typography","content":"Loading…","color":"muted"}],"gap":"md"}]]},{"from":"browsing","to":"browsing","event":"TaskLoaded","effects":[["render-ui","main",{"navItems":[{"label":"Tasks","icon":"check-square","href":"/tasks"},{"icon":"zap","label":"Sprints","href":"/sprints"},{"icon":"layout-list","href":"/burndown","label":"Burndown"}],"appName":"ProjectManagerApp","type":"dashboard-layout","children":[{"type":"stack","className":"max-w-5xl mx-auto w-full","gap":"lg","children":[{"children":[{"gap":"sm","children":[{"type":"icon","name":"check-square"},{"variant":"h2","type":"typography","content":"Tasks"}],"type":"stack","direction":"horizontal","align":"center"},{"children":[{"action":"CREATE","variant":"primary","label":"Create Task","icon":"plus","type":"button"}],"direction":"horizontal","type":"stack","gap":"sm"}],"type":"stack","align":"center","justify":"between","gap":"md","direction":"horizontal"},{"type":"divider"},{"children":[{"type":"stat-display","value":"@payload.data.length","label":"Total Tasks","icon":"check-square"}],"type":"simple-grid","cols":1},{"type":"divider"},{"cols":2,"gap":"md","entity":"@payload.data","fields":[{"icon":"check-square","name":"title","variant":"h3"},{"variant":"badge","name":"priority"},{"variant":"badge","name":"status"},{"name":"assignee","variant":"body"},{"variant":"body","label":"Points","name":"storyPoints","format":"number"},{"format":"date","label":"Due","name":"dueDate","variant":"caption"}],"type":"data-grid","itemActions":[{"label":"View","event":"VIEW","variant":"ghost"},{"label":"Edit","event":"EDIT","variant":"ghost"},{"label":"Delete","event":"DELETE","variant":"danger"}]}],"direction":"vertical"}]}]]},{"from":"browsing","to":"browsing","event":"TaskLoadFailed","effects":[["render-ui","main",{"align":"center","type":"stack","direction":"vertical","className":"py-12","children":[{"type":"icon","color":"destructive","name":"alert-triangle"},{"variant":"h3","content":"Failed to load task","type":"typography"},{"type":"typography","variant":"body","color":"muted","content":"@payload.error"},{"action":"INIT","variant":"primary","label":"Retry","icon":"rotate-ccw","type":"button"}],"gap":"md"}]]}]},"scope":"collection"},{"name":"TaskCreate","category":"interaction","linkedEntity":"Task","emits":[{"event":"TASK_CREATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskLoadFailed","description":"Fired when Task fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskLoaded","description":"Fired when Task finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Task]"}]},{"event":"TaskSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"TaskBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"TASK_CREATED","name":"Task Created"},{"key":"TaskLoadFailed","name":"Task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskLoaded","name":"Task loaded","payloadSchema":[{"name":"data","type":"[Task]"}]},{"key":"TaskSaveFailed","name":"Task save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskSaved","name":"Task saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}],["render-ui","modal",{"children":[{"gap":"sm","direction":"horizontal","type":"stack","children":[{"name":"plus-circle","type":"icon"},{"type":"typography","variant":"h3","content":"Create Task"}]},{"type":"divider"},{"fields":["title","description","assignee","priority","status","storyPoints","dueDate"],"submitEvent":"SAVE","cancelEvent":"CLOSE","type":"form-section","mode":"create"}],"direction":"vertical","type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Task","@payload.data",{"emit":{"success":"TaskSaved","failure":"TaskSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","TASK_CREATED"]]}]},"scope":"collection"},{"name":"TaskEdit","category":"interaction","linkedEntity":"Task","emits":[{"event":"TASK_UPDATED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskLoadFailed","description":"Fired when Task fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskLoaded","description":"Fired when Task finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Task]"}]},{"event":"TaskUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"TaskView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"TaskBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row","type":"Task"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"TASK_UPDATED","name":"Task Updated"},{"key":"TaskLoadFailed","name":"Task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskLoaded","name":"Task loaded","payloadSchema":[{"name":"data","type":"[Task]"}]},{"key":"TaskUpdateFailed","name":"Task update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskUpdated","name":"Task updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Task",{"emit":{"success":"TaskLoaded","failure":"TaskLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"},"id":"@payload.id"}],["render-ui","modal",{"children":[{"children":[{"type":"icon","name":"edit"},{"content":"Edit Task","variant":"h3","type":"typography"}],"type":"stack","gap":"sm","direction":"horizontal"},{"type":"divider"},{"entity":"@payload.row","cancelEvent":"CLOSE","fields":["title","description","assignee","priority","status","storyPoints","dueDate"],"mode":"edit","submitEvent":"SAVE","type":"form-section"}],"direction":"vertical","type":"stack","gap":"md"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Task","@payload.data",{"emit":{"success":"TaskUpdated","failure":"TaskUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","TASK_UPDATED"]]}]},"scope":"collection"},{"name":"TaskView","category":"interaction","linkedEntity":"Task","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskLoaded","description":"Fired when Task finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Task]"}]},{"event":"TaskLoadFailed","description":"Fired when Task fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"TaskBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"object","required":true}]},{"key":"EDIT","name":"Edit"},{"key":"TaskLoaded","name":"Task loaded","payloadSchema":[{"name":"data","type":"[Task]"}]},{"key":"TaskLoadFailed","name":"Task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"},"id":"@payload.id"}],["render-ui","modal",{"type":"stack","gap":"md","direction":"vertical","children":[{"type":"stack","align":"center","children":[{"name":"eye","type":"icon"},{"type":"typography","variant":"h3","content":"@entity.title"}],"direction":"horizontal","gap":"sm"},{"type":"divider"},{"direction":"horizontal","children":[{"variant":"caption","content":"Title","type":"typography"},{"type":"typography","content":"@entity.title","variant":"body"}],"gap":"md","type":"stack"},{"children":[{"variant":"caption","type":"typography","content":"Description"},{"content":"@entity.description","type":"typography","variant":"body"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"stack","direction":"horizontal","gap":"md","children":[{"variant":"caption","content":"Assignee","type":"typography"},{"content":"@entity.assignee","type":"typography","variant":"body"}]},{"children":[{"variant":"caption","type":"typography","content":"Priority"},{"type":"typography","variant":"body","content":"@entity.priority"}],"gap":"md","type":"stack","direction":"horizontal"},{"type":"stack","children":[{"content":"Status","type":"typography","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.status"}],"direction":"horizontal","gap":"md"},{"children":[{"type":"typography","variant":"caption","content":"Story Points"},{"content":"@entity.storyPoints","variant":"body","type":"typography"}],"gap":"md","direction":"horizontal","type":"stack"},{"children":[{"type":"typography","content":"Due Date","variant":"caption"},{"variant":"body","type":"typography","content":"@entity.dueDate"}],"type":"stack","gap":"md","direction":"horizontal"},{"type":"divider"},{"gap":"sm","type":"stack","justify":"end","direction":"horizontal","children":[{"variant":"primary","label":"Edit","icon":"edit","type":"button","action":"EDIT"},{"variant":"ghost","type":"button","label":"Close","action":"CLOSE"}]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"TaskDelete","category":"interaction","linkedEntity":"Task","emits":[{"event":"TASK_DELETED","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"TaskLoadFailed","description":"Fired when Task fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"TaskLoaded","description":"Fired when Task finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Task]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"TaskBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string","required":true}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"TASK_DELETED","name":"Task Deleted"},{"key":"TaskDeleteFailed","name":"Task delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskDeleted","name":"Task deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"TaskLoadFailed","name":"Task load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"TaskLoaded","name":"Task loaded","payloadSchema":[{"name":"data","type":"[Task]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Task",{"emit":{"success":"TaskLoaded","failure":"TaskLoadFailed"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Task",{"id":"@payload.id","emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}],["render-ui","modal",{"direction":"vertical","type":"stack","children":[{"children":[{"name":"alert-triangle","type":"icon"},{"variant":"h3","type":"typography","content":"Delete Task"}],"type":"stack","gap":"sm","direction":"horizontal","align":"center"},{"type":"divider"},{"type":"alert","variant":"error","message":"This action cannot be undone."},{"type":"stack","direction":"horizontal","gap":"sm","children":[{"label":"Cancel","action":"CANCEL","type":"button","variant":"ghost"},{"action":"CONFIRM_DELETE","type":"button","variant":"danger","icon":"check","label":"Delete"}],"justify":"end"}],"gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Task","@entity.pendingId",{"emit":{"failure":"TaskDeleteFailed","success":"TaskDeleted"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Task",{"emit":{"success":"TaskLoaded","failure":"TaskLoadFailed"}}],["emit","TASK_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Task",{"emit":{"success":"TaskLoaded","failure":"TaskLoadFailed"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Task",{"emit":{"failure":"TaskLoadFailed","success":"TaskLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"TasksPage","path":"/tasks","traits":[{"ref":"TaskBrowse"},{"ref":"TaskCreate"},{"ref":"TaskEdit"},{"ref":"TaskView"},{"ref":"TaskDelete"}]}]},{"name":"SprintOrbital","entity":{"name":"Sprint","collection":"sprints","persistence":"persistent","fields":[{"name":"id","type":"string","required":true},{"name":"name","type":"string","required":true},{"name":"startDate","type":"datetime","required":true},{"name":"endDate","type":"datetime","required":true},{"name":"goal","type":"string"},{"name":"status","type":"string","default":"todo","values":["todo","in-progress","review","done"]},{"name":"taskCount","type":"number"},{"name":"pendingId","type":"string","default":""}]},"traits":[{"name":"SprintBrowse","category":"interaction","linkedEntity":"Sprint","emits":[{"event":"ASSIGN_TASK","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"COMPLETE_SPRINT","scope":"external","payloadSchema":[{"name":"id","type":"string"}]},{"event":"CREATE"},{"event":"VIEW","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.startDate","type":"datetime","required":true},{"name":"row.endDate","type":"datetime","required":true},{"name":"row.goal","type":"string"},{"name":"row.status","type":"string"},{"name":"row.taskCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"EDIT","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.startDate","type":"datetime","required":true},{"name":"row.endDate","type":"datetime","required":true},{"name":"row.goal","type":"string"},{"name":"row.status","type":"string"},{"name":"row.taskCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"DELETE","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"row.id","type":"string","required":true},{"name":"row.name","type":"string","required":true},{"name":"row.startDate","type":"datetime","required":true},{"name":"row.endDate","type":"datetime","required":true},{"name":"row.goal","type":"string"},{"name":"row.status","type":"string"},{"name":"row.taskCount","type":"number"},{"name":"row.pendingId","type":"string"}]},{"event":"SprintLoaded","description":"Fired when Sprint finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"event":"SprintLoadFailed","description":"Fired when Sprint fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"SPRINT_CREATED","triggers":"INIT","source":{"kind":"trait","trait":"SprintCreate"}},{"event":"SPRINT_UPDATED","triggers":"INIT","source":{"kind":"trait","trait":"SprintEdit"}},{"event":"SPRINT_DELETED","triggers":"INIT","source":{"kind":"trait","trait":"SprintDelete"}}],"stateMachine":{"states":[{"name":"browsing","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"SprintLoaded","name":"Sprint loaded","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"key":"SprintLoadFailed","name":"Sprint load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"ASSIGN_TASK","name":"Assign Task"},{"key":"COMPLETE_SPRINT","name":"Complete Sprint"},{"key":"CREATE","name":"Create"},{"key":"VIEW","name":"View"},{"key":"EDIT","name":"Edit"},{"key":"DELETE","name":"Delete"}],"transitions":[{"from":"browsing","to":"browsing","event":"INIT","effects":[["fetch","Sprint",{"emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}],["render-ui","main",{"gap":"md","direction":"vertical","className":"py-12","align":"center","type":"stack","children":[{"type":"spinner"},{"type":"typography","content":"Loading…","color":"muted","variant":"caption"}]}]]},{"from":"browsing","to":"browsing","event":"SprintLoaded","effects":[["render-ui","main",{"children":[{"gap":"lg","className":"max-w-5xl mx-auto w-full","children":[{"children":[{"align":"center","children":[{"name":"zap","type":"icon"},{"variant":"h2","type":"typography","content":"Sprints"}],"gap":"sm","type":"stack","direction":"horizontal"},{"children":[{"type":"button","variant":"primary","icon":"plus","action":"CREATE","label":"Create Sprint"}],"gap":"sm","direction":"horizontal","type":"stack"}],"align":"center","direction":"horizontal","type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"itemActions":[{"event":"VIEW","variant":"ghost","label":"View"},{"variant":"ghost","label":"Edit","event":"EDIT"},{"event":"DELETE","variant":"danger","label":"Delete"}],"cols":2,"gap":"md","type":"data-grid","entity":"@payload.data","fields":[{"icon":"zap","variant":"h3","name":"name"},{"variant":"badge","name":"status"},{"name":"goal","variant":"body"},{"variant":"caption","format":"date","name":"startDate","label":"Start"},{"format":"date","label":"End","name":"endDate","variant":"caption"},{"name":"taskCount","variant":"body","format":"number","label":"Tasks"}]}],"type":"stack","direction":"vertical"}],"type":"dashboard-layout","appName":"ProjectManagerApp","navItems":[{"href":"/tasks","icon":"check-square","label":"Tasks"},{"icon":"zap","label":"Sprints","href":"/sprints"},{"href":"/burndown","label":"Burndown","icon":"layout-list"}]}]]},{"from":"browsing","to":"browsing","event":"SprintLoadFailed","effects":[["render-ui","main",{"className":"py-12","align":"center","type":"stack","gap":"md","direction":"vertical","children":[{"color":"destructive","type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Failed to load sprint"},{"content":"@payload.error","variant":"body","type":"typography","color":"muted"},{"action":"INIT","icon":"rotate-ccw","label":"Retry","type":"button","variant":"primary"}]}]]}]},"scope":"collection"},{"name":"SprintCreate","category":"interaction","linkedEntity":"Sprint","emits":[{"event":"SPRINT_CREATED"},{"event":"SprintLoadFailed","description":"Fired when Sprint fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintLoaded","description":"Fired when Sprint finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"event":"SprintSaveFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintSaved","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"CREATE","triggers":"CREATE","source":{"kind":"trait","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"CREATE","name":"Create"},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"SPRINT_CREATED","name":"Sprint Created"},{"key":"SprintLoadFailed","name":"Sprint load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintLoaded","name":"Sprint loaded","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"key":"SprintSaveFailed","name":"Sprint save failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintSaved","name":"Sprint saved","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"}}]]},{"from":"closed","to":"open","event":"CREATE","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"}}],["render-ui","modal",{"type":"stack","direction":"vertical","gap":"md","children":[{"gap":"sm","children":[{"type":"icon","name":"plus-circle"},{"content":"Create Sprint","variant":"h3","type":"typography"}],"direction":"horizontal","type":"stack"},{"type":"divider"},{"submitEvent":"SAVE","mode":"create","type":"form-section","cancelEvent":"CLOSE","fields":["name","startDate","endDate","goal","status","taskCount"]}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","create","Sprint","@payload.data",{"emit":{"success":"SprintSaved","failure":"SprintSaveFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","SPRINT_CREATED"]]}]},"scope":"collection"},{"name":"SprintEdit","category":"interaction","linkedEntity":"Sprint","emits":[{"event":"SPRINT_UPDATED"},{"event":"SprintLoadFailed","description":"Fired when Sprint fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintLoaded","description":"Fired when Sprint finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"event":"SprintUpdateFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintUpdated","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]}],"listens":[{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"SprintView"}},{"event":"EDIT","triggers":"EDIT","source":{"kind":"trait","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"EDIT","name":"Edit","payloadSchema":[{"name":"id","type":"string"},{"name":"row","type":"Sprint"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save","payloadSchema":[{"name":"data","type":"string"}]},{"key":"SPRINT_UPDATED","name":"Sprint Updated"},{"key":"SprintLoadFailed","name":"Sprint load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintLoaded","name":"Sprint loaded","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"key":"SprintUpdateFailed","name":"Sprint update failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintUpdated","name":"Sprint updated","payloadSchema":[{"name":"id","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"}}]]},{"from":"closed","to":"open","event":"EDIT","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"direction":"vertical","gap":"md","type":"stack","children":[{"type":"stack","gap":"sm","children":[{"name":"edit","type":"icon"},{"type":"typography","content":"Edit Sprint","variant":"h3"}],"direction":"horizontal"},{"type":"divider"},{"fields":["name","startDate","endDate","goal","status","taskCount"],"submitEvent":"SAVE","entity":"@payload.row","mode":"edit","type":"form-section","cancelEvent":"CLOSE"}]}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["persist","update","Sprint","@payload.data",{"emit":{"success":"SprintUpdated","failure":"SprintUpdateFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["emit","SPRINT_UPDATED"]]}]},"scope":"collection"},{"name":"SprintView","category":"interaction","linkedEntity":"Sprint","emits":[{"event":"EDIT","payloadSchema":[{"name":"id","type":"string"}]},{"event":"SprintLoaded","description":"Fired when Sprint finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"event":"SprintLoadFailed","description":"Fired when Sprint fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"VIEW","triggers":"VIEW","source":{"kind":"trait","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"closed","isInitial":true},{"name":"open"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"VIEW","name":"View","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CLOSE","name":"Close"},{"key":"SAVE","name":"Save"},{"key":"EDIT","name":"Edit"},{"key":"SprintLoaded","name":"Sprint loaded","payloadSchema":[{"name":"data","type":"[Sprint]"}]},{"key":"SprintLoadFailed","name":"Sprint load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"closed","to":"closed","event":"INIT","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"}}]]},{"from":"closed","to":"open","event":"VIEW","effects":[["fetch","Sprint",{"emit":{"success":"SprintLoaded","failure":"SprintLoadFailed"},"id":"@payload.id"}],["render-ui","modal",{"children":[{"type":"stack","direction":"horizontal","align":"center","children":[{"type":"icon","name":"eye"},{"variant":"h3","content":"@entity.name","type":"typography"}],"gap":"sm"},{"type":"divider"},{"type":"stack","gap":"md","children":[{"variant":"caption","content":"Name","type":"typography"},{"type":"typography","content":"@entity.name","variant":"body"}],"direction":"horizontal"},{"gap":"md","type":"stack","direction":"horizontal","children":[{"content":"Start Date","type":"typography","variant":"caption"},{"content":"@entity.startDate","type":"typography","variant":"body"}]},{"gap":"md","type":"stack","direction":"horizontal","children":[{"type":"typography","variant":"caption","content":"End Date"},{"variant":"body","type":"typography","content":"@entity.endDate"}]},{"direction":"horizontal","type":"stack","gap":"md","children":[{"type":"typography","variant":"caption","content":"Goal"},{"type":"typography","content":"@entity.goal","variant":"body"}]},{"type":"stack","children":[{"type":"typography","variant":"caption","content":"Status"},{"variant":"body","type":"typography","content":"@entity.status"}],"gap":"md","direction":"horizontal"},{"gap":"md","type":"stack","children":[{"type":"typography","variant":"caption","content":"Task Count"},{"variant":"body","type":"typography","content":"@entity.taskCount"}],"direction":"horizontal"},{"type":"divider"},{"direction":"horizontal","gap":"sm","type":"stack","justify":"end","children":[{"variant":"primary","icon":"edit","label":"Edit","type":"button","action":"EDIT"},{"type":"button","variant":"ghost","label":"Close","action":"CLOSE"}]}],"type":"stack","gap":"md","direction":"vertical"}]]},{"from":"open","to":"closed","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["notify","Cancelled","info"]]},{"from":"open","to":"closed","event":"SAVE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}]]}]},"scope":"collection"},{"name":"SprintDelete","category":"interaction","linkedEntity":"Sprint","emits":[{"event":"SPRINT_DELETED"},{"event":"SprintDeleteFailed","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintDeleted","scope":"internal","payloadSchema":[{"name":"id","type":"string"}]},{"event":"SprintLoadFailed","description":"Fired when Sprint fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"event":"SprintLoaded","description":"Fired when Sprint finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Sprint]"}]}],"listens":[{"event":"DELETE","triggers":"DELETE","source":{"kind":"trait","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"idle","isInitial":true},{"name":"confirming"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"DELETE","name":"Delete","payloadSchema":[{"name":"id","type":"string"}]},{"key":"CONFIRM_DELETE","name":"Confirm Delete"},{"key":"CANCEL","name":"Cancel"},{"key":"CLOSE","name":"Close"},{"key":"SPRINT_DELETED","name":"Sprint Deleted"},{"key":"SprintDeleteFailed","name":"Sprint delete failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintDeleted","name":"Sprint deleted","payloadSchema":[{"name":"id","type":"string"}]},{"key":"SprintLoadFailed","name":"Sprint load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]},{"key":"SprintLoaded","name":"Sprint loaded","payloadSchema":[{"name":"data","type":"[Sprint]"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","Sprint",{"emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}]]},{"from":"idle","to":"confirming","event":"DELETE","effects":[["set","@entity.pendingId","@payload.id"],["fetch","Sprint",{"id":"@payload.id","emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}],["render-ui","modal",{"children":[{"type":"stack","align":"center","gap":"sm","direction":"horizontal","children":[{"type":"icon","name":"alert-triangle"},{"type":"typography","variant":"h3","content":"Delete Sprint"}]},{"type":"divider"},{"message":"This action cannot be undone.","type":"alert","variant":"error"},{"justify":"end","children":[{"variant":"ghost","label":"Cancel","action":"CANCEL","type":"button"},{"label":"Delete","icon":"check","variant":"danger","action":"CONFIRM_DELETE","type":"button"}],"direction":"horizontal","gap":"sm","type":"stack"}],"type":"stack","direction":"vertical","gap":"md"}]]},{"from":"confirming","to":"idle","event":"CONFIRM_DELETE","effects":[["persist","delete","Sprint","@entity.pendingId",{"emit":{"success":"SprintDeleted","failure":"SprintDeleteFailed"}}],["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Sprint",{"emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}],["emit","SPRINT_DELETED"]]},{"from":"confirming","to":"idle","event":"CANCEL","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Sprint",{"emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}]]},{"from":"confirming","to":"idle","event":"CLOSE","effects":[["render-ui","modal",null],["render-ui","main",{"type":"box"}],["fetch","Sprint",{"emit":{"failure":"SprintLoadFailed","success":"SprintLoaded"}}]]}]},"scope":"collection"}],"pages":[{"name":"Sprints","path":"/sprints","traits":[{"ref":"SprintBrowse"},{"ref":"SprintCreate"},{"ref":"SprintEdit"},{"ref":"SprintView"},{"ref":"SprintDelete"}]}]},{"name":"BurndownOrbital","entity":{"name":"Burndown","persistence":"singleton","fields":[{"name":"id","type":"string","required":true},{"name":"totalPoints","type":"number"},{"name":"completedPoints","type":"number"},{"name":"remainingPoints","type":"number"},{"name":"velocity","type":"number"},{"name":"daysRemaining","type":"number"}]},"traits":[{"name":"BurndownDisplay","category":"interaction","linkedEntity":"Burndown","emits":[{"event":"BurndownLoaded","description":"Fired when Burndown finishes loading","scope":"internal","payloadSchema":[{"name":"data","type":"[Burndown]"}]},{"event":"BurndownLoadFailed","description":"Fired when Burndown fails to load","scope":"internal","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"listens":[{"event":"COMPLETE_SPRINT","triggers":"INIT","source":{"kind":"orbital","orbital":"SprintOrbital","trait":"SprintBrowse"}}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"BurndownLoaded","name":"Burndown loaded","payloadSchema":[{"name":"data","type":"[Burndown]"}]},{"key":"BurndownLoadFailed","name":"Burndown load failed","payloadSchema":[{"name":"error","type":"string"},{"name":"code","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","Burndown",{"emit":{"success":"BurndownLoaded","failure":"BurndownLoadFailed"}}],["render-ui","main",{"appName":"ProjectManagerApp","children":[{"type":"scaled-diagram","children":[{"type":"stack","direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Burndown Chart"}]},{"gap":"md","justify":"between","type":"stack","direction":"horizontal","children":[{"children":[{"name":"trending-down","type":"icon"},{"content":"Burndown Chart","type":"typography","variant":"h2"}],"type":"stack","gap":"md","direction":"horizontal"},{"action":"REFRESH","variant":"secondary","icon":"refresh-cw","label":"Refresh","type":"button"}]},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":5,"children":[{"value":"@entity.totalPoints","type":"stat-display","label":"TotalPoints"},{"type":"stat-display","label":"CompletedPoints","value":"@entity.completedPoints"},{"type":"stat-display","label":"RemainingPoints","value":"@entity.remainingPoints"},{"type":"stat-display","value":"@entity.velocity","label":"Velocity"},{"label":"DaysRemaining","value":"@entity.daysRemaining","type":"stat-display"}],"type":"simple-grid"}]},{"type":"divider"},{"children":[{"type":"card","children":[{"variant":"caption","content":"Chart View","type":"typography"}]},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"gap":"md","cols":2,"type":"grid"},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"height":200,"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"width":400,"type":"graph-view"}],"gap":"lg"}]}],"navItems":[{"label":"Tasks","href":"/tasks","icon":"check-square"},{"label":"Sprints","href":"/sprints","icon":"zap"},{"href":"/burndown","icon":"layout-list","label":"Burndown"}],"type":"dashboard-layout"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","Burndown",{"emit":{"failure":"BurndownLoadFailed","success":"BurndownLoaded"}}],["render-ui","main",{"type":"dashboard-layout","navItems":[{"href":"/tasks","label":"Tasks","icon":"check-square"},{"icon":"zap","label":"Sprints","href":"/sprints"},{"label":"Burndown","href":"/burndown","icon":"layout-list"}],"children":[{"type":"scaled-diagram","children":[{"direction":"vertical","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Burndown Chart"}]},{"justify":"between","children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"type":"icon","name":"trending-down"},{"content":"Burndown Chart","type":"typography","variant":"h2"}]},{"variant":"secondary","icon":"refresh-cw","label":"Refresh","type":"button","action":"REFRESH"}],"direction":"horizontal","gap":"md","type":"stack"},{"type":"divider"},{"type":"box","children":[{"cols":5,"children":[{"label":"TotalPoints","type":"stat-display","value":"@entity.totalPoints"},{"type":"stat-display","label":"CompletedPoints","value":"@entity.completedPoints"},{"type":"stat-display","label":"RemainingPoints","value":"@entity.remainingPoints"},{"value":"@entity.velocity","type":"stat-display","label":"Velocity"},{"type":"stat-display","label":"DaysRemaining","value":"@entity.daysRemaining"}],"type":"simple-grid"}],"padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"type":"card","children":[{"content":"Graph View","variant":"caption","type":"typography"}]}],"gap":"md"},{"type":"line-chart","data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"id":"c","label":"End"}],"width":400,"height":200,"type":"graph-view","edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}]}],"type":"stack"}]}],"appName":"ProjectManagerApp"}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","Burndown",{"emit":{"success":"BurndownLoaded","failure":"BurndownLoadFailed"}}],["render-ui","main",{"appName":"ProjectManagerApp","navItems":[{"label":"Tasks","href":"/tasks","icon":"check-square"},{"href":"/sprints","icon":"zap","label":"Sprints"},{"icon":"layout-list","label":"Burndown","href":"/burndown"}],"children":[{"children":[{"direction":"vertical","type":"stack","gap":"lg","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Burndown Chart"}]},{"children":[{"type":"stack","direction":"horizontal","gap":"md","children":[{"name":"trending-down","type":"icon"},{"content":"Burndown Chart","variant":"h2","type":"typography"}]},{"variant":"secondary","label":"Refresh","type":"button","action":"REFRESH","icon":"refresh-cw"}],"direction":"horizontal","justify":"between","type":"stack","gap":"md"},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":5,"children":[{"type":"stat-display","label":"TotalPoints","value":"@entity.totalPoints"},{"value":"@entity.completedPoints","label":"CompletedPoints","type":"stat-display"},{"label":"RemainingPoints","value":"@entity.remainingPoints","type":"stat-display"},{"type":"stat-display","label":"Velocity","value":"@entity.velocity"},{"type":"stat-display","value":"@entity.daysRemaining","label":"DaysRemaining"}],"type":"simple-grid"}]},{"type":"divider"},{"cols":2,"children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"type":"card","children":[{"content":"Graph View","type":"typography","variant":"caption"}]}],"type":"grid","gap":"md"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"value":30,"date":"Jun"}]},{"items":[{"color":"primary","label":"Current"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"width":400,"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}],"height":200,"edges":[{"target":"b","source":"a"},{"source":"b","target":"c"}]}]}],"type":"scaled-diagram"}],"type":"dashboard-layout"}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","Burndown",{"emit":{"failure":"BurndownLoadFailed","success":"BurndownLoaded"}}],["render-ui","main",{"children":[{"children":[{"direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Burndown Chart"}]},{"children":[{"gap":"md","children":[{"type":"icon","name":"trending-down"},{"content":"Burndown Chart","variant":"h2","type":"typography"}],"direction":"horizontal","type":"stack"},{"icon":"refresh-cw","variant":"secondary","action":"REFRESH","type":"button","label":"Refresh"}],"direction":"horizontal","gap":"md","type":"stack","justify":"between"},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":5,"children":[{"label":"TotalPoints","value":"@entity.totalPoints","type":"stat-display"},{"value":"@entity.completedPoints","type":"stat-display","label":"CompletedPoints"},{"type":"stat-display","value":"@entity.remainingPoints","label":"RemainingPoints"},{"type":"stat-display","label":"Velocity","value":"@entity.velocity"},{"label":"DaysRemaining","type":"stat-display","value":"@entity.daysRemaining"}],"type":"simple-grid"}]},{"type":"divider"},{"cols":2,"type":"grid","children":[{"type":"card","children":[{"type":"typography","variant":"caption","content":"Chart View"}]},{"children":[{"variant":"caption","content":"Graph View","type":"typography"}],"type":"card"}],"gap":"md"},{"data":[{"date":"Jan","value":12},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"value":30,"date":"Jun"}],"type":"line-chart"},{"type":"chart-legend","items":[{"color":"primary","label":"Current"},{"label":"Previous","color":"muted"}]},{"type":"graph-view","width":400,"height":200,"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"label":"End","id":"c"}],"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}]}],"gap":"lg","type":"stack"}],"type":"scaled-diagram"}],"navItems":[{"href":"/tasks","icon":"check-square","label":"Tasks"},{"href":"/sprints","label":"Sprints","icon":"zap"},{"label":"Burndown","icon":"layout-list","href":"/burndown"}],"type":"dashboard-layout","appName":"ProjectManagerApp"}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","Burndown",{"emit":{"failure":"BurndownLoadFailed","success":"BurndownLoaded"}}],["render-ui","main",{"navItems":[{"icon":"check-square","href":"/tasks","label":"Tasks"},{"label":"Sprints","href":"/sprints","icon":"zap"},{"icon":"layout-list","label":"Burndown","href":"/burndown"}],"children":[{"children":[{"direction":"vertical","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Burndown Chart"}]},{"type":"stack","justify":"between","children":[{"children":[{"name":"trending-down","type":"icon"},{"content":"Burndown Chart","variant":"h2","type":"typography"}],"direction":"horizontal","type":"stack","gap":"md"},{"action":"REFRESH","variant":"secondary","icon":"refresh-cw","type":"button","label":"Refresh"}],"gap":"md","direction":"horizontal"},{"type":"divider"},{"padding":"md","children":[{"type":"simple-grid","cols":5,"children":[{"value":"@entity.totalPoints","label":"TotalPoints","type":"stat-display"},{"type":"stat-display","label":"CompletedPoints","value":"@entity.completedPoints"},{"value":"@entity.remainingPoints","label":"RemainingPoints","type":"stat-display"},{"type":"stat-display","value":"@entity.velocity","label":"Velocity"},{"value":"@entity.daysRemaining","type":"stat-display","label":"DaysRemaining"}]}],"type":"box"},{"type":"divider"},{"gap":"md","children":[{"type":"card","children":[{"content":"Chart View","type":"typography","variant":"caption"}]},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}],"type":"grid","cols":2},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"width":400,"height":200,"type":"graph-view","edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}],"nodes":[{"id":"a","label":"Start"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}],"gap":"lg","type":"stack"}],"type":"scaled-diagram"}],"type":"dashboard-layout","appName":"ProjectManagerApp"}]]}]},"scope":"collection"}],"pages":[{"name":"Burndown","path":"/burndown","traits":[{"ref":"BurndownDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'TaskOrbital',
+      uses: [],
+      entity: {
+        'name': 'Task',
+        'collection': 'tasks',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'assignee',
+            'type': 'string',
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'critical',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'todo',
+            'values': [
+              'todo',
+              'in-progress',
+              'review',
+              'done',
+            ],
+          },
+          {
+            'name': 'storyPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'dueDate',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'TaskBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Task',
+          'emits': [
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.assignee',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.priority',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.storyPoints',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.dueDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.assignee',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.priority',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.storyPoints',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.dueDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.description',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.assignee',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.priority',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.storyPoints',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.dueDate',
+                  'type': 'datetime',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoaded',
+              'description': 'Fired when Task finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Task]',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoadFailed',
+              'description': 'Fired when Task fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'TASK_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskCreate',
+              },
+            },
+            {
+              'event': 'TASK_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskEdit',
+              },
+            },
+            {
+              'event': 'TASK_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskDelete',
+              },
+            },
+            {
+              'event': 'ASSIGN_TASK',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'SprintOrbital',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'TaskLoaded',
+                'name': 'Task loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Task]',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoadFailed',
+                'name': 'Task load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Task',
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Task',
+                  },
+                ],
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Task',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskSaved',
+                'name': 'Task saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskSaveFailed',
+                'name': 'Task save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskUpdated',
+                'name': 'Task updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskUpdateFailed',
+                'name': 'Task update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskDeleted',
+                'name': 'Task deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskDeleteFailed',
+                'name': 'Task delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintSaved',
+                'name': 'Sprint saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintSaveFailed',
+                'name': 'Sprint save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintUpdated',
+                'name': 'Sprint updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintUpdateFailed',
+                'name': 'Sprint update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintDeleted',
+                'name': 'Sprint deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintDeleteFailed',
+                'name': 'Sprint delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'content': 'Loading…',
+                          'color': 'muted',
+                        },
+                      ],
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'align': 'center',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'TaskLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'check-square',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Tasks',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'type': 'button',
+                                      'label': 'Create Task',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                },
+                              ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 1,
+                              'children': [
+                                {
+                                  'label': 'Total Tasks',
+                                  'value': '@payload.data.length',
+                                  'icon': 'check-square',
+                                  'type': 'stat-display',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'title',
+                                  'icon': 'check-square',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'priority',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'status',
+                                },
+                                {
+                                  'name': 'assignee',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'label': 'Points',
+                                  'format': 'number',
+                                  'name': 'storyPoints',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'format': 'date',
+                                  'variant': 'caption',
+                                  'label': 'Due',
+                                  'name': 'dueDate',
+                                },
+                              ],
+                              'type': 'data-grid',
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                },
+                                {
+                                  'event': 'EDIT',
+                                  'label': 'Edit',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'cols': 2,
+                              'gap': 'md',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'ProjectManagerApp',
+                      'navItems': [
+                        {
+                          'href': '/tasks',
+                          'label': 'Tasks',
+                          'icon': 'check-square',
+                        },
+                        {
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                          'icon': 'zap',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Burndown',
+                          'href': '/burndown',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'TaskLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Failed to load task',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'color': 'muted',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'variant': 'body',
+                        },
+                        {
+                          'label': 'Retry',
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'type': 'button',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TaskCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Task',
+          'emits': [
+            {
+              'event': 'TASK_CREATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoadFailed',
+              'description': 'Fired when Task fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoaded',
+              'description': 'Fired when Task finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Task]',
+                },
+              ],
+            },
+            {
+              'event': 'TaskSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'TASK_CREATED',
+                'name': 'Task Created',
+              },
+              {
+                'key': 'TaskLoadFailed',
+                'name': 'Task load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoaded',
+                'name': 'Task loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Task]',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskSaveFailed',
+                'name': 'Task save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskSaved',
+                'name': 'Task saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'plus-circle',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Create Task',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'title',
+                            'description',
+                            'assignee',
+                            'priority',
+                            'status',
+                            'storyPoints',
+                            'dueDate',
+                          ],
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'mode': 'create',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Task',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'TaskSaveFailed',
+                        'success': 'TaskSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TASK_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TaskEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Task',
+          'emits': [
+            {
+              'event': 'TASK_UPDATED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoadFailed',
+              'description': 'Fired when Task fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoaded',
+              'description': 'Fired when Task finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Task]',
+                },
+              ],
+            },
+            {
+              'event': 'TaskUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Task',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'TASK_UPDATED',
+                'name': 'Task Updated',
+              },
+              {
+                'key': 'TaskLoadFailed',
+                'name': 'Task load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoaded',
+                'name': 'Task loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Task]',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskUpdateFailed',
+                'name': 'Task update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskUpdated',
+                'name': 'Task updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'name': 'edit',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': 'Edit Task',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'edit',
+                          'type': 'form-section',
+                          'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'title',
+                            'description',
+                            'assignee',
+                            'priority',
+                            'status',
+                            'storyPoints',
+                            'dueDate',
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Task',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'success': 'TaskUpdated',
+                        'failure': 'TaskUpdateFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TASK_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TaskView',
+          'category': 'interaction',
+          'linkedEntity': 'Task',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoaded',
+              'description': 'Fired when Task finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Task]',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoadFailed',
+              'description': 'Fired when Task fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'object',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'TaskLoaded',
+                'name': 'Task loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Task]',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoadFailed',
+                'name': 'Task load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.assignee',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.description',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.dueDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.priority',
+                    'medium',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'todo',
+                  ],
+                  [
+                    'set',
+                    '@entity.storyPoints',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.title',
+                    '',
+                  ],
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': '@entity.title',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Title',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.title',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Description',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.description',
+                              'type': 'typography',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Assignee',
+                              'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.assignee',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Priority',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.priority',
+                              'variant': 'body',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'content': 'Status',
+                              'variant': 'caption',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.status',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Story Points',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.storyPoints',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Due Date',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.dueDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'label': 'Edit',
+                              'type': 'button',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                              'action': 'EDIT',
+                            },
+                            {
+                              'label': 'Close',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'action': 'CLOSE',
+                            },
+                          ],
+                          'type': 'stack',
+                          'justify': 'end',
+                          'gap': 'sm',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'TaskDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Task',
+          'emits': [
+            {
+              'event': 'TASK_DELETED',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoadFailed',
+              'description': 'Fired when Task fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'TaskLoaded',
+              'description': 'Fired when Task finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Task]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'TaskBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'TASK_DELETED',
+                'name': 'Task Deleted',
+              },
+              {
+                'key': 'TaskDeleteFailed',
+                'name': 'Task delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskDeleted',
+                'name': 'Task deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoadFailed',
+                'name': 'Task load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'TaskLoaded',
+                'name': 'Task loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Task]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'content': 'Delete Task',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
+                          'type': 'alert',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'ghost',
+                              'action': 'CANCEL',
+                              'type': 'button',
+                              'label': 'Cancel',
+                            },
+                            {
+                              'variant': 'danger',
+                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
+                              'type': 'button',
+                              'icon': 'check',
+                            },
+                          ],
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Task',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'TaskDeleteFailed',
+                        'success': 'TaskDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'TASK_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Task',
+                    {
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'TasksPage',
+          'path': '/tasks',
+          'traits': [
+            {
+              'ref': 'TaskBrowse',
+            },
+            {
+              'ref': 'TaskCreate',
+            },
+            {
+              'ref': 'TaskEdit',
+            },
+            {
+              'ref': 'TaskView',
+            },
+            {
+              'ref': 'TaskDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'SprintOrbital',
+      uses: [],
+      entity: {
+        'name': 'Sprint',
+        'collection': 'sprints',
+        'persistence': 'persistent',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'endDate',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'goal',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'todo',
+            'values': [
+              'todo',
+              'in-progress',
+              'review',
+              'done',
+            ],
+          },
+          {
+            'name': 'taskCount',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'SprintBrowse',
+          'category': 'interaction',
+          'linkedEntity': 'Sprint',
+          'emits': [
+            {
+              'event': 'ASSIGN_TASK',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'COMPLETE_SPRINT',
+              'scope': 'external',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'CREATE',
+            },
+            {
+              'event': 'VIEW',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.goal',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.taskCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.goal',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.taskCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'DELETE',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.name',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row.startDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.endDate',
+                  'type': 'datetime',
+                  'required': true,
+                },
+                {
+                  'name': 'row.goal',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.status',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row.taskCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'row.pendingId',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoaded',
+              'description': 'Fired when Sprint finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Sprint]',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoadFailed',
+              'description': 'Fired when Sprint fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'SPRINT_CREATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintCreate',
+              },
+            },
+            {
+              'event': 'SPRINT_UPDATED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintEdit',
+              },
+            },
+            {
+              'event': 'SPRINT_DELETED',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintDelete',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'browsing',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'SprintLoaded',
+                'name': 'Sprint loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Sprint]',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoadFailed',
+                'name': 'Sprint load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'ASSIGN_TASK',
+                'name': 'Assign Task',
+              },
+              {
+                'key': 'COMPLETE_SPRINT',
+                'name': 'Complete Sprint',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'spinner',
+                        },
+                        {
+                          'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                        },
+                      ],
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'className': 'py-12',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'SprintLoaded',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Tasks',
+                          'icon': 'check-square',
+                          'href': '/tasks',
+                        },
+                        {
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                          'icon': 'zap',
+                        },
+                        {
+                          'label': 'Burndown',
+                          'href': '/burndown',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'align': 'center',
+                              'gap': 'md',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'zap',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Sprints',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'icon': 'plus',
+                                      'label': 'Create Sprint',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                },
+                              ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'icon': 'zap',
+                                  'name': 'name',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'status',
+                                },
+                                {
+                                  'name': 'goal',
+                                  'variant': 'body',
+                                },
+                                {
+                                  'label': 'Start',
+                                  'variant': 'caption',
+                                  'name': 'startDate',
+                                  'format': 'date',
+                                },
+                                {
+                                  'name': 'endDate',
+                                  'label': 'End',
+                                  'format': 'date',
+                                  'variant': 'caption',
+                                },
+                                {
+                                  'format': 'number',
+                                  'label': 'Tasks',
+                                  'variant': 'body',
+                                  'name': 'taskCount',
+                                },
+                              ],
+                              'cols': 2,
+                              'gap': 'md',
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'browsing',
+                'to': 'browsing',
+                'event': 'SprintLoadFailed',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'gap': 'md',
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
+                        },
+                        {
+                          'content': 'Failed to load sprint',
+                          'type': 'typography',
+                          'variant': 'h3',
+                        },
+                        {
+                          'content': '@payload.error',
+                          'variant': 'body',
+                          'type': 'typography',
+                          'color': 'muted',
+                        },
+                        {
+                          'icon': 'rotate-ccw',
+                          'action': 'INIT',
+                          'variant': 'primary',
+                          'label': 'Retry',
+                          'type': 'button',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'SprintCreate',
+          'category': 'interaction',
+          'linkedEntity': 'Sprint',
+          'emits': [
+            {
+              'event': 'SPRINT_CREATED',
+            },
+            {
+              'event': 'SprintLoadFailed',
+              'description': 'Fired when Sprint fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoaded',
+              'description': 'Fired when Sprint finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Sprint]',
+                },
+              ],
+            },
+            {
+              'event': 'SprintSaveFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintSaved',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'CREATE',
+              'triggers': 'CREATE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'CREATE',
+                'name': 'Create',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SPRINT_CREATED',
+                'name': 'Sprint Created',
+              },
+              {
+                'key': 'SprintLoadFailed',
+                'name': 'Sprint load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoaded',
+                'name': 'Sprint loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Sprint]',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintSaveFailed',
+                'name': 'Sprint save failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintSaved',
+                'name': 'Sprint saved',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'CREATE',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'plus-circle',
+                            },
+                            {
+                              'content': 'Create Sprint',
+                              'type': 'typography',
+                              'variant': 'h3',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'fields': [
+                            'name',
+                            'startDate',
+                            'endDate',
+                            'goal',
+                            'status',
+                            'taskCount',
+                          ],
+                          'submitEvent': 'SAVE',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'create',
+                    'Sprint',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'SprintSaveFailed',
+                        'success': 'SprintSaved',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'SPRINT_CREATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'SprintEdit',
+          'category': 'interaction',
+          'linkedEntity': 'Sprint',
+          'emits': [
+            {
+              'event': 'SPRINT_UPDATED',
+            },
+            {
+              'event': 'SprintLoadFailed',
+              'description': 'Fired when Sprint fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoaded',
+              'description': 'Fired when Sprint finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Sprint]',
+                },
+              ],
+            },
+            {
+              'event': 'SprintUpdateFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintUpdated',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintView',
+              },
+            },
+            {
+              'event': 'EDIT',
+              'triggers': 'EDIT',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'row',
+                    'type': 'Sprint',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SPRINT_UPDATED',
+                'name': 'Sprint Updated',
+              },
+              {
+                'key': 'SprintLoadFailed',
+                'name': 'Sprint load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoaded',
+                'name': 'Sprint loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Sprint]',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintUpdateFailed',
+                'name': 'Sprint update failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintUpdated',
+                'name': 'Sprint updated',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'EDIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'content': 'Edit Sprint',
+                              'variant': 'h3',
+                              'type': 'typography',
+                            },
+                          ],
+                          'gap': 'sm',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'fields': [
+                            'name',
+                            'startDate',
+                            'endDate',
+                            'goal',
+                            'status',
+                            'taskCount',
+                          ],
+                          'entity': '@payload.row',
+                        },
+                      ],
+                      'type': 'stack',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'persist',
+                    'update',
+                    'Sprint',
+                    '@payload.data',
+                    {
+                      'emit': {
+                        'failure': 'SprintUpdateFailed',
+                        'success': 'SprintUpdated',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'emit',
+                    'SPRINT_UPDATED',
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'SprintView',
+          'category': 'interaction',
+          'linkedEntity': 'Sprint',
+          'emits': [
+            {
+              'event': 'EDIT',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoaded',
+              'description': 'Fired when Sprint finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Sprint]',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoadFailed',
+              'description': 'Fired when Sprint fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'VIEW',
+              'triggers': 'VIEW',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'closed',
+                'isInitial': true,
+              },
+              {
+                'name': 'open',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'VIEW',
+                'name': 'View',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SAVE',
+                'name': 'Save',
+              },
+              {
+                'key': 'EDIT',
+                'name': 'Edit',
+              },
+              {
+                'key': 'SprintLoaded',
+                'name': 'Sprint loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Sprint]',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoadFailed',
+                'name': 'Sprint load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'closed',
+                'to': 'closed',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.endDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.goal',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.name',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.startDate',
+                    '',
+                  ],
+                  [
+                    'set',
+                    '@entity.status',
+                    'todo',
+                  ],
+                  [
+                    'set',
+                    '@entity.taskCount',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'closed',
+                'to': 'open',
+                'event': 'VIEW',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                      'id': '@payload.id',
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'eye',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.name',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Name',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.name',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'content': 'Start Date',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.startDate',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'End Date',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.endDate',
+                            },
+                          ],
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Goal',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.goal',
+                            },
+                          ],
+                        },
+                        {
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Status',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.status',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Task Count',
+                            },
+                            {
+                              'content': '@entity.taskCount',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                              'action': 'EDIT',
+                              'type': 'button',
+                            },
+                            {
+                              'label': 'Close',
+                              'action': 'CLOSE',
+                              'variant': 'ghost',
+                              'type': 'button',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'notify',
+                    'Cancelled',
+                    'info',
+                  ],
+                ],
+              },
+              {
+                'from': 'open',
+                'to': 'closed',
+                'event': 'SAVE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+        {
+          'name': 'SprintDelete',
+          'category': 'interaction',
+          'linkedEntity': 'Sprint',
+          'emits': [
+            {
+              'event': 'SPRINT_DELETED',
+            },
+            {
+              'event': 'SprintDeleteFailed',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintDeleted',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoadFailed',
+              'description': 'Fired when Sprint fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'SprintLoaded',
+              'description': 'Fired when Sprint finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Sprint]',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'DELETE',
+              'triggers': 'DELETE',
+              'source': {
+                'kind': 'trait',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+              {
+                'name': 'confirming',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'DELETE',
+                'name': 'Delete',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'CONFIRM_DELETE',
+                'name': 'Confirm Delete',
+              },
+              {
+                'key': 'CANCEL',
+                'name': 'Cancel',
+              },
+              {
+                'key': 'CLOSE',
+                'name': 'Close',
+              },
+              {
+                'key': 'SPRINT_DELETED',
+                'name': 'Sprint Deleted',
+              },
+              {
+                'key': 'SprintDeleteFailed',
+                'name': 'Sprint delete failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintDeleted',
+                'name': 'Sprint deleted',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoadFailed',
+                'name': 'Sprint load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'SprintLoaded',
+                'name': 'Sprint loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Sprint]',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'confirming',
+                'event': 'DELETE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.pendingId',
+                    '@payload.id',
+                  ],
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'id': '@payload.id',
+                      'emit': {
+                        'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    {
+                      'gap': 'md',
+                      'children': [
+                        {
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Delete Sprint',
+                            },
+                          ],
+                          'type': 'stack',
+                          'align': 'center',
+                        },
+                        {
+                          'type': 'divider',
+                        },
+                        {
+                          'message': 'This action cannot be undone.',
+                          'variant': 'error',
+                          'type': 'alert',
+                        },
+                        {
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'label': 'Delete',
+                            },
+                          ],
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CONFIRM_DELETE',
+                'effects': [
+                  [
+                    'persist',
+                    'delete',
+                    'Sprint',
+                    '@entity.pendingId',
+                    {
+                      'emit': {
+                        'failure': 'SprintDeleteFailed',
+                        'success': 'SprintDeleted',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'emit',
+                    'SPRINT_DELETED',
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CANCEL',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'confirming',
+                'to': 'idle',
+                'event': 'CLOSE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'modal',
+                    null,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'box',
+                    },
+                  ],
+                  [
+                    'fetch',
+                    'Sprint',
+                    {
+                      'emit': {
+                        'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
+                      },
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Sprints',
+          'path': '/sprints',
+          'traits': [
+            {
+              'ref': 'SprintBrowse',
+            },
+            {
+              'ref': 'SprintCreate',
+            },
+            {
+              'ref': 'SprintEdit',
+            },
+            {
+              'ref': 'SprintView',
+            },
+            {
+              'ref': 'SprintDelete',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'BurndownOrbital',
+      uses: [],
+      entity: {
+        'name': 'Burndown',
+        'persistence': 'singleton',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalPoints',
+            'type': 'number',
+          },
+          {
+            'name': 'completedPoints',
+            'type': 'number',
+          },
+          {
+            'name': 'remainingPoints',
+            'type': 'number',
+          },
+          {
+            'name': 'velocity',
+            'type': 'number',
+          },
+          {
+            'name': 'daysRemaining',
+            'type': 'number',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'BurndownDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'Burndown',
+          'emits': [
+            {
+              'event': 'BurndownLoaded',
+              'description': 'Fired when Burndown finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Burndown]',
+                },
+              ],
+            },
+            {
+              'event': 'BurndownLoadFailed',
+              'description': 'Fired when Burndown fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'listens': [
+            {
+              'event': 'COMPLETE_SPRINT',
+              'triggers': 'INIT',
+              'source': {
+                'kind': 'orbital',
+                'orbital': 'SprintOrbital',
+                'trait': 'SprintBrowse',
+              },
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'BurndownLoaded',
+                'name': 'Burndown loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'data',
+                    'type': '[Burndown]',
+                  },
+                ],
+              },
+              {
+                'key': 'BurndownLoadFailed',
+                'name': 'Burndown load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'error',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'code',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.completedPoints',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.daysRemaining',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.remainingPoints',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.totalPoints',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.velocity',
+                    0,
+                  ],
+                  [
+                    'fetch',
+                    'Burndown',
+                    {
+                      'emit': {
+                        'failure': 'BurndownLoadFailed',
+                        'success': 'BurndownLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Burndown Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'trending-down',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Burndown Chart',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'label': 'TotalPoints',
+                                          'value': '@entity.totalPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'CompletedPoints',
+                                          'type': 'stat-display',
+                                          'value': '@entity.completedPoints',
+                                        },
+                                        {
+                                          'value': '@entity.remainingPoints',
+                                          'type': 'stat-display',
+                                          'label': 'RemainingPoints',
+                                        },
+                                        {
+                                          'label': 'Velocity',
+                                          'value': '@entity.velocity',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.daysRemaining',
+                                          'label': 'DaysRemaining',
+                                        },
+                                      ],
+                                      'cols': 5,
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                },
+                              ],
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'check-square',
+                          'href': '/tasks',
+                          'label': 'Tasks',
+                        },
+                        {
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                          'icon': 'zap',
+                        },
+                        {
+                          'href': '/burndown',
+                          'icon': 'layout-list',
+                          'label': 'Burndown',
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Burndown',
+                    {
+                      'emit': {
+                        'failure': 'BurndownLoadFailed',
+                        'success': 'BurndownLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'href': '/tasks',
+                          'icon': 'check-square',
+                          'label': 'Tasks',
+                        },
+                        {
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                          'icon': 'zap',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/burndown',
+                          'label': 'Burndown',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Burndown Chart',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'trending-down',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Burndown Chart',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 5,
+                                      'children': [
+                                        {
+                                          'value': '@entity.totalPoints',
+                                          'type': 'stat-display',
+                                          'label': 'TotalPoints',
+                                        },
+                                        {
+                                          'value': '@entity.completedPoints',
+                                          'label': 'CompletedPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'RemainingPoints',
+                                          'value': '@entity.remainingPoints',
+                                        },
+                                        {
+                                          'value': '@entity.velocity',
+                                          'type': 'stat-display',
+                                          'label': 'Velocity',
+                                        },
+                                        {
+                                          'label': 'DaysRemaining',
+                                          'value': '@entity.daysRemaining',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                  'type': 'box',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'gap': 'md',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                },
+                              ],
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                      'type': 'dashboard-layout',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Burndown',
+                    {
+                      'emit': {
+                        'success': 'BurndownLoaded',
+                        'failure': 'BurndownLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Burndown Chart',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'trending-down',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Burndown Chart',
+                                        },
+                                      ],
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 5,
+                                      'children': [
+                                        {
+                                          'label': 'TotalPoints',
+                                          'value': '@entity.totalPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'CompletedPoints',
+                                          'type': 'stat-display',
+                                          'value': '@entity.completedPoints',
+                                        },
+                                        {
+                                          'value': '@entity.remainingPoints',
+                                          'type': 'stat-display',
+                                          'label': 'RemainingPoints',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Velocity',
+                                          'value': '@entity.velocity',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'DaysRemaining',
+                                          'value': '@entity.daysRemaining',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                      'navItems': [
+                        {
+                          'href': '/tasks',
+                          'icon': 'check-square',
+                          'label': 'Tasks',
+                        },
+                        {
+                          'icon': 'zap',
+                          'href': '/sprints',
+                          'label': 'Sprints',
+                        },
+                        {
+                          'label': 'Burndown',
+                          'icon': 'layout-list',
+                          'href': '/burndown',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'Burndown',
+                    {
+                      'emit': {
+                        'success': 'BurndownLoaded',
+                        'failure': 'BurndownLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'navItems': [
+                        {
+                          'label': 'Tasks',
+                          'icon': 'check-square',
+                          'href': '/tasks',
+                        },
+                        {
+                          'icon': 'zap',
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                        },
+                        {
+                          'href': '/burndown',
+                          'label': 'Burndown',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Burndown Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'justify': 'between',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'trending-down',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Burndown Chart',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 5,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalPoints',
+                                          'label': 'TotalPoints',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.completedPoints',
+                                          'label': 'CompletedPoints',
+                                        },
+                                        {
+                                          'value': '@entity.remainingPoints',
+                                          'type': 'stat-display',
+                                          'label': 'RemainingPoints',
+                                        },
+                                        {
+                                          'value': '@entity.velocity',
+                                          'type': 'stat-display',
+                                          'label': 'Velocity',
+                                        },
+                                        {
+                                          'label': 'DaysRemaining',
+                                          'value': '@entity.daysRemaining',
+                                          'type': 'stat-display',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'height': 200,
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'type': 'stack',
+                            },
+                          ],
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'Burndown',
+                    {
+                      'emit': {
+                        'success': 'BurndownLoaded',
+                        'failure': 'BurndownLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Tasks',
+                          'icon': 'check-square',
+                          'href': '/tasks',
+                        },
+                        {
+                          'label': 'Sprints',
+                          'href': '/sprints',
+                          'icon': 'zap',
+                        },
+                        {
+                          'label': 'Burndown',
+                          'href': '/burndown',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'ProjectManagerApp',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Burndown Chart',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'trending-down',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Burndown Chart',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 5,
+                                      'children': [
+                                        {
+                                          'label': 'TotalPoints',
+                                          'value': '@entity.totalPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.completedPoints',
+                                          'label': 'CompletedPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'RemainingPoints',
+                                          'value': '@entity.remainingPoints',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'Velocity',
+                                          'value': '@entity.velocity',
+                                        },
+                                        {
+                                          'label': 'DaysRemaining',
+                                          'type': 'stat-display',
+                                          'value': '@entity.daysRemaining',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'type': 'grid',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'color': 'primary',
+                                      'label': 'Current',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Burndown',
+          'path': '/burndown',
+          'traits': [
+            {
+              'ref': 'BurndownDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

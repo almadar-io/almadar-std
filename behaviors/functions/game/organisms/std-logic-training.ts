@@ -84,9 +84,1046 @@ export function stdLogicTraining(params: StdLogicTrainingParams): OrbitalDefinit
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"DebugChallengeOrbital","entity":{"name":"DebugChallenge","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"bugType","type":"string"},{"name":"score","type":"number","default":0},{"name":"solved","type":"boolean","default":false},{"name":"level","type":"number","default":1}]},"traits":[{"name":"DebugChallengeDebuggerGame","category":"interaction","linkedEntity":"DebugChallenge","emits":[{"event":"DebugChallengeLoaded","description":"Fired when DebugChallenge finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"bugType","type":"string"},{"name":"score","type":"number"},{"name":"solved","type":"boolean"},{"name":"level","type":"number"}]},{"event":"DebugChallengeLoadFailed","description":"Fired when DebugChallenge fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"DebugChallengeLoaded","name":"DebugChallenge loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"bugType","type":"string"},{"name":"score","type":"number"},{"name":"solved","type":"boolean"},{"name":"level","type":"number"}]},{"key":"DebugChallengeLoadFailed","name":"DebugChallenge load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","DebugChallenge",{"emit":{"success":"DebugChallengeLoaded","failure":"DebugChallengeLoadFailed"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Logic Training","children":[{"title":"Debug Challenge","menuItems":[{"event":"START","variant":"primary","label":"Start"}],"type":"game-menu"}]}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"type":"game-shell","appName":"Logic Training","showTopBar":true,"children":[{"type":"stack","gap":"md","direction":"vertical","children":[{"stats":[{"label":"Score","value":"@entity.score"},{"label":"Level","value":"@entity.level"}],"type":"game-hud"},{"type":"debugger-board","completeEvent":"COMPLETE","entity":"DebugChallenge"}]}]}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"appName":"Logic Training","type":"game-shell","children":[{"type":"game-over-screen","title":"Well Done!","menuItems":[{"label":"Play Again","variant":"primary","event":"RESTART"}]}],"showTopBar":true}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"appName":"Logic Training","showTopBar":true,"children":[{"menuItems":[{"event":"START","variant":"primary","label":"Start"}],"title":"Debug Challenge","type":"game-menu"}],"type":"game-shell"}]]}]},"scope":"instance"}],"pages":[{"name":"DebuggerPage","path":"/debugger","traits":[{"ref":"DebugChallengeDebuggerGame"}]}]},{"name":"NegotiateChallengeOrbital","entity":{"name":"NegotiateChallenge","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"scenario","type":"string"},{"name":"score","type":"number","default":0},{"name":"outcome","type":"string"},{"name":"level","type":"number","default":1}]},"traits":[{"name":"NegotiateChallengeNegotiatorGame","category":"interaction","linkedEntity":"NegotiateChallenge","emits":[{"event":"NegotiateChallengeLoaded","description":"Fired when NegotiateChallenge finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"scenario","type":"string"},{"name":"score","type":"number"},{"name":"outcome","type":"string"},{"name":"level","type":"number"}]},{"event":"NegotiateChallengeLoadFailed","description":"Fired when NegotiateChallenge fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"NegotiateChallengeLoaded","name":"NegotiateChallenge loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"scenario","type":"string"},{"name":"score","type":"number"},{"name":"outcome","type":"string"},{"name":"level","type":"number"}]},{"key":"NegotiateChallengeLoadFailed","name":"NegotiateChallenge load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","NegotiateChallenge",{"emit":{"failure":"NegotiateChallengeLoadFailed","success":"NegotiateChallengeLoaded"}}],["render-ui","main",{"children":[{"title":"Negotiate Challenge","menuItems":[{"variant":"primary","label":"Start","event":"START"}],"type":"game-menu"}],"showTopBar":true,"appName":"Logic Training","type":"game-shell"}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"Logic Training","children":[{"type":"stack","direction":"vertical","children":[{"type":"game-hud","stats":[{"label":"Score","value":"@entity.score"},{"label":"Level","value":"@entity.level"}]},{"completeEvent":"COMPLETE","type":"negotiator-board","entity":"NegotiateChallenge"}],"gap":"md"}]}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"type":"game-shell","appName":"Logic Training","showTopBar":true,"children":[{"type":"game-over-screen","title":"Well Done!","menuItems":[{"event":"RESTART","label":"Play Again","variant":"primary"}]}]}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"children":[{"type":"game-menu","title":"Negotiate Challenge","menuItems":[{"event":"START","label":"Start","variant":"primary"}]}],"type":"game-shell","appName":"Logic Training","showTopBar":true}]]}]},"scope":"instance"}],"pages":[{"name":"Negotiator","path":"/negotiator","traits":[{"ref":"NegotiateChallengeNegotiatorGame"}]}]},{"name":"TrainingScoreOrbital","entity":{"name":"TrainingScore","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true,"default":0},{"name":"category","type":"string"},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number"},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"},{"name":"level","type":"number","default":1}]},"traits":[{"name":"TrainingScoreScoreBoard","category":"interaction","linkedEntity":"TrainingScore","emits":[{"event":"TrainingScoreLoaded","description":"Fired when TrainingScore finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true},{"name":"category","type":"string"},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number"},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"},{"name":"level","type":"number"}]},{"event":"TrainingScoreLoadFailed","description":"Fired when TrainingScore fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"idle","isInitial":true}],"events":[{"key":"INIT","name":"Initialize"},{"key":"ADD_SCORE","name":"Add Score","payloadSchema":[{"name":"points","type":"string"}]},{"key":"COMBO","name":"Combo","payloadSchema":[{"name":"multiplier","type":"string"}]},{"key":"RESET","name":"Reset"},{"key":"TrainingScoreLoaded","name":"TrainingScore loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"playerName","type":"string","required":true},{"name":"score","type":"number","required":true},{"name":"category","type":"string"},{"name":"completedAt","type":"string"},{"name":"highScore","type":"number"},{"name":"combo","type":"number"},{"name":"multiplier","type":"number"},{"name":"level","type":"number"}]},{"key":"TrainingScoreLoadFailed","name":"TrainingScore load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"idle","to":"idle","event":"INIT","effects":[["fetch","TrainingScore",{"emit":{"success":"TrainingScoreLoaded","failure":"TrainingScoreLoadFailed"}}],["render-ui","main",{"type":"game-shell","appName":"Logic Training","children":[{"combo":"@entity.combo","level":"@entity.level","highScore":"@entity.highScore","score":"@entity.score","multiplier":"@entity.multiplier","type":"score-board"}],"showTopBar":true}]]},{"from":"idle","to":"idle","event":"ADD_SCORE","effects":[["set","@entity.score",["+","@entity.score","@payload.points"]],["set","@entity.combo",["+","@entity.combo",1]],["render-ui","main",{"appName":"Logic Training","children":[{"multiplier":"@entity.multiplier","level":"@entity.level","score":"@entity.score","highScore":"@entity.highScore","type":"score-board","combo":"@entity.combo"}],"type":"game-shell","showTopBar":true}]]},{"from":"idle","to":"idle","event":"COMBO","effects":[["set","@entity.multiplier","@payload.multiplier"],["render-ui","main",{"children":[{"type":"score-board","highScore":"@entity.highScore","score":"@entity.score","combo":"@entity.combo","multiplier":"@entity.multiplier","level":"@entity.level"}],"type":"game-shell","appName":"Logic Training","showTopBar":true}]]},{"from":"idle","to":"idle","event":"RESET","effects":[["set","@entity.score",0],["set","@entity.combo",0],["set","@entity.multiplier",1],["render-ui","main",{"children":[{"combo":"@entity.combo","highScore":"@entity.highScore","score":"@entity.score","multiplier":"@entity.multiplier","level":"@entity.level","type":"score-board"}],"showTopBar":true,"appName":"Logic Training","type":"game-shell"}]]}]},"scope":"instance"}],"pages":[{"name":"Scores","path":"/scores","traits":[{"ref":"TrainingScoreScoreBoard"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'DebugChallengeOrbital',
+      uses: [],
+      entity: {
+        'name': 'DebugChallenge',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'bugType',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'solved',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'DebugChallengeDebuggerGame',
+          'category': 'interaction',
+          'linkedEntity': 'DebugChallenge',
+          'emits': [
+            {
+              'event': 'DebugChallengeLoaded',
+              'description': 'Fired when DebugChallenge finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'bugType',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'solved',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'DebugChallengeLoadFailed',
+              'description': 'Fired when DebugChallenge fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'DebugChallengeLoaded',
+                'name': 'DebugChallenge loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'bugType',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'solved',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'DebugChallengeLoadFailed',
+                'name': 'DebugChallenge load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'DebugChallenge',
+                    {
+                      'emit': {
+                        'success': 'DebugChallengeLoaded',
+                        'failure': 'DebugChallengeLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'children': [
+                        {
+                          'title': 'Debug Challenge',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'variant': 'primary',
+                              'label': 'Start',
+                            },
+                          ],
+                          'type': 'game-menu',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'stats': [
+                                {
+                                  'label': 'Score',
+                                  'value': '@entity.score',
+                                },
+                                {
+                                  'label': 'Level',
+                                  'value': '@entity.level',
+                                },
+                              ],
+                              'type': 'game-hud',
+                            },
+                            {
+                              'type': 'debugger-board',
+                              'completeEvent': 'COMPLETE',
+                              'entity': 'DebugChallenge',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Logic Training',
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                          'menuItems': [
+                            {
+                              'label': 'Play Again',
+                              'variant': 'primary',
+                              'event': 'RESTART',
+                            },
+                          ],
+                        },
+                      ],
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Logic Training',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'variant': 'primary',
+                              'label': 'Start',
+                            },
+                          ],
+                          'title': 'Debug Challenge',
+                          'type': 'game-menu',
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'DebuggerPage',
+          'path': '/debugger',
+          'traits': [
+            {
+              'ref': 'DebugChallengeDebuggerGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'NegotiateChallengeOrbital',
+      uses: [],
+      entity: {
+        'name': 'NegotiateChallenge',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'scenario',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'outcome',
+            'type': 'string',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'NegotiateChallengeNegotiatorGame',
+          'category': 'interaction',
+          'linkedEntity': 'NegotiateChallenge',
+          'emits': [
+            {
+              'event': 'NegotiateChallengeLoaded',
+              'description': 'Fired when NegotiateChallenge finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'scenario',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'outcome',
+                  'type': 'string',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'NegotiateChallengeLoadFailed',
+              'description': 'Fired when NegotiateChallenge fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'NegotiateChallengeLoaded',
+                'name': 'NegotiateChallenge loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'scenario',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'outcome',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'NegotiateChallengeLoadFailed',
+                'name': 'NegotiateChallenge load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'NegotiateChallenge',
+                    {
+                      'emit': {
+                        'failure': 'NegotiateChallengeLoadFailed',
+                        'success': 'NegotiateChallengeLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'title': 'Negotiate Challenge',
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'event': 'START',
+                            },
+                          ],
+                          'type': 'game-menu',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'appName': 'Logic Training',
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'game-hud',
+                              'stats': [
+                                {
+                                  'label': 'Score',
+                                  'value': '@entity.score',
+                                },
+                                {
+                                  'label': 'Level',
+                                  'value': '@entity.level',
+                                },
+                              ],
+                            },
+                            {
+                              'completeEvent': 'COMPLETE',
+                              'type': 'negotiator-board',
+                              'entity': 'NegotiateChallenge',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                          'menuItems': [
+                            {
+                              'event': 'RESTART',
+                              'label': 'Play Again',
+                              'variant': 'primary',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'title': 'Negotiate Challenge',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'label': 'Start',
+                              'variant': 'primary',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Negotiator',
+          'path': '/negotiator',
+          'traits': [
+            {
+              'ref': 'NegotiateChallengeNegotiatorGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'TrainingScoreOrbital',
+      uses: [],
+      entity: {
+        'name': 'TrainingScore',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'TrainingScoreScoreBoard',
+          'category': 'interaction',
+          'linkedEntity': 'TrainingScore',
+          'emits': [
+            {
+              'event': 'TrainingScoreLoaded',
+              'description': 'Fired when TrainingScore finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'playerName',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                  'required': true,
+                },
+                {
+                  'name': 'category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'completedAt',
+                  'type': 'string',
+                },
+                {
+                  'name': 'highScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'combo',
+                  'type': 'number',
+                },
+                {
+                  'name': 'multiplier',
+                  'type': 'number',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'TrainingScoreLoadFailed',
+              'description': 'Fired when TrainingScore fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'idle',
+                'isInitial': true,
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'ADD_SCORE',
+                'name': 'Add Score',
+                'payloadSchema': [
+                  {
+                    'name': 'points',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'COMBO',
+                'name': 'Combo',
+                'payloadSchema': [
+                  {
+                    'name': 'multiplier',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'RESET',
+                'name': 'Reset',
+              },
+              {
+                'key': 'TrainingScoreLoaded',
+                'name': 'TrainingScore loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'playerName',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                    'required': true,
+                  },
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'completedAt',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'highScore',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'combo',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'multiplier',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'TrainingScoreLoadFailed',
+                'name': 'TrainingScore load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'TrainingScore',
+                    {
+                      'emit': {
+                        'success': 'TrainingScoreLoaded',
+                        'failure': 'TrainingScoreLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'children': [
+                        {
+                          'combo': '@entity.combo',
+                          'level': '@entity.level',
+                          'highScore': '@entity.highScore',
+                          'score': '@entity.score',
+                          'multiplier': '@entity.multiplier',
+                          'type': 'score-board',
+                        },
+                      ],
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'ADD_SCORE',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.score',
+                    [
+                      '+',
+                      '@entity.score',
+                      '@payload.points',
+                    ],
+                  ],
+                  [
+                    'set',
+                    '@entity.combo',
+                    [
+                      '+',
+                      '@entity.combo',
+                      1,
+                    ],
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'Logic Training',
+                      'children': [
+                        {
+                          'multiplier': '@entity.multiplier',
+                          'level': '@entity.level',
+                          'score': '@entity.score',
+                          'highScore': '@entity.highScore',
+                          'type': 'score-board',
+                          'combo': '@entity.combo',
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'COMBO',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.multiplier',
+                    '@payload.multiplier',
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'score-board',
+                          'highScore': '@entity.highScore',
+                          'score': '@entity.score',
+                          'combo': '@entity.combo',
+                          'multiplier': '@entity.multiplier',
+                          'level': '@entity.level',
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'appName': 'Logic Training',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'idle',
+                'to': 'idle',
+                'event': 'RESET',
+                'effects': [
+                  [
+                    'set',
+                    '@entity.score',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.combo',
+                    0,
+                  ],
+                  [
+                    'set',
+                    '@entity.multiplier',
+                    1,
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'combo': '@entity.combo',
+                          'highScore': '@entity.highScore',
+                          'score': '@entity.score',
+                          'multiplier': '@entity.multiplier',
+                          'level': '@entity.level',
+                          'type': 'score-board',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'appName': 'Logic Training',
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'instance',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Scores',
+          'path': '/scores',
+          'traits': [
+            {
+              'ref': 'TrainingScoreScoreBoard',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }

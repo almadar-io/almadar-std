@@ -84,9 +84,2012 @@ export function stdStemLab(params: StdStemLabParams): OrbitalDefinition[] {
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital behavior: returns canonical orbitals verbatim.
-  // params.entityName / params.fields are not used for these cases —
-  // each orbital preserves its own canonical entity + fields.
+  // Multi-orbital organism: each orbital is constructed via
+  // `makeOrbitalWithUses(...)`. Trait/page references go through
+  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
+  // authored in the `.lolo` source — embed as typed literals.
+  // params.entityName / params.fields are ignored here; each
+  // orbital owns its canonical entity and fields.
   void params;
-  return JSON.parse('[{"name":"ExperimentOrbital","entity":{"name":"Experiment","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"hypothesis","type":"string"},{"name":"score","type":"number","default":0},{"name":"completed","type":"boolean","default":false},{"name":"level","type":"number","default":1}]},"traits":[{"name":"ExperimentSimulatorGame","category":"interaction","linkedEntity":"Experiment","emits":[{"event":"ExperimentLoaded","description":"Fired when Experiment finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"hypothesis","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"event":"ExperimentLoadFailed","description":"Fired when Experiment fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"ExperimentLoaded","name":"Experiment loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"hypothesis","type":"string"},{"name":"score","type":"number"},{"name":"completed","type":"boolean"},{"name":"level","type":"number"}]},{"key":"ExperimentLoadFailed","name":"Experiment load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","Experiment",{"emit":{"success":"ExperimentLoaded","failure":"ExperimentLoadFailed"}}],["render-ui","main",{"appName":"STEM Lab","children":[{"type":"game-menu","menuItems":[{"variant":"primary","label":"Start","event":"START"}],"title":"Experiment Simulator"}],"showTopBar":true,"type":"game-shell"}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"appName":"STEM Lab","children":[{"type":"stack","gap":"md","direction":"vertical","children":[{"type":"game-hud","stats":[{"value":"@entity.score","label":"Score"},{"value":"@entity.level","label":"Level"}]},{"type":"simulator-board","entity":"Experiment","completeEvent":"COMPLETE"}]}],"showTopBar":true,"type":"game-shell"}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"type":"game-shell","showTopBar":true,"appName":"STEM Lab","children":[{"title":"Well Done!","type":"game-over-screen","menuItems":[{"event":"RESTART","variant":"primary","label":"Play Again"}]}]}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"type":"game-shell","appName":"STEM Lab","showTopBar":true,"children":[{"type":"game-menu","title":"Experiment Simulator","menuItems":[{"event":"START","label":"Start","variant":"primary"}]}]}]]}]},"scope":"collection"}],"pages":[{"name":"SimulatorPage","path":"/simulator","traits":[{"ref":"ExperimentSimulatorGame"}]}]},{"name":"ClassificationOrbital","entity":{"name":"Classification","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"category","type":"string"},{"name":"score","type":"number","default":0},{"name":"accuracy","type":"number"},{"name":"level","type":"number","default":1}]},"traits":[{"name":"ClassificationClassifierGame","category":"interaction","linkedEntity":"Classification","emits":[{"event":"ClassificationLoaded","description":"Fired when Classification finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"category","type":"string"},{"name":"score","type":"number"},{"name":"accuracy","type":"number"},{"name":"level","type":"number"}]},{"event":"ClassificationLoadFailed","description":"Fired when Classification fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"menu","isInitial":true},{"name":"playing"},{"name":"complete"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"START","name":"Start"},{"key":"NAVIGATE","name":"Navigate"},{"key":"COMPLETE","name":"Complete"},{"key":"RESTART","name":"Restart"},{"key":"ClassificationLoaded","name":"Classification loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"title","type":"string","required":true},{"name":"category","type":"string"},{"name":"score","type":"number"},{"name":"accuracy","type":"number"},{"name":"level","type":"number"}]},{"key":"ClassificationLoadFailed","name":"Classification load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"menu","to":"menu","event":"INIT","effects":[["fetch","Classification",{"emit":{"success":"ClassificationLoaded","failure":"ClassificationLoadFailed"}}],["render-ui","main",{"showTopBar":true,"appName":"STEM Lab","type":"game-shell","children":[{"title":"Classification Lab","menuItems":[{"variant":"primary","label":"Start","event":"START"}],"type":"game-menu"}]}]]},{"from":"menu","to":"playing","event":"START","effects":[["render-ui","main",{"showTopBar":true,"type":"game-shell","children":[{"type":"stack","children":[{"type":"game-hud","stats":[{"value":"@entity.score","label":"Score"},{"value":"@entity.level","label":"Level"}]},{"type":"classifier-board","entity":"Classification","completeEvent":"COMPLETE"}],"gap":"md","direction":"vertical"}],"appName":"STEM Lab"}]]},{"from":"menu","to":"menu","event":"NAVIGATE"},{"from":"playing","to":"complete","event":"COMPLETE","effects":[["render-ui","main",{"type":"game-shell","children":[{"menuItems":[{"event":"RESTART","variant":"primary","label":"Play Again"}],"type":"game-over-screen","title":"Well Done!"}],"showTopBar":true,"appName":"STEM Lab"}]]},{"from":"complete","to":"menu","event":"RESTART","effects":[["render-ui","main",{"appName":"STEM Lab","showTopBar":true,"type":"game-shell","children":[{"title":"Classification Lab","type":"game-menu","menuItems":[{"event":"START","variant":"primary","label":"Start"}]}]}]]}]},"scope":"collection"}],"pages":[{"name":"Classifier","path":"/classifier","traits":[{"ref":"ClassificationClassifierGame"}]}]},{"name":"LabResultOrbital","entity":{"name":"LabResult","persistence":"runtime","fields":[{"name":"id","type":"string","required":true},{"name":"experimentCount","type":"number"},{"name":"avgAccuracy","type":"number"},{"name":"totalScore","type":"number"},{"name":"grade","type":"string"}]},"traits":[{"name":"LabResultDisplay","category":"interaction","linkedEntity":"LabResult","emits":[{"event":"LabResultLoaded","description":"Fired when LabResult finishes loading","scope":"internal","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"experimentCount","type":"number"},{"name":"avgAccuracy","type":"number"},{"name":"totalScore","type":"number"},{"name":"grade","type":"string"}]},{"event":"LabResultLoadFailed","description":"Fired when LabResult fails to load","scope":"internal","payloadSchema":[{"name":"message","type":"string"}]}],"stateMachine":{"states":[{"name":"loading","isInitial":true},{"name":"displaying"},{"name":"refreshing"}],"events":[{"key":"INIT","name":"Initialize"},{"key":"LOADED","name":"Loaded"},{"key":"REFRESH","name":"Refresh"},{"key":"REFRESHED","name":"Refreshed"},{"key":"LabResultLoaded","name":"LabResult loaded","payloadSchema":[{"name":"id","type":"string","required":true},{"name":"experimentCount","type":"number"},{"name":"avgAccuracy","type":"number"},{"name":"totalScore","type":"number"},{"name":"grade","type":"string"}]},{"key":"LabResultLoadFailed","name":"LabResult load failed","payloadSchema":[{"name":"message","type":"string"}]}],"transitions":[{"from":"loading","to":"displaying","event":"INIT","effects":[["fetch","LabResult",{"emit":{"success":"LabResultLoaded","failure":"LabResultLoadFailed"}}],["render-ui","main",{"appName":"STEM Lab","showTopBar":true,"children":[{"type":"scaled-diagram","children":[{"type":"stack","gap":"lg","direction":"vertical","children":[{"items":[{"label":"Home","href":"/"},{"label":"Lab Results"}],"type":"breadcrumb"},{"gap":"md","justify":"between","direction":"horizontal","type":"stack","children":[{"gap":"md","children":[{"type":"icon","name":"clipboard"},{"type":"typography","content":"Lab Results","variant":"h2"}],"direction":"horizontal","type":"stack"},{"label":"Refresh","action":"REFRESH","type":"button","variant":"secondary","icon":"refresh-cw"}]},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":3,"type":"simple-grid","children":[{"type":"stat-display","label":"ExperimentCount","value":"@entity.experimentCount"},{"value":"@entity.avgAccuracy","type":"stat-display","label":"AvgAccuracy"},{"value":"@entity.totalScore","type":"stat-display","label":"TotalScore"},{"type":"card","children":[{"gap":"sm","children":[{"variant":"caption","content":"Grade","type":"typography"},{"variant":"h3","type":"typography","content":"@entity.grade"}],"type":"stack","direction":"vertical"}]}]}]},{"type":"divider"},{"children":[{"type":"card","children":[{"variant":"caption","type":"typography","content":"Chart View"}]},{"type":"card","children":[{"type":"typography","content":"Graph View","variant":"caption"}]}],"cols":2,"type":"grid","gap":"md"},{"type":"line-chart","data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"value":22,"date":"May"},{"value":30,"date":"Jun"}]},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"nodes":[{"id":"a","label":"Start"},{"label":"Process","id":"b"},{"label":"End","id":"c"}],"type":"graph-view","width":400,"height":200,"edges":[{"source":"a","target":"b"},{"target":"c","source":"b"}]}]}]}],"type":"game-shell"}]]},{"from":"loading","to":"displaying","event":"LOADED","effects":[["fetch","LabResult",{"emit":{"failure":"LabResultLoadFailed","success":"LabResultLoaded"}}],["render-ui","main",{"children":[{"type":"scaled-diagram","children":[{"type":"stack","direction":"vertical","gap":"lg","children":[{"items":[{"href":"/","label":"Home"},{"label":"Lab Results"}],"type":"breadcrumb"},{"children":[{"direction":"horizontal","gap":"md","children":[{"name":"clipboard","type":"icon"},{"content":"Lab Results","type":"typography","variant":"h2"}],"type":"stack"},{"variant":"secondary","type":"button","icon":"refresh-cw","action":"REFRESH","label":"Refresh"}],"direction":"horizontal","type":"stack","gap":"md","justify":"between"},{"type":"divider"},{"type":"box","children":[{"type":"simple-grid","cols":3,"children":[{"type":"stat-display","label":"ExperimentCount","value":"@entity.experimentCount"},{"value":"@entity.avgAccuracy","label":"AvgAccuracy","type":"stat-display"},{"value":"@entity.totalScore","label":"TotalScore","type":"stat-display"},{"children":[{"type":"stack","direction":"vertical","children":[{"variant":"caption","type":"typography","content":"Grade"},{"type":"typography","content":"@entity.grade","variant":"h3"}],"gap":"sm"}],"type":"card"}]}],"padding":"md"},{"type":"divider"},{"type":"grid","cols":2,"children":[{"children":[{"type":"typography","variant":"caption","content":"Chart View"}],"type":"card"},{"children":[{"type":"typography","content":"Graph View","variant":"caption"}],"type":"card"}],"gap":"md"},{"data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"value":22,"date":"May"},{"value":30,"date":"Jun"}],"type":"line-chart"},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"width":400,"height":200,"type":"graph-view","edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}]}]}]}],"type":"game-shell","appName":"STEM Lab","showTopBar":true}]]},{"from":"displaying","to":"displaying","event":"INIT","effects":[["fetch","LabResult",{"emit":{"success":"LabResultLoaded","failure":"LabResultLoadFailed"}}],["render-ui","main",{"showTopBar":true,"type":"game-shell","appName":"STEM Lab","children":[{"type":"scaled-diagram","children":[{"direction":"vertical","children":[{"type":"breadcrumb","items":[{"href":"/","label":"Home"},{"label":"Lab Results"}]},{"type":"stack","gap":"md","direction":"horizontal","children":[{"gap":"md","children":[{"type":"icon","name":"clipboard"},{"variant":"h2","content":"Lab Results","type":"typography"}],"direction":"horizontal","type":"stack"},{"type":"button","action":"REFRESH","label":"Refresh","icon":"refresh-cw","variant":"secondary"}],"justify":"between"},{"type":"divider"},{"children":[{"cols":3,"children":[{"type":"stat-display","label":"ExperimentCount","value":"@entity.experimentCount"},{"type":"stat-display","value":"@entity.avgAccuracy","label":"AvgAccuracy"},{"value":"@entity.totalScore","label":"TotalScore","type":"stat-display"},{"children":[{"children":[{"type":"typography","variant":"caption","content":"Grade"},{"content":"@entity.grade","variant":"h3","type":"typography"}],"direction":"vertical","gap":"sm","type":"stack"}],"type":"card"}],"type":"simple-grid"}],"type":"box","padding":"md"},{"type":"divider"},{"cols":2,"gap":"md","type":"grid","children":[{"type":"card","children":[{"content":"Chart View","variant":"caption","type":"typography"}]},{"children":[{"type":"typography","content":"Graph View","variant":"caption"}],"type":"card"}]},{"data":[{"value":12,"date":"Jan"},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"value":25,"date":"Apr"},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"type":"chart-legend","items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}]},{"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"height":200,"width":400}],"gap":"lg","type":"stack"}]}]}]]},{"from":"displaying","to":"refreshing","event":"REFRESH","effects":[["fetch","LabResult",{"emit":{"success":"LabResultLoaded","failure":"LabResultLoadFailed"}}],["render-ui","main",{"appName":"STEM Lab","children":[{"children":[{"type":"stack","gap":"lg","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Lab Results"}]},{"gap":"md","direction":"horizontal","type":"stack","children":[{"children":[{"name":"clipboard","type":"icon"},{"type":"typography","variant":"h2","content":"Lab Results"}],"type":"stack","direction":"horizontal","gap":"md"},{"type":"button","label":"Refresh","action":"REFRESH","icon":"refresh-cw","variant":"secondary"}],"justify":"between"},{"type":"divider"},{"padding":"md","type":"box","children":[{"cols":3,"children":[{"value":"@entity.experimentCount","type":"stat-display","label":"ExperimentCount"},{"label":"AvgAccuracy","type":"stat-display","value":"@entity.avgAccuracy"},{"label":"TotalScore","type":"stat-display","value":"@entity.totalScore"},{"children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"type":"typography","content":"Grade","variant":"caption"},{"content":"@entity.grade","type":"typography","variant":"h3"}]}],"type":"card"}],"type":"simple-grid"}]},{"type":"divider"},{"children":[{"children":[{"content":"Chart View","type":"typography","variant":"caption"}],"type":"card"},{"children":[{"content":"Graph View","type":"typography","variant":"caption"}],"type":"card"}],"gap":"md","type":"grid","cols":2},{"type":"line-chart","data":[{"date":"Jan","value":12},{"value":19,"date":"Feb"},{"date":"Mar","value":15},{"date":"Apr","value":25},{"value":22,"date":"May"},{"date":"Jun","value":30}]},{"items":[{"label":"Current","color":"primary"},{"color":"muted","label":"Previous"}],"type":"chart-legend"},{"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"width":400,"height":200,"type":"graph-view","nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"id":"c","label":"End"}]}],"direction":"vertical"}],"type":"scaled-diagram"}],"showTopBar":true,"type":"game-shell"}]]},{"from":"refreshing","to":"displaying","event":"REFRESHED","effects":[["fetch","LabResult",{"emit":{"success":"LabResultLoaded","failure":"LabResultLoadFailed"}}],["render-ui","main",{"type":"game-shell","showTopBar":true,"children":[{"children":[{"direction":"vertical","type":"stack","children":[{"type":"breadcrumb","items":[{"label":"Home","href":"/"},{"label":"Lab Results"}]},{"children":[{"direction":"horizontal","gap":"md","type":"stack","children":[{"name":"clipboard","type":"icon"},{"variant":"h2","type":"typography","content":"Lab Results"}]},{"variant":"secondary","type":"button","icon":"refresh-cw","action":"REFRESH","label":"Refresh"}],"gap":"md","justify":"between","direction":"horizontal","type":"stack"},{"type":"divider"},{"type":"box","padding":"md","children":[{"cols":3,"type":"simple-grid","children":[{"label":"ExperimentCount","value":"@entity.experimentCount","type":"stat-display"},{"value":"@entity.avgAccuracy","label":"AvgAccuracy","type":"stat-display"},{"label":"TotalScore","type":"stat-display","value":"@entity.totalScore"},{"type":"card","children":[{"gap":"sm","type":"stack","direction":"vertical","children":[{"variant":"caption","content":"Grade","type":"typography"},{"content":"@entity.grade","type":"typography","variant":"h3"}]}]}]}]},{"type":"divider"},{"type":"grid","children":[{"children":[{"type":"typography","content":"Chart View","variant":"caption"}],"type":"card"},{"children":[{"type":"typography","variant":"caption","content":"Graph View"}],"type":"card"}],"gap":"md","cols":2},{"data":[{"value":12,"date":"Jan"},{"date":"Feb","value":19},{"value":15,"date":"Mar"},{"date":"Apr","value":25},{"date":"May","value":22},{"date":"Jun","value":30}],"type":"line-chart"},{"items":[{"label":"Current","color":"primary"},{"label":"Previous","color":"muted"}],"type":"chart-legend"},{"type":"graph-view","width":400,"nodes":[{"label":"Start","id":"a"},{"id":"b","label":"Process"},{"label":"End","id":"c"}],"edges":[{"target":"b","source":"a"},{"target":"c","source":"b"}],"height":200}],"gap":"lg"}],"type":"scaled-diagram"}],"appName":"STEM Lab"}]]}]},"scope":"collection"}],"pages":[{"name":"Results","path":"/results","traits":[{"ref":"LabResultDisplay"}]}]}]') as OrbitalDefinition[];
+  return [
+    makeOrbitalWithUses({
+      name: 'ExperimentOrbital',
+      uses: [],
+      entity: {
+        'name': 'Experiment',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hypothesis',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ExperimentSimulatorGame',
+          'category': 'interaction',
+          'linkedEntity': 'Experiment',
+          'emits': [
+            {
+              'event': 'ExperimentLoaded',
+              'description': 'Fired when Experiment finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'hypothesis',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'ExperimentLoadFailed',
+              'description': 'Fired when Experiment fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'ExperimentLoaded',
+                'name': 'Experiment loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'hypothesis',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'completed',
+                    'type': 'boolean',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'ExperimentLoadFailed',
+                'name': 'Experiment load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Experiment',
+                    {
+                      'emit': {
+                        'success': 'ExperimentLoaded',
+                        'failure': 'ExperimentLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'STEM Lab',
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'event': 'START',
+                            },
+                          ],
+                          'title': 'Experiment Simulator',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'STEM Lab',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'game-hud',
+                              'stats': [
+                                {
+                                  'value': '@entity.score',
+                                  'label': 'Score',
+                                },
+                                {
+                                  'value': '@entity.level',
+                                  'label': 'Level',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'simulator-board',
+                              'entity': 'Experiment',
+                              'completeEvent': 'COMPLETE',
+                            },
+                          ],
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'STEM Lab',
+                      'children': [
+                        {
+                          'title': 'Well Done!',
+                          'type': 'game-over-screen',
+                          'menuItems': [
+                            {
+                              'event': 'RESTART',
+                              'variant': 'primary',
+                              'label': 'Play Again',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'appName': 'STEM Lab',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'type': 'game-menu',
+                          'title': 'Experiment Simulator',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'label': 'Start',
+                              'variant': 'primary',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'SimulatorPage',
+          'path': '/simulator',
+          'traits': [
+            {
+              'ref': 'ExperimentSimulatorGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'ClassificationOrbital',
+      uses: [],
+      entity: {
+        'name': 'Classification',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'accuracy',
+            'type': 'number',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'ClassificationClassifierGame',
+          'category': 'interaction',
+          'linkedEntity': 'Classification',
+          'emits': [
+            {
+              'event': 'ClassificationLoaded',
+              'description': 'Fired when Classification finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'category',
+                  'type': 'string',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'accuracy',
+                  'type': 'number',
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'event': 'ClassificationLoadFailed',
+              'description': 'Fired when Classification fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'menu',
+                'isInitial': true,
+              },
+              {
+                'name': 'playing',
+              },
+              {
+                'name': 'complete',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'START',
+                'name': 'Start',
+              },
+              {
+                'key': 'NAVIGATE',
+                'name': 'Navigate',
+              },
+              {
+                'key': 'COMPLETE',
+                'name': 'Complete',
+              },
+              {
+                'key': 'RESTART',
+                'name': 'Restart',
+              },
+              {
+                'key': 'ClassificationLoaded',
+                'name': 'Classification loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'title',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'category',
+                    'type': 'string',
+                  },
+                  {
+                    'name': 'score',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'accuracy',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'level',
+                    'type': 'number',
+                  },
+                ],
+              },
+              {
+                'key': 'ClassificationLoadFailed',
+                'name': 'Classification load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'Classification',
+                    {
+                      'emit': {
+                        'success': 'ClassificationLoaded',
+                        'failure': 'ClassificationLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'appName': 'STEM Lab',
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'title': 'Classification Lab',
+                          'menuItems': [
+                            {
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'event': 'START',
+                            },
+                          ],
+                          'type': 'game-menu',
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'playing',
+                'event': 'START',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'game-hud',
+                              'stats': [
+                                {
+                                  'value': '@entity.score',
+                                  'label': 'Score',
+                                },
+                                {
+                                  'value': '@entity.level',
+                                  'label': 'Level',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'classifier-board',
+                              'entity': 'Classification',
+                              'completeEvent': 'COMPLETE',
+                            },
+                          ],
+                          'gap': 'md',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'appName': 'STEM Lab',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'menu',
+                'to': 'menu',
+                'event': 'NAVIGATE',
+              },
+              {
+                'from': 'playing',
+                'to': 'complete',
+                'event': 'COMPLETE',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'menuItems': [
+                            {
+                              'event': 'RESTART',
+                              'variant': 'primary',
+                              'label': 'Play Again',
+                            },
+                          ],
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'appName': 'STEM Lab',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'complete',
+                'to': 'menu',
+                'event': 'RESTART',
+                'effects': [
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'STEM Lab',
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'children': [
+                        {
+                          'title': 'Classification Lab',
+                          'type': 'game-menu',
+                          'menuItems': [
+                            {
+                              'event': 'START',
+                              'variant': 'primary',
+                              'label': 'Start',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Classifier',
+          'path': '/classifier',
+          'traits': [
+            {
+              'ref': 'ClassificationClassifierGame',
+            },
+          ],
+        } as never,
+      ],
+    }),
+    makeOrbitalWithUses({
+      name: 'LabResultOrbital',
+      uses: [],
+      entity: {
+        'name': 'LabResult',
+        'persistence': 'runtime',
+        'fields': [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'experimentCount',
+            'type': 'number',
+          },
+          {
+            'name': 'avgAccuracy',
+            'type': 'number',
+          },
+          {
+            'name': 'totalScore',
+            'type': 'number',
+          },
+          {
+            'name': 'grade',
+            'type': 'string',
+          },
+        ],
+      } as Entity,
+      traits: [
+        {
+          'name': 'LabResultDisplay',
+          'category': 'interaction',
+          'linkedEntity': 'LabResult',
+          'emits': [
+            {
+              'event': 'LabResultLoaded',
+              'description': 'Fired when LabResult finishes loading',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'experimentCount',
+                  'type': 'number',
+                },
+                {
+                  'name': 'avgAccuracy',
+                  'type': 'number',
+                },
+                {
+                  'name': 'totalScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'grade',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'event': 'LabResultLoadFailed',
+              'description': 'Fired when LabResult fails to load',
+              'scope': 'internal',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'stateMachine': {
+            'states': [
+              {
+                'name': 'loading',
+                'isInitial': true,
+              },
+              {
+                'name': 'displaying',
+              },
+              {
+                'name': 'refreshing',
+              },
+            ],
+            'events': [
+              {
+                'key': 'INIT',
+                'name': 'Initialize',
+              },
+              {
+                'key': 'LOADED',
+                'name': 'Loaded',
+              },
+              {
+                'key': 'REFRESH',
+                'name': 'Refresh',
+              },
+              {
+                'key': 'REFRESHED',
+                'name': 'Refreshed',
+              },
+              {
+                'key': 'LabResultLoaded',
+                'name': 'LabResult loaded',
+                'payloadSchema': [
+                  {
+                    'name': 'id',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  {
+                    'name': 'experimentCount',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'avgAccuracy',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'totalScore',
+                    'type': 'number',
+                  },
+                  {
+                    'name': 'grade',
+                    'type': 'string',
+                  },
+                ],
+              },
+              {
+                'key': 'LabResultLoadFailed',
+                'name': 'LabResult load failed',
+                'payloadSchema': [
+                  {
+                    'name': 'message',
+                    'type': 'string',
+                  },
+                ],
+              },
+            ],
+            'transitions': [
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LabResult',
+                    {
+                      'emit': {
+                        'success': 'LabResultLoaded',
+                        'failure': 'LabResultLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'STEM Lab',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Lab Results',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'clipboard',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Lab Results',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'ExperimentCount',
+                                          'value': '@entity.experimentCount',
+                                        },
+                                        {
+                                          'value': '@entity.avgAccuracy',
+                                          'type': 'stat-display',
+                                          'label': 'AvgAccuracy',
+                                        },
+                                        {
+                                          'value': '@entity.totalScore',
+                                          'type': 'stat-display',
+                                          'label': 'TotalScore',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Grade',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.grade',
+                                                },
+                                              ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'loading',
+                'to': 'displaying',
+                'event': 'LOADED',
+                'effects': [
+                  [
+                    'fetch',
+                    'LabResult',
+                    {
+                      'emit': {
+                        'failure': 'LabResultLoadFailed',
+                        'success': 'LabResultLoaded',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Lab Results',
+                                    },
+                                  ],
+                                  'type': 'breadcrumb',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'clipboard',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Lab Results',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'ExperimentCount',
+                                          'value': '@entity.experimentCount',
+                                        },
+                                        {
+                                          'value': '@entity.avgAccuracy',
+                                          'label': 'AvgAccuracy',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.totalScore',
+                                          'label': 'TotalScore',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Grade',
+                                                },
+                                                {
+                                                  'type': 'typography',
+                                                  'content': '@entity.grade',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'value': 30,
+                                      'date': 'Jun',
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'game-shell',
+                      'appName': 'STEM Lab',
+                      'showTopBar': true,
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'displaying',
+                'event': 'INIT',
+                'effects': [
+                  [
+                    'fetch',
+                    'LabResult',
+                    {
+                      'emit': {
+                        'success': 'LabResultLoaded',
+                        'failure': 'LabResultLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'STEM Lab',
+                      'children': [
+                        {
+                          'type': 'scaled-diagram',
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'href': '/',
+                                      'label': 'Home',
+                                    },
+                                    {
+                                      'label': 'Lab Results',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'clipboard',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'content': 'Lab Results',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'type': 'stat-display',
+                                          'label': 'ExperimentCount',
+                                          'value': '@entity.experimentCount',
+                                        },
+                                        {
+                                          'type': 'stat-display',
+                                          'value': '@entity.avgAccuracy',
+                                          'label': 'AvgAccuracy',
+                                        },
+                                        {
+                                          'value': '@entity.totalScore',
+                                          'label': 'TotalScore',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Grade',
+                                                },
+                                                {
+                                                  'content': '@entity.grade',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                  'type': 'box',
+                                  'padding': 'md',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'value': 25,
+                                      'date': 'Apr',
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'type': 'chart-legend',
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'width': 400,
+                                },
+                              ],
+                              'gap': 'lg',
+                              'type': 'stack',
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'displaying',
+                'to': 'refreshing',
+                'event': 'REFRESH',
+                'effects': [
+                  [
+                    'fetch',
+                    'LabResult',
+                    {
+                      'emit': {
+                        'success': 'LabResultLoaded',
+                        'failure': 'LabResultLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'appName': 'STEM Lab',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'gap': 'lg',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Lab Results',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'name': 'clipboard',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                          'content': 'Lab Results',
+                                        },
+                                      ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                    },
+                                    {
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                    },
+                                  ],
+                                  'justify': 'between',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'padding': 'md',
+                                  'type': 'box',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'children': [
+                                        {
+                                          'value': '@entity.experimentCount',
+                                          'type': 'stat-display',
+                                          'label': 'ExperimentCount',
+                                        },
+                                        {
+                                          'label': 'AvgAccuracy',
+                                          'type': 'stat-display',
+                                          'value': '@entity.avgAccuracy',
+                                        },
+                                        {
+                                          'label': 'TotalScore',
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalScore',
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'type': 'typography',
+                                                  'content': 'Grade',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.grade',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                          'type': 'card',
+                                        },
+                                      ],
+                                      'type': 'simple-grid',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'content': 'Graph View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
+                                },
+                                {
+                                  'type': 'line-chart',
+                                  'data': [
+                                    {
+                                      'date': 'Jan',
+                                      'value': 12,
+                                    },
+                                    {
+                                      'value': 19,
+                                      'date': 'Feb',
+                                    },
+                                    {
+                                      'date': 'Mar',
+                                      'value': 15,
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'value': 22,
+                                      'date': 'May',
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'color': 'muted',
+                                      'label': 'Previous',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'direction': 'vertical',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
+                    },
+                  ],
+                ],
+              },
+              {
+                'from': 'refreshing',
+                'to': 'displaying',
+                'event': 'REFRESHED',
+                'effects': [
+                  [
+                    'fetch',
+                    'LabResult',
+                    {
+                      'emit': {
+                        'success': 'LabResultLoaded',
+                        'failure': 'LabResultLoadFailed',
+                      },
+                    },
+                  ],
+                  [
+                    'render-ui',
+                    'main',
+                    {
+                      'type': 'game-shell',
+                      'showTopBar': true,
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'type': 'breadcrumb',
+                                  'items': [
+                                    {
+                                      'label': 'Home',
+                                      'href': '/',
+                                    },
+                                    {
+                                      'label': 'Lab Results',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'children': [
+                                        {
+                                          'name': 'clipboard',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Lab Results',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'box',
+                                  'padding': 'md',
+                                  'children': [
+                                    {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
+                                      'children': [
+                                        {
+                                          'label': 'ExperimentCount',
+                                          'value': '@entity.experimentCount',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'value': '@entity.avgAccuracy',
+                                          'label': 'AvgAccuracy',
+                                          'type': 'stat-display',
+                                        },
+                                        {
+                                          'label': 'TotalScore',
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalScore',
+                                        },
+                                        {
+                                          'type': 'card',
+                                          'children': [
+                                            {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Grade',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.grade',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                {
+                                  'type': 'divider',
+                                },
+                                {
+                                  'type': 'grid',
+                                  'children': [
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                    {
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                      'type': 'card',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'cols': 2,
+                                },
+                                {
+                                  'data': [
+                                    {
+                                      'value': 12,
+                                      'date': 'Jan',
+                                    },
+                                    {
+                                      'date': 'Feb',
+                                      'value': 19,
+                                    },
+                                    {
+                                      'value': 15,
+                                      'date': 'Mar',
+                                    },
+                                    {
+                                      'date': 'Apr',
+                                      'value': 25,
+                                    },
+                                    {
+                                      'date': 'May',
+                                      'value': 22,
+                                    },
+                                    {
+                                      'date': 'Jun',
+                                      'value': 30,
+                                    },
+                                  ],
+                                  'type': 'line-chart',
+                                },
+                                {
+                                  'items': [
+                                    {
+                                      'label': 'Current',
+                                      'color': 'primary',
+                                    },
+                                    {
+                                      'label': 'Previous',
+                                      'color': 'muted',
+                                    },
+                                  ],
+                                  'type': 'chart-legend',
+                                },
+                                {
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'height': 200,
+                                },
+                              ],
+                              'gap': 'lg',
+                            },
+                          ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'STEM Lab',
+                    },
+                  ],
+                ],
+              },
+            ],
+          },
+          'scope': 'collection',
+        } as never,
+      ],
+      pages: [
+        {
+          'name': 'Results',
+          'path': '/results',
+          'traits': [
+            {
+              'ref': 'LabResultDisplay',
+            },
+          ],
+        } as never,
+      ],
+    }),
+  ];
 }
